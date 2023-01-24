@@ -1,0 +1,3 @@
+[submodule "example/casf-2016-evaluator"]
+	path = example/casf-2016-evaluator
+	url = https://github.com/labdao/casf-2016-evaluator.git
