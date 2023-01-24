@@ -61,18 +61,19 @@ sudo apt-get update
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 
-flag=false
+exit_flag=0
 
 /usr/bin/newgrp docker <<EONG
 echo "Testing Nvidia-Docker Install"
 if docker run --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi ; then
     echo "Nvidia-Docker succesfully installed"
 else
-    flag=true
+    exit_flag=1
     echo "Nvidia-Docker install failed"
 fi
 EONG
-if [ flag ]; then
+
+if [ $exit_flag -eq 1 ] ; then
     exit
 fi
 
