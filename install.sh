@@ -19,10 +19,9 @@ sudo apt-get update
 sudo apt-get install -y  docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo groupadd -f docker
 sudo usermod -aG docker $USER
-
-# these two lines avoid the docker newgrp command from hanging the shell script
-/usr/bin/newgrp docker <<EONG
-#!/bin/bash
+if [ $(id -gn) != docker ]; then
+  exec sg $group "$0 $*"
+fi
 
 echo "Testing Docker Install"
 if docker run hello-world ; then
@@ -71,5 +70,4 @@ else
     exit
 fi
 
-echo “Set up success! You may need to run `newgrp docker` if your shell session has not been reset.
-EONG
+echo "Set up success! You may need to run `newgrp docker` if your shell session has not been reset."
