@@ -1,15 +1,4 @@
 #!/bin/bash
-# This script is tested to run on a fresh Ubuntu 20.04 LTS with an Nvidia GPU
-# Specifically tested on AWS g4dn & g5 instance types
-
-# Docker install directions from https://docs.docker.com/engine/install/ubuntu/
-echo "Installing Docker"
-sudo apt-get update
-sudo apt-get install -y \
-    ca-certificates \
-    curl \
-ubuntu@ip-172-31-92-171:~$ head -1000 install.sh
-#!/bin/bash
 # This script is tested to run on a fresh Ubuntu 20.04 LTS Nvidia Tesla T4 computer
 # Specifically an AWS g4dn instance
 
@@ -33,6 +22,7 @@ sudo usermod -aG docker $USER
 
 # these two lines avoid the docker newgrp command from hanging the shell script
 /usr/bin/newgrp docker <<EONG
+#!/bin/bash
 
 echo "Testing Docker Install"
 if docker run hello-world ; then
