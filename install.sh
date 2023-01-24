@@ -19,9 +19,7 @@ sudo apt-get update
 sudo apt-get install -y  docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo groupadd -f docker
 sudo usermod -aG docker $USER
-if [ $(id -gn) != docker ]; then
-  exec sg $group "$0 $*"
-fi
+/usr/bin/newgrp docker <<EONG
 
 echo "Testing Docker Install"
 if docker run hello-world ; then
@@ -30,6 +28,7 @@ else
     echo "Docker install failed"
     exit
 fi
+EONG
 
 # Nvidia driver instructions from https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html
 echo "Installing Nvidia Drivers"
@@ -69,5 +68,41 @@ else
     echo "Nvidia-Docker install failed"
     exit
 fi
+logo="
+                                        @
+                                 @@@@@@@@@@@@@@@
+                               @@@@@@@@@@@@@@@@@@@
+                              @@@@@@@@@@@@@@@@@@@@@
+             @@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@
+           @@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@
+         @@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@
+        *@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@         @@@@@@@@@@@@@
+         @@@@@@@@@@        @@@@@@@@@@@@@@@@@@@@@%            &@@@@@@@@@@
+           @@@@           @@@@@@@@@@@@@@@@@@&                     @@@@
+                        @@@@@@@@
+                   @@@@@@@@@
+      @@@@@@@@@@@@@@@@@@@@        ,@@@@@@@@@@@                 @@@@@@@@@@@@
+   @@@@@@@@@@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@           @@@@@@@@@@@@@@@@@@
+  @@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@@@
+ @@@@@@@@@@@@@@@@@@@@@@@     @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@     @@@@@@@@@@@@@@@@@@@@@@@     @@@@@@@@@@@@@@@@@@@@@@@
+ @@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@     @@@@@@@@@@@@@@@@@@@@@@@
+  @@@@@@@@@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@
+   @@@@@@@@@@@@@@@@@@           @@@@@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@@@@
+      @@@@@@@@@@@@                 @@@@@@@@@@@         @@@@@@@@@@@@@@@@@@@@
+                                                     @@@@@@@@@
+                                                 @@@@@@@@
+           @@@@                     &@@@@@@@@@@@@@@@@@@           @@@@
+         @@@@@@@@@@             @@@@@@@@@@@@@@@@@@@@@        &@@@@@@@@@@
+        *@@@@@@@@@@@@@        @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@
+         @@@@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@@@
+           @@@@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@@@
+             @@@@@@@@@@      @@@@@@@@@@@@@@@@@@@@@@@      @@@@@@@@@@
+                              @@@@@@@@@@@@@@@@@@@@@
+                               @@@@@@@@@@@@@@@@@@@
+                                 @@@@@@@@@@@@@@@
+                                        @
+"
+echo "$logo"
 
-echo "Set up success! You may need to run `newgrp docker` if your shell session has not been reset."
+echo "Set up success! You may need to run newgrp docker if your shell session has not been reset."
