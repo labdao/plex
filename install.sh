@@ -114,5 +114,3 @@ logo="
 "
 echo "$logo"
 echo "Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
-
-newgrp docker # must be last line in file
