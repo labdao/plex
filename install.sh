@@ -1,6 +1,6 @@
 #!/bin/bash
-# This script is tested to run on a fresh Ubuntu 20.04 LTS Nvidia Tesla T4 computer
-# Specifically an AWS g4dn instance
+# This script is tested to run on a fresh Ubuntu 20.04 LTS Nvidia GPU compute instance
+# Specifically tested on an AWS P3, G4, and G5 instance
 
 # Docker install directions from https://docs.docker.com/engine/install/ubuntu/
 echo "Installing Docker"
@@ -50,7 +50,7 @@ else
     exit
 fi
 
-# Nvidia-Docker instructions from https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+# Nvidia Container Toolkit instructions from https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
 echo "Installing Nvidia Container Toolkit"
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
       && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --yes --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
@@ -66,10 +66,10 @@ exit_flag=0
 /usr/bin/newgrp docker <<EONG
 echo "Testing Nvidia Container Toolkit Install"
 if docker run --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi ; then
-    echo "Nvidia-Docker succesfully installed"
+    echo "Nvidia Container Toolkit succesfully installed"
 else
     exit_flag=1
-    echo "Nvidia-Docker install failed"
+    echo "Nvidia Container Toolkit install failed"
 fi
 EONG
 
@@ -114,6 +114,5 @@ logo="
 "
 echo "$logo"
 echo "Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
-echo "Run 'newgrp docker' if docker commands output permission denied errors"
 
 newgrp docker # must be last line in file
