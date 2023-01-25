@@ -3,7 +3,7 @@ import json
 import subprocess
 
 
-REQUIRED_INSTRUCTION_FIELDS = {"container_id"}
+REQUIRED_INSTRUCTION_FIELDS = {"container_id", "short_args", "long_args"}
 
 
 class InputError(Exception):
@@ -17,15 +17,22 @@ def validate_instructions(instructions: dict) -> None:
             raise InputError(f"Missing required input field {key}")
 
 
+def format_args(instruction_args: dict, prefix: str) -> str:
+    arg_flags = ""
+    for key, val in instruction_args.items():
+        arg_flags += f" {prefix}{key} {val}"
+    return arg_flags
+
+
 def build_docker_cmd(instructions: dict) -> str:
-    return 'docker run hello_world'
+    return f"docker run{format_args(instructions['short_args']), '-'}{format_args(instructions['long_args']), '--'} {instructions['container_id']}"
 
 
 def main(instructions: dict) -> None:
     validate_instructions(instructions)
     docker_cmd = build_docker_cmd(instructions)
-    result = subprocess.run(docker_cmd, capture_output=True, text=True)
-    import pdb; pdb.set_trace()
+    result = subprocess.run(docker_cmd, capture_output=True, shell=True, text=True)
+    print(result)
 
 
 if __name__ == "__main__":
