@@ -51,7 +51,7 @@ else
 fi
 
 # Nvidia-Docker instructions from https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
-echo "Installing Nvidia-Docker"
+echo "Installing Nvidia Container Toolkit"
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
       && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --yes --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
       && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
@@ -64,7 +64,7 @@ sudo systemctl restart docker
 exit_flag=0
 
 /usr/bin/newgrp docker <<EONG
-echo "Testing Nvidia-Docker Install"
+echo "Testing Nvidia Container Toolkit Install"
 if docker run --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi ; then
     echo "Nvidia-Docker succesfully installed"
 else
@@ -114,5 +114,6 @@ logo="
 "
 echo "$logo"
 echo "Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
+echo "Run 'newgrp docker' if docker commands output permission denied errors"
 
 newgrp docker # must be last line in file
