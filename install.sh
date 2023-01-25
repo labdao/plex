@@ -113,5 +113,6 @@ logo="
                                         @
 "
 echo "$logo"
+echo "Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
 
-echo "Set up success! You may need to run newgrp docker if your shell session has not been reset."
+newgrp docker # must be last line in file
