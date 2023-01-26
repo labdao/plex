@@ -3,7 +3,7 @@ import unittest
 from process import InputError, build_docker_cmd, format_args, validate_instructions
 
 
-class TestCalculations(unittest.TestCase):
+class TestProcess(unittest.TestCase):
     def test_format_args(self):
         input_args = {"gpus": "all", "inference_steps": 15}
 
@@ -22,6 +22,7 @@ class TestCalculations(unittest.TestCase):
             "short_args": {"v": "/home/ubuntu/diffdock:/diffdock"},
             "long_args": {"gpus": "all"},
             "cmd": (
+                '/bin/bash -c "'
                 "python datasets/esm_embedding_preparation.py --protein_path"
                 " test/test.pdb --out_file data/prepared_for_esm.fasta &&"
                 " HOME=esm/model_weights python esm/scripts/extract.py"
@@ -29,7 +30,7 @@ class TestCalculations(unittest.TestCase):
                 " --repr_layers 33 --include per_tok && python -m inference"
                 " --protein_path test/test.pdb --ligand test/test.sdf --out_dir"
                 " /outputs --inference_steps 20 --samples_per_complex 40 --batch_size"
-                " 10 --actual_steps 18 --no_final_step_noise"
+                ' 10 --actual_steps 18 --no_final_step_noise"'
             ),
         }
         expected_output = (
@@ -46,8 +47,18 @@ class TestCalculations(unittest.TestCase):
         self.assertEqual(expected_output, build_docker_cmd(instructions))
 
     def test_validate_instructions(self):
-        invalid_instructions = {"de": "sci"}
-        self.assertRaises(InputError, validate_instructions, invalid_instructions)
+        missing_field_instructions = {"cmd": "echo DeSci"}
+
+        # it raises error when required field is missing
+        self.assertRaises(InputError, validate_instructions, missing_field_instructions)
+
+        # it raises error when extra field is required
+        extra_field_instructions = {"container_id": "hello-world", "de": "sci"}
+        self.assertRaises(InputError, validate_instructions, extra_field_instructions)
+
+        # it raises no error for valid input
+        valid_instructions = {"container_id": "hello-world", "cmd": "echo DeSci"}
+        self.assertIsNone(validate_instructions(valid_instructions))
 
 
 if __name__ == "__main__":
