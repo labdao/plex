@@ -3,7 +3,7 @@ import json
 import subprocess
 
 
-REQUIRED_INSTRUCTION_FIELDS = {"container_id", "short_args", "long_args"}
+REQUIRED_INSTRUCTION_FIELDS = {"container_id", "short_args", "long_args", "cmd"}
 
 
 class InputError(Exception):
@@ -25,13 +25,22 @@ def format_args(instruction_args: dict, prefix: str) -> str:
 
 
 def build_docker_cmd(instructions: dict) -> str:
-    return f"docker run{format_args(instructions['short_args']), '-'}{format_args(instructions['long_args']), '--'} {instructions['container_id']}"
+    return (
+        "docker"
+        f' run{format_args(instructions["long_args"], "--")}'
+        f'{format_args(instructions["short_args"], "-")}'
+        f' {instructions["container_id"]} /bin/bash'
+        f' -c "{instructions["cmd"]}"'
+    )
 
 
 def main(instructions: dict) -> None:
     validate_instructions(instructions)
     docker_cmd = build_docker_cmd(instructions)
-    result = subprocess.run(docker_cmd, capture_output=True, shell=True, text=True)
+    if instructions.get('debug_logs'):
+        result = subprocess.run(docker_cmd, shell=True)
+    else:
+        result = subprocess.run(docker_cmd, capture_output=True, shell=True, text=True)
     print(result)
 
 
