@@ -1,4 +1,5 @@
 # pull images
+docker pull ghcr.io/labdao/diffdock:main
 docker pull gnina/gnina
 docker pull ghcr.io/labdao/casf-2016-eval:main
 
