@@ -30,6 +30,29 @@ def generate_diffdock_instructions(
     }
     return json.dumps(instructions)
 
+#TODO: #26 introduce guidance on volume mounting, especially mounting multiple volumes
+def generate_vina_instructions(
+    debug_logs=True,
+    protein="1a30/1a30_protein.pdb",
+    ligand="1a30/1a30_ligand.sdf",
+    output="1a30/1a30_scored_vina.sdf.gz",
+    cnn_scoring="none",
+    modifier="score_only",
+) -> dict:
+    instructions = {
+        "container_id": "gnina/gnina:latest",
+        "debug_logs": debug_logs,
+        "short_args": {"v": "/home/ubuntu/casf-2016:/inputs"},
+        "cmd": (
+            "gnina -r"
+            f" /inputs/{protein} -l /inputs/{ligand} -o"
+            f" /inputs/{output}"
+            f" --autobox_ligand /inputs/{protein} --cnn_scoring {cnn_scoring} --exhaustiveness 64"
+            f" --{modifier}"
+        ),
+    }
+    return json.dumps(instructions)
 
 if __name__ == "__main__":
-    print(generate_diffdock_instructions())
+    #print(generate_diffdock_instructions())
+    print(generate_vina_instructions())
