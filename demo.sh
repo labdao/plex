@@ -1,7 +1,14 @@
+# run from basedir
+# pull container images for basic CASF 2016 evaluation
+docker pull ghcr.io/labdao/diffdock:main
 docker pull gnina/gnina
 docker pull ghcr.io/labdao/casf-2016-eval:main
+
+# pull data for basic CASF 2016 evaluation
+ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy
 # avoided by adding some examples into git
 # aws s3 sync s3://labdao-benchmark/CASF-2016/coreset/1a30/ data
+
 
 ## interactive for debug
 # docker run -it -v /home/ubuntu/casf-2016-evaluator/data/coreset:/inputs -v /home/ubuntu/outputs:/outputs gnina/gnina bash
