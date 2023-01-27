@@ -1,6 +1,7 @@
 import client
 import process
 import os
+import json
 
 if __name__ == "__main__":
     casf_list = os.listdir("/home/ubuntu/casf-2016")
@@ -14,11 +15,13 @@ if __name__ == "__main__":
         protein = i + '/' + i + '_protein.pdb'
         ligand = i + '/' + i + '_ligand.sdf'
         output = i + '/' + i + '_scored_vina.sdf.gz'
-        instruction_list.append(client.generate_vina_instructions(
+        instruction = client.generate_vina_instructions(
             protein=protein,
             ligand=ligand,
             output=output
-        ))
+        )
+        print(instruction)
+        instruction_list.append(instruction)
     print("running scoring")
     for instruction in instruction_list:
-        process.main(instruction)
+        process.main(json.loads(instruction))
