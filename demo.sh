@@ -1,7 +1,14 @@
+# pull images
 docker pull gnina/gnina
 docker pull ghcr.io/labdao/casf-2016-eval:main
+
+# pull example data
+chmod +x ipfs.sh
+./ipfs.sh
+ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy -o /home/ubuntu/.
 # avoided by adding some examples into git
 # aws s3 sync s3://labdao-benchmark/CASF-2016/coreset/1a30/ data
+
 
 ## interactive for debug
 # docker run -it -v /home/ubuntu/casf-2016-evaluator/data/coreset:/inputs -v /home/ubuntu/outputs:/outputs gnina/gnina bash
