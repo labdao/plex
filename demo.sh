@@ -24,5 +24,3 @@ docker run \
             -r /inputs/1a30/1a30_protein.pdb \
             -l /inputs/1a30/1a30_ligand.sdf \
             -o /outputs/scored_vina.sdf.gz
-
-
