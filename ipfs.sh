@@ -6,10 +6,8 @@ sudo bash install.sh
 ipfs --version
 
 # post installation
-mkdir data
-cd data
-ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy
-cd ..
+ipfs init
+ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
 
 
 # port forwarding
