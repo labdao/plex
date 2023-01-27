@@ -24,7 +24,7 @@ cd ..
 
 # run scoring
 docker run \
-    -v /home/ubuntu/bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy:/inputs \
+    -v /home/ubuntu/data/bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy:/inputs \
     -v /home/ubuntu/outputs:/outputs \
     gnina/gnina \
     gnina   --autobox_ligand /inputs/1a30/1a30_protein.pdb \
@@ -33,4 +33,6 @@ docker run \
             --score_only  \
             -r /inputs/1a30/1a30_protein.pdb \
             -l /inputs/1a30/1a30_ligand.sdf \
-            -o /outputs/1a30/1a30_scored_vina.sdf.gz
+            -o 1a30_scored_vina.sdf.gz &&  \
+            mkdir -p /outputs/1a30 && \
+            mv 1a30_scored_vina.sdf.gz /outputs/1a30/
