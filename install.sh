@@ -2,6 +2,11 @@
 # This script is tested to run on a fresh Ubuntu 20.04 LTS Nvidia GPU compute instance
 # Specifically tested on an AWS P3, G4, and G5 instance
 
+# this exception allows exit 77 to exist the whole script with subshells
+# https://unix.stackexchange.com/questions/48533/exit-shell-script-from-a-subshell
+set -E
+trap '[ "$?" -ne 77 ] || exit 77' ERR
+
 # Docker install directions from https://docs.docker.com/engine/install/ubuntu/
 echo "Installing Docker"
 sudo apt-get update
@@ -19,14 +24,14 @@ sudo apt-get update
 sudo apt-get install -y  docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo groupadd -f docker
 sudo usermod -aG docker $USER
-/usr/bin/newgrp docker <<EONG
 
+/usr/bin/newgrp docker <<EONG
 echo "Testing Docker Install"
 if docker run hello-world ; then
     echo "Docker succesfully installed"
 else
     echo "Docker install failed"
-    exit
+    exit 77
 fi
 EONG
 
@@ -61,21 +66,15 @@ sudo apt-get update
 sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 
-exit_flag=0
-
 /usr/bin/newgrp docker <<EONG
 echo "Testing Nvidia Container Toolkit Install"
 if docker run --gpus all nvidia/cuda:11.6.2-base-ubuntu20.04 nvidia-smi ; then
     echo "Nvidia Container Toolkit succesfully installed"
 else
-    exit_flag=1
     echo "Nvidia Container Toolkit install failed"
+    exit 77
 fi
 EONG
-
-if [ $exit_flag -eq 1 ] ; then
-    exit
-fi
 
 logo="
                                         @
