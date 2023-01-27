@@ -6,8 +6,11 @@ sudo bash install.sh
 ipfs --version
 
 # post installation
-ipfs init
-ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
+mkdir data
+cd data
+ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy
+cd ..
+
 
 # port forwarding
 # 127.0.0.1:5001/webui 
