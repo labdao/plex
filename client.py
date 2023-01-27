@@ -43,6 +43,7 @@ def generate_vina_instructions(
         "container_id": "gnina/gnina:latest",
         "debug_logs": debug_logs,
         "short_args": {"v": "/home/ubuntu/casf-2016:/inputs"},
+        "long_args": {"gpus": 0},
         "cmd": (
             "gnina -r"
             f" /inputs/{protein} -l /inputs/{ligand} -o"
@@ -54,5 +55,4 @@ def generate_vina_instructions(
     return json.dumps(instructions)
 
 if __name__ == "__main__":
-    #print(generate_diffdock_instructions())
     print(generate_vina_instructions())
