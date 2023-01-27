@@ -21,7 +21,7 @@ ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy
 
 # run scoring
 docker run \
-    -v /home/ubuntu/casf-2016-evaluator/data/coreset:/inputs \
+    -v /home/ubuntu/bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy:/inputs \
     -v /home/ubuntu/outputs:/outputs \
     gnina/gnina \
     gnina   --autobox_ligand /inputs/1a30/1a30_protein.pdb \
@@ -30,4 +30,4 @@ docker run \
             --score_only  \
             -r /inputs/1a30/1a30_protein.pdb \
             -l /inputs/1a30/1a30_ligand.sdf \
-            -o /outputs/scored_vina.sdf.gz
+            -o /outputs/1a30/1a30_scored_vina.sdf.gz
