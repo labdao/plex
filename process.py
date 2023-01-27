@@ -18,6 +18,7 @@ class InputError(Exception):
 
 
 def validate_instructions(instructions: dict) -> None:
+    #TODO: #38 validate instructions if it is a dict
     for key in REQUIRED_INSTRUCTION_FIELDS:
         if key not in instructions:
             raise InputError(f"Missing required input field {key}")
