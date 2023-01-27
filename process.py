@@ -40,9 +40,9 @@ def format_args(instruction_args: dict, prefix: str) -> str:
 
 def build_docker_cmd(instructions: dict) -> str:
     return (
-        "docker"
-        f' run{format_args(instructions["long_args"], "--")}'
-        f'{format_args(instructions["short_args"], "-")}'
+        "docker run -v /home/ubuntu/inputs:/root/inputs -v /home/ubuntu/outputs:/root/outputs"
+        f'{format_args(instructions.get("long_args", {}), "--")}'
+        f'{format_args(instructions.get("short_args", {}), "-")}'
         f' {instructions["container_id"]} {instructions["cmd"]}'
     )
 
@@ -50,6 +50,8 @@ def build_docker_cmd(instructions: dict) -> str:
 def main(instructions: dict) -> None:
     validate_instructions(instructions)
     docker_cmd = build_docker_cmd(instructions)
+    print('About to run: ')
+    print(docker_cmd)
     if instructions.get("debug_logs"):
         result = subprocess.run(docker_cmd, shell=True)
     else:

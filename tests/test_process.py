@@ -18,31 +18,16 @@ class TestProcess(unittest.TestCase):
     def test_build_docker_cmd(self):
         self.maxDiff = None
         instructions = {
-            "container_id": "ghcr.io/labdao/diffdock:main",
-            "short_args": {"v": "/home/ubuntu/diffdock:/diffdock"},
+            "container_id": "compbio:latest",
+            "short_args": {'p': 5000},
             "long_args": {"gpus": "all"},
             "cmd": (
-                '/bin/bash -c "'
-                "python datasets/esm_embedding_preparation.py --protein_path"
-                " test/test.pdb --out_file data/prepared_for_esm.fasta &&"
-                " HOME=esm/model_weights python esm/scripts/extract.py"
-                " esm2_t33_650M_UR50D data/prepared_for_esm.fasta data/esm2_output"
-                " --repr_layers 33 --include per_tok && python -m inference"
-                " --protein_path test/test.pdb --ligand test/test.sdf --out_dir"
-                " /outputs --inference_steps 20 --samples_per_complex 40 --batch_size"
-                ' 10 --actual_steps 18 --no_final_step_noise"'
+                'python design_drug.py'
             ),
         }
         expected_output = (
-            "docker run --gpus all -v /home/ubuntu/diffdock:/diffdock"
-            ' ghcr.io/labdao/diffdock:main /bin/bash -c "python'
-            " datasets/esm_embedding_preparation.py --protein_path test/test.pdb"
-            " --out_file data/prepared_for_esm.fasta && HOME=esm/model_weights python"
-            " esm/scripts/extract.py esm2_t33_650M_UR50D data/prepared_for_esm.fasta"
-            " data/esm2_output --repr_layers 33 --include per_tok && python -m"
-            " inference --protein_path test/test.pdb --ligand test/test.sdf --out_dir"
-            " /outputs --inference_steps 20 --samples_per_complex 40 --batch_size 10"
-            ' --actual_steps 18 --no_final_step_noise"'
+            "docker run -v /home/ubuntu/inputs:/inputs -v /home/ubuntu/outputs:/outputs "
+            "--gpus all -p 5000 compbio:latest python design_drug.py"
         )
         self.assertEqual(expected_output, build_docker_cmd(instructions))
 
