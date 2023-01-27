@@ -10,12 +10,24 @@ if __name__ == "__main__":
     # print("running docking")
     # process.main(docking_instruct)
     instruction_list = []
-    print("generating scoring instructions")
+    print("generating scoring instructions for vina")
     for i in casf_list:
         protein = i + '/' + i + '_protein.pdb'
         ligand = i + '/' + i + '_ligand.sdf'
         output = i + '/' + i + '_scored_vina.sdf.gz'
         instruction = client.generate_vina_instructions(
+            protein=protein,
+            ligand=ligand,
+            output=output
+        )
+        print(instruction)
+        instruction_list.append(instruction)
+    print("generating scoring instructions for gnina")
+    for i in casf_list:
+        protein = i + '/' + i + '_protein.pdb'
+        ligand = i + '/' + i + '_ligand.sdf'
+        output = i + '/' + i + '_scored_gnina.sdf.gz'
+        instruction = client.generate_gnina_instructions(
             protein=protein,
             ligand=ligand,
             output=output
