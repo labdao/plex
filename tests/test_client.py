@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from client import generate_diffdock_instructions
+from ganglia.client import generate_diffdock_instructions
 
 
 class TestClient(unittest.TestCase):
