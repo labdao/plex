@@ -26,7 +26,7 @@ class TestProcess(unittest.TestCase):
             ),
         }
         expected_output = (
-            "docker run -v /home/ubuntu/inputs:/inputs -v /home/ubuntu/outputs:/outputs "
+            "docker run -v /home/ubuntu/inputs:/root/inputs -v /home/ubuntu/outputs:/root/outputs "
             "--gpus all -p 5000 compbio:latest python design_drug.py"
         )
         self.assertEqual(expected_output, build_docker_cmd(instructions))

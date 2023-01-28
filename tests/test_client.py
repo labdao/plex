@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from client import generate_diffdock_instructions
+from ganglia.client import generate_diffdock_instructions
 
 
 class TestClient(unittest.TestCase):
@@ -19,7 +19,8 @@ class TestClient(unittest.TestCase):
                     '&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D '
                     'outputs/prepared_for_esm.fasta outputs/esm2_output --repr_layers 33 --include per_tok && '
                     'python -m inference --protein_path inputs/test.pdb --ligand inputs/test.sdf --out_dir outputs '
-                    '--inference_steps 20 --samples_per_complex 40 --batch_size 10 --actual_steps 18 --no_final_step_noise"'
+                    '--inference_steps 20 --samples_per_complex 40 --batch_size 10 --actual_steps 18 '
+                    '--esm_embeddings_path outputs/esm2_output --no_final_step_noise"'
                 ),
             }
         )
