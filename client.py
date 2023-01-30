@@ -30,7 +30,6 @@ def generate_diffdock_instructions(
     }
     return json.dumps(instructions)
 
-#TODO: #26 introduce guidance on volume mounting, especially mounting multiple volumes
 def generate_vina_instructions(
     debug_logs=True,
     protein="1a30/1a30_protein.pdb",
@@ -60,7 +59,7 @@ def generate_gnina_instructions(
     ligand="1a30/1a30_ligand.sdf",
     output="1a30/1a30_scored_gnina.sdf.gz",
     cnn_scoring="rescore",
-    modifier="score_only",
+    modifier="", # --score_only for blind docking
 ) -> dict:
     instructions = {
         "container_id": "gnina/gnina:latest",
@@ -72,7 +71,7 @@ def generate_gnina_instructions(
             f" /inputs/{protein} -l /inputs/{ligand} -o"
             f" /inputs/{output}"
             f" --autobox_ligand /inputs/{protein} --cnn_scoring {cnn_scoring} --exhaustiveness 64"
-            f" --{modifier}"
+            f" {modifier}"
         ),
     }
     return json.dumps(instructions)
