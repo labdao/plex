@@ -7,6 +7,10 @@
 set -E
 trap '[ "$?" -ne 77 ] || exit 77' ERR
 
+# https://unix.stackexchange.com/questions/48533/exit-shell-script-from-a-subshell
+set -E
+trap '[ "$?" -ne 77 ] || exit 77' ERR
+
 # Docker install directions from https://docs.docker.com/engine/install/ubuntu/
 echo "Installing Docker"
 sudo apt-get update

@@ -1,7 +1,17 @@
+# run from basedir
+# pull container images for basic CASF 2016 evaluation
+docker pull ghcr.io/labdao/diffdock:main
 docker pull gnina/gnina
 docker pull ghcr.io/labdao/casf-2016-eval:main
+
+# pull data for basic CASF 2016 evaluation
+mkdir data
+cd data
+ipfs get bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy -o /home/ubuntu/casf-2016
+cd ..
 # avoided by adding some examples into git
 # aws s3 sync s3://labdao-benchmark/CASF-2016/coreset/1a30/ data
+
 
 ## interactive for debug
 # docker run -it -v /home/ubuntu/casf-2016-evaluator/data/coreset:/inputs -v /home/ubuntu/outputs:/outputs gnina/gnina bash
@@ -14,7 +24,7 @@ docker pull ghcr.io/labdao/casf-2016-eval:main
 
 # run scoring
 docker run \
-    -v /home/ubuntu/casf-2016-evaluator/data/coreset:/inputs \
+    -v /home/ubuntu/data/bafybeiaqyjf65cs2slhilsrqvo3mo6ckdqnr5spplcts7svq7256hiiguy:/inputs \
     -v /home/ubuntu/outputs:/outputs \
     gnina/gnina \
     gnina   --autobox_ligand /inputs/1a30/1a30_protein.pdb \
@@ -23,4 +33,6 @@ docker run \
             --score_only  \
             -r /inputs/1a30/1a30_protein.pdb \
             -l /inputs/1a30/1a30_ligand.sdf \
-            -o /outputs/scored_vina.sdf.gz
+            -o 1a30_scored_vina.sdf.gz &&  \
+            mkdir -p /outputs/1a30 && \
+            mv 1a30_scored_vina.sdf.gz /outputs/1a30/
