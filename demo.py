@@ -3,6 +3,7 @@ import process
 import os
 import json
 
+
 if __name__ == "__main__":
     casf_list = os.listdir("/home/ubuntu/casf-2016")
     # print("generating docking instructions")
