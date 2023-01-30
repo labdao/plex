@@ -14,7 +14,7 @@ if __name__ == "__main__":
     instruction_list = []
     print("generating docking instructions for diffdock")
     for i in filtered_task_list:
-        protein = TASKDIR + '/' + i + '/' + i + '_protein.pdb'
+        protein = TASKDIR + '/' + i + '/' + i + '_protein_processed.pdb'
         ligand = TASKDIR + '/' + i + '/' + i + '_ligand.sdf'
         output = TASKDIR + '/' + i
         instruction = client.generate_diffdock_instructions(
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         instruction_list.append(instruction)
     print("generating scoring instructions for vina")
     for i in filtered_task_list:
-        protein = TASKDIR + '/' + i + '/' + i + '_protein.pdb'
+        protein = TASKDIR + '/' + i + '/' + i + '_protein_processed.pdb'
         ligand = TASKDIR + '/' + i + '/' + i + '_ligand.sdf'
         output = TASKDIR + '/' + i + '/' + i + '_scored_vina.sdf.gz'
         instruction = client.generate_vina_instructions(
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         instruction_list.append(instruction)
     print("generating scoring instructions for gnina")
     for i in filtered_task_list:
-        protein = TASKDIR + '/' + i + '/' + i + '_protein.pdb'
+        protein = TASKDIR + '/' + i + '/' + i + '_protein_processed.pdb'
         ligand = TASKDIR + '/' + i + '/' + i + '_ligand.sdf'
         output = TASKDIR + '/' + i + '/' + i + '_scored_gnina.sdf.gz'
         instruction = client.generate_gnina_instructions(
