@@ -19,9 +19,9 @@ def generate_diffdock_instructions(
         "long_args": {"gpus": "all"},
         "cmd": (
             '/bin/bash -c \"'
-            f'mkdir /outputs/{output}&& ' 
-            f'python datasets/esm_embedding_preparation.py --protein_path /inputs/{protein} --out_file /outputs/{output}/esm2_input.fasta'
-            f'&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D /outputs/{output}/esm2_input.fasta'
+            f'mkdir -p /outputs/{output}&& ' 
+            f'python datasets/esm_embedding_preparation.py --protein_path /inputs/{protein} --out_file /outputs/{output}/esm2_input.fasta '
+            f'&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D /outputs/{output}/esm2_input.fasta '
             f'/outputs/{output}/esm2_output --repr_layers {repr_layers} --include per_tok && '
             f'python -m inference --protein_path /inputs/{protein} --ligand /inputs/{ligand} --out_dir /outputs/{output} '
             f'--inference_steps {inference_steps} --samples_per_complex {samples_per_complex} --batch_size {batch_size} '
@@ -30,7 +30,6 @@ def generate_diffdock_instructions(
     }
     return json.dumps(instructions)
 
-#TODO: #26 introduce guidance on volume mounting, especially mounting multiple volumes
 def generate_vina_instructions(
     debug_logs=True,
     protein="1a30/1a30_protein.pdb",
