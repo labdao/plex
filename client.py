@@ -14,7 +14,7 @@ def generate_diffdock_instructions(
     instructions = {
         "container_id": "ghcr.io/labdao/diffdock:main",
         "debug_logs": debug_logs,
-        "short_args": {},
+        "short_args": {"v": "/home/ubuntu/PDBBind_processed:/inputs"},
         "long_args": {"gpus": "all"},
         "cmd": (
             '/bin/bash -c \"'

@@ -15,7 +15,6 @@ if __name__ == "__main__":
     for i in filtered_task_list:
         protein = i + '/' + i + '_protein.pdb'
         ligand = i + '/' + i + '_ligand.sdf'
-        print(protein)
         instruction = client.generate_diffdock_instructions(
             protein=protein,
             ligand=ligand
