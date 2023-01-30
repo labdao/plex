@@ -19,12 +19,12 @@ def generate_diffdock_instructions(
         "long_args": {"gpus": "all"},
         "cmd": (
             '/bin/bash -c \"'
-            f'python datasets/esm_embedding_preparation.py --protein_path inputs/{protein} --out_file esm2_input.fasta'
-            f'&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D inputs/esm2_input.fasta'
-            f'inputs/esm2_output --repr_layers {repr_layers} --include per_tok && '
-            f'python -m inference --protein_path inputs/{protein} --ligand inputs/{ligand} --out_dir /outputs/{output} '
+            f'python datasets/esm_embedding_preparation.py --protein_path /inputs/{protein} --out_file /outputs/{output}/esm2_input.fasta'
+            f'&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D /outputs/{output}/esm2_input.fasta'
+            f'/outputs/{output}/esm2_output --repr_layers {repr_layers} --include per_tok && '
+            f'python -m inference --protein_path /inputs/{protein} --ligand /inputs/{ligand} --out_dir /outputs/{output} '
             f'--inference_steps {inference_steps} --samples_per_complex {samples_per_complex} --batch_size {batch_size} '
-            f'--actual_steps {actual_steps} --esm_embeddings_path inputs/esm2_output --no_final_step_noise\"'
+            f'--actual_steps {actual_steps} --esm_embeddings_path /outputs/{output}/esm2_output --no_final_step_noise\"'
         ),
     }
     return json.dumps(instructions)
@@ -69,7 +69,7 @@ def generate_gnina_instructions(
         "cmd": (
             "gnina -r"
             f" /inputs/{protein} -l /inputs/{ligand} -o"
-            f" /inputs/{output}"
+            f" /outputs/{output}"
             f" --autobox_ligand /inputs/{protein} --cnn_scoring {cnn_scoring} --exhaustiveness 64"
             f" --{modifier}"
         ),
