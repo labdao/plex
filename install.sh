@@ -2,6 +2,11 @@
 # This script is tested to run on a fresh Ubuntu 20.04 LTS Nvidia GPU compute instance
 # Specifically tested on an AWS P3, G4, and G5 instance
 
+# this exception allows exit 77 to exit the whole script within subshells
+# https://unix.stackexchange.com/questions/48533/exit-shell-script-from-a-subshell
+set -E
+trap '[ "$?" -ne 77 ] || exit 77' ERR
+
 # https://unix.stackexchange.com/questions/48533/exit-shell-script-from-a-subshell
 set -E
 trap '[ "$?" -ne 77 ] || exit 77' ERR
