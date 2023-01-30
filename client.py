@@ -19,6 +19,7 @@ def generate_diffdock_instructions(
         "long_args": {"gpus": "all"},
         "cmd": (
             '/bin/bash -c \"'
+            f'mkdir /outputs/{output}&& ' 
             f'python datasets/esm_embedding_preparation.py --protein_path /inputs/{protein} --out_file /outputs/{output}/esm2_input.fasta'
             f'&& HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D /outputs/{output}/esm2_input.fasta'
             f'/outputs/{output}/esm2_output --repr_layers {repr_layers} --include per_tok && '
