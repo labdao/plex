@@ -4,7 +4,7 @@ import subprocess
 from helpers.settings import PROJECT_ROOT
 
 
-DEFAULT_DATA_CIDS = ['QmRJrFNe6jfmiiUzjhEH4UWTivaHmpwR2Ryenu7k9aeLTM']
+DEFAULT_DATA_CIDS = ['Qme6wmyrLQHurhrWBGD1jVFspMzfLLY1vgjiSa4U5kWJqV']
 
 
 def load_cids_to_inputs(cids):
