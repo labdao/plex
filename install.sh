@@ -80,6 +80,25 @@ else
 fi
 EONG
 
+# IPFS setup
+echo "Installing IPFS"
+wget https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
+tar -xvzf kubo_v0.18.0_linux-amd64.tar.gz
+cd kubo
+sudo bash install.sh
+ipfs --version
+
+# post installation
+ipfs init
+ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
+
+echo "Starting IPFS Daemon"
+screen -dm ipfs daemon
+
+# pip installation
+echo "Installing pip"
+sudo apt install python3-pip
+
 logo="
                                         @
                                  @@@@@@@@@@@@@@@
