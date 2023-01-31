@@ -41,7 +41,7 @@ def format_args(instruction_args: dict, prefix: str) -> str:
 
 def build_docker_cmd(instructions: dict) -> str:
     return (
-        "docker run -v /home/ubuntu/inputs:/root/inputs -v /home/ubuntu/outputs:/root/outputs"
+        "docker run -v /home/ubuntu/inputs:/inputs -v /home/ubuntu/outputs:/outputs"
         f'{format_args(instructions.get("long_args", {}), "--")}'
         f'{format_args(instructions.get("short_args", {}), "-")}'
         f' {instructions["container_id"]} {instructions["cmd"]}'
