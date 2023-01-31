@@ -7,6 +7,7 @@ import pandas as pd
 BASEDIR = "/home/ubuntu/inputs/"
 TASKDIR = "PDBBind_processed"
 
+
 if __name__ == "__main__":
     task_list = os.listdir(BASEDIR + TASKDIR)
     testset_df = pd.read_csv(BASEDIR + TASKDIR + '/testset_csv.csv')
