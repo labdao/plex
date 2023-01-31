@@ -19,7 +19,6 @@ Set-up directory and run server
 ```
 git clone https://github.com/labdao/ganglia
 cd ./ganglia
-./ipfs.sh  # TODO move to install script
 pip install -r requirements.txt 
 cd ./server
 python3 server.py
