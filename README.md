@@ -15,16 +15,24 @@ curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/install.sh | bash
 ## Development
 
 ### Run example
+Set-up directory and run server
 ```
-cd /home/ubuntu
-git clone https://github.com/labdao/diffdock.git
 git clone https://github.com/labdao/ganglia
-
 cd ./ganglia
-python3 client.py
+./ipfs.sh  # TODO move to install script
+pip install -r requirements.txt 
+cd ./server
+python3 server.py
+```
 
-# the json in this argument is from the client.py output
-python3 process.py '{"container_id": "ghcr.io/labdao/diffdock:main", "debug_logs": true, "short_args": {"v": "/home/ubuntu/diffdock:/diffdock"}, "long_args": {"gpus": "all"}, "cmd": "/bin/bash -c \"python datasets/esm_embedding_preparation.py --protein_path test/test.pdb --out_file data/prepared_for_esm.fasta && HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D data/prepared_for_esm.fasta data/esm2_output --repr_layers 33 --include per_tok && python -m inference --protein_path test/test.pdb --ligand test/test.sdf --out_dir /outputs --inference_steps 20 --samples_per_complex 40 --batch_size 10 --actual_steps 18 --no_final_step_noise\""}'
+Run client in new tab
+````
+python3
+
+import asyncio
+from ganglia import generate_diffdock_instructions, run_with_socket
+
+asyncio.run(run_with_socket(generate_diffdock_instructions()))
 ```
 
 ### Run unittests

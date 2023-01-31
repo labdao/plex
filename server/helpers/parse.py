@@ -1,6 +1,9 @@
 import argparse
 import json
+import os
 import subprocess
+
+from helpers.settings import PROJECT_ROOT
 
 
 REQUIRED_INSTRUCTION_FIELDS = ["container_id"]
@@ -39,29 +42,12 @@ def format_args(instruction_args: dict, prefix: str) -> str:
 
 
 def build_docker_cmd(instructions: dict) -> str:
+    input_vol = f'{os.path.join(PROJECT_ROOT, "inputs")}:/inputs'
+    output_vol = f'{os.path.join(PROJECT_ROOT, "outputs")}:/outputs'
+
     return (
-        "docker run -v /home/ubuntu/inputs:/root/inputs -v /home/ubuntu/outputs:/root/outputs"
+        f'docker run -v {input_vol} -v {output_vol}'
         f'{format_args(instructions.get("long_args", {}), "--")}'
         f'{format_args(instructions.get("short_args", {}), "-")}'
         f' {instructions["container_id"]} {instructions["cmd"]}'
     )
-
-
-def main(instructions: dict) -> None:
-    validate_instructions(instructions)
-    docker_cmd = build_docker_cmd(instructions)
-    print('About to run: ')
-    print(docker_cmd)
-    if instructions.get("debug_logs"):
-        result = subprocess.run(docker_cmd, shell=True)
-    else:
-        result = subprocess.run(docker_cmd, capture_output=True, shell=True, text=True)
-    print(result)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("instructions_json", help="JSON string with job input params")
-    args = parser.parse_args()
-    instructions_json = json.loads(args.instructions_json)
-    main(instructions_json)
