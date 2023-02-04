@@ -6,19 +6,20 @@ import (
 	"os"
 	"bufio"
 	"encoding/json"
+	"strings"
+	"path/filepath"
 	//ipfsapi "github.com/ipfs/go-ipfs-api"
 	//"io/ioutil"
 )
 
 // appStruct for the application file in the app.jsonl file
+//TODO #65 #64
 type appStruct struct {
 	App     string `json:"app"`
-	Inputs  []struct {
-		protein_path string `json:"protein_path"`
-		ligand      string `json:"ligand"`
-	} `json:"inputs"`
+	Inputs  [][2]string `json:"inputs"`
 	Outputs []string `json:"outputs"`
 }
+
 
 // validate that the directory path exists and is a directory
 func validateDirectoryPath(directory *string){
@@ -34,8 +35,8 @@ func validateDirectoryPath(directory *string){
 }
 
 // validate that the application is supported based on the app.jsonl file
-func validateApplication(application *string){	
-	file, err := os.Open("plexus/app.jsonl")
+func validateApplication(application *string, app_config *string){	
+	file, err := os.Open(*app_config)
 	if err != nil {
 		fmt.Println("Error opening application file:", err)
 		return
@@ -64,12 +65,12 @@ func validateApplication(application *string){
 }
 
 // index the directory path and return the files that match the input of the specified application
-func indexDirectoryPath(directory *string, layers int) {
+func indexDirectoryPath(directory *string, app_config *string, layers int) []string {
 	// read the app.jsonl file
-	file, err := os.Open("plexus/app.jsonl")
+	file, err := os.Open(*app_config)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
-		return
+		return nil
 	}
 	defer file.Close()
 
@@ -80,14 +81,14 @@ func indexDirectoryPath(directory *string, layers int) {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
 			fmt.Println("Error unmarshalling JSON:", err)
-			return
+			return nil
 		}
 		break
 	}
 	// additional errors
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error scanning file:", err)
-		return
+		return nil
 	}
 	if _, err := os.Stat(*directory); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
@@ -108,6 +109,7 @@ func indexDirectoryPath(directory *string, layers int) {
 				return filepath.SkipDir
 			}
 		}
+		//TODO: create safeguard to prevent "ligand" or "protein_path" from being added to the index
 		for _, input := range appData.Inputs {
 			for ext := range input {
 				if strings.HasSuffix(path, input[ext]) {
@@ -123,7 +125,10 @@ func indexDirectoryPath(directory *string, layers int) {
 		os.Exit(1)
 	}
 
-	fmt.Println("Files:", files)
+	for _, file := range files {
+		fmt.Println(file)
+	}
+	return files
 }
 
 
@@ -131,20 +136,26 @@ func main() {
 	// define the flags
 	app := flag.String("application", "", "Application name")
 	dir := flag.String("directory", "", "Directory path")
+	app_config := flag.String("app_config", "app.jsonl", "App Config file")
 	flag.Parse()
 
 
 	// print the values of the flags
+	fmt.Println("## User input ##")
 	fmt.Println("Provided application name:", *app)
 	fmt.Println("Provided directory path:", *dir)
+	fmt.Println("## Default parameters ##")
+	fmt.Println("Using app config at:", *dir)
 
 	// validate the flags
+	fmt.Println("## Validating ##")
 	validateDirectoryPath(dir)
-	validateApplication(app)
+	validateApplication(app, app_config)
 
 	// creating index file
-	indexDirectoryPath(dir, 1)
-
+	fmt.Println("## Creating index ##")
+	out := indexDirectoryPath(dir, app_config, 3)
+	fmt.Println(out)
 	
 
 	
