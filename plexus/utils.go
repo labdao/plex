@@ -172,7 +172,7 @@ func indexCreateInputsVolume(volume_directory *string, files []string) {
 	}
 	// copy the files to the volume directory
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, volume_path)
+		_, err = fileutils.CopyFile(file, volume_path + "/" + filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to volume directory:", err)
 			return
