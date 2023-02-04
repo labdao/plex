@@ -162,7 +162,9 @@ func main() {
 	// define the flags
 	app := flag.String("application", "", "Application name")
 	dir := flag.String("directory", "", "Directory path")
+	// additional flags
 	app_config := flag.String("app_config", "app.jsonl", "App Config file")
+	layers := flag.Int("layers", 0, "number of layers to search in the directory path")
 	flag.Parse()
 
 
@@ -180,7 +182,7 @@ func main() {
 
 	// creating index file
 	fmt.Println("## Creating index ##")
-	out := indexSearchDirectoryPath(dir, app_config, 3)
+	out := indexSearchDirectoryPath(dir, app_config, *layers)
 	fmt.Println(out)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
