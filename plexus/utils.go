@@ -63,6 +63,7 @@ func validateAppConfig(app_config *string){
 		fmt.Println("Error: the directory path does not exist.")
 		os.Exit(1)
 	}
+	//fmt.Println("App Config found:", *app_config)
 }
 
 // validate that the application is supported based on the app.jsonl file
@@ -157,32 +158,42 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 	return files
 }
 
+// func indexCreateInputsVolume(volume_directory, files)
+
+// create a csv file that lists the indexed files in an application-specific format
+//func indexCreateIndexCSV(files, app_config *string, layers int) []string {
+//}
 
 func main() {
 	// define the flags
 	app := flag.String("application", "", "Application name")
-	dir := flag.String("directory", "", "Directory path")
+	in_dir := flag.String("input_directory", "", "Input directory path")
 	// additional flags
 	app_config := flag.String("app_config", "app.jsonl", "App Config file")
-	layers := flag.Int("layers", 0, "number of layers to search in the directory path")
+	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
 
 
 	// print the values of the flags
 	fmt.Println("## User input ##")
 	fmt.Println("Provided application name:", *app)
-	fmt.Println("Provided directory path:", *dir)
+	fmt.Println("Provided directory path:", *in_dir)
 	fmt.Println("## Default parameters ##")
-	fmt.Println("Using app config at:", *dir)
+	fmt.Println("Using app config:", *app_config)
+	fmt.Println("Setting layers to:", *layers)
 
 	// validate the flags
 	fmt.Println("## Validating ##")
-	validateDirectoryPath(dir)
 	validateApplication(app, app_config)
+	validateDirectoryPath(in_dir)
+	validateAppConfig(app_config)
+	fmt.Println("App Config found:", *app_config)
+	
+	
 
 	// creating index file
 	fmt.Println("## Creating index ##")
-	out := indexSearchDirectoryPath(dir, app_config, *layers)
+	out := indexSearchDirectoryPath(in_dir, app_config, *layers)
 	fmt.Println(out)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
