@@ -224,7 +224,4 @@ func main() {
 	fmt.Println("Volume ID:", id)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
-	
-
-	
 }
