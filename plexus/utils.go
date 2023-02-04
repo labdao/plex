@@ -155,7 +155,7 @@ func main() {
 	// creating index file
 	fmt.Println("## Creating index ##")
 	out := indexDirectoryPath(dir, app_config, 3)
-	fmt.Println(out)
+	// fmt.Println(out)
 	
 
 	
