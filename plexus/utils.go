@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"strings"
 	"path/filepath"
+	"github.com/google/uuid"
+	fileutils "github.com/docker/docker/pkg/fileutils"
 	//ipfsapi "github.com/ipfs/go-ipfs-api"
 	//"io/ioutil"
 )
@@ -158,7 +160,26 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 	return files
 }
 
-// func indexCreateInputsVolume(volume_directory, files)
+func indexCreateInputsVolume(volume_directory *string, files []string) {
+	// creating uuid for the volume
+	id := uuid.New()
+	//create a volume directory
+	volume_path := *volume_directory + "/" + id.String()
+	err := os.Mkdir(volume_path, 0755)
+	if err != nil {
+		fmt.Println("Error creating volume directory:", err)
+		return
+	}
+	// copy the files to the volume directory
+	for _, file := range files {
+		_, err = fileutils.CopyFile(file, volume_path)
+		if err != nil {
+			fmt.Println("Error copying file to volume directory:", err)
+			return
+		}
+	}
+	print("Volume created:", volume_path)
+}
 
 // create a csv file that lists the indexed files in an application-specific format
 //func indexCreateIndexCSV(files, app_config *string, layers int) []string {
@@ -194,7 +215,8 @@ func main() {
 	// creating index file
 	fmt.Println("## Creating index ##")
 	out := indexSearchDirectoryPath(in_dir, app_config, *layers)
-	fmt.Println(out)
+	// TODO pass separate volume directory
+	indexCreateInputsVolume(in_dir, out)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
 	
