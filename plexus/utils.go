@@ -164,11 +164,13 @@ func indexCreateInputsVolume(volume_directory *string, files []string) string {
 	// creating uuid for the volume
 	id := uuid.New()
 	//create a volume directory
+	//TODO: add safeguard to prevent the creation of a volume directory if it already exists
+	//TODO: find elegant solution for "nil"
 	volume_path := *volume_directory + "/" + id.String()
 	err := os.Mkdir(volume_path, 0755)
 	if err != nil {
 		fmt.Println("Error creating a volume directory:", err)
-		return
+		return "nil"
 	}
 	os.Mkdir(volume_path + "/inputs", 0755)
 	// copy the files to the volume directory
@@ -176,11 +178,11 @@ func indexCreateInputsVolume(volume_directory *string, files []string) string {
 		_, err = fileutils.CopyFile(file, volume_path + "/inputs/" + filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to volume directory:", err)
-			return
+			return "nil"
 		}
 	}
 	print("Volume created:", volume_path)
-	return id
+	return id.String()
 }
 
 // create a csv file that lists the indexed files in an application-specific format
@@ -219,6 +221,7 @@ func main() {
 	// TODO create dedicated id generator
 	// TODO enable passing an array of multiple input directories
 	id := indexCreateInputsVolume(in_dir, out)
+	fmt.Println("Volume ID:", id)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
 	
