@@ -160,25 +160,27 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 	return files
 }
 
-func indexCreateInputsVolume(volume_directory *string, files []string) {
+func indexCreateInputsVolume(volume_directory *string, files []string) string {
 	// creating uuid for the volume
 	id := uuid.New()
 	//create a volume directory
 	volume_path := *volume_directory + "/" + id.String()
 	err := os.Mkdir(volume_path, 0755)
 	if err != nil {
-		fmt.Println("Error creating volume directory:", err)
+		fmt.Println("Error creating a volume directory:", err)
 		return
 	}
+	os.Mkdir(volume_path + "/inputs", 0755)
 	// copy the files to the volume directory
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, volume_path + "/" + filepath.Base(file))
+		_, err = fileutils.CopyFile(file, volume_path + "/inputs/" + filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to volume directory:", err)
 			return
 		}
 	}
 	print("Volume created:", volume_path)
+	return id
 }
 
 // create a csv file that lists the indexed files in an application-specific format
@@ -209,14 +211,14 @@ func main() {
 	validateDirectoryPath(in_dir)
 	validateAppConfig(app_config)
 	fmt.Println("App Config found:", *app_config)
-	
-	
 
 	// creating index file
 	fmt.Println("## Creating index ##")
 	out := indexSearchDirectoryPath(in_dir, app_config, *layers)
 	// TODO pass separate volume directory
-	indexCreateInputsVolume(in_dir, out)
+	// TODO create dedicated id generator
+	// TODO enable passing an array of multiple input directories
+	id := indexCreateInputsVolume(in_dir, out)
 	//indexCreateIndexCSV(out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
 	
