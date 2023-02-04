@@ -34,14 +34,42 @@ func validateDirectoryPath(directory *string){
 	fmt.Println("Directory found:", *directory)
 }
 
-// validate that the application is supported based on the app.jsonl file
-func validateApplication(application *string, app_config *string){	
+// validate the app.jsonl file
+func validateAppConfig(app_config *string){
 	file, err := os.Open(*app_config)
 	if err != nil {
-		fmt.Println("Error opening application file:", err)
+		fmt.Println("Error opening file:", err)
 		return
 	}
 	defer file.Close()
+
+	// read the file line by line
+	var appData appStruct
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		err = json.Unmarshal([]byte(scanner.Text()), &appData)
+		if err != nil {
+			fmt.Println("Error unmarshalling JSON:", err)
+			return
+		}
+		break
+	}
+	// additional errors
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error scanning file:", err)
+		return
+	}
+	if _, err := os.Stat(*app_config); os.IsNotExist(err) {
+		fmt.Println("Error: the directory path does not exist.")
+		os.Exit(1)
+	}
+}
+
+// validate that the application is supported based on the app.jsonl file
+func validateApplication(application *string, app_config *string){
+	// validate config file
+	validateAppConfig(app_config)
+	file, err := os.Open(*app_config)
 
 	// read the file line by line
 	scanner := bufio.NewScanner(file)
@@ -65,7 +93,9 @@ func validateApplication(application *string, app_config *string){
 }
 
 // index the directory path and return the files that match the input of the specified application
-func indexDirectoryPath(directory *string, app_config *string, layers int) []string {
+func indexSearchDirectoryPath(directory *string, app_config *string, layers int) []string {
+	// validate config file
+	validateAppConfig(app_config)
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
 	if err != nil {
@@ -89,10 +119,6 @@ func indexDirectoryPath(directory *string, app_config *string, layers int) []str
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error scanning file:", err)
 		return nil
-	}
-	if _, err := os.Stat(*directory); os.IsNotExist(err) {
-		fmt.Println("Error: the directory path does not exist.")
-		os.Exit(1)
 	}
 
 	// walk the directory path and return the files that match the input file extensions of the specified application
@@ -154,8 +180,10 @@ func main() {
 
 	// creating index file
 	fmt.Println("## Creating index ##")
-	out := indexDirectoryPath(dir, app_config, 3)
-	// fmt.Println(out)
+	out := indexSearchDirectoryPath(dir, app_config, 3)
+	fmt.Println(out)
+	//indexCreateIndexCSV(out, app_config)
+	// TODO create indexCreateIndexJSONL(out, app_config)
 	
 
 	
