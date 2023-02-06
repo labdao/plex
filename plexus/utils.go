@@ -174,15 +174,18 @@ func indexCreateInputsVolume(volume_directory *string, files []string, prefix = 
 	}
 	os.Mkdir(volume_path + prefix, 0755)
 	// copy the files to the volume directory
+	new_files := make([]string, 0)
 	for _, file := range files {
 		_, err = fileutils.CopyFile(file, volume_path + prefix + "/" + filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to volume directory:", err)
 			return "nil"
 		}
+		new_files = = append(new_files, prefix + "/" + filepath.Base(file))
 	}
+	print("ID:", id.String)
 	print("Volume created:", volume_path)
-	return id.String()
+	return id.String(), new_files
 }
 
 // create a csv file that lists the indexed files in an application-specific format
