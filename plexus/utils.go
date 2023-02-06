@@ -9,6 +9,7 @@ import (
 	"strings"
 	"path/filepath"
 	"github.com/google/uuid"
+	//"github.com/tobgu/qframe"
 	fileutils "github.com/docker/docker/pkg/fileutils"
 	//ipfsapi "github.com/ipfs/go-ipfs-api"
 	//"io/ioutil"
@@ -189,8 +190,57 @@ func indexCreateInputsVolume(volume_directory *string, files []string, prefix st
 }
 
 // create a csv file that lists the indexed files in an application-specific format
-//func indexCreateIndexCSV(files, app_config *string, layers int) []string {
-//}
+// the paths to the input files and the app config are given as input 
+// the path to the index.csv file is returned
+func indexCreateIndexCSV(new_files []string, app_config *string) string {
+	// read the app.jsonl file
+	file, err := os.Open(*app_config)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return "nil"
+	}
+	defer file.Close()
+	
+	// parse the json object
+    var appData appStruct
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		err = json.Unmarshal([]byte(scanner.Text()), &appData)
+		if err != nil {
+			fmt.Println("Error unmarshalling JSON:", err)
+			return "nil"
+		}
+		break
+	}
+
+    // map the input new_files to their respective columns based on the config
+    columns := make(map[string][]string)
+    for _, file := range new_files {
+        for _, mapping := range appData.Inputs {
+            if strings.HasSuffix(file, mapping[1]) {
+                columns[mapping[0]] = append(columns[mapping[0]], file)
+            }
+        }
+    }
+
+	fmt.Println(columns)
+	//df := qframe.New(columns)
+	//fmt.Println(df)
+
+    // write the dataframe to a csv file
+    //csvFile, err := os.Create("index.csv")
+    //if err != nil {
+    //    fmt.Println("Error creating csv file:", err)
+    //    return ""
+    //}
+    //defer csvFile.Close()
+
+    // create a qframe dataframe from the columns
+    //df := qframe.New(columns)
+
+    // write the dataframe to a csv file
+    return "index.csv"
+}
 
 func main() {
 	// define the flags
@@ -226,6 +276,6 @@ func main() {
 	id, new_out := indexCreateInputsVolume(in_dir, out, "/inputs")
 	fmt.Println("Volume ID:", id)
 	fmt.Println(new_out)
-	//indexCreateIndexCSV(out, app_config)
+	indexCreateIndexCSV(new_out, app_config)
 	// TODO create indexCreateIndexJSONL(out, app_config)
 }
