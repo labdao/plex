@@ -9,7 +9,7 @@ import (
 	"strings"
 	"path/filepath"
 	"github.com/google/uuid"
-	//"github.com/tobgu/qframe"
+	//"encoding/csv"
 	fileutils "github.com/docker/docker/pkg/fileutils"
 	//ipfsapi "github.com/ipfs/go-ipfs-api"
 	//"io/ioutil"
@@ -214,14 +214,16 @@ func indexCreateIndexCSV(new_files []string, app_config *string) string {
 	}
 
     // map the input new_files to their respective columns based on the config
-    columns := make(map[string][]string)
-    for _, file := range new_files {
-        for _, mapping := range appData.Inputs {
-            if strings.HasSuffix(file, mapping[1]) {
-                columns[mapping[0]] = append(columns[mapping[0]], file)
-            }
-        }
-    }
+    var columns [][2]string
+	for _, file := range new_files {
+		for _, mapping := range appData.Inputs {
+			if strings.HasSuffix(file, mapping[1]) {
+				columns = append(columns, mapping)
+				break
+			}
+		}
+	}
+
 
 	fmt.Println(columns)
 	//df := qframe.New(columns)
