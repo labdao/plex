@@ -161,7 +161,7 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 	return files
 }
 
-func indexCreateInputsVolume(volume_directory *string, files []string, prefix string) (string, []string) {
+func indexCreateInputsVolume(volume_directory *string, files []string, prefix string) (string, []string, string) {
 	// creating uuid for the volume
 	id := uuid.New()
 	//create a volume directory
@@ -171,7 +171,7 @@ func indexCreateInputsVolume(volume_directory *string, files []string, prefix st
 	err := os.Mkdir(volume_path, 0755)
 	if err != nil {
 		fmt.Println("Error creating a volume directory:", err)
-		return "nil", files
+		return "nil", files, "nil"
 	}
 	os.Mkdir(volume_path + prefix, 0755)
 	// copy the files to the volume directory
@@ -180,19 +180,18 @@ func indexCreateInputsVolume(volume_directory *string, files []string, prefix st
 		_, err = fileutils.CopyFile(file, volume_path + prefix + "/" + filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to volume directory:", err)
-			return "nil", files
+			return "nil", files, "nil"
 		}
 		new_files = append(new_files, prefix + "/" + filepath.Base(file))
 	}
-	print("ID:", id.String)
-	print("Volume created:", volume_path)
-	return id.String(), new_files
+	print("Volume created: ", volume_path, "\n")
+	return id.String(), new_files, volume_path
 }
 
 // create a csv file that lists the indexed files in an application-specific format
 // the paths to the input files and the app config are given as input 
 // the path to the index.csv file is returned
-func indexCreateIndexCSV(new_files []string, app_config *string) string {
+func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path string) string {
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
 	if err != nil {
@@ -214,34 +213,65 @@ func indexCreateIndexCSV(new_files []string, app_config *string) string {
 	}
 
     // map the input new_files to their respective columns based on the config
-    var columns [][2]string
+    // Create an empty 2D slice to store the columns and their corresponding files
+	var result []map[string]string // Define a slice to store the maps
+
 	for _, file := range new_files {
+		m := make(map[string]string)
 		for _, mapping := range appData.Inputs {
 			if strings.HasSuffix(file, mapping[1]) {
-				columns = append(columns, mapping)
+				m[mapping[0]] = file
 				break
 			}
 		}
+		result = append(result, m)
 	}
+	fmt.Println(result)
 
+	// generate combinations of the mapping
+	//TODO implement generalisable version
+	combinations := []map[string]string{}
+	for _, r := range result {
+		if r["ligand"] != "" {
+			for _, r2 := range result {
+				if r2["protein_path"] != "" && r2["ligand"] == "" {
+					m := make(map[string]string)
+					m["ligand"] = r["ligand"]
+					m["protein_path"] = r2["protein_path"]
+					combinations = append(combinations, m)
+				}
+			}
+		}
+	}
+	fmt.Println(combinations)
 
-	fmt.Println(columns)
-	//df := qframe.New(columns)
-	//fmt.Println(df)
+	// Open the file for writing
+	index_file := volume_path + "/index.jsonl"
+	index_dict, err := os.Create(index_file)
+	if err != nil {
+		panic(err)
+	}
+	defer index_dict.Close()
 
-    // write the dataframe to a csv file
-    //csvFile, err := os.Create("index.csv")
-    //if err != nil {
-    //    fmt.Println("Error creating csv file:", err)
-    //    return ""
-    //}
-    //defer csvFile.Close()
+	// Write each JSON object as a separate line in the file
+	for _, m := range res {
+		b, err := json.Marshal(m)
+		if err != nil {
+			panic(err)
+		}
 
-    // create a qframe dataframe from the columns
-    //df := qframe.New(columns)
+		_, err = index_dict.Write(b)
+		if err != nil {
+			panic(err)
+		}
 
-    // write the dataframe to a csv file
-    return "index.csv"
+		_, err = index_dict.WriteString("\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+	fmt.Println("Index file created:", index_file)
+    return index_file
 }
 
 func main() {
@@ -270,14 +300,14 @@ func main() {
 	fmt.Println("App Config found:", *app_config)
 
 	// creating index file
-	fmt.Println("## Creating index ##")
+	fmt.Println("## Seaching input files ##")
 	out := indexSearchDirectoryPath(in_dir, app_config, *layers)
 	// TODO pass separate volume directory
 	// TODO create dedicated id generator
 	// TODO enable passing an array of multiple input directories
-	id, new_out := indexCreateInputsVolume(in_dir, out, "/inputs")
-	fmt.Println("Volume ID:", id)
-	fmt.Println(new_out)
-	indexCreateIndexCSV(new_out, app_config)
+	fmt.Println("## Creating volume ##")
+	_, new_out, volume := indexCreateInputsVolume(in_dir, out, "/inputs")
+	fmt.Println("## Creating index ##")
+	indexCreateIndexJSONL(new_out, app_config, volume)
 	// TODO create indexCreateIndexJSONL(out, app_config)
 }
