@@ -28,6 +28,8 @@ WORKDIR DiffDock
 RUN git clone https://github.com/facebookresearch/esm
 RUN cd esm && pip install -e .
 
+RUN mkdir outputs
+
 COPY test.sh test.sh
 
 CMD ["./test.sh"]

@@ -80,6 +80,21 @@ else
 fi
 EONG
 
+# Install GoLang
+echo "Installing GoLang"
+wget https://go.dev/dl/go1.20.linux-amd64.tar.gz
+sudo tar -C /usr/local -xvzf go1.20.linux-amd64.tar.gz
+rm go1.20.linux-amd64.tar.gz 
+export PATH=$PATH:/usr/local/go/bin
+
+echo "Testing GoLang Install"
+if go version ; then
+    echo "GoLang succesfully installed "
+else
+    echo "GoLang install failed"
+    exit 77
+fi
+
 # IPFS setup
 echo "Installing IPFS"
 wget https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
