@@ -9,6 +9,7 @@ import (
 	"strings"
 	"path/filepath"
 	"github.com/google/uuid"
+	"encoding/csv"
 	//"encoding/csv"
 	fileutils "github.com/docker/docker/pkg/fileutils"
 	//ipfsapi "github.com/ipfs/go-ipfs-api"
@@ -191,12 +192,11 @@ func indexCreateInputsVolume(volume_directory *string, files []string, prefix st
 // create a csv file that lists the indexed files in an application-specific format
 // the paths to the input files and the app config are given as input 
 // the path to the index.csv file is returned
-func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path string) string {
+func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path string) (string, []map[string]string) {
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return "nil"
+		panic(err)
 	}
 	defer file.Close()
 	
@@ -206,8 +206,7 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
-			fmt.Println("Error unmarshalling JSON:", err)
-			return "nil"
+			panic(err)
 		}
 		break
 	}
@@ -226,7 +225,7 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 		}
 		result = append(result, m)
 	}
-	fmt.Println(result)
+	//fmt.Println(result)
 
 	// generate combinations of the mapping
 	//TODO implement generalisable version
@@ -243,7 +242,7 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 			}
 		}
 	}
-	fmt.Println(combinations)
+	//fmt.Println(combinations)
 
 	// Open the file for writing
 	index_file := volume_path + "/index.jsonl"
@@ -254,7 +253,7 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 	defer index_dict.Close()
 
 	// Write each JSON object as a separate line in the file
-	for _, m := range res {
+	for _, m := range combinations {
 		b, err := json.Marshal(m)
 		if err != nil {
 			panic(err)
@@ -270,8 +269,35 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 			panic(err)
 		}
 	}
-	fmt.Println("Index file created:", index_file)
-    return index_file
+    return index_file, combinations
+}
+
+func indexCreateIndexCSV(index []map[string]string, volume_path string) string {
+	// todo generalise the function
+	index_csv := volume_path + "/index.csv"
+	file, err := os.Create(index_csv)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	header := []string{"protein_path", "ligand"}
+	if err := writer.Write(header); err != nil {
+		panic(err)
+	}
+
+	for _, row := range index {
+		proteinPath := row["protein_path"]
+		ligand := row["ligand"]
+		record := []string{proteinPath, ligand}
+		if err := writer.Write(record); err != nil {
+			panic(err)
+		}
+	}
+	return index_csv
 }
 
 func main() {
@@ -308,6 +334,8 @@ func main() {
 	fmt.Println("## Creating volume ##")
 	_, new_out, volume := indexCreateInputsVolume(in_dir, out, "/inputs")
 	fmt.Println("## Creating index ##")
-	indexCreateIndexJSONL(new_out, app_config, volume)
-	// TODO create indexCreateIndexJSONL(out, app_config)
+	index_file, index := indexCreateIndexJSONL(new_out, app_config, volume)
+	index_csv := indexCreateIndexCSV(index, volume)
+	fmt.Println("Index jsonl created:", index_file)
+	fmt.Println("Index csv created:", index_csv)
 }
