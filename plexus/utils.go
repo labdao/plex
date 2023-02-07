@@ -13,8 +13,7 @@ import (
 	fileutils "github.com/docker/docker/pkg/fileutils"
 )
 
-// appStruct for the application file in the app.jsonl file
-//TODO #65 #64
+// Structure for AppConfig
 type appStruct struct {
 	App     string `json:"app"`
 	Inputs  [][2]string `json:"inputs"`
@@ -85,36 +84,84 @@ func validateApplication(application *string, app_config *string){
 	}
 }
 
-// index the directory path and return the files that match the input of the specified application
+func indexWriteJSONL(index_map []map[string]string, file *string){
+	// Open the file for writing
+	file_dict, err := os.Create(file)
+	if err != nil {
+		panic(err)
+	}
+	defer file_dict.Close()
+
+	// Write each JSON object as a separate line in the file
+	for _, m := range index_map {
+		b, err := json.Marshal(m)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = index_dict.Write(b)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = index_dict.WriteString("\n")
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func indexWriteCSV(index_map []map[string]string, file string) string {
+	// todo generalise the function beyond diffdock
+	file_dict, err := os.Create(file)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file_dict)
+	defer writer.Flush()
+
+	header := []string{"protein_path", "ligand"}
+	if err := writer.Write(header); err != nil {
+		panic(err)
+	}
+
+	for _, row := range index {
+		proteinPath := row["protein_path"]
+		ligand := row["ligand"]
+		record := []string{proteinPath, ligand}
+		if err := writer.Write(record); err != nil {
+			panic(err)
+		}
+	}
+	return file
+}
+
 func indexSearchDirectoryPath(directory *string, app_config *string, layers int) []string {
 	// validate config file
 	validateAppConfig(app_config)
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return nil
+		panic(err)
 	}
 	defer file.Close()
-
 	// read the file line by line
 	var appData appStruct
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
-			fmt.Println("Error unmarshalling JSON:", err)
-			return nil
+			panic(err)
 		}
 		break
 	}
 	// additional errors
 	if err := scanner.Err(); err != nil {
-		fmt.Println("Error scanning file:", err)
-		return nil
+		panic(err)
 	}
-
-	// walk the directory path and return the files that match the input file extensions of the specified application
+	// walk the directory path
 	var files []string
 	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -128,7 +175,8 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 				return filepath.SkipDir
 			}
 		}
-		//TODO: create safeguard to prevent "ligand" or "protein_path" from being added to the index
+		//keep files that match the input file extensions of the specified application
+		//TODO: create safeguard to constrain ext to the 2nd element input array
 		for _, input := range appData.Inputs {
 			for ext := range input {
 				if strings.HasSuffix(path, input[ext]) {
@@ -140,45 +188,38 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 		return nil
 	})
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
-
 	for _, file := range files {
 		fmt.Println(file)
 	}
 	return files
 }
 
-func indexCreateInputsVolume(volume_directory *string, files []string, prefix string) (string, []string, string) {
-	// creating uuid for the volume
+func indexCreateInputsDirectory(inputs_basedir *string, files []string, prefix string) (string, []string, string) {
+	// create job directory
 	id := uuid.New()
-	//TODO: add safeguard to prevent the creation of a volume directory if it already exists
-	//TODO: find elegant solution for "nil"
-	volume_path := *volume_directory + "/" + id.String()
-	err := os.Mkdir(volume_path, 0755)
+	inputs_path := *inputs_basedir + "/" + id.String()
+	err := os.Mkdir(inputs_path, 0755)
 	if err != nil {
-		fmt.Println("Error creating a volume directory:", err)
-		return "nil", files, "nil"
+		panic(err)
 	}
-	os.Mkdir(volume_path + prefix, 0755)
-	// copy the files to the volume directory
+	// create the inputs directory within the job directory
+	os.Mkdir(inputs_path + prefix, 0755)
+	// copy files to the inputs directory
 	new_files := make([]string, 0)
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, volume_path + prefix + "/" + filepath.Base(file))
+		_, err = fileutils.CopyFile(file, inputs_path + prefix + "/" + filepath.Base(file))
 		if err != nil {
-			fmt.Println("Error copying file to volume directory:", err)
-			return "nil", files, "nil"
+			fmt.Println("Error copying file to inputs directory")
+			panic(err)
 		}
 		new_files = append(new_files, prefix + "/" + filepath.Base(file))
 	}
-	print("Volume created: ", volume_path, "\n")
-	return id.String(), new_files, volume_path
+	print("job directory created: ", inputs_path, "\n")
+	return id.String(), new_files, inputs_path
 }
 
-// create a csv file that lists the indexed files in an application-specific format
-// the paths to the input files and the app config are given as input 
-// the path to the index.csv file is returned
 func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path string) (string, []map[string]string) {
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
@@ -212,7 +253,6 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 		}
 		result = append(result, m)
 	}
-	//fmt.Println(result)
 
 	// generate combinations of the mapping
 	//TODO implement generalisable version
@@ -229,62 +269,10 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 			}
 		}
 	}
+	indexWriteJSONL(combinations, volume_path + "/index.jsonl")
+	indexWriteCSV(combinations, volume_path + "/index.csv")
 	//fmt.Println(combinations)
-
-	// Open the file for writing
-	index_file := volume_path + "/index.jsonl"
-	index_dict, err := os.Create(index_file)
-	if err != nil {
-		panic(err)
-	}
-	defer index_dict.Close()
-
-	// Write each JSON object as a separate line in the file
-	for _, m := range combinations {
-		b, err := json.Marshal(m)
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = index_dict.Write(b)
-		if err != nil {
-			panic(err)
-		}
-
-		_, err = index_dict.WriteString("\n")
-		if err != nil {
-			panic(err)
-		}
-	}
     return index_file, combinations
-}
-
-func indexCreateIndexCSV(index []map[string]string, volume_path string) string {
-	// todo generalise the function
-	index_csv := volume_path + "/index.csv"
-	file, err := os.Create(index_csv)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	header := []string{"protein_path", "ligand"}
-	if err := writer.Write(header); err != nil {
-		panic(err)
-	}
-
-	for _, row := range index {
-		proteinPath := row["protein_path"]
-		ligand := row["ligand"]
-		record := []string{proteinPath, ligand}
-		if err := writer.Write(record); err != nil {
-			panic(err)
-		}
-	}
-	return index_csv
 }
 
 func main() {
@@ -319,10 +307,7 @@ func main() {
 	// TODO create dedicated id generator
 	// TODO enable passing an array of multiple input directories
 	fmt.Println("## Creating volume ##")
-	_, new_out, volume := indexCreateInputsVolume(in_dir, out, "/inputs")
+	_, new_out, volume := indexCreateInputsDirectory(in_dir, out, "/inputs")
 	fmt.Println("## Creating index ##")
-	index_file, index := indexCreateIndexJSONL(new_out, app_config, volume)
-	index_csv := indexCreateIndexCSV(index, volume)
-	fmt.Println("Index jsonl created:", index_file)
-	fmt.Println("Index csv created:", index_csv)
+	indexCreateIndexJSONL(new_out, app_config, volume)
 }
