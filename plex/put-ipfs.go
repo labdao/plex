@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"strings"
 
 	"github.com/ipfs/go-cid"
 	"github.com/web3-storage/go-w3s-client"
@@ -12,7 +13,7 @@ import (
 
 func main() {
 	client, err := w3s.NewClient(
-		w3s.WithEndpoint(os.Getenv(("ENDPOINT"))),
+		w3s.WithEndpoint(os.Getenv(("WEB3STORAGE_ENDPOINT"))),
 		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
 	)
 	errorCheck(err)
@@ -22,10 +23,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	command := os.Args[1]
+	command := strings.ToLower(os.Args[1])
+
 	switch command {
-	case "putFile":
-		if len(os.Args) < 3 {
+	case "putfile":
+		if len(os.Args) != 3 {
 			fmt.Println("Error: Please specify a file path")
 			os.Exit(1)
 		}
@@ -34,19 +36,19 @@ func main() {
 		errorCheck(err)
 		defer file.Close()
 		putFile(client, file)
-	case "putDirectory":
-		if len(os.Args) < 3 {
+	case "putdirectory":
+		if len(os.Args) != 3 {
 			fmt.Println("Error: Please specify a directory path")
 			os.Exit(1)
 		}
 		directoryPath := os.Args[2]
 		putDirectory(client, directoryPath)
-	case "getFiles":
+	case "getfiles":
 		if len(os.Args) < 3 {
 			fmt.Println("Error: Please specify a CID")
 			os.Exit(1)
 		}
-		cidString := os.Args[1]
+		cidString := os.Args[2]
 		getFiles(client, cidString)
 	}
 }
@@ -66,10 +68,9 @@ func putDirectory(client w3s.Client, directoryPath string) cid.Cid {
 	return putFile(client, directory)
 }
 
-// TODO
-// fix parsing of CID
-
 func getFiles(client w3s.Client, cidStr string) {
+	fmt.Printf("Retrieving files from IPFS... \n")
+
 	cid, err := cid.Parse(cidStr)
 	errorCheck(err)
 
@@ -96,6 +97,7 @@ func getFiles(client w3s.Client, cidStr string) {
 
 func errorCheck(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
