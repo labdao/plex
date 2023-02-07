@@ -10,10 +10,7 @@ import (
 	"path/filepath"
 	"github.com/google/uuid"
 	"encoding/csv"
-	//"encoding/csv"
 	fileutils "github.com/docker/docker/pkg/fileutils"
-	//ipfsapi "github.com/ipfs/go-ipfs-api"
-	//"io/ioutil"
 )
 
 // appStruct for the application file in the app.jsonl file
@@ -24,8 +21,6 @@ type appStruct struct {
 	Outputs []string `json:"outputs"`
 }
 
-
-// validate that the directory path exists and is a directory
 func validateDirectoryPath(directory *string){
 	if _, err := os.Stat(*directory); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
@@ -38,7 +33,6 @@ func validateDirectoryPath(directory *string){
 	fmt.Println("Directory found:", *directory)
 }
 
-// validate the app.jsonl file
 func validateAppConfig(app_config *string){
 	file, err := os.Open(*app_config)
 	if err != nil {
@@ -47,7 +41,6 @@ func validateAppConfig(app_config *string){
 	}
 	defer file.Close()
 
-	// read the file line by line
 	var appData appStruct
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -58,7 +51,6 @@ func validateAppConfig(app_config *string){
 		}
 		break
 	}
-	// additional errors
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error scanning file:", err)
 		return
@@ -67,16 +59,12 @@ func validateAppConfig(app_config *string){
 		fmt.Println("Error: the directory path does not exist.")
 		os.Exit(1)
 	}
-	//fmt.Println("App Config found:", *app_config)
 }
 
-// validate that the application is supported based on the app.jsonl file
 func validateApplication(application *string, app_config *string){
-	// validate config file
 	validateAppConfig(app_config)
 	file, err := os.Open(*app_config)
 
-	// read the file line by line
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		var appData appStruct
@@ -165,7 +153,6 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 func indexCreateInputsVolume(volume_directory *string, files []string, prefix string) (string, []string, string) {
 	// creating uuid for the volume
 	id := uuid.New()
-	//create a volume directory
 	//TODO: add safeguard to prevent the creation of a volume directory if it already exists
 	//TODO: find elegant solution for "nil"
 	volume_path := *volume_directory + "/" + id.String()
