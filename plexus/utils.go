@@ -1,26 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"flag"
-	"os"
 	"bufio"
-	"encoding/json"
-	"strings"
-	"path/filepath"
-	"github.com/google/uuid"
 	"encoding/csv"
+	"encoding/json"
+	"flag"
+	"fmt"
 	fileutils "github.com/docker/docker/pkg/fileutils"
+	"github.com/google/uuid"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 // Structure for AppConfig
 type appStruct struct {
-	App     string `json:"app"`
+	App     string      `json:"app"`
 	Inputs  [][2]string `json:"inputs"`
-	Outputs []string `json:"outputs"`
+	Outputs []string    `json:"outputs"`
 }
 
-func validateDirectoryPath(directory *string){
+func validateDirectoryPath(directory *string) {
 	if _, err := os.Stat(*directory); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
 		os.Exit(1)
@@ -32,7 +32,7 @@ func validateDirectoryPath(directory *string){
 	fmt.Println("Directory found:", *directory)
 }
 
-func validateAppConfig(app_config *string){
+func validateAppConfig(app_config *string) {
 	file, err := os.Open(*app_config)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -60,7 +60,7 @@ func validateAppConfig(app_config *string){
 	}
 }
 
-func validateApplication(application *string, app_config *string){
+func validateApplication(application *string, app_config *string) {
 	validateAppConfig(app_config)
 	file, err := os.Open(*app_config)
 
@@ -84,7 +84,7 @@ func validateApplication(application *string, app_config *string){
 	}
 }
 
-func writeJSONL(index_map []map[string]string, file string){
+func writeJSONL(index_map []map[string]string, file string) {
 	// Open the file for writing
 	file_dict, err := os.Create(file)
 	if err != nil {
@@ -205,16 +205,16 @@ func createInputsDirectory(inputs_basedir string, files []string, prefix string)
 		panic(err)
 	}
 	// create the inputs directory within the job directory
-	os.Mkdir(inputs_path + prefix, 0755)
+	os.Mkdir(inputs_path+prefix, 0755)
 	// copy files to the inputs directory
 	new_files := make([]string, 0)
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, inputs_path + prefix + "/" + filepath.Base(file))
+		_, err = fileutils.CopyFile(file, inputs_path+prefix+"/"+filepath.Base(file))
 		if err != nil {
 			fmt.Println("Error copying file to inputs directory")
 			panic(err)
 		}
-		new_files = append(new_files, prefix + "/" + filepath.Base(file))
+		new_files = append(new_files, prefix+"/"+filepath.Base(file))
 	}
 	print("job directory created: ", inputs_path, "\n")
 	return id.String(), new_files, inputs_path
@@ -247,7 +247,7 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 	}
 	defer file.Close()
 	// parse the json object
-    var appData appStruct
+	var appData appStruct
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
@@ -257,7 +257,7 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 		break
 	}
 
-    // categorise the input files based on the app config specifications
+	// categorise the input files based on the app config specifications
 	var sorted []map[string]string // Define a slice to store the maps
 
 	for _, file := range new_files {
@@ -272,8 +272,8 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 	}
 
 	combinations := createCombinations(sorted)
-	writeJSONL(combinations, volume_path + "/index.jsonl")
-	writeCSV(combinations, volume_path + "/index.csv")
+	writeJSONL(combinations, volume_path+"/index.jsonl")
+	writeCSV(combinations, volume_path+"/index.csv")
 	return volume_path + "/index.csv", combinations
 }
 
