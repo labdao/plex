@@ -84,7 +84,7 @@ func validateApplication(application *string, app_config *string){
 	}
 }
 
-func indexWriteJSONL(index_map []map[string]string, file *string){
+func writeJSONL(index_map []map[string]string, file string){
 	// Open the file for writing
 	file_dict, err := os.Create(file)
 	if err != nil {
@@ -99,25 +99,25 @@ func indexWriteJSONL(index_map []map[string]string, file *string){
 			panic(err)
 		}
 
-		_, err = index_dict.Write(b)
+		_, err = file_dict.Write(b)
 		if err != nil {
 			panic(err)
 		}
 
-		_, err = index_dict.WriteString("\n")
+		_, err = file_dict.WriteString("\n")
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func indexWriteCSV(index_map []map[string]string, file string) string {
+func writeCSV(index_map []map[string]string, file string) string {
 	// todo generalise the function beyond diffdock
 	file_dict, err := os.Create(file)
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+	defer file_dict.Close()
 
 	writer := csv.NewWriter(file_dict)
 	defer writer.Flush()
@@ -127,7 +127,7 @@ func indexWriteCSV(index_map []map[string]string, file string) string {
 		panic(err)
 	}
 
-	for _, row := range index {
+	for _, row := range index_map {
 		proteinPath := row["protein_path"]
 		ligand := row["ligand"]
 		record := []string{proteinPath, ligand}
@@ -138,7 +138,7 @@ func indexWriteCSV(index_map []map[string]string, file string) string {
 	return file
 }
 
-func indexSearchDirectoryPath(directory *string, app_config *string, layers int) []string {
+func searchDirectoryPath(directory *string, app_config *string, layers int) []string {
 	// validate config file
 	validateAppConfig(app_config)
 	// read the app.jsonl file
@@ -196,10 +196,10 @@ func indexSearchDirectoryPath(directory *string, app_config *string, layers int)
 	return files
 }
 
-func indexCreateInputsDirectory(inputs_basedir *string, files []string, prefix string) (string, []string, string) {
+func createInputsDirectory(inputs_basedir string, files []string, prefix string) (string, []string, string) {
 	// create job directory
 	id := uuid.New()
-	inputs_path := *inputs_basedir + "/" + id.String()
+	inputs_path := inputs_basedir + "/" + id.String()
 	err := os.Mkdir(inputs_path, 0755)
 	if err != nil {
 		panic(err)
@@ -220,14 +220,32 @@ func indexCreateInputsDirectory(inputs_basedir *string, files []string, prefix s
 	return id.String(), new_files, inputs_path
 }
 
-func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path string) (string, []map[string]string) {
+func createCombinations(index_map []map[string]string) []map[string]string {
+	// generate combinations of the mapping
+	//TODO implement generalisable version
+	combinations := []map[string]string{}
+	for _, r := range index_map {
+		if r["ligand"] != "" {
+			for _, r2 := range index_map {
+				if r2["protein_path"] != "" && r2["ligand"] == "" {
+					m := make(map[string]string)
+					m["ligand"] = r["ligand"]
+					m["protein_path"] = r2["protein_path"]
+					combinations = append(combinations, m)
+				}
+			}
+		}
+	}
+	return combinations
+}
+
+func createIndex(new_files []string, app_config *string, volume_path string) (string, []map[string]string) {
 	// read the app.jsonl file
 	file, err := os.Open(*app_config)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	
 	// parse the json object
     var appData appStruct
 	scanner := bufio.NewScanner(file)
@@ -239,9 +257,8 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 		break
 	}
 
-    // map the input new_files to their respective columns based on the config
-    // Create an empty 2D slice to store the columns and their corresponding files
-	var result []map[string]string // Define a slice to store the maps
+    // categorise the input files based on the app config specifications
+	var sorted []map[string]string // Define a slice to store the maps
 
 	for _, file := range new_files {
 		m := make(map[string]string)
@@ -251,28 +268,13 @@ func indexCreateIndexJSONL(new_files []string, app_config *string, volume_path s
 				break
 			}
 		}
-		result = append(result, m)
+		sorted = append(sorted, m)
 	}
 
-	// generate combinations of the mapping
-	//TODO implement generalisable version
-	combinations := []map[string]string{}
-	for _, r := range result {
-		if r["ligand"] != "" {
-			for _, r2 := range result {
-				if r2["protein_path"] != "" && r2["ligand"] == "" {
-					m := make(map[string]string)
-					m["ligand"] = r["ligand"]
-					m["protein_path"] = r2["protein_path"]
-					combinations = append(combinations, m)
-				}
-			}
-		}
-	}
-	indexWriteJSONL(combinations, volume_path + "/index.jsonl")
-	indexWriteCSV(combinations, volume_path + "/index.csv")
-	//fmt.Println(combinations)
-    return index_file, combinations
+	combinations := createCombinations(sorted)
+	writeJSONL(combinations, volume_path + "/index.jsonl")
+	writeCSV(combinations, volume_path + "/index.csv")
+	return volume_path + "/index.csv", combinations
 }
 
 func main() {
@@ -283,7 +285,6 @@ func main() {
 	app_config := flag.String("app_config", "app.jsonl", "App Config file")
 	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
-
 
 	// print the values of the flags
 	fmt.Println("## User input ##")
@@ -302,12 +303,11 @@ func main() {
 
 	// creating index file
 	fmt.Println("## Seaching input files ##")
-	out := indexSearchDirectoryPath(in_dir, app_config, *layers)
-	// TODO pass separate volume directory
-	// TODO create dedicated id generator
+	identified_files := searchDirectoryPath(in_dir, app_config, *layers)
 	// TODO enable passing an array of multiple input directories
-	fmt.Println("## Creating volume ##")
-	_, new_out, volume := indexCreateInputsDirectory(in_dir, out, "/inputs")
+	fmt.Println("## Creating job directory ##")
+	dir, _ := os.Getwd()
+	_, moved_files, job_dir := createInputsDirectory(dir, identified_files, "/inputs")
 	fmt.Println("## Creating index ##")
-	indexCreateIndexJSONL(new_out, app_config, volume)
+	createIndex(moved_files, app_config, job_dir)
 }
