@@ -1,4 +1,4 @@
-package main
+package plexus
 
 import (
 	"bufio"
@@ -20,23 +20,26 @@ type appStruct struct {
 	Outputs []string    `json:"outputs"`
 }
 
-func validateDirectoryPath(directory *string) {
+func validateDirectoryPath(directory *string) (bool){
 	if _, err := os.Stat(*directory); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
+		return false
 		os.Exit(1)
 	}
 	if fileInfo, err := os.Stat(*directory); err == nil && !fileInfo.Mode().IsDir() {
 		fmt.Println("Error: the path provided is not a directory.")
+		return false
 		os.Exit(1)
 	}
 	fmt.Println("Directory found:", *directory)
+	return true
 }
 
-func validateAppConfig(app_config *string) {
+func validateAppConfig(app_config *string) (bool) {
 	file, err := os.Open(*app_config)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
-		return
+		return false
 	}
 	defer file.Close()
 
@@ -46,18 +49,20 @@ func validateAppConfig(app_config *string) {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
 			fmt.Println("Error unmarshalling JSON:", err)
-			return
+			return false
 		}
 		break
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error scanning file:", err)
-		return
+		return false
 	}
 	if _, err := os.Stat(*app_config); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
+		return false
 		os.Exit(1)
 	}
+	return true
 }
 
 func validateApplication(application *string, app_config *string) {
