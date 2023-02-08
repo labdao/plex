@@ -3,6 +3,7 @@ package plexus
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 /*
@@ -47,11 +48,16 @@ func overwriteParams(defaultParams, overrideParams map[string]string) (finalPara
 	return
 }
 
-/*
-func formatCmd(cmd string, params map[string][string]) {
-
+func formatCmd(cmd string, params map[string]string) (formatted string) {
+	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
+	formatted = cmd
+	for key, val := range params {
+		formatted = strings.Replace(formatted, "%{"+key+"}s", fmt.Sprintf("%s", val), -1)
+	}
+	return
 }
 
+/*
 func createInstruction(appConfig appStruct2, inputCIDs []string, paramOverrides map[string][string]) (appStruct2) {
 	var instruction appStruct2
 	json.Unmarshal([]byte(appConfig), &instruct)

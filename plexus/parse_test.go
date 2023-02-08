@@ -23,3 +23,13 @@ func TestOverwriteParams(t *testing.T) {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
 }
+
+func TestFormatCmd(t *testing.T) {
+	want := "python -m solvescience --iterations 42 -extra-fast YESSS --batch_size 12"
+	unformmatted := "python -m solvescience --iterations %{iterations}s -extra-fast %{fast}s --batch_size %{batch_size}s"
+	params := map[string]string{"fast": "YESSS", "batch_size": "12", "iterations": "42"}
+	got := formatCmd(unformmatted, params)
+	if want != got {
+		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
+	}
+}
