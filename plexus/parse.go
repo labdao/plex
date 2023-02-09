@@ -57,6 +57,11 @@ func createHelperFile(dirPath string, contents string) error {
 		return err
 	}
 
+	err = os.Chmod(fileName, 0755)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
