@@ -182,3 +182,6 @@ kubo*
 
 # Go workspace file
 go.work
+
+# IPFS Test Config file
+ipfs_test_config.go
