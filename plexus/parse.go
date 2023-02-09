@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
 	"strings"
 )
 
@@ -39,6 +38,75 @@ type Instruction struct {
 	CmdHelper bool              `json:"cmd_helper"`
 }
 
+func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
+	instruction, err := readInstructions(app, instuctionFilePath)
+	if err != nil {
+		return instruction, err
+	}
+	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
+	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
+	cid, err := createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd)
+	if err != nil {
+		return instruction, err
+	}
+	instruction.InputCIDs = append(instruction.InputCIDs, cid)
+	return instruction, nil
+}
+
+func readInstructions(app string, filepath string) (Instruction, error) {
+	fileContents, err := ioutil.ReadFile(filepath)
+	var instruction Instruction
+	if err != nil {
+		return instruction, err
+	}
+	lines := strings.Split(string(fileContents), "\n")
+	for _, line := range lines {
+		err := json.Unmarshal([]byte(line), &instruction)
+		if err != nil {
+			return instruction, err
+		}
+
+		if instruction.App == app {
+			return instruction, nil
+		}
+	}
+
+	return instruction, fmt.Errorf("No instruction found for app %s", app)
+}
+
+func overwriteParams(defaultParams, overrideParams map[string]string) (finalParams map[string]string) {
+	finalParams = make(map[string]string)
+	for key, defaultVal := range defaultParams {
+		if overrideVal, ok := overrideParams[key]; ok {
+			finalParams[key] = overrideVal
+		} else {
+			finalParams[key] = defaultVal
+		}
+	}
+	return
+}
+
+func formatCmd(cmd string, params map[string]string) (formatted string) {
+	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
+	formatted = cmd
+	for key, val := range params {
+		formatted = strings.Replace(formatted, "%{"+key+"}s", fmt.Sprintf("%s", val), -1)
+	}
+	return
+}
+
+func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (string, error) {
+	// if cmdHelper this will push formattedCmd to helper.sh
+	// this will then use the 2 be merged ipfs function to return a cid
+	if (cmdHelper) {
+		err := createHelperFile(inputDirPath, cmd)
+		if err != nil {
+			return "", err
+		}
+	}
+	return "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", nil
+}
+
 func createHelperFile(dirPath string, contents string) error {
 	fileName := filepath.Join(dirPath, "helper.sh")
 	file, err := os.Create(fileName)
@@ -63,94 +131,4 @@ func createHelperFile(dirPath string, contents string) error {
 	}
 
 	return nil
-}
-
-func overwriteParams(defaultParams, overrideParams map[string]string) (finalParams map[string]string) {
-	finalParams = make(map[string]string)
-	for key, defaultVal := range defaultParams {
-		if overrideVal, ok := overrideParams[key]; ok {
-			finalParams[key] = overrideVal
-		} else {
-			finalParams[key] = defaultVal
-		}
-	}
-	return
-}
-
-func readInstructions(app string, filepath string) (Instruction, error) {
-	fileContents, err := ioutil.ReadFile(filepath)
-	var instruction Instruction
-	if err != nil {
-		return instruction, err
-	}
-	lines := strings.Split(string(fileContents), "\n")
-	for _, line := range lines {
-		err := json.Unmarshal([]byte(line), &instruction)
-		if err != nil {
-			return instruction, err
-		}
-
-		if instruction.App == app {
-			return instruction, nil
-		}
-	}
-
-	return instruction, fmt.Errorf("No instruction found for app %s", app)
-}
-
-func formatCmd(cmd string, params map[string]string) (formatted string) {
-	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
-	formatted = cmd
-	for key, val := range params {
-		formatted = strings.Replace(formatted, "%{"+key+"}s", fmt.Sprintf("%s", val), -1)
-	}
-	return
-}
-
-func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (string, error) {
-	// if cmdHelper this will push formattedCmd to helper.sh
-	// this will then use the 2 be merged ipfs function to return a cid
-	if (cmdHelper) {
-		err := createHelperFile(inputDirPath, cmd)
-		if err != nil {
-			return "", err
-		}
-	}
-	return "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", nil
-}
-
-func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
-	instruction, err := readInstructions(app, instuctionFilePath)
-	if err != nil {
-		return instruction, err
-	}
-	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
-	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	cid, err := createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd)
-	if err != nil {
-		return instruction, err
-	}
-	instruction.InputCIDs = append(instruction.InputCIDs, cid)
-	return instruction, nil
-}
-
-func InstructionToBacalhauCmd(cid, container, cmd string, cmdHelper bool) string {
-	// TODO allow overrides for gpu memory and network flags
-	bacalhauCmd := `bacalhau docker run --network full --gpu 1 --memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container)
-	if cmdHelper {
-		return bacalhauCmd + ` ` + `./helper.sh`
-	}
-	return bacalhauCmd + ` ` + fmt.Sprintf(cmd)
-}
-
-func RunBacalhauCmd(cmdString string) {
-	args := strings.Fields(cmdString)
-	fmt.Println(args)
-	cmd := exec.Command(args[0], args[1:]...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Command failed: %s\n", err)
-		return
-	}
-	fmt.Printf("Output: %s\n", out)
 }

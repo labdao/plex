@@ -324,9 +324,4 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(instruction)
-
-	// run bacalhau
-	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, instruction.CmdHelper)
-	fmt.Println(bacalhauCmd)
-	RunBacalhauCmd(bacalhauCmd)
 }

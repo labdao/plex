@@ -6,11 +6,29 @@ import (
 	"testing"
 )
 
-func TestCanary(t *testing.T) {
-	got := "desci"
-	want := "desci"
-	if got != want {
-		t.Errorf("got = %s; wanted %s", got, want)
+func TestCreateInstruction(t *testing.T) {
+	want := Instruction{
+		App:       "simpdock",
+		InputCIDs: []string{"QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR"},
+		Container: "simpdock:v1",
+		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
+		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
+		CmdHelper: true,
+	}
+	type Instruction struct {
+		App       string            `json:"app"`
+		InputCIDs []string          `json:"input_cids"`
+		Container string            `json:"container"`
+		params    map[string]string `json:"params"`
+		Cmd       string            `json:"cmd"`
+		CmdHelper bool              `json:"cmd_helper"`
+	}
+	got, err := CreateInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test_input/", map[string]string{"steps": "9000", "scifimode": "Y"})
+	if err != nil {
+		t.Errorf(fmt.Sprint(err))
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
 }
 
@@ -41,48 +59,6 @@ func TestCreateInputCID(t *testing.T) {
 		t.Errorf(fmt.Sprint(err))
 	}
 	if want != got {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
-	}
-}
-
-func TestInstructionToBacalhauCmd(t *testing.T) {
-	// it uses cmd when cmdHelper is false
-	want := "bacalhau docker run --network full --gpu 1 --memory 12gb -i QmZGavZu mycontainer python -m molbind"
-	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", false)
-	if want != got {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
-	}
-
-	// it uses helper.sh cmd when cmdHelper is true
-	want = "bacalhau docker run --network full --gpu 1 --memory 12gb -i QmZGavZu mycontainer ./helper.sh"
-	got = InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", true)
-	if want != got {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
-	}
-}
-
-func TestCreateInstruction(t *testing.T) {
-	want := Instruction{
-		App:       "simpdock",
-		InputCIDs: []string{"QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR"},
-		Container: "simpdock:v1",
-		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
-		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
-		CmdHelper: true,
-	}
-	type Instruction struct {
-		App       string            `json:"app"`
-		InputCIDs []string          `json:"input_cids"`
-		Container string            `json:"container"`
-		params    map[string]string `json:"params"`
-		Cmd       string            `json:"cmd"`
-		CmdHelper bool              `json:"cmd_helper"`
-	}
-	got, err := CreateInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test_input/", map[string]string{"steps": "9000", "scifimode": "Y"})
-	if err != nil {
-		t.Errorf(fmt.Sprint(err))
-	}
-	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
 }
