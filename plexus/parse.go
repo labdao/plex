@@ -1,7 +1,9 @@
 package plexus
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 )
@@ -26,14 +28,13 @@ LOG_LEVEL=debug bacalhau serve --job-selection-accept-networked --limit-total-gp
 # also make sure data is on ipfs node
 */
 
-// Structure for AppConfig
-type appStruct2 struct {
-	app     string      `json:"app"`
-	inputs  [][2]string `json:"inputs"`
-	outputs []string    `json:"outputs"`
-	container string
-	params map[string]string
-	cmd string
+type Instruction struct {
+	App       string            `json:"app"`
+	InputCIDs []string          `json:"input_cids"`
+	Container string            `json:"container"`
+	Params    map[string]string `json:"params"`
+	Cmd       string            `json:"cmd"`
+	CmdHelper bool              `json:"cmd_helper"`
 }
 
 func overwriteParams(defaultParams, overrideParams map[string]string) (finalParams map[string]string) {
@@ -48,6 +49,27 @@ func overwriteParams(defaultParams, overrideParams map[string]string) (finalPara
 	return
 }
 
+func readInstructions(app string, filepath string) (Instruction, error) {
+	fileContents, err := ioutil.ReadFile(filepath)
+	var instruction Instruction
+	if err != nil {
+		return instruction, err
+	}
+	lines := strings.Split(string(fileContents), "\n")
+	for _, line := range lines {
+		err := json.Unmarshal([]byte(line), &instruction)
+		if err != nil {
+			return instruction, err
+		}
+
+		if instruction.App == app {
+			return instruction, nil
+		}
+	}
+
+	return instruction, fmt.Errorf("No instruction found for app %s", app)
+}
+
 func formatCmd(cmd string, params map[string]string) (formatted string) {
 	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
 	formatted = cmd
@@ -57,17 +79,26 @@ func formatCmd(cmd string, params map[string]string) (formatted string) {
 	return
 }
 
-/*
-func createInstruction(appConfig appStruct2, inputCIDs []string, paramOverrides map[string][string]) (appStruct2) {
-	var instruction appStruct2
-	json.Unmarshal([]byte(appConfig), &instruct)
-	instruction.params = overrideParams(instruction.params, paramOverrides)
-	instruction.cmd = formatCmd
+func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (cid string) {
+	// if cmdHelper this will push formattedCmd to helper.sh
+	// this will then use the 2 be merged ipfs function to return a cid
+	cid = "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR"
+	return
 }
-*/
+
+func createInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
+	instruction, err := readInstructions(app, instuctionFilePath)
+	if err != nil {
+		return instruction, err
+	}
+	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
+	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
+	instruction.InputCIDs = append(instruction.InputCIDs, createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd))
+	return instruction, nil
+}
 
 /*
-func instructJSONtoBacalhauCmd(instructJSON: json) -> string {
+func instructiontoBacalhauCmd(instructJSON: json) -> string {
 
 }
 
