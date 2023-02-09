@@ -1,6 +1,8 @@
-package plexus
+package main
 
 import (
+	"os"
+	"path/filepath"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -35,6 +37,27 @@ type Instruction struct {
 	Params    map[string]string `json:"params"`
 	Cmd       string            `json:"cmd"`
 	CmdHelper bool              `json:"cmd_helper"`
+}
+
+func createHelperFile(dirPath string, contents string) error {
+	fileName := filepath.Join(dirPath, "helper.sh")
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString("#!/bin/bash\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(contents)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func overwriteParams(defaultParams, overrideParams map[string]string) (finalParams map[string]string) {
@@ -79,44 +102,46 @@ func formatCmd(cmd string, params map[string]string) (formatted string) {
 	return
 }
 
-func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (cid string) {
+func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (string, error) {
 	// if cmdHelper this will push formattedCmd to helper.sh
 	// this will then use the 2 be merged ipfs function to return a cid
-	cid = "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR"
-	return
+	if (cmdHelper) {
+		err := createHelperFile(inputDirPath, cmd)
+		if err != nil {
+			return "", err
+		}
+	}
+	return "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", nil
 }
 
-func createInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
+func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
 	instruction, err := readInstructions(app, instuctionFilePath)
 	if err != nil {
 		return instruction, err
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	instruction.InputCIDs = append(instruction.InputCIDs, createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd))
+	cid, err := createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd)
+	if err != nil {
+		return instruction, err
+	}
+	instruction.InputCIDs = append(instruction.InputCIDs, cid)
 	return instruction, nil
 }
 
-/*
-func instructiontoBacalhauCmd(instructJSON: json) -> string {
-
+func InstructionToBacalhauCmd(cid, container, cmd string, cmdHelper bool) string {
+	// TODO allow overrides for gpu memory and network flags
+	bacalhauCmd := `bacalhau docker run --network full --gpu 1 --memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container)
+	if cmdHelper {
+		return bacalhauCmd + ` ` + `./helper.sh`
+	}
+	return bacalhauCmd + ` ` + fmt.Sprintf(cmd)
 }
 
-func runBacalhauCmd(cmd: str) -> {
-
-}
-*/
-
-func bacalhau() {
-	// cmd := exec.Command("bacalhau", "docker", "run", "ubuntu", "echo", "Hello World")
-	// cmd := exec.Command("bacalhau", "docker", "run", "--gpu", "1", "--memory", "12gb", "nvidia/cuda:11.0.3-base-ubuntu20.04", "nvidia-smi")
-	// cmd := exec.Command("bacalhau", "docker", "run", "--gpu", "1", "--memory", "12gb", "-i", "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", "nvidia/cuda:11.0.3-base-ubuntu20.04", "nvidia-smi")
-	cmd := exec.Command("bacalhau", "docker", "run", "--gpu", "1", "--memory", "12gb", "-i", "bafybeidu5cds5bzjmlt2mmahsfsja6sn5hpdibsfrxwqu5clx5l7q3dvbq", "nvidia/cuda:11.0.3-base-ubuntu20.04", "ls", "-lah", "/inputs", ">", "/outputs/ls.txt")
-	// cmd := exec.Command("bacalhau", "docker", "run", "--network", "full", "--gpu", "1", "--memory", "12gb", "-i", "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", "openzyme/diffdock:latest", "head", "./test.sh")
-	// cmd := exec.Command("bacalhau", "docker", "run", "--gpu", "1", "--memory", "12gb", "-i", "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", "nvidia/cuda:11.0.3-base-ubuntu20.04", "nvidia-smi")
-	// docker exec -i $container /bin/sh < ./your_script.sh
-
-	// cmd := exec.Command("bacalhau", "docker", "run", "--network", "full", "--gpu", "1", "--memory", "12gb", "-i", "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", "openzyme/labdaodiffdock", "./test.sh")
+func RunBacalhauCmd(cmdString string) {
+	args := strings.Fields(cmdString)
+	fmt.Println(args)
+	cmd := exec.Command(args[0], args[1:]...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("Command failed: %s\n", err)

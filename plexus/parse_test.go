@@ -1,4 +1,4 @@
-package plexus
+package main
 
 import (
 	"fmt"
@@ -36,7 +36,26 @@ func TestFormatCmd(t *testing.T) {
 
 func TestCreateInputCID(t *testing.T) {
 	want := "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR"
-	got := createInputCID("testdata", true, "python -m desci --decent-lvl 11")
+	got, err := createInputCID("testdata", true, "python -m desci --decent-lvl 11")
+	if err != nil {
+		t.Errorf(fmt.Sprint(err))
+	}
+	if want != got {
+		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
+	}
+}
+
+func TestInstructionToBacalhauCmd(t *testing.T) {
+	// it uses cmd when cmdHelper is false
+	want := "bacalhau docker run --network full --gpu 1 --memory 12gb -i QmZGavZu mycontainer python -m molbind"
+	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", false)
+	if want != got {
+		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
+	}
+
+	// it uses helper.sh cmd when cmdHelper is true
+	want = "bacalhau docker run --network full --gpu 1 --memory 12gb -i QmZGavZu mycontainer ./helper.sh"
+	got = InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", true)
 	if want != got {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
@@ -59,7 +78,7 @@ func TestCreateInstruction(t *testing.T) {
 		Cmd       string            `json:"cmd"`
 		CmdHelper bool              `json:"cmd_helper"`
 	}
-	got, err := createInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test_input/", map[string]string{"steps": "9000", "scifimode": "Y"})
+	got, err := CreateInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test_input/", map[string]string{"steps": "9000", "scifimode": "Y"})
 	if err != nil {
 		t.Errorf(fmt.Sprint(err))
 	}

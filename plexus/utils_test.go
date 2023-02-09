@@ -1,4 +1,4 @@
-package plexus
+package main
 
 import (
 	"os"

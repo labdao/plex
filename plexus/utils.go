@@ -1,4 +1,4 @@
-package plexus
+package main
 
 import (
 	"bufio"
@@ -315,4 +315,18 @@ func main() {
 	_, moved_files, job_dir := createInputsDirectory(dir, identified_files, "/inputs")
 	fmt.Println("## Creating index ##")
 	createIndex(moved_files, app_config, job_dir)
+
+	// create instructions
+	fmt.Println("## Creating instruction ##")
+	instruction, err := CreateInstruction("diffdock", "instruction_template.jsonl", job_dir, map[string]string{})
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	fmt.Println(instruction)
+
+	// run bacalhau
+	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, instruction.CmdHelper)
+	fmt.Println(bacalhauCmd)
+	RunBacalhauCmd(bacalhauCmd)
 }
