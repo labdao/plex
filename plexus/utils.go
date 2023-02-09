@@ -1,4 +1,4 @@
-package plexus
+package main
 
 import (
 	"bufio"
@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	fileutils "github.com/docker/docker/pkg/fileutils"
-	"github.com/google/uuid"
 	"os"
 	"path/filepath"
 	"strings"
+
+	fileutils "github.com/docker/docker/pkg/fileutils"
+	"github.com/google/uuid"
 )
 
 // Structure for AppConfig
@@ -20,7 +21,7 @@ type appStruct struct {
 	Outputs []string    `json:"outputs"`
 }
 
-func validateDirectoryPath(directory *string) (bool){
+func validateDirectoryPath(directory *string) bool {
 	if _, err := os.Stat(*directory); os.IsNotExist(err) {
 		fmt.Println("Error: the directory path does not exist.")
 		return false
@@ -35,7 +36,7 @@ func validateDirectoryPath(directory *string) (bool){
 	return true
 }
 
-func validateAppConfig(app_config *string) (bool) {
+func validateAppConfig(app_config *string) bool {
 	file, err := os.Open(*app_config)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -282,7 +283,7 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 	return volume_path + "/index.csv", combinations
 }
 
-func main() {
+func main2() {
 	// define the flags
 	app := flag.String("application", "", "Application name")
 	in_dir := flag.String("input_directory", "", "Input directory path")
