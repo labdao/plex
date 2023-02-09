@@ -1,0 +1,1 @@
+{"app": "simpdock", "input_cids": [], "container": "simpdock:v1", "params": {"layers": "33", "steps": "20", "scifimode": "N"}, "cmd": "python -m inference -l %{layers}s -s %{steps}s && python -m run --scifimode %{scifimode}s", "cmd_helper": true}
