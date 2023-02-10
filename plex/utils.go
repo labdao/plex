@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -21,26 +20,20 @@ type appStruct struct {
 	Outputs []string    `json:"outputs"`
 }
 
-func validateDirectoryPath(directory *string) bool {
-	if _, err := os.Stat(*directory); os.IsNotExist(err) {
-		fmt.Println("Error: the directory path does not exist.")
-		return false
-		os.Exit(1)
+func validateDirectoryPath(directory string) (bool, error) {
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		return false, err
 	}
-	if fileInfo, err := os.Stat(*directory); err == nil && !fileInfo.Mode().IsDir() {
-		fmt.Println("Error: the path provided is not a directory.")
-		return false
-		os.Exit(1)
+	if fileInfo, err := os.Stat(directory); err == nil && !fileInfo.Mode().IsDir() {
+		return false, err
 	}
-	fmt.Println("Directory found:", *directory)
-	return true
+	return true, nil
 }
 
-func validateAppConfig(app_config *string) bool {
-	file, err := os.Open(*app_config)
+func validateAppConfig(appConfig string) (bool, error) {
+	file, err := os.Open(appConfig)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
-		return false
+		return false, err
 	}
 	defer file.Close()
 
@@ -49,26 +42,22 @@ func validateAppConfig(app_config *string) bool {
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
-			fmt.Println("Error unmarshalling JSON:", err)
-			return false
+			return false, err
 		}
 		break
 	}
 	if err := scanner.Err(); err != nil {
-		fmt.Println("Error scanning file:", err)
-		return false
+		return false, err
 	}
-	if _, err := os.Stat(*app_config); os.IsNotExist(err) {
-		fmt.Println("Error: the directory path does not exist.")
-		return false
-		os.Exit(1)
+	if _, err := os.Stat(appConfig); os.IsNotExist(err) {
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
-func validateApplication(application *string, app_config *string) {
-	validateAppConfig(app_config)
-	file, err := os.Open(*app_config)
+func validateApplication(application string, appConfig string) {
+	validateAppConfig(appConfig)
+	file, err := os.Open(appConfig)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -78,7 +67,7 @@ func validateApplication(application *string, app_config *string) {
 			fmt.Println("Error unmarshalling application file JSON:", err)
 			return
 		}
-		if appData.App == *application {
+		if appData.App == application {
 			fmt.Println("Application found:", appData.App)
 			break
 		}
@@ -144,15 +133,17 @@ func writeCSV(index_map []map[string]string, file string) string {
 	return file
 }
 
-func searchDirectoryPath(directory *string, app_config *string, layers int) []string {
+func searchDirectoryPath(directory *string, appConfig string, layers int) []string {
 	// validate config file
-	validateAppConfig(app_config)
+	validateAppConfig(appConfig)
+
 	// read the app.jsonl file
-	file, err := os.Open(*app_config)
+	file, err := os.Open(appConfig)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
+
 	// read the file line by line
 	var appData appStruct
 	scanner := bufio.NewScanner(file)
@@ -163,10 +154,12 @@ func searchDirectoryPath(directory *string, app_config *string, layers int) []st
 		}
 		break
 	}
+
 	// additional errors
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+
 	// walk the directory path
 	var files []string
 	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
@@ -181,6 +174,7 @@ func searchDirectoryPath(directory *string, app_config *string, layers int) []st
 				return filepath.SkipDir
 			}
 		}
+
 		//keep files that match the input file extensions of the specified application
 		//TODO: create safeguard to constrain ext to the 2nd element input array
 		for _, input := range appData.Inputs {
@@ -210,8 +204,10 @@ func createInputsDirectory(inputs_basedir string, files []string, prefix string)
 	if err != nil {
 		panic(err)
 	}
+
 	// create the inputs directory within the job directory
 	os.Mkdir(inputs_path+prefix, 0755)
+
 	// copy files to the inputs directory
 	new_files := make([]string, 0)
 	for _, file := range files {
@@ -245,13 +241,14 @@ func createCombinations(index_map []map[string]string) []map[string]string {
 	return combinations
 }
 
-func createIndex(new_files []string, app_config *string, volume_path string) (string, []map[string]string) {
+func createIndex(newFiles []string, appConfig string, volumePath string) (string, []map[string]string) {
 	// read the app.jsonl file
-	file, err := os.Open(*app_config)
+	file, err := os.Open(appConfig)
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
+
 	// parse the json object
 	var appData appStruct
 	scanner := bufio.NewScanner(file)
@@ -266,7 +263,7 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 	// categorise the input files based on the app config specifications
 	var sorted []map[string]string // Define a slice to store the maps
 
-	for _, file := range new_files {
+	for _, file := range newFiles {
 		m := make(map[string]string)
 		for _, mapping := range appData.Inputs {
 			if strings.HasSuffix(file, mapping[1]) {
@@ -278,51 +275,14 @@ func createIndex(new_files []string, app_config *string, volume_path string) (st
 	}
 
 	combinations := createCombinations(sorted)
-	writeJSONL(combinations, volume_path+"/index.jsonl")
-	writeCSV(combinations, volume_path+"/index.csv")
-	return volume_path + "/index.csv", combinations
+	writeJSONL(combinations, volumePath+"/index.jsonl")
+	writeCSV(combinations, volumePath+"/index.csv")
+	return volumePath + "/index.csv", combinations
 }
 
-func main2() {
-	// define the flags
-	app := flag.String("application", "", "Application name")
-	in_dir := flag.String("input_directory", "", "Input directory path")
-	// additional flags
-	app_config := flag.String("app_config", "app.jsonl", "App Config file")
-	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
-	flag.Parse()
-
-	// print the values of the flags
-	fmt.Println("## User input ##")
-	fmt.Println("Provided application name:", *app)
-	fmt.Println("Provided directory path:", *in_dir)
-	fmt.Println("## Default parameters ##")
-	fmt.Println("Using app config:", *app_config)
-	fmt.Println("Setting layers to:", *layers)
-
-	// validate the flags
-	fmt.Println("## Validating ##")
-	validateApplication(app, app_config)
-	validateDirectoryPath(in_dir)
-	validateAppConfig(app_config)
-	fmt.Println("App Config found:", *app_config)
-
-	// creating index file
-	fmt.Println("## Seaching input files ##")
-	identified_files := searchDirectoryPath(in_dir, app_config, *layers)
-	// TODO enable passing an array of multiple input directories
-	fmt.Println("## Creating job directory ##")
-	dir, _ := os.Getwd()
-	_, moved_files, job_dir := createInputsDirectory(dir, identified_files, "/inputs")
-	fmt.Println("## Creating index ##")
-	createIndex(moved_files, app_config, job_dir)
-
-	// create instructions
-	fmt.Println("## Creating instruction ##")
-	instruction, err := CreateInstruction("diffdock", "instruction_template.jsonl", job_dir, map[string]string{})
+func errorCheck(err error) {
 	if err != nil {
 		fmt.Println(err)
-		panic(err)
+		os.Exit(1)
 	}
-	fmt.Println(instruction)
 }

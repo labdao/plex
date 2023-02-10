@@ -1,4 +1,4 @@
-module labdao/plexus
+module labdao/plex
 
 go 1.19
 

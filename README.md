@@ -12,35 +12,8 @@ Tested on Ubuntu 20.04 LTS with Nvidia T4, V100, and A10 GPUs (AWS G4, P3, and G
 curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/install.sh | bash && newgrp docker
 ```
 
-## Development
+### CLI example
 
-### Run example
-Set-up directory and run server
 ```
-git clone https://github.com/labdao/ganglia
-cd ./ganglia
-pip install -r requirements.txt 
-cd ./server
-python3 server.py
-```
-
-Run client in new tab
-````
-python3
-
-import asyncio
-from ganglia import generate_diffdock_instructions, run_with_socket
-
-asyncio.run(run_with_socket(generate_diffdock_instructions()))
-```
-
-### Run unittests
-```
-python3 -m unittest
-```
-
-### Lint
-```
-pip install black
-python -m black --preview ./
+export WEB3STORAGE_TOKEN=<your_token>
 ```
