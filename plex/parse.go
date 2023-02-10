@@ -1,12 +1,14 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/web3-storage/go-w3s-client"
 )
 
 /*
@@ -96,15 +98,27 @@ func formatCmd(cmd string, params map[string]string) (formatted string) {
 }
 
 func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (string, error) {
-	// if cmdHelper this will push formattedCmd to helper.sh
-	// this will then use the 2 be merged ipfs function to return a cid
-	if (cmdHelper) {
+	// if cmdHelper creates a helper.sh file with cmd as content
+	if cmdHelper {
 		err := createHelperFile(inputDirPath, cmd)
 		if err != nil {
 			return "", err
 		}
 	}
-	return "QmZGavZusys5SrgyQB69iJwWL5tAbXrYeyoJBcjdJsp3mR", nil
+	client, err := w3s.NewClient(
+		w3s.WithEndpoint("https://api.web3.storage"),
+		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
+	)
+	errorCheck(err)
+	inputDir, err := os.Open(inputDirPath)
+	if err != nil {
+		return "", err
+	}
+	cid, err := putFile(client, inputDir)
+	if err != nil {
+		return cid.String(), err
+	}
+	return cid.String(), nil
 }
 
 func createHelperFile(dirPath string, contents string) error {

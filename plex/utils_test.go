@@ -23,7 +23,7 @@ func TestValidateAppConfig(t *testing.T) {
 		want := tc.want
 
 		// Call the function to test
-		got, _ := validateAppConfig(appConfig)
+		got, _ := ValidateAppConfig(appConfig)
 
 		// Assert the expected result
 		if got != want {
@@ -50,7 +50,7 @@ func TestValidateDirectoryPath(t *testing.T) {
 		want := tc.want
 
 		// Call the function to test
-		got, _ := validateDirectoryPath(directory)
+		got, _ := ValidateDirectoryPath(directory)
 
 		// Assert the expected result
 		if got != want {

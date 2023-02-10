@@ -14,7 +14,7 @@ func main() {
 	inputDir := flag.String("input-directory", "", "Input directory path")
 
 	// optional flags
-	appConfig := flag.String("app_config", "app.jsonl", "App Config file")
+	appConfig := flag.String("app-config", "app.jsonl", "App Config file")
 	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
 
@@ -24,23 +24,23 @@ func main() {
 	fmt.Println("Provided directory path:", inputDir)
 
 	fmt.Println("## Default parameters ##")
-	// fmt.Println("Using app config:", *app_config)
-	// fmt.Println("Setting layers to:", *layers)
+	fmt.Println("Using app config:", *appConfig)
+	fmt.Println("Setting layers to:", *layers)
 
 	// validate the flags
 	fmt.Println("## Validating ##")
-	validateApplication(*app, *appConfig)
-	validateDirectoryPath(*inputDir)
-	validateAppConfig(*appConfig)
+	ValidateApplication(*app, *appConfig)
+	ValidateDirectoryPath(*inputDir)
+	ValidateAppConfig(*appConfig)
 
 	// creating index file
 	fmt.Println("## Seaching input files ##")
-	identified_files := searchDirectoryPath(inputDir, *appConfig, *layers)
+	identifiedFiles := searchDirectoryPath(inputDir, *appConfig, *layers)
 
 	// TODO enable passing an array of multiple input directories
 	fmt.Println("## Creating job directory ##")
 	dir, _ := os.Getwd()
-	_, movedFiles, jobDir := createInputsDirectory(dir, identified_files, "/inputs")
+	_, movedFiles, jobDir := createInputsDirectory(dir, identifiedFiles, "/inputs")
 	fmt.Println("## Creating index ##")
 	createIndex(movedFiles, "app.jsonl", jobDir)
 
@@ -51,7 +51,8 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
-	fmt.Println(instruction)
+	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, instruction.CmdHelper)
+	fmt.Println(bacalhauCmd)
 }
 
 /*

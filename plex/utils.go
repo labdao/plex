@@ -20,7 +20,7 @@ type appStruct struct {
 	Outputs []string    `json:"outputs"`
 }
 
-func validateDirectoryPath(directory string) (bool, error) {
+func ValidateDirectoryPath(directory string) (bool, error) {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		return false, err
 	}
@@ -30,7 +30,7 @@ func validateDirectoryPath(directory string) (bool, error) {
 	return true, nil
 }
 
-func validateAppConfig(appConfig string) (bool, error) {
+func ValidateAppConfig(appConfig string) (bool, error) {
 	file, err := os.Open(appConfig)
 	if err != nil {
 		return false, err
@@ -55,8 +55,8 @@ func validateAppConfig(appConfig string) (bool, error) {
 	return true, nil
 }
 
-func validateApplication(application string, appConfig string) {
-	validateAppConfig(appConfig)
+func ValidateApplication(application string, appConfig string) {
+	ValidateAppConfig(appConfig)
 	file, err := os.Open(appConfig)
 
 	scanner := bufio.NewScanner(file)
@@ -135,7 +135,7 @@ func writeCSV(index_map []map[string]string, file string) string {
 
 func searchDirectoryPath(directory *string, appConfig string, layers int) []string {
 	// validate config file
-	validateAppConfig(appConfig)
+	ValidateAppConfig(appConfig)
 
 	// read the app.jsonl file
 	file, err := os.Open(appConfig)
