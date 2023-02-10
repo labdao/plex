@@ -51,8 +51,8 @@ func TestFormatCmd(t *testing.T) {
 }
 
 func TestCreateInputCID(t *testing.T) {
-	want := "bafybeiafbzh3tphkukrudimzis5wusfb2gclsbwnqcnqfby57qm6ou7sji"
-	got, err := createInputCID("testdata", "python -m desci --decent-lvl 11")
+	want := "bafybeifzg6egpgb6wi47cayzlltjcdlglls7qtteuqzbrecpiyzyfipuzi"
+	got, err := createInputCID("test-directory", "python -m desci --decent-lvl 11")
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}

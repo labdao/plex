@@ -14,7 +14,7 @@ func main() {
 	inputDir := flag.String("input-dir", "", "Input directory path")
 
 	// optional flags
-	appConfig := flag.String("app-config", "app.jsonl", "App Config file")
+	appConfigsFilePath := flag.String("app-configs", "app.jsonl", "App Configurations file")
 	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
 
@@ -24,18 +24,22 @@ func main() {
 	fmt.Println("Provided directory path:", *inputDir)
 
 	fmt.Println("## Default parameters ##")
-	fmt.Println("Using app config:", *appConfig)
+	fmt.Println("Using app configs:", *appConfigsFilePath)
 	fmt.Println("Setting layers to:", *layers)
 
 	// validate the flags
 	fmt.Println("## Validating ##")
-	ValidateApplication(*app, *appConfig)
-	ValidateDirectoryPath(*inputDir)
-	ValidateAppConfig(*appConfig)
+	appConfig, err := findAppConfig(*app, *appConfigsFilePath)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	// ValidateDirectoryPath(*inputDir)
+	// ValidateAppConfig(*appConfig)
 
 	// creating index file
 	fmt.Println("## Seaching input files ##")
-	identifiedFiles, err := searchDirectoryPath(inputDir, *appConfig, *layers)
+	identifiedFiles, err := searchDirectoryPath(inputDir, appConfig, *layers)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

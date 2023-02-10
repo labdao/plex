@@ -13,8 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Structure for AppConfig
-type appStruct struct {
+type AppConfig struct {
 	App     string      `json:"app"`
 	Inputs  [][2]string `json:"inputs"`
 	Outputs []string    `json:"outputs"`
@@ -30,6 +29,7 @@ func ValidateDirectoryPath(directory string) (bool, error) {
 	return true, nil
 }
 
+/*
 func ValidateAppConfig(appConfig string) (bool, error) {
 	file, err := os.Open(appConfig)
 	if err != nil {
@@ -54,29 +54,26 @@ func ValidateAppConfig(appConfig string) (bool, error) {
 	}
 	return true, nil
 }
+*/
 
-func ValidateApplication(application string, appConfig string) {
-	ValidateAppConfig(appConfig)
-	file, err := os.Open(appConfig)
-
+func findAppConfig(app string, appConfigsFilePath string) (AppConfig, error) {
+	appConfig := AppConfig{}
+	file, err := os.Open(appConfigsFilePath)
+	if err != nil {
+		return appConfig, err
+	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		var appData appStruct
-		err = json.Unmarshal([]byte(scanner.Text()), &appData)
+		err = json.Unmarshal([]byte(scanner.Text()), &appConfig)
 		if err != nil {
-			fmt.Println("Error unmarshalling application file JSON:", err)
-			return
+			return appConfig, err
 		}
-		if appData.App == application {
-			fmt.Println("Application found:", appData.App)
-			break
+		if appConfig.App == app {
+			fmt.Println("App found:", appConfig.App)
+			return appConfig, nil
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error scanning file:", err)
-		return
-	}
+	return appConfig, err
 }
 
 func writeJSONL(index_map []map[string]string, file string) {
@@ -133,39 +130,13 @@ func writeCSV(index_map []map[string]string, file string) string {
 	return file
 }
 
-func searchDirectoryPath(directory *string, appConfig string, layers int) ([]string, error) {
-	var files []string
-
+func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) ([]string, error) {
+	files := []string{}
 	// validate config file
-	fmt.Println("inside searchDirectoryPath func")
-	ValidateAppConfig(appConfig)
-
-	// read the app.jsonl file
-	file, err := os.Open(appConfig)
-	if err != nil {
-		return files, err
-	}
-	defer file.Close()
-
-	// read the file line by line
-	fmt.Println("Reading file line by line")
-	var appData appStruct
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		err = json.Unmarshal([]byte(scanner.Text()), &appData)
-		if err != nil {
-			return files, err
-		}
-		break
-	}
-
-	// additional errors
-	if err := scanner.Err(); err != nil {
-		return files, err
-	}
+	// ValidateAppConfig(appConfig)
 
 	// walk the directory path
-	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -180,10 +151,11 @@ func searchDirectoryPath(directory *string, appConfig string, layers int) ([]str
 
 		//keep files that match the input file extensions of the specified application
 		//TODO: create safeguard to constrain ext to the 2nd element input array
-		fmt.Println("appData.Inputs", appData.Inputs)
-		for _, input := range appData.Inputs {
+		fmt.Println("appConfig.Inputs", appConfig.Inputs)
+		for _, input := range appConfig.Inputs {
 			for ext := range input {
 				fmt.Println("path:", path, "extention search", ext)
+				fmt.Println(input[ext])
 				if strings.HasSuffix(path, input[ext]) {
 					files = append(files, path)
 					break
@@ -192,11 +164,9 @@ func searchDirectoryPath(directory *string, appConfig string, layers int) ([]str
 		}
 		return nil
 	})
+
 	if err != nil {
 		return files, err
-	}
-	for _, file := range files {
-		fmt.Println(file)
 	}
 	return files, nil
 }
@@ -253,7 +223,7 @@ func createIndex(newFiles []string, appConfig string, volumePath string) (string
 	defer file.Close()
 
 	// parse the json object
-	var appData appStruct
+	var appData AppConfig
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
