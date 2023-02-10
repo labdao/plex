@@ -11,7 +11,8 @@ import (
 func TestPutFile(t *testing.T) {
 	client, err := w3s.NewClient(
 		w3s.WithEndpoint("https://api.web3.storage"),
-		w3s.WithToken(testToken),
+		// set your web3 storage token here
+		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
 	)
 	if err != nil {
 		t.Fatalf("error creating client: %v", err)
@@ -25,10 +26,10 @@ func TestPutFile(t *testing.T) {
 
 	file, err := os.Open("test-directory/haiku2.txt")
 
-	actualCid := putFile(client, file)
+	actualCid, err := putFile(client, file)
 
 	if !expectedCid.Equals(actualCid) {
-		t.Fatalf(`unmatching cids
+		t.Errorf(`unmatching cids
 			expected CID: %s
 			actual CID: %s`, expectedCid, actualCid,
 		)

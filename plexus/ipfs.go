@@ -13,7 +13,7 @@ import (
 
 func main() {
 	client, err := w3s.NewClient(
-		w3s.WithEndpoint(os.Getenv(("WEB3STORAGE_ENDPOINT"))),
+		w3s.WithEndpoint("https://api.web3.storage"),
 		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
 	)
 	errorCheck(err)
@@ -53,35 +53,47 @@ func main() {
 	}
 }
 
-func putFile(client w3s.Client, file fs.File, opts ...w3s.PutOption) cid.Cid {
+func putFile(client w3s.Client, file fs.File, opts ...w3s.PutOption) (cid.Cid, error) {
 	fmt.Printf("Uploading to IPFS via web3.storage... \n")
 	cid, err := client.Put(context.Background(), file, opts...)
-	errorCheck(err)
+	if err != nil {
+		return cid, err
+	}
 	fmt.Printf("CID: %s\n", cid)
-	return cid
+	return cid, nil
 }
 
-func putDirectory(client w3s.Client, directoryPath string) cid.Cid {
+func putDirectory(client w3s.Client, directoryPath string) (cid.Cid, error) {
 	directory, err := os.Open(directoryPath)
-	errorCheck(err)
+	if err != nil {
+		return cid.Cid{}, err
+	}
 	defer directory.Close()
 	return putFile(client, directory)
 }
 
-func getFiles(client w3s.Client, cidStr string) {
+func getFiles(client w3s.Client, cidStr string) error {
 	fmt.Printf("Retrieving files from IPFS... \n")
 
 	cid, err := cid.Parse(cidStr)
-	errorCheck(err)
+	if err != nil {
+		return err
+	}
 
 	res, err := client.Get(context.Background(), cid)
-	errorCheck(err)
+	if err != nil {
+		return err
+	}
 
 	f, fsys, err := res.Files()
-	errorCheck(err)
+	if err != nil {
+		return err
+	}
 
 	info, err := f.Stat()
-	errorCheck(err)
+	if err != nil {
+		return err
+	}
 
 	if info.IsDir() {
 		err = fs.WalkDir(fsys, "/", func(path string, d fs.DirEntry, err error) error {
@@ -89,10 +101,14 @@ func getFiles(client w3s.Client, cidStr string) {
 			fmt.Printf("%s (%d bytes)\n", path, info.Size())
 			return err
 		})
-		errorCheck(err)
-	} else {
-		fmt.Printf("%s (%d bytes)\n", cid.String(), info.Size())
+		if err != nil {
+			return err
+		}
 	}
+
+	fmt.Printf("%s (%d bytes)\n", cid.String(), info.Size())
+
+	return nil
 }
 
 func errorCheck(err error) {
