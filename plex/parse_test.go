@@ -13,7 +13,6 @@ func TestCreateInstruction(t *testing.T) {
 		Container: "simpdock:v1",
 		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
 		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
-		CmdHelper: false,
 	}
 	type Instruction struct {
 		App       string            `json:"app"`
@@ -21,9 +20,8 @@ func TestCreateInstruction(t *testing.T) {
 		Container string            `json:"container"`
 		Params    map[string]string `json:"params"`
 		Cmd       string            `json:"cmd"`
-		CmdHelper bool              `json:"cmd_helper"`
 	}
-	got, err := CreateInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test-directory/", map[string]string{"steps": "9000", "scifimode": "Y"})
+	got, err := CreateInstruction("simpdock", "testdata/test_instruction_template.jsonl", "test-directory", map[string]string{"steps": "9000", "scifimode": "Y"})
 	if err != nil {
 		t.Errorf(fmt.Sprint(err))
 	}
@@ -53,10 +51,10 @@ func TestFormatCmd(t *testing.T) {
 }
 
 func TestCreateInputCID(t *testing.T) {
-	want := "bafybeiafphev4hxg5potnih4add2l55qpigjtynyhs7dof4jtbx6fylgei"
-	got, err := createInputCID("testdata", true, "python -m desci --decent-lvl 11")
+	want := "bafybeiafbzh3tphkukrudimzis5wusfb2gclsbwnqcnqfby57qm6ou7sji"
+	got, err := createInputCID("testdata", "python -m desci --decent-lvl 11")
 	if err != nil {
-		t.Errorf(fmt.Sprint(err))
+		t.Fatalf(fmt.Sprint(err))
 	}
 	if want != got {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))

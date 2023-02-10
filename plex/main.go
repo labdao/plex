@@ -11,7 +11,7 @@ import (
 func main() {
 	// define the flags
 	app := flag.String("app", "", "Application name")
-	inputDir := flag.String("input-directory", "", "Input directory path")
+	inputDir := flag.String("input-dir", "", "Input directory path")
 
 	// optional flags
 	appConfig := flag.String("app-config", "app.jsonl", "App Config file")
@@ -20,8 +20,8 @@ func main() {
 
 	// print the values of the flags
 	fmt.Println("## User input ##")
-	fmt.Println("Provided application name:", app)
-	fmt.Println("Provided directory path:", inputDir)
+	fmt.Println("Provided application name:", *app)
+	fmt.Println("Provided directory path:", *inputDir)
 
 	fmt.Println("## Default parameters ##")
 	fmt.Println("Using app config:", *appConfig)
@@ -35,28 +35,46 @@ func main() {
 
 	// creating index file
 	fmt.Println("## Seaching input files ##")
-	identifiedFiles := searchDirectoryPath(inputDir, *appConfig, *layers)
+	identifiedFiles, err := searchDirectoryPath(inputDir, *appConfig, *layers)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("Found", len(identifiedFiles), "matching files")
+	for _, fileName := range identifiedFiles {
+		fmt.Println(fileName)
+	}
 
 	// TODO enable passing an array of multiple input directories
 	fmt.Println("## Creating job directory ##")
-	dir, _ := os.Getwd()
-	_, movedFiles, jobDir := createInputsDirectory(dir, identifiedFiles, "/inputs")
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	_, movedFiles, jobDir, err := createInputsDirectory(dir, identifiedFiles)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("Created job directory", jobDir)
 	fmt.Println("## Creating index ##")
 	createIndex(movedFiles, "app.jsonl", jobDir)
 
 	// create instructions
 	fmt.Println("## Creating instruction ##")
-	instruction, err := CreateInstruction("diffdock", "instruction_template.jsonl", jobDir, map[string]string{})
+	instruction, err := CreateInstruction(*app, "instruction_template.jsonl", jobDir, map[string]string{})
 	if err != nil {
 		fmt.Println(err)
-		panic(err)
+		os.Exit(1)
 	}
-	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, instruction.CmdHelper)
+	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
 	fmt.Println(bacalhauCmd)
 }
 
 /*
-func main() {
+func main2() {
 	client, err := w3s.NewClient(
 		w3s.WithEndpoint("https://api.web3.storage"),
 		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),

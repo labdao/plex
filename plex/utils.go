@@ -133,35 +133,38 @@ func writeCSV(index_map []map[string]string, file string) string {
 	return file
 }
 
-func searchDirectoryPath(directory *string, appConfig string, layers int) []string {
+func searchDirectoryPath(directory *string, appConfig string, layers int) ([]string, error) {
+	var files []string
+
 	// validate config file
+	fmt.Println("inside searchDirectoryPath func")
 	ValidateAppConfig(appConfig)
 
 	// read the app.jsonl file
 	file, err := os.Open(appConfig)
 	if err != nil {
-		panic(err)
+		return files, err
 	}
 	defer file.Close()
 
 	// read the file line by line
+	fmt.Println("Reading file line by line")
 	var appData appStruct
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		err = json.Unmarshal([]byte(scanner.Text()), &appData)
 		if err != nil {
-			panic(err)
+			return files, err
 		}
 		break
 	}
 
 	// additional errors
 	if err := scanner.Err(); err != nil {
-		panic(err)
+		return files, err
 	}
 
 	// walk the directory path
-	var files []string
 	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -177,8 +180,10 @@ func searchDirectoryPath(directory *string, appConfig string, layers int) []stri
 
 		//keep files that match the input file extensions of the specified application
 		//TODO: create safeguard to constrain ext to the 2nd element input array
+		fmt.Println("appData.Inputs", appData.Inputs)
 		for _, input := range appData.Inputs {
 			for ext := range input {
+				fmt.Println("path:", path, "extention search", ext)
 				if strings.HasSuffix(path, input[ext]) {
 					files = append(files, path)
 					break
@@ -188,43 +193,41 @@ func searchDirectoryPath(directory *string, appConfig string, layers int) []stri
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		return files, err
 	}
 	for _, file := range files {
 		fmt.Println(file)
 	}
-	return files
+	return files, nil
 }
 
-func createInputsDirectory(inputs_basedir string, files []string, prefix string) (string, []string, string) {
+func createInputsDirectory(inputsBasedir string, files []string) (string, []string, string, error) {
 	// create job directory
 	id := uuid.New()
-	inputs_path := inputs_basedir + "/" + id.String()
-	err := os.Mkdir(inputs_path, 0755)
+	inputsPath := inputsBasedir + "/" + id.String()
+	err := os.Mkdir(inputsPath, 0755)
 	if err != nil {
-		panic(err)
+		return id.String(), []string{}, inputsPath, err
 	}
 
 	// create the inputs directory within the job directory
-	os.Mkdir(inputs_path+prefix, 0755)
+	os.Mkdir(inputsPath, 0755)
 
 	// copy files to the inputs directory
-	new_files := make([]string, 0)
+	newFiles := make([]string, 0)
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, inputs_path+prefix+"/"+filepath.Base(file))
+		_, err = fileutils.CopyFile(file, inputsPath+"/"+filepath.Base(file))
 		if err != nil {
-			fmt.Println("Error copying file to inputs directory")
-			panic(err)
+			return id.String(), newFiles, inputsPath, err
 		}
-		new_files = append(new_files, prefix+"/"+filepath.Base(file))
+		newFiles = append(newFiles, filepath.Base(file))
 	}
-	print("job directory created: ", inputs_path, "\n")
-	return id.String(), new_files, inputs_path
+	return id.String(), newFiles, inputsPath, nil
 }
 
 func createCombinations(index_map []map[string]string) []map[string]string {
 	// generate combinations of the mapping
-	//TODO implement generalisable version
+	// TODO implement generalisable version
 	combinations := []map[string]string{}
 	for _, r := range index_map {
 		if r["ligand"] != "" {
@@ -285,4 +288,18 @@ func errorCheck(err error) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func relativePath(absPath string) (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	rel, err := filepath.Rel(cwd, absPath)
+	if err != nil {
+		return "", err
+	}
+
+	return rel, nil
 }

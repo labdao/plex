@@ -37,7 +37,6 @@ type Instruction struct {
 	Container string            `json:"container"`
 	Params    map[string]string `json:"params"`
 	Cmd       string            `json:"cmd"`
-	CmdHelper bool              `json:"cmd_helper"`
 }
 
 func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
@@ -47,7 +46,7 @@ func CreateInstruction(app string, instuctionFilePath, inputDirPath string, para
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	cid, err := createInputCID(inputDirPath, instruction.CmdHelper, instruction.Cmd)
+	cid, err := createInputCID(inputDirPath, instruction.Cmd)
 	if err != nil {
 		return instruction, err
 	}
@@ -97,19 +96,14 @@ func formatCmd(cmd string, params map[string]string) (formatted string) {
 	return
 }
 
-func createInputCID(inputDirPath string, cmdHelper bool, cmd string) (string, error) {
-	// if cmdHelper creates a helper.sh file with cmd as content
-	if cmdHelper {
-		err := createHelperFile(inputDirPath, cmd)
-		if err != nil {
-			return "", err
-		}
-	}
+func createInputCID(inputDirPath string, cmd string) (string, error) {
 	client, err := w3s.NewClient(
 		w3s.WithEndpoint("https://api.web3.storage"),
 		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
 	)
-	errorCheck(err)
+	if err != nil {
+		return "", err
+	}
 	inputDir, err := os.Open(inputDirPath)
 	if err != nil {
 		return "", err

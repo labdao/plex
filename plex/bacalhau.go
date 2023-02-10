@@ -6,13 +6,9 @@ import (
 	"strings"
 )
 
-func InstructionToBacalhauCmd(cid, container, cmd string, cmdHelper bool) string {
+func InstructionToBacalhauCmd(cid, container, cmd string) string {
 	// TODO allow overrides for gpu memory and network flags
-	bacalhauCmd := `bacalhau docker run --network full --gpu 1 --memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container)
-	if cmdHelper {
-		return bacalhauCmd + ` ` + `./helper.sh`
-	}
-	return bacalhauCmd + ` ` + fmt.Sprintf(cmd)
+	return `bacalhau docker run --network full --gpu 1 --memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + fmt.Sprintf(cmd)
 }
 
 func RunBacalhauCmd(cmdString string) {
