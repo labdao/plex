@@ -1,0 +1,1 @@
+{"app": "diffdock", "input_cids": [], "container": "openzyme/diffdock:latest", "params": {"repr_layers": "33", "infrence_steps": "20", "samples_per_complex": "40", "batch_size": "10", "actual_steps": "18"}, "cmd": "./test.sh", "cmd_helper": false}
