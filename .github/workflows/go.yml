@@ -25,9 +25,9 @@ jobs:
     - name: Build
       env:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-      run: go build -v ./plexus
+      run: cd ./plexus && go build -v
 
     - name: Test
       env:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-      run: go test -v ./plexus
+      run: cd ./plexus && go test -v
