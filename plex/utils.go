@@ -107,11 +107,11 @@ func writeJSONL(index_map []map[string]string, file string) {
 	}
 }
 
-func writeCSV(index_map []map[string]string, file string) string {
+func writeCSV(index_map []map[string]string, file string) (string, error) {
 	// todo generalise the function beyond diffdock
 	file_dict, err := os.Create(file)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	defer file_dict.Close()
 
@@ -120,18 +120,18 @@ func writeCSV(index_map []map[string]string, file string) string {
 
 	header := []string{"protein_path", "ligand"}
 	if err := writer.Write(header); err != nil {
-		panic(err)
+		return "", err
 	}
 
 	for _, row := range index_map {
-		proteinPath := row["protein_path"]
-		ligand := row["ligand"]
+		proteinPath := path.Join("../inputs/", row["protein_path"])
+		ligand := path.Join("../inputs/", row["ligand"])
 		record := []string{proteinPath, ligand}
 		if err := writer.Write(record); err != nil {
-			panic(err)
+			return "", err
 		}
 	}
-	return file
+	return file, nil
 }
 
 func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) (files []string, err error) {
