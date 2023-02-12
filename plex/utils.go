@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -14,9 +15,12 @@ import (
 )
 
 type AppConfig struct {
-	App     string      `json:"app"`
-	Inputs  [][2]string `json:"inputs"`
-	Outputs []string    `json:"outputs"`
+	App    string `json:"app"`
+	Inputs []struct {
+		Field     string   `json:"field"`
+		Filetypes []string `json:"filetypes"`
+	} `json:"inputs"`
+	Outputs []string `json:"outputs"`
 }
 
 func ValidateDirectoryPath(directory string) (bool, error) {
@@ -130,13 +134,12 @@ func writeCSV(index_map []map[string]string, file string) string {
 	return file
 }
 
-func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) ([]string, error) {
-	files := []string{}
+func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) (files []string, err error) {
 	// validate config file
 	// ValidateAppConfig(appConfig)
 
 	// walk the directory path
-	err := filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -144,21 +147,17 @@ func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) ([]
 			if layers > 0 {
 				layers--
 				return nil
-			} else {
-				return filepath.SkipDir
 			}
 		}
 
-		//keep files that match the input file extensions of the specified application
-		//TODO: create safeguard to constrain ext to the 2nd element input array
+		// keep files that match the input filetypes of the specified application
 		fmt.Println("appConfig.Inputs", appConfig.Inputs)
 		for _, input := range appConfig.Inputs {
-			for ext := range input {
-				fmt.Println("path:", path, "extention search", ext)
-				fmt.Println(input[ext])
-				if strings.HasSuffix(path, input[ext]) {
+			for _, filetype := range input.Filetypes {
+				fmt.Println("path:", path, "extension search", filetype)
+				fmt.Println(filetype)
+				if strings.HasSuffix(path, filetype) {
 					files = append(files, path)
-					break
 				}
 			}
 		}
@@ -166,15 +165,15 @@ func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) ([]
 	})
 
 	if err != nil {
-		return files, err
+		return
 	}
-	return files, nil
+	return
 }
 
 func createInputsDirectory(inputsBasedir string, files []string) (string, []string, string, error) {
 	// create job directory
 	id := uuid.New()
-	inputsPath := inputsBasedir + "/" + id.String()
+	inputsPath := path.Join(inputsBasedir, id.String())
 	err := os.Mkdir(inputsPath, 0755)
 	if err != nil {
 		return id.String(), []string{}, inputsPath, err
@@ -186,7 +185,7 @@ func createInputsDirectory(inputsBasedir string, files []string) (string, []stri
 	// copy files to the inputs directory
 	newFiles := make([]string, 0)
 	for _, file := range files {
-		_, err = fileutils.CopyFile(file, inputsPath+"/"+filepath.Base(file))
+		_, err = fileutils.CopyFile(file, path.Join(inputsPath, filepath.Base(file)))
 		if err != nil {
 			return id.String(), newFiles, inputsPath, err
 		}
@@ -195,81 +194,35 @@ func createInputsDirectory(inputsBasedir string, files []string) (string, []stri
 	return id.String(), newFiles, inputsPath, nil
 }
 
-func createCombinations(index_map []map[string]string) []map[string]string {
+func createCombinations(indexMap map[string][]string, fieldA, fieldB string) []map[string]string {
 	// generate combinations of the mapping
-	// TODO implement generalisable version
 	combinations := []map[string]string{}
-	for _, r := range index_map {
-		if r["ligand"] != "" {
-			for _, r2 := range index_map {
-				if r2["protein_path"] != "" && r2["ligand"] == "" {
-					m := make(map[string]string)
-					m["ligand"] = r["ligand"]
-					m["protein_path"] = r2["protein_path"]
-					combinations = append(combinations, m)
-				}
-			}
+	for _, valA := range indexMap[fieldA] {
+		for _, valB := range indexMap[fieldB] {
+			row := map[string]string{fieldA: valA, fieldB: valB}
+			combinations = append(combinations, row)
 		}
 	}
 	return combinations
 }
 
-func createIndex(newFiles []string, appConfig string, volumePath string) (string, []map[string]string) {
-	// read the app.jsonl file
-	file, err := os.Open(appConfig)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	// parse the json object
-	var appData AppConfig
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		err = json.Unmarshal([]byte(scanner.Text()), &appData)
-		if err != nil {
-			panic(err)
-		}
-		break
-	}
-
+func createIndex(filePaths []string, appConfig AppConfig, jobDirPath string) (string, []map[string]string) {
 	// categorise the input files based on the app config specifications
-	var sorted []map[string]string // Define a slice to store the maps
-
-	for _, file := range newFiles {
-		m := make(map[string]string)
-		for _, mapping := range appData.Inputs {
-			if strings.HasSuffix(file, mapping[1]) {
-				m[mapping[0]] = file
-				break
+	indexMap := map[string][]string{}
+	for _, filePath := range filePaths {
+		for _, input := range appConfig.Inputs {
+			for _, filetype := range input.Filetypes {
+				if strings.HasSuffix(filePath, filetype) {
+					indexMap[input.Field] = append(indexMap[input.Field], filePath)
+				}
 			}
 		}
-		sorted = append(sorted, m)
 	}
 
-	combinations := createCombinations(sorted)
-	writeJSONL(combinations, volumePath+"/index.jsonl")
-	writeCSV(combinations, volumePath+"/index.csv")
-	return volumePath + "/index.csv", combinations
-}
-
-func errorCheck(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func relativePath(absPath string) (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	rel, err := filepath.Rel(cwd, absPath)
-	if err != nil {
-		return "", err
-	}
-
-	return rel, nil
+	fieldA := appConfig.Inputs[0].Field
+	fieldB := appConfig.Inputs[1].Field
+	combinations := createCombinations(indexMap, fieldA, fieldB)
+	writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
+	writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
+	return path.Join(jobDirPath, "index.csv"), combinations
 }

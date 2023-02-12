@@ -9,7 +9,7 @@ import (
 // go run main.go --app diffdock --input-dir /path/to/pdbs (mode, network and other flags in future)
 
 func main() {
-	// define the flags
+	// required flags
 	app := flag.String("app", "", "Application name")
 	inputDir := flag.String("input-dir", "", "Input directory path")
 
@@ -49,7 +49,6 @@ func main() {
 		fmt.Println(fileName)
 	}
 
-	// TODO enable passing an array of multiple input directories
 	fmt.Println("## Creating job directory ##")
 	dir, err := os.Getwd()
 	if err != nil {
@@ -64,7 +63,7 @@ func main() {
 	}
 	fmt.Println("Created job directory", jobDir)
 	fmt.Println("## Creating index ##")
-	createIndex(movedFiles, "app.jsonl", jobDir)
+	createIndex(movedFiles, appConfig, jobDir)
 
 	// create instructions
 	fmt.Println("## Creating instruction ##")

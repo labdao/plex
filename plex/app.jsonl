@@ -1,2 +1,2 @@
-{"app": "canarytest", "inputs": [["message_path", ".txt"]], "outputs": ["txt"]}
-{"app": "diffdock", "inputs": [["protein_path", ".pdb"], ["ligand", ".sdf"]], "outputs": ["pdb", "sdf"]}
+{"app": "canarytest", "inputs": [{"field": "message_path", "filetypes": [".txt"]}], "outputs": [".txt"]}
+{"app": "diffdock", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
