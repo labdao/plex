@@ -11,7 +11,6 @@ import (
 func TestPutFile(t *testing.T) {
 	client, err := w3s.NewClient(
 		w3s.WithEndpoint("https://api.web3.storage"),
-		// set your web3 storage token here
 		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
 	)
 	if err != nil {

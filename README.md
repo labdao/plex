@@ -17,29 +17,19 @@ go build
 export WEB3STORAGE_TOKEN=<your_token>
 ```
 
-3) Run the canary test
-```
-./plex -app canary -input-dir ./test-directory
-
-# Then copy and run the bacalhau command output
-```
-
-4) Run the diffdock example
+3) Run the diffdock example
 ```
 ./plex -app diffdock -input-dir ./testdata/pdbbind_processed_size1
 
-# Running the bacalhau command takes ~10 min per complex
+# Running the outputted Bacalhau command takes ~10 min per complex, this example has 1 complex
 ```
 
-
-5) Run diffdock with your own inputs
+4) Run diffdock with your own inputs
 ```
 ./plex -app diffdock -input-dir <path to dir on your computer>
 
 # plex will automagically run diffdock on every protein and ligand file found in the directory
 ```
-
-
 
 ## Running a node
 This is a script for setting up a compute instance to run LabDAO jobs. Requires linux OS with Nvidia GPU.
@@ -61,4 +51,10 @@ export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001/p2p/<your id goes here>
 # example: export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001/p2p/12D3KooWPH1BpPfNXwkf778GMP2H5z7pwjKVQFnA5NS3DngU7pxG
 
 LOG_LEVEL=debug bacalhau serve --job-selection-accept-networked --limit-total-gpu 1 --limit-total-memory 12gb --ipfs-connect $IPFS_CONNECT
+```
+
+## Notes
+To download large bacalhau results the below command may need ran 
+```
+sudo sysctl -w net.core.rmem_max=2500000
 ```

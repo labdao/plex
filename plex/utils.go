@@ -23,43 +23,6 @@ type AppConfig struct {
 	Outputs []string `json:"outputs"`
 }
 
-func ValidateDirectoryPath(directory string) (bool, error) {
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		return false, err
-	}
-	if fileInfo, err := os.Stat(directory); err == nil && !fileInfo.Mode().IsDir() {
-		return false, err
-	}
-	return true, nil
-}
-
-/*
-func ValidateAppConfig(appConfig string) (bool, error) {
-	file, err := os.Open(appConfig)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-
-	var appData appStruct
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		err = json.Unmarshal([]byte(scanner.Text()), &appData)
-		if err != nil {
-			return false, err
-		}
-		break
-	}
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-	if _, err := os.Stat(appConfig); os.IsNotExist(err) {
-		return false, err
-	}
-	return true, nil
-}
-*/
-
 func findAppConfig(app string, appConfigsFilePath string) (AppConfig, error) {
 	appConfig := AppConfig{}
 	file, err := os.Open(appConfigsFilePath)
@@ -135,9 +98,6 @@ func writeCSV(index_map []map[string]string, file string) (string, error) {
 }
 
 func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) (files []string, err error) {
-	// validate config file
-	// ValidateAppConfig(appConfig)
-
 	// walk the directory path
 	err = filepath.Walk(*directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

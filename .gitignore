@@ -204,3 +204,6 @@ go.work
 
 # Go workspace file
 go.work
+
+# Module binary
+plex/plex

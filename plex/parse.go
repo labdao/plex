@@ -11,26 +11,6 @@ import (
 	"github.com/web3-storage/go-w3s-client"
 )
 
-/*
-docker container setup
-
-docker build -t diffdock -f Docker/DiffDock/Dockerfile Docker/DiffDock/
-docker tag diffdock openzyme/diffdock
-docker push openzyme/diffdock
-
-bacalhau server setup:
-sudo sysctl -w net.core.rmem_max=2500000
-
-ipfs id
-
-# change 4001 to 5001
-export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001/p2p/12D3KooWPH1BpPfNXwkf778GMP2H5z7pwjKVQFnA5NS3DngU7pxG
-
-LOG_LEVEL=debug bacalhau serve --job-selection-accept-networked --limit-total-gpu 1 --limit-total-memory 12gb --ipfs-connect $IPFS_CONNECT
-
-# also make sure data is on ipfs node
-*/
-
 type Instruction struct {
 	App       string            `json:"app"`
 	InputCIDs []string          `json:"input_cids"`

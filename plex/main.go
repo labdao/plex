@@ -6,8 +6,6 @@ import (
 	"os"
 )
 
-// go run main.go --app diffdock --input-dir /path/to/pdbs (mode, network and other flags in future)
-
 func main() {
 	// required flags
 	app := flag.String("app", "", "Application name")
@@ -34,8 +32,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	// ValidateDirectoryPath(*inputDir)
-	// ValidateAppConfig(*appConfig)
 
 	// creating index file
 	fmt.Println("## Seaching input files ##")
@@ -75,47 +71,3 @@ func main() {
 	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
 	fmt.Println(bacalhauCmd)
 }
-
-/*
-func main2() {
-	client, err := w3s.NewClient(
-		w3s.WithEndpoint("https://api.web3.storage"),
-		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
-	)
-	errorCheck(err)
-
-	if len(os.Args) < 2 {
-		fmt.Println("Error: Please specify a command (putFile, putDirectory, getFiles)")
-		os.Exit(1)
-	}
-
-	command := strings.ToLower(os.Args[1])
-
-	switch command {
-	case "putfile":
-		if len(os.Args) != 3 {
-			fmt.Println("Error: Please specify a file path")
-			os.Exit(1)
-		}
-		filePath := os.Args[2]
-		file, err := os.Open(filePath)
-		errorCheck(err)
-		defer file.Close()
-		putFile(client, file)
-	case "putdirectory":
-		if len(os.Args) != 3 {
-			fmt.Println("Error: Please specify a directory path")
-			os.Exit(1)
-		}
-		directoryPath := os.Args[2]
-		putDirectory(client, directoryPath)
-	case "getfiles":
-		if len(os.Args) < 3 {
-			fmt.Println("Error: Please specify a CID")
-			os.Exit(1)
-		}
-		cidString := os.Args[2]
-		getFiles(client, cidString)
-	}
-}
-*/
