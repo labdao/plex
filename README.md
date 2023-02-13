@@ -9,7 +9,14 @@ Install script coming soon. For now git cloning the repo is required.
 
 1) Install [GoLang](https://go.dev/doc/install)
 
-2) Run the following commands
+2) Install Bacalhau with the following command
+
+```
+# the installer will ask you for your password at some point
+curl -sL https://get.bacalhau.org/install.sh | bash
+```
+
+3) Run the following commands
 ```
 git clone https://github.com/labdao/ganglia.git
 cd ganglia/plex
@@ -17,14 +24,14 @@ go build
 export WEB3STORAGE_TOKEN=<your_token>
 ```
 
-3) Run the diffdock example
+4) Run the diffdock example
 ```
 ./plex -app diffdock -input-dir ./testdata/pdbbind_processed_size1
 
 # Running the outputted Bacalhau command takes ~10 min per complex, this example has 1 complex
 ```
 
-4) Run diffdock with your own inputs
+5) Run diffdock with your own inputs
 ```
 ./plex -app diffdock -input-dir <path to dir on your computer>
 
