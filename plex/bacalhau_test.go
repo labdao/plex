@@ -13,7 +13,7 @@ func TestInstructionToBacalhauCmd(t *testing.T) {
 	}
 }
 
-func TestCreatevalhauJob(t *testing.T) {
+func TestCreateBalhauJob(t *testing.T) {
 	cid := "bafybeig7rsafgrtwzivrorumixcqxpwmje7cp56eoxzg3jbwxxyy26xgue"
 	container := "ubuntu"
 	cmd := "echo DeSci"
@@ -32,6 +32,31 @@ func TestCreatevalhauJob(t *testing.T) {
 	}
 }
 
+func TestGetBacalhauJobResults(t *testing.T) {
+	cid := "bafybeig7rsafgrtwzivrorumixcqxpwmje7cp56eoxzg3jbwxxyy26xgue"
+	container := "ubuntu"
+	cmd := "ls"
+	bacalCmd := InstructionToBacalhauCmd(cid, container, cmd)
+	RunBacalhauCmd(bacalCmd)
+	job, err := createBacalhauJob(cid, container, cmd)
+	if err != nil {
+		t.Fatalf(fmt.Sprint(err))
+	}
+	submittedBacalhauJob, err := submitBacalhauJob(job)
+	if err != nil {
+		t.Fatalf(fmt.Sprint(err))
+	}
+	fmt.Println(submittedBacalhauJob.Metadata.ID)
+	results, err := getBacalhauJobResults(submittedBacalhauJob)
+	if err != nil {
+		t.Fatalf(fmt.Sprint(err))
+	}
+	fmt.Println("******")
+	fmt.Println(results)
+	fmt.Println(len(results))
+}
+
+/*
 func TestRunBacalhauCmd(t *testing.T) {
 	cmd := "bacalhau docker run ubuntu echo Hello World"
 	out, err := RunBacalhauCmd(cmd)
@@ -40,3 +65,4 @@ func TestRunBacalhauCmd(t *testing.T) {
 	}
 	fmt.Printf("Output: %s\n", out)
 }
+*/
