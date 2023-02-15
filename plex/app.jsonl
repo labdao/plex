@@ -1,3 +1,3 @@
 {"app": "canarytest", "inputs": [{"field": "message_path", "filetypes": [".txt"]}, {"field": "csv_path", "filetypes": [".csv"]}], "outputs": [".txt"]}
 {"app": "diffdock", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
-{"app": "equibind", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
+{"app": "equibind", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
