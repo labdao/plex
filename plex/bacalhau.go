@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-func InstructionToBacalhauCmd(cid, container, cmd string, gpu bool) string {
-	// TODO allow overrides for gpu memory and network flags
+func InstructionToBacalhauCmd(cid, container, cmd string, gpu string) string {
+	// TODO allow boolean overrides for gpu memory and network flags
 	gpuFlag := ""
-	if gpu {
+	if gpu != "false"{
 		gpuFlag = "--gpu 1 "
 	}
 	return `bacalhau docker run --network full ` + gpuFlag + `--memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + fmt.Sprintf(cmd)
