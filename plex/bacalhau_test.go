@@ -24,7 +24,7 @@ func TestCreateBalhauJob(t *testing.T) {
 	if job.Spec.Docker.Image != container {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(job.Spec.Docker.Image), fmt.Sprint(container))
 	}
-	if job.Spec.Docker.Entrypoint[0] != cmd {
+	if fmt.Sprint(job.Spec.Docker.Entrypoint) != fmt.Sprint([]string{"/bin/bash", "-c", cmd}) {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(job.Spec.Docker.Entrypoint), fmt.Sprint(cmd))
 	}
 	if job.Spec.Inputs[0].CID != cid {
@@ -35,9 +35,7 @@ func TestCreateBalhauJob(t *testing.T) {
 func TestGetBacalhauJobResults(t *testing.T) {
 	cid := "bafybeig7rsafgrtwzivrorumixcqxpwmje7cp56eoxzg3jbwxxyy26xgue"
 	container := "ubuntu"
-	cmd := "ls"
-	bacalCmd := InstructionToBacalhauCmd(cid, container, cmd)
-	RunBacalhauCmd(bacalCmd)
+	cmd := "printenv && echo DeSci"
 	job, err := createBacalhauJob(cid, container, cmd)
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
@@ -51,9 +49,9 @@ func TestGetBacalhauJobResults(t *testing.T) {
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
-	fmt.Println("******")
-	fmt.Println(results)
-	fmt.Println(len(results))
+	if len(results) == 0 {
+		t.Errorf("Bacalhau failed to find completed job")
+	}
 }
 
 /*

@@ -25,7 +25,7 @@ func createBacalhauJob(cid, container, cmd string) (job *model.Job, err error) {
 	job.Spec.Engine = model.EngineDocker
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Image = container
-	job.Spec.Docker.Entrypoint = []string{cmd}
+	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	job.Spec.Resources.Memory = "12gb"
 	job.Spec.Resources.GPU = "1"
@@ -47,7 +47,7 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	apiPort := 1234
 	apiHost := "35.245.115.191"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 5)
 	fmt.Println(submittedJob.Metadata.ID)
 	results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 	return results, err
