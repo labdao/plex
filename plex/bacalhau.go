@@ -47,8 +47,31 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	apiPort := 1234
 	apiHost := "35.245.115.191"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
-	time.Sleep(time.Second * 5)
-	fmt.Println(submittedJob.Metadata.ID)
+	for {
+		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
+		if err != nil {
+			return results, err
+		}
+
+		// check to see if any node shards have finished or errored while running job
+		// this assumes the job spec will only have one shard attempt to run the job
+		completedShardRuns := []model.JobShardState{}
+		erroredShardRuns := []model.JobShardState{}
+		for _, jobNodeState := range jobState.Nodes {
+			for _, jobShardState := range jobNodeState.Shards {
+				if jobShardState.State == model.JobStateCompleted {
+					completedShardRuns = append(completedShardRuns, jobShardState)
+				} else if jobShardState.State == model.JobStateError {
+					erroredShardRuns = append(erroredShardRuns, jobShardState)
+				}
+			}
+		}
+		fmt.Printf("Job Status: %v\n", jobState)
+		if len(completedShardRuns) > 0 || len(erroredShardRuns) > 0 {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
 	results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 	return results, err
 }

@@ -64,3 +64,25 @@ func TestRunBacalhauCmd(t *testing.T) {
 	fmt.Printf("Output: %s\n", out)
 }
 */
+
+/*
+    // Loop until the job is no longer in progress
+    for {
+        // Get the status of the job using the model's JobStatus method
+        status, err := client.GetJobStatus(jobID)
+        if err != nil {
+            panic(err)
+        }
+
+        fmt.Printf("Job Status: %v\n", status.State)
+
+        // If the job has completed or failed, break out of the loop
+        if status.State == model.JobStateCompleted || status.State == model.JobStateFailed {
+            break
+        }
+
+        // Wait for a few seconds before checking the job status again
+        time.Sleep(5 * time.Second)
+    }
+}
+*/
