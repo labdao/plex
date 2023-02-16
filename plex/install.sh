@@ -1,5 +1,58 @@
 #!/bin/bash
 
+setOSandArch() {
+    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+    ARCH=$(arch)
+    if ["${ARCH}" = "x86_64" ]; then
+        ARCH="amd64"
+    fi
+}
+
+installGo() {
+    if ! command -v go &> /dev/null
+    then
+        echo "Downloading and installing Go..."
+        setOSandArch
+        
+        if [ "$OS" = "darwin"]
+        then
+            if [ "$ARCH" = "amd64" ]
+            then
+                curl -O https://go.dev/dl/go1.19.6.darwin-amd64.pkg
+                sudo installer -pkg go1.19.6.darwin-amd64.pkg -target /
+                export PATH=$PATH:/usr/local/go/bin                
+            elif [ "$ARCH" = "arm64" ]
+            then
+                # download and install macOS arm64 Go
+                curl -O https://go.dev/dl/go1.19.6.darwin-arm64.pkg
+                sudo installer -pkg go1.19.6.darwin-arm64.pkg -target /
+                export PATH=$PATH:/usr/local/go/bin
+            else
+                echo "Cannot install Go. Unsupported architecture for Darwin OS: $ARCH"
+            fi
+        elif [ "$OS" = "linux" ]
+        then
+            if [ "$ARCH" = "amd64" ]
+            then
+                curl -O https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
+                sudo tar -C /usr/local -xzf go1.19.6.linux-amd64.tar.gz
+                export PATH=$PATH:/usr/local/go/bin
+            else
+                echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
+            fi
+        elif [ "$OS" = "windows" ]
+        then
+            if [ "$ARCH" = "amd64" ]
+            then
+                curl -O https://go.dev/dl/go1.20.1.windows-amd64.msi
+                msiexec /i go1.20.1.windows-amd64.msi /quiet /qn
+            else
+                echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
+            fi
+        fi
+    fi
+}
+
 installBacalhau() {
     echo "Installing Bacalhau..."
     curl -sL https://get.bacalhau.org/install.sh | bash
@@ -56,7 +109,10 @@ displayLogo() {
     echo "$logo"
 }
 
+installGo
 installBacalhau
 setW3SToken
 displayLogo
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
+echo "If you would like to jump right in, run the following command..."
+echo ""
