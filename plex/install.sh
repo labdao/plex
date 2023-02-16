@@ -114,5 +114,3 @@ installBacalhau
 setW3SToken
 displayLogo
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
-echo "If you would like to jump right in, run the following command..."
-echo ""
