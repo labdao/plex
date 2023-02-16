@@ -3,9 +3,6 @@
 setOSandArch() {
     OS=$(uname -s | tr '[:upper:]' '[:lower:]')
     ARCH=$(arch)
-    if ["${ARCH}" = "x86_64" ]; then
-        ARCH="amd64"
-    fi
 }
 
 installGo() {
@@ -16,14 +13,13 @@ installGo() {
         
         if [ "$OS" = "darwin"]
         then
-            if [ "$ARCH" = "amd64" ]
+            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
             then
                 curl -O https://go.dev/dl/go1.19.6.darwin-amd64.pkg
                 sudo installer -pkg go1.19.6.darwin-amd64.pkg -target /
                 export PATH=$PATH:/usr/local/go/bin                
             elif [ "$ARCH" = "arm64" ]
             then
-                # download and install macOS arm64 Go
                 curl -O https://go.dev/dl/go1.19.6.darwin-arm64.pkg
                 sudo installer -pkg go1.19.6.darwin-arm64.pkg -target /
                 export PATH=$PATH:/usr/local/go/bin
@@ -32,17 +28,18 @@ installGo() {
             fi
         elif [ "$OS" = "linux" ]
         then
-            if [ "$ARCH" = "amd64" ]
+            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
             then
-                curl -O https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
-                sudo tar -C /usr/local -xzf go1.19.6.linux-amd64.tar.gz
+                wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
+                sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
+                rm go1.19.6.linux-amd64.tar.gz
                 export PATH=$PATH:/usr/local/go/bin
             else
                 echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
             fi
         elif [ "$OS" = "windows" ]
         then
-            if [ "$ARCH" = "amd64" ]
+            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
             then
                 curl -O https://go.dev/dl/go1.19.6.windows-amd64.msi
                 msiexec /i go1.19.6.windows-amd64.msi /quiet /qn
