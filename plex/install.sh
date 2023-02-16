@@ -44,8 +44,8 @@ installGo() {
         then
             if [ "$ARCH" = "amd64" ]
             then
-                curl -O https://go.dev/dl/go1.20.1.windows-amd64.msi
-                msiexec /i go1.20.1.windows-amd64.msi /quiet /qn
+                curl -O https://go.dev/dl/go1.19.6.windows-amd64.msi
+                msiexec /i go1.19.6.windows-amd64.msi /quiet /qn
             else
                 echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
             fi
