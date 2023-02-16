@@ -126,4 +126,4 @@ displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
 echo "To start using Plex, run the following command:"
-echo "./plex -app equibind -input-dir ./testdata/pdbbind_processed_size1"
+echo "./plex -app equibind -gpu false -input-dir ./testdata/pdbbind_processed_size1"
