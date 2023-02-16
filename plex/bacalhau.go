@@ -30,6 +30,7 @@ func createBacalhauJob(cid, container, cmd string) (job *model.Job, err error) {
 	job.Spec.Resources.Memory = "12gb"
 	job.Spec.Resources.GPU = "1"
 	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
+	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	return job, err
 }
 
@@ -47,7 +48,8 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	apiPort := 1234
 	apiHost := "35.245.115.191"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
-	for {
+	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
+	for i := 0; i < maxTrys; i++ {
 		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
@@ -66,13 +68,14 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 				}
 			}
 		}
-		fmt.Printf("Job Status: %v\n", jobState)
 		if len(completedShardRuns) > 0 || len(erroredShardRuns) > 0 {
-			break
+			fmt.Println("Job run complete")
+			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+			return results, err
 		}
+		fmt.Println("Job still running...")
 		time.Sleep(5 * time.Second)
 	}
-	results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 	return results, err
 }
 

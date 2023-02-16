@@ -68,6 +68,21 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
-	fmt.Println(bacalhauCmd)
+	job, err := createBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	submittedJob, err := submitBacalhauJob(job)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println("Bacalhau Job Id: " + submittedJob.Metadata.ID)
+	results, err := getBacalhauJobResults(submittedJob)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	print(len(results))
 }
