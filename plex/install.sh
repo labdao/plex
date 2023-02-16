@@ -13,7 +13,7 @@ installGo() {
         
         if [ "$OS" = "darwin"]
         then
-            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
+            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
                 curl -O https://go.dev/dl/go1.19.6.darwin-amd64.pkg
                 sudo installer -pkg go1.19.6.darwin-amd64.pkg -target /
@@ -28,7 +28,7 @@ installGo() {
             fi
         elif [ "$OS" = "linux" ]
         then
-            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
+            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
                 wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
                 sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
@@ -39,7 +39,7 @@ installGo() {
             fi
         elif [ "$OS" = "windows" ]
         then
-            if [ "$ARCH" = "amd64" || "$ARCH" = "x86_64" ]
+            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
                 curl -O https://go.dev/dl/go1.19.6.windows-amd64.msi
                 msiexec /i go1.19.6.windows-amd64.msi /quiet /qn
