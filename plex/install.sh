@@ -73,8 +73,10 @@ getPlex() {
 }
 
 buildPlexBinary() {
+    echo "Building Plex binary..."
     getPlex
     go build
+    echo "Plex binary built successfully."
 }
 
 displayLogo() {
