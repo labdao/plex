@@ -7,7 +7,7 @@ import (
 
 func TestInstructionToBacalhauCmd(t *testing.T) {
 	want := "bacalhau docker run --network full --gpu 1 --memory 12gb -i QmZGavZu mycontainer -- python -m molbind"
-	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind")
+	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", "true")
 	if want != got {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
