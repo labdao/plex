@@ -67,6 +67,16 @@ setW3SToken() {
     fi
 }
 
+getPlex() {
+    git clone https://github.com/labdao/ganglia.git
+    cd ganglia/plex
+}
+
+buildPlexBinary() {
+    getPlex
+    go build
+}
+
 displayLogo() {
     logo="
                                         @
@@ -109,5 +119,6 @@ displayLogo() {
 installGo
 installBacalhau
 setW3SToken
+buildPlexBinary
 displayLogo
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
