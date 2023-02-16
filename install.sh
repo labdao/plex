@@ -82,9 +82,9 @@ EONG
 
 # Install GoLang
 echo "Installing GoLang"
-wget https://go.dev/dl/go1.20.linux-amd64.tar.gz
-sudo tar -C /usr/local -xvzf go1.20.linux-amd64.tar.gz
-rm go1.20.linux-amd64.tar.gz 
+wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
+sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
+rm go1.19.6.linux-amd64.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 
 echo "Testing GoLang Install"

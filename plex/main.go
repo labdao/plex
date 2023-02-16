@@ -68,6 +68,9 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	// create bacalhau job
+	fmt.Println("## Creating Bacalhau Job ##")
 	job, err := createBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
 	if err != nil {
 		fmt.Println(err)
@@ -84,5 +87,6 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	print(len(results))
+	DownloadBacalhauResults(jobDir, submittedJob, results)
+	fmt.Println("Your job results have been downloaded to " + jobDir)
 }
