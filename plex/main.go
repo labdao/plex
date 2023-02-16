@@ -10,6 +10,8 @@ func main() {
 	// required flags
 	app := flag.String("app", "", "Application name")
 	inputDir := flag.String("input-dir", "", "Input directory path")
+	// todo: needs to be a boolean flag
+	gpu := flag.String("gpu", "true", "Use GPU")
 
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "app.jsonl", "App Configurations file")
@@ -20,6 +22,7 @@ func main() {
 	fmt.Println("## User input ##")
 	fmt.Println("Provided application name:", *app)
 	fmt.Println("Provided directory path:", *inputDir)
+	fmt.Println("Using GPU:", *gpu)
 
 	fmt.Println("## Default parameters ##")
 	fmt.Println("Using app configs:", *appConfigsFilePath)
@@ -89,4 +92,6 @@ func main() {
 	}
 	DownloadBacalhauResults(jobDir, submittedJob, results)
 	fmt.Println("Your job results have been downloaded to " + jobDir)
+	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, *gpu)
+	fmt.Println(bacalhauCmd)
 }

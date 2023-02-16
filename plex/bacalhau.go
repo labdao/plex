@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/filecoin-project/bacalhau/pkg/downloader"
@@ -81,4 +83,25 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadJob(context.Background(), submittedJob.Spec.Outputs, results, downloaderProvider, downloadSettings)
 	return err
+}
+
+func InstructionToBacalhauCmd(cid, container, cmd, gpu string) string {
+	// TODO allow boolean overrides for gpu memory and network flags
+	gpuFlag := ""
+	if gpu != "false" {
+		gpuFlag = "--gpu 1 "
+	}
+	return `bacalhau docker run --network full ` + gpuFlag + `--memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + fmt.Sprintf(cmd)
+}
+
+func RunBacalhauCmd(cmdString string) {
+	args := strings.Fields(cmdString)
+	fmt.Println(args)
+	cmd := exec.Command(args[0], args[1:]...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Printf("Command failed: %s\n", err)
+		return
+	}
+	fmt.Printf("Output: %s\n", out)
 }
