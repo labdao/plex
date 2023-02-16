@@ -15,7 +15,7 @@ downloadPlex() {
         echo "Downloading Plex..."
         setOSandArch
         
-        if [ "$OS" = "darwin"]
+        if [ "$OS" = "darwin" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
