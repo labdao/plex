@@ -5,24 +5,24 @@ setOSandArch() {
     ARCH=$(arch)
 }
 
-installGo() {
-    if ! command -v go &> /dev/null
-    then
-        echo "Downloading and installing Go..."
+makeParentFolder() {
+    mkdir plex
+    cd plex
+}
+
+downloadPlex() {
+    if [[ ! -x plex ]]; then
+        echo "Downloading Plex..."
         setOSandArch
         
         if [ "$OS" = "darwin"]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://go.dev/dl/go1.19.6.darwin-amd64.pkg
-                sudo installer -pkg go1.19.6.darwin-amd64.pkg -target /
-                export PATH=$PATH:/usr/local/go/bin                
+                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/macos-amd64/plex
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -O https://go.dev/dl/go1.19.6.darwin-arm64.pkg
-                sudo installer -pkg go1.19.6.darwin-arm64.pkg -target /
-                export PATH=$PATH:/usr/local/go/bin
+                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/macos-arm64/plex
             else
                 echo "Cannot install Go. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -30,10 +30,7 @@ installGo() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
-                sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
-                rm go1.19.6.linux-amd64.tar.gz
-                export PATH=$PATH:/usr/local/go/bin
+                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/linux-amd64/plex
             else
                 echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
             fi
@@ -41,8 +38,7 @@ installGo() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://go.dev/dl/go1.19.6.windows-amd64.msi
-                msiexec /i go1.19.6.windows-amd64.msi /quiet /qn
+                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/windows-amd64/plex.exe
             else
                 echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
             fi
@@ -67,16 +63,11 @@ setW3SToken() {
     fi
 }
 
-getPlex() {
-    git clone https://github.com/labdao/ganglia.git
-}
-
-buildPlexBinary() {
-    echo "Building Plex binary..."
-    getPlex
-    cd ganglia/plex
-    go build
-    echo "Plex binary built successfully."
+getTestData() {
+    mkdir testdata
+    cd testdata
+    curl -r -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/gettestdata
+    cd ..
 }
 
 displayLogo() {
@@ -118,10 +109,11 @@ displayLogo() {
     echo "$logo"
 }
 
-installGo
+makeParentFolder
+downloadPlex
 installBacalhau
 setW3SToken
-buildPlexBinary
+getTestData
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"

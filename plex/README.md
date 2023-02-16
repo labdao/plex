@@ -12,7 +12,7 @@ The installer may ask for your password at some point. You will also be prompted
 
 ## Running the client
 
-Once the client is installed, you can run the following command in the `plex` folder to run equibind.
+Once the client is installed, you can run the following command in the newly-created `plex` folder to run equibind.
 
 ```
 ./plex -app equibind -input-dir ./testdata/pdbbind_processed_size1
