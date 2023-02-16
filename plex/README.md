@@ -5,7 +5,7 @@
 First, install the client by running
 
 ```
-curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/plex/install.sh | bash
+source <(curl -sSL https://raw.githubusercontent.com/labdao/ganglia/main/plex/install.sh)
 ```
 
 The installer may ask for your password at some point. You will also be prompted to enter a web3.storage API token.
