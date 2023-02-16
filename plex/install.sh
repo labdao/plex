@@ -69,12 +69,12 @@ setW3SToken() {
 
 getPlex() {
     git clone https://github.com/labdao/ganglia.git
-    cd ganglia/plex
 }
 
 buildPlexBinary() {
     echo "Building Plex binary..."
     getPlex
+    cd ganglia/plex
     go build
     echo "Plex binary built successfully."
 }
