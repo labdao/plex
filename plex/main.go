@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// creating index file
-	fmt.Println("## Seaching input files ##")
+	fmt.Println("## Searching input files ##")
 	identifiedFiles, err := searchDirectoryPath(inputDir, appConfig, *layers)
 	if err != nil {
 		fmt.Println(err)
@@ -48,7 +48,6 @@ func main() {
 		fmt.Println(fileName)
 	}
 
-	fmt.Println("## Creating job directory ##")
 	dir, err := os.Getwd()
 	if err != nil {
 		fmt.Println(err)
@@ -61,11 +60,10 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("Created job directory", jobDir)
-	fmt.Println("## Creating index ##")
+
 	createIndex(movedFiles, appConfig, jobDir)
 
 	// create instructions
-	fmt.Println("## Creating instruction ##")
 	instruction, err := CreateInstruction(*app, "instruction_template.jsonl", jobDir, map[string]string{})
 	if err != nil {
 		fmt.Println(err)
@@ -92,6 +90,4 @@ func main() {
 	}
 	DownloadBacalhauResults(jobDir, submittedJob, results)
 	fmt.Println("Your job results have been downloaded to " + jobDir)
-	bacalhauCmd := InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, *gpu)
-	fmt.Println(bacalhauCmd)
 }

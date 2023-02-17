@@ -48,7 +48,10 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	apiHost := "35.245.115.191"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
 	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
+	animation := []string{"\U0001F331", "_", "_", "_", "_"}
+	fmt.Println("Job running...")
 	for i := 0; i < maxTrys; i++ {
+		saplingIndex := i % 5
 		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
@@ -68,12 +71,15 @@ func getBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 			}
 		}
 		if len(completedShardRuns) > 0 || len(erroredShardRuns) > 0 {
-			fmt.Println("Job run complete")
+			fmt.Println("")
+			fmt.Println("\U0001F332 Job run complete")
 			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 			return results, err
 		}
-		fmt.Println("Job still running...")
-		time.Sleep(5 * time.Second)
+		animation[saplingIndex] = "\U0001F331"
+		fmt.Printf("////%s////\r", strings.Join(animation, ""))
+		animation[saplingIndex] = "_"
+		time.Sleep(2 * time.Second)
 	}
 	return results, err
 }
