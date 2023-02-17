@@ -27,5 +27,5 @@ chmod +x ./plex
 Once the client is installed, you can run the following command in the newly-created `plex` folder to run equibind.
 
 ```
-./plex -app equibind -input-dir ./testdata
+./plex -app equibind -input-dir ./testdata -gpu false
 ```
