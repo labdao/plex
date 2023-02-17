@@ -111,11 +111,8 @@ func searchDirectoryPath(directory *string, appConfig AppConfig, layers int) (fi
 		}
 
 		// keep files that match the input filetypes of the specified application
-		fmt.Println("appConfig.Inputs", appConfig.Inputs)
 		for _, input := range appConfig.Inputs {
 			for _, filetype := range input.Filetypes {
-				fmt.Println("path:", path, "extension search", filetype)
-				fmt.Println(filetype)
 				if strings.HasSuffix(path, filetype) {
 					files = append(files, path)
 				}
