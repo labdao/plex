@@ -74,7 +74,7 @@ func main() {
 
 	// create bacalhau job
 	fmt.Println("## Creating Bacalhau Job ##")
-	job, err := createBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd)
+	job, err := createBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, *gpu)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

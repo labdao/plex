@@ -14,7 +14,7 @@ import (
 	"github.com/filecoin-project/bacalhau/pkg/system"
 )
 
-func createBacalhauJob(cid, container, cmd string) (job *model.Job, err error) {
+func createBacalhauJob(cid, container, cmd, gpu string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -25,7 +25,9 @@ func createBacalhauJob(cid, container, cmd string) (job *model.Job, err error) {
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	job.Spec.Resources.Memory = "12gb"
-	job.Spec.Resources.GPU = "1"
+	if gpu == "true" {
+		job.Spec.Resources.GPU = "1"
+	}
 	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	return job, err
