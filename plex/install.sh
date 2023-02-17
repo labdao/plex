@@ -128,7 +128,10 @@ getTestData
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
-echo "Please run the following command to set your web3.storage token:"
+echo "To get started, please run the following 3 steps:"
+echo "1. Please change the permissions of plex on your system:"
+echo "chmod +x ./plex"
+echo "2. Please run the following command to set your web3.storage token:"
 echo "export WEB3STORAGE_TOKEN=<your API token>"
-echo "After you have set your API token, to start using Plex run the following command:"
+echo "3. After you have set your API token, to start using Plex run the following command:"
 echo "./plex -app equibind -gpu false -input-dir ./testdata"
