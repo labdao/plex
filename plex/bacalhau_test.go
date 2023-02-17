@@ -9,7 +9,7 @@ func TestCreateBalhauJob(t *testing.T) {
 	cid := "bafybeig7rsafgrtwzivrorumixcqxpwmje7cp56eoxzg3jbwxxyy26xgue"
 	container := "ubuntu"
 	cmd := "echo DeSci"
-	job, err := createBacalhauJob(cid, container, cmd)
+	job, err := createBacalhauJob(cid, container, cmd, "false")
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
@@ -28,7 +28,7 @@ func TestGetBacalhauJobResults(t *testing.T) {
 	cid := "bafybeig7rsafgrtwzivrorumixcqxpwmje7cp56eoxzg3jbwxxyy26xgue"
 	container := "ubuntu"
 	cmd := "printenv && echo DeSci"
-	job, err := createBacalhauJob(cid, container, cmd)
+	job, err := createBacalhauJob(cid, container, cmd, "false")
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
