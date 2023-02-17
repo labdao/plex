@@ -51,17 +51,17 @@ installBacalhau() {
     curl -sL https://get.bacalhau.org/install.sh | bash
 }
 
-setW3SToken() {
-    read -p "Enter your web3.storage API token: " WEB3STORAGE_TOKEN
-    if [ -z "$WEB3STORAGE_TOKEN" ]
-    then
-        echo "web3.storage API token cannot be empty."
-        setW3SToken
-    else
-        export WEB3STORAGE_TOKEN
-        echo "web3.storage API token set successfully."
-    fi
-}
+# setW3SToken() {
+#     read -p "Enter your web3.storage API token: " WEB3STORAGE_TOKEN
+#     if [ -z "$WEB3STORAGE_TOKEN" ]
+#     then
+#         echo "web3.storage API token cannot be empty."
+#         setW3SToken
+#     else
+#         export WEB3STORAGE_TOKEN
+#         echo "web3.storage API token set successfully."
+#     fi
+# }
 
 getTestData() {
     mkdir testdata
@@ -112,10 +112,12 @@ displayLogo() {
 makeParentFolder
 downloadPlex
 installBacalhau
-setW3SToken
+# setW3SToken
 getTestData
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
-echo "To start using Plex, run the following command:"
+echo "Please run the following command to set your web3.storage token:"
+echo "export WEB3STORAGE_TOKEN=<your API token>"
+echo "After you have set your API token, to start using Plex run the following command:"
 echo "./plex -app equibind -gpu false -input-dir ./testdata/pdbbind_processed_size1"
