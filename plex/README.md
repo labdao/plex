@@ -10,6 +10,12 @@ source <(curl -sSL https://raw.githubusercontent.com/labdao/ganglia/main/plex/in
 
 The installer may ask for your password at some point. You will also be prompted to enter a web3.storage API token.
 
+Next, set your web3.storage API token.
+
+```
+export WEB3STORAGE_TOKEN=<your token here>
+```
+
 ## Running the client
 
 Once the client is installed, you can run the following command in the newly-created `plex` folder to run equibind.
