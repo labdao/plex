@@ -165,7 +165,7 @@ kubo*
 
 # GoLang
 # Binaries for programs and plugins
-*.exe
+# *.exe add this back in once release is separate from git repo
 *.exe~
 *.dll
 *.so
@@ -187,7 +187,6 @@ go.work
 .DS_Store
 
 # Binaries for programs and plugins
-*.exe
 *.exe~
 *.dll
 *.so
