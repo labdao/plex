@@ -48,9 +48,14 @@ The install script sets up Docker, Nvidia Drivers, Nvidia Container Toolkit, and
 curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/install.sh | bash && newgrp docker
 ```
 
-After the script run the following commands to start a Bacalhau server to accept jobs
+After the script run the following command in a separate terminal to start a Bacalhau server to accept jobs.
 ```
-ipfs init
+ipfs daemon
+```
+
+Once the daemon is running, configure the Bacalhau node based on the addresses used by the IFPS node.
+```
+ipfs id
 
 # copy the ip4 tcp output and change port 4001 to 5001 then export
 export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001/p2p/<your id goes here>
