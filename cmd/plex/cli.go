@@ -7,7 +7,7 @@ import (
 	"github.com/labdao/plex/internal/bacalhau"
 )
 
-func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int) {
+func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int, dry bool) {
 	// validate the flags
 	fmt.Println("## Validating ##")
 	appConfig, err := FindAppConfig(app, appConfigsFilePath)
@@ -50,10 +50,10 @@ func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int) {
 		os.Exit(1)
 	}
 
-	cmd := bacalhau.InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, "true")
-	fmt.Println(cmd)
-
-	/*
+	if dry {
+		cmd := bacalhau.InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, "true")
+		fmt.Println(cmd)
+	} else {
 		// create bacalhau job
 		fmt.Println("## Creating Bacalhau Job ##")
 		job, err := bacalhau.CreateBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, gpu)
@@ -74,5 +74,5 @@ func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int) {
 		}
 		bacalhau.DownloadBacalhauResults(jobDir, submittedJob, results)
 		fmt.Println("Your job results have been downloaded to " + jobDir)
-	*/
+	}
 }

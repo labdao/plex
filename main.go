@@ -16,6 +16,7 @@ func main() {
 
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
+	dry := flag.Bool("dry", false, "do not send request and just print Bacalhau cmd")
 	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
 
@@ -29,5 +30,5 @@ func main() {
 	fmt.Println("Using app configs:", *appConfigsFilePath)
 	fmt.Println("Setting layers to:", *layers)
 
-	plex.Execute(*app, *inputDir, *gpu, *appConfigsFilePath, *layers)
+	plex.Execute(*app, *inputDir, *gpu, *appConfigsFilePath, *layers, *dry)
 }
