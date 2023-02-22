@@ -12,7 +12,7 @@ import (
 
 	fileutils "github.com/docker/docker/pkg/fileutils"
 	"github.com/google/uuid"
-	"github.com/labdao/ganglia/internal/ipfs"
+	"github.com/labdao/plex/internal/ipfs"
 	"github.com/web3-storage/go-w3s-client"
 )
 

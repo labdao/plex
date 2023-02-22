@@ -61,22 +61,38 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 		// this assumes the job spec will only have one shard attempt to run the job
 		completedShardRuns := []model.JobShardState{}
 		erroredShardRuns := []model.JobShardState{}
+		cancelledShardRuns := []model.JobShardState{}
+		fmt.Printf("Found %d Nodes with job", len(jobState.Nodes))
 		for _, jobNodeState := range jobState.Nodes {
+			fmt.Printf("Found %d Shards with job", len(jobNodeState.Shards))
 			for _, jobShardState := range jobNodeState.Shards {
+				fmt.Printf("job state is: %s", jobShardState.State)
+				fmt.Printf("job completed state is: %s", model.JobStateCompleted)
+				fmt.Printf("job errored state is: %s", model.JobStateError)
+				fmt.Printf("job cancelled state is: %s", model.JobStateCancelled)
 				if jobShardState.State == model.JobStateCompleted {
 					completedShardRuns = append(completedShardRuns, jobShardState)
 				} else if jobShardState.State == model.JobStateError {
 					erroredShardRuns = append(erroredShardRuns, jobShardState)
+				} else if jobShardState.State == model.JobStateCancelled {
+					cancelledShardRuns = append(cancelledShardRuns, jobShardState)
 				}
 			}
 		}
-		if len(completedShardRuns) > 0 || len(erroredShardRuns) > 0 {
+		if len(completedShardRuns) > 0 {
 			fmt.Println("")
 			fmt.Println("\U0001F332 Job run complete")
 			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 			return results, err
 		}
+		if len(cancelledShardRuns) > 0 || len(erroredShardRuns) > 0 {
+			fmt.Println("")
+			fmt.Println("\U0001F342 Job failed to complete")
+			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+			return results, err
+		}
 		animation[saplingIndex] = "\U0001F331"
+		fmt.Println("")
 		fmt.Printf("////%s////\r", strings.Join(animation, ""))
 		animation[saplingIndex] = "_"
 		time.Sleep(2 * time.Second)
@@ -99,7 +115,7 @@ func InstructionToBacalhauCmd(cid, container, cmd, gpu string) string {
 	if gpu != "false" {
 		gpuFlag = "--gpu 1 "
 	}
-	return `bacalhau docker run --network full ` + gpuFlag + `--memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + fmt.Sprintf(cmd)
+	return `bacalhau docker run --network full ` + gpuFlag + `--memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + `/bin/bash -c ` + fmt.Sprintf(cmd)
 }
 
 func RunBacalhauCmd(cmdString string) {

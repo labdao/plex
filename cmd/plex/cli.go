@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/labdao/ganglia/internal/bacalhau"
+	"github.com/labdao/plex/internal/bacalhau"
 )
 
 func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int) {
@@ -44,30 +44,35 @@ func Execute(app, inputDir, gpu, appConfigsFilePath string, layers int) {
 	createIndex(movedFiles, appConfig, jobDir)
 
 	// create instructions
-	instruction, err := CreateInstruction(app, "instruction_template.jsonl", jobDir, map[string]string{})
+	instruction, err := CreateInstruction(app, "config/instruction_template.jsonl", jobDir, map[string]string{})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	// create bacalhau job
-	fmt.Println("## Creating Bacalhau Job ##")
-	job, err := bacalhau.CreateBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, gpu)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	submittedJob, err := bacalhau.SubmitBacalhauJob(job)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println("Bacalhau Job Id: " + submittedJob.Metadata.ID)
-	results, err := bacalhau.GetBacalhauJobResults(submittedJob)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	bacalhau.DownloadBacalhauResults(jobDir, submittedJob, results)
-	fmt.Println("Your job results have been downloaded to " + jobDir)
+	cmd := bacalhau.InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, "true")
+	fmt.Println(cmd)
+
+	/*
+		// create bacalhau job
+		fmt.Println("## Creating Bacalhau Job ##")
+		job, err := bacalhau.CreateBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, gpu)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		submittedJob, err := bacalhau.SubmitBacalhauJob(job)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Bacalhau Job Id: " + submittedJob.Metadata.ID)
+		results, err := bacalhau.GetBacalhauJobResults(submittedJob)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		bacalhau.DownloadBacalhauResults(jobDir, submittedJob, results)
+		fmt.Println("Your job results have been downloaded to " + jobDir)
+	*/
 }

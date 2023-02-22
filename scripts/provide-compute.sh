@@ -150,4 +150,4 @@ logo="
                                         @
 "
 echo "$logo"
-echo "Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
+echo "Welcome to LabDAO! Documentation at https://github.com/labdao/"

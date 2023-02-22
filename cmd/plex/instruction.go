@@ -3,7 +3,7 @@ package plex
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -31,7 +31,7 @@ func CreateInstruction(app string, instuctionFilePath, inputDirPath string, para
 }
 
 func ReadInstructions(app string, filepath string) (Instruction, error) {
-	fileContents, err := ioutil.ReadFile(filepath)
+	fileContents, err := os.ReadFile(filepath)
 	var instruction Instruction
 	if err != nil {
 		return instruction, err
@@ -48,7 +48,7 @@ func ReadInstructions(app string, filepath string) (Instruction, error) {
 		}
 	}
 
-	return instruction, fmt.Errorf("No instruction found for app %s", app)
+	return instruction, fmt.Errorf("no instruction found for app %s", app)
 }
 
 func overwriteParams(defaultParams, overrideParams map[string]string) (finalParams map[string]string) {
@@ -67,7 +67,7 @@ func formatCmd(cmd string, params map[string]string) (formatted string) {
 	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
 	formatted = cmd
 	for key, val := range params {
-		formatted = strings.Replace(formatted, "%{"+key+"}s", fmt.Sprintf("%s", val), -1)
+		formatted = strings.Replace(formatted, "%{"+key+"}s", val, -1)
 	}
 	return
 }
