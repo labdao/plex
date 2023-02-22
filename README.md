@@ -5,7 +5,7 @@
 First, install the client by running
 
 ```
-source <(curl -sSL https://raw.githubusercontent.com/labdao/ganglia/main/plex/install.sh)
+source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/plex/install.sh)
 ```
 
 The installer may ask for your password at some point. 
@@ -37,7 +37,7 @@ Tested on Ubuntu 20.04 LTS with Nvidia T4, V100, and A10 GPUs (AWS G4, P3, and G
 
 The install script sets up Docker, Nvidia Drivers, Nvidia Container Toolkit, and IPFS
 ```
-curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/sripts/provide_compute.sh | bash && newgrp docker
+curl -sL https://raw.githubusercontent.com/labdao/plex/main/sripts/provide_compute.sh | bash && newgrp docker
 ```
 
 After the script run the following command in a separate terminal to start a Bacalhau server to accept jobs.
