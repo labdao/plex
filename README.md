@@ -5,7 +5,7 @@
 First, install the client by running
 
 ```
-source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/plex/install.sh)
+source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
 ```
 
 The installer may ask for your password at some point. 
