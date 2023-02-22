@@ -1,4 +1,4 @@
-module github.com/labdao/ganglia
+module github.com/labdao/plex
 
 go 1.19
 
