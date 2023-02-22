@@ -19,10 +19,10 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/macos-amd64/plex
+                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-amd64/plex
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/macos-arm64/plex
+                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-arm64/plex
             else
                 echo "Cannot install Go. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -30,7 +30,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/linux-amd64/plex
+                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/linux-amd64/plex
             else
                 echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
             fi
@@ -38,7 +38,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/releases/windows-amd64/plex.exe
+                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/windows-amd64/plex.exe
             else
                 echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
             fi
@@ -64,18 +64,18 @@ installBacalhau() {
 # }
 
 getAppJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/app.jsonl
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/app.jsonl
 }
 
 getInstructionsTemplateJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/instruction_template.jsonl
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/instruction_template.jsonl
 }
 
 getTestData() {
     mkdir testdata
     cd testdata
-    curl -sL -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/ganglia/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_ligand.sdf
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_ligand.sdf
     cd ..
 }
 
@@ -127,7 +127,7 @@ getInstructionsTemplateJsonl
 getTestData
 displayLogo
 
-echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/ganglia"
+echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
 echo "To get started, please run the following 3 steps:"
 echo "1. Please change the permissions of plex on your system:"
 echo "chmod +x ./plex"

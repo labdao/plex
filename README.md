@@ -30,6 +30,11 @@ Once the client is installed, you can run the following command in the newly-cre
 ./plex -app equibind -input-dir ./testdata -gpu false
 ```
 
+To do a dry run that just prints a Bacalhau command
+```
+./plex -app equibind -input-dir ./testdata/pdbbind_processed_size1 -dry=true
+```
+
 ## Running a node
 This is a script for setting up a compute instance to run LabDAO jobs. Requires linux OS with Nvidia GPU.
 

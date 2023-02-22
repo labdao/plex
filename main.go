@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/labdao/ganglia/cmd/plex"
+	"github.com/labdao/plex/cmd/plex"
 )
 
 func main() {
@@ -15,7 +15,8 @@ func main() {
 	gpu := flag.String("gpu", "true", "Use GPU")
 
 	// optional flags
-	appConfigsFilePath := flag.String("app-configs", "app.jsonl", "App Configurations file")
+	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
+	dry := flag.Bool("dry", false, "do not send request and just print Bacalhau cmd")
 	layers := flag.Int("layers", 2, "number of layers to search in the directory path")
 	flag.Parse()
 
@@ -29,5 +30,5 @@ func main() {
 	fmt.Println("Using app configs:", *appConfigsFilePath)
 	fmt.Println("Setting layers to:", *layers)
 
-	plex.Execute(*app, *inputDir, *gpu, *appConfigsFilePath, *layers)
+	plex.Execute(*app, *inputDir, *gpu, *appConfigsFilePath, *layers, *dry)
 }
