@@ -1,41 +1,33 @@
-# Ganglia
+# PLEx Lab Exchange
 
-gan·gli·a [gang-glee-uh] : a decentralized "mini-brain" in an octopus or more generally a group of neurons in the peripheral nervous system.
+## Installing the client
 
-This repo contains infrastructure code for running nodes in LabDAO's decentralized compute system.
+First, install the client by running
+
+```
+source <(curl -sSL https://raw.githubusercontent.com/labdao/ganglia/main/plex/install.sh)
+```
+
+The installer may ask for your password at some point. 
+
+When the installer is complete, next set your web3.storage API token.
+
+```
+export WEB3STORAGE_TOKEN=<your token here>
+```
+
+Finally, update the executable's permissions.
+
+```
+chmod +x ./plex
+```
 
 ## Running the client
-Install script coming soon. For now git cloning the repo is required.
 
-1) Install [GoLang](https://go.dev/doc/install)
-
-2) Install Bacalhau with the following command
+Once the client is installed, you can run the following command in the newly-created `plex` folder to run equibind.
 
 ```
-# the installer will ask you for your password at some point
-curl -sL https://get.bacalhau.org/install.sh | bash
-```
-
-3) Run the following commands
-```
-git clone https://github.com/labdao/ganglia.git
-cd ganglia/plex
-go build
-export WEB3STORAGE_TOKEN=<your_token>
-```
-
-4) Run the diffdock example
-```
-./plex -app diffdock -input-dir ./testdata/pdbbind_processed_size1
-
-# Running the outputted Bacalhau command takes ~10 min per complex, this example has 1 complex
-```
-
-5) Run diffdock with your own inputs
-```
-./plex -app diffdock -input-dir <path to dir on your computer>
-
-# plex will automagically run diffdock on every protein and ligand file found in the directory
+./plex -app equibind -input-dir ./testdata -gpu false
 ```
 
 ## Running a node
@@ -45,7 +37,7 @@ Tested on Ubuntu 20.04 LTS with Nvidia T4, V100, and A10 GPUs (AWS G4, P3, and G
 
 The install script sets up Docker, Nvidia Drivers, Nvidia Container Toolkit, and IPFS
 ```
-curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/install.sh | bash && newgrp docker
+curl -sL https://raw.githubusercontent.com/labdao/ganglia/main/sripts/provide_compute.sh | bash && newgrp docker
 ```
 
 After the script run the following command in a separate terminal to start a Bacalhau server to accept jobs.
