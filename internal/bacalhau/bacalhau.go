@@ -12,9 +12,10 @@ import (
 	"github.com/filecoin-project/bacalhau/pkg/model"
 	"github.com/filecoin-project/bacalhau/pkg/requester/publicapi"
 	"github.com/filecoin-project/bacalhau/pkg/system"
+	"k8s.io/apimachinery/pkg/selection"
 )
 
-func CreateBacalhauJob(cid, container, cmd, gpu string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -23,10 +24,16 @@ func CreateBacalhauJob(cid, container, cmd, gpu string) (job *model.Job, err err
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Image = container
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
-	job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
-	job.Spec.Resources.Memory = "12gb"
-	if gpu == "true" {
+	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{"labdao"}}
+	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+	if memory > 0 {
+		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
+	}
+	if gpu {
 		job.Spec.Resources.GPU = "1"
+	}
+	if network {
+		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	}
 	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
@@ -52,8 +59,15 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	fmt.Println("Job running...")
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
+		fmt.Println("id:", submittedJob.Metadata.ID)
 		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
+			return results, err
+		}
+
+		// check once to see if job is already complete
+		results, _ = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+		if len(results) > 0 {
 			return results, err
 		}
 
@@ -62,14 +76,8 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 		completedShardRuns := []model.JobShardState{}
 		erroredShardRuns := []model.JobShardState{}
 		cancelledShardRuns := []model.JobShardState{}
-		fmt.Printf("Found %d Nodes with job", len(jobState.Nodes))
 		for _, jobNodeState := range jobState.Nodes {
-			fmt.Printf("Found %d Shards with job", len(jobNodeState.Shards))
 			for _, jobShardState := range jobNodeState.Shards {
-				fmt.Printf("job state is: %s", jobShardState.State)
-				fmt.Printf("job completed state is: %s", model.JobStateCompleted)
-				fmt.Printf("job errored state is: %s", model.JobStateError)
-				fmt.Printf("job cancelled state is: %s", model.JobStateCancelled)
 				if jobShardState.State == model.JobStateCompleted {
 					completedShardRuns = append(completedShardRuns, jobShardState)
 				} else if jobShardState.State == model.JobStateError {
@@ -109,13 +117,20 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	return err
 }
 
-func InstructionToBacalhauCmd(cid, container, cmd, gpu string) string {
-	// TODO allow boolean overrides for gpu memory and network flags
+func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
 	gpuFlag := ""
-	if gpu != "false" {
+	if gpu {
 		gpuFlag = "--gpu 1 "
 	}
-	return `bacalhau docker run --network full ` + gpuFlag + `--memory 12gb -i ` + fmt.Sprintf(cid) + ` ` + fmt.Sprintf(container) + ` -- ` + `/bin/bash -c ` + fmt.Sprintf(cmd)
+	memoryFlag := ""
+	if memory != 0 {
+		memoryFlag = fmt.Sprintf("--memory %dgb ", memory)
+	}
+	networkFlag := ""
+	if network {
+		networkFlag = "--network full"
+	}
+	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c %s", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
 }
 
 func RunBacalhauCmd(cmdString string) {
