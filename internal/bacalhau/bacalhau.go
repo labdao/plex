@@ -21,7 +21,6 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 		return nil, err
 	}
 	job.Spec.Engine = model.EngineDocker
-	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Image = container
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{"labdao"}}
