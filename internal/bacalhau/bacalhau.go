@@ -59,7 +59,6 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	fmt.Println("Job running...")
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
-		fmt.Println("id:", submittedJob.Metadata.ID)
 		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
