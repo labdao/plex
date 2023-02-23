@@ -74,8 +74,8 @@ getInstructionsTemplateJsonl() {
 getTestData() {
     mkdir testdata
     cd testdata
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/pdbbind_processed_size1/6d08/6d08_ligand.sdf
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
     cd ..
 }
 
@@ -134,4 +134,4 @@ echo "chmod +x ./plex"
 echo "2. Please run the following command to set your web3.storage token:"
 echo "export WEB3STORAGE_TOKEN=<your API token>"
 echo "3. After you have set your API token, to start using Plex run the following command:"
-echo "./plex -app equibind -gpu false -input-dir ./testdata"
+echo "./plex -app equibind -gpu false -input-dir ./testdata/binding"
