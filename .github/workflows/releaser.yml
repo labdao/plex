@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "release" ]
 
+permissions:
+  contents: write
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest

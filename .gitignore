@@ -206,3 +206,5 @@ go.work
 
 # Module binary
 plex/plex
+
+dist/
