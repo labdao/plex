@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/ipfs/go-cid v0.3.2
 	github.com/web3-storage/go-w3s-client v0.0.7
+	k8s.io/apimachinery v0.26.1
 )
 
 require (
@@ -295,7 +296,6 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.26.1 // indirect
 	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
 	lukechampine.com/blake3 v1.1.7 // indirect
