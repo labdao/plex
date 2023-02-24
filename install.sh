@@ -10,6 +10,10 @@ makeParentFolder() {
     cd plex
 }
 
+makeConfigFolder() {
+    mkdir config
+}
+
 downloadPlex() {
     if [[ ! -x plex ]]; then
         echo "Downloading Plex..."
@@ -64,11 +68,13 @@ installBacalhau() {
 # }
 
 getAppJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/app.jsonl
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl -O ./config
+    mv app.jsonl config
 }
 
 getInstructionsTemplateJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/instruction_template.jsonl
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl -O ./config
+    mv instruction_template.jsonl config
 }
 
 getTestData() {
@@ -119,6 +125,7 @@ displayLogo() {
 }
 
 makeParentFolder
+makeConfigFolder
 downloadPlex
 installBacalhau
 # setW3SToken
