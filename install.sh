@@ -19,28 +19,28 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-amd64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-arm64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_arm64.tar.gz | tar xvz
             else
-                echo "Cannot install Go. Unsupported architecture for Darwin OS: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
         elif [ "$OS" = "linux" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/linux-amd64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_linux_amd64.tar.gz | tar xvz
             else
-                echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
         elif [ "$OS" = "windows" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/windows-amd64/plex.exe
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_windows_amd64.tar.gz
             else
-                echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
         fi
     fi
