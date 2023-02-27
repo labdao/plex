@@ -10,6 +10,10 @@ makeParentFolder() {
     cd plex
 }
 
+makeConfigFolder() {
+    mkdir config
+}
+
 downloadPlex() {
     if [[ ! -x plex ]]; then
         echo "Downloading Plex..."
@@ -19,28 +23,28 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-amd64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/macos-arm64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_arm64.tar.gz | tar xvz
             else
-                echo "Cannot install Go. Unsupported architecture for Darwin OS: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
         elif [ "$OS" = "linux" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/linux-amd64/plex
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_linux_amd64.tar.gz | tar xvz
             else
-                echo "Cannot install Go. Unsupported architecture for Linux: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
         elif [ "$OS" = "windows" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -O https://raw.githubusercontent.com/labdao/plex/main/plex/releases/windows-amd64/plex.exe
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_windows_amd64.tar.gz
             else
-                echo "Cannot install Go. Unsupported architecture for Windows: $ARCH"
+                echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
         fi
     fi
@@ -64,19 +68,20 @@ installBacalhau() {
 # }
 
 getAppJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/app.jsonl
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl -O ./config
+    mv app.jsonl config
 }
 
 getInstructionsTemplateJsonl() {
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/instruction_template.jsonl
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl -O ./config
+    mv instruction_template.jsonl config
 }
 
 getTestData() {
-    mkdir testdata
-    cd testdata
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
-    cd ..
+    mkdir -p testdata/binding/pdbbind_processed_size1/6d08 && cd testdata/binding/pdbbind_processed_size1/6d08
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
+    cd ../../..
 }
 
 displayLogo() {
@@ -119,6 +124,7 @@ displayLogo() {
 }
 
 makeParentFolder
+makeConfigFolder
 downloadPlex
 installBacalhau
 # setW3SToken
@@ -134,4 +140,4 @@ echo "chmod +x ./plex"
 echo "2. Please run the following command to set your web3.storage token:"
 echo "export WEB3STORAGE_TOKEN=<your API token>"
 echo "3. After you have set your API token, to start using Plex run the following command:"
-echo "./plex -app equibind -gpu false -input-dir ./testdata/binding"
+echo "./plex -app equibind -input-dir ./testdata/binding/pdbbind_processed_size1/"
