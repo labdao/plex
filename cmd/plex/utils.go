@@ -18,6 +18,7 @@ import (
 
 type AppConfig struct {
 	App    string `json:"app"`
+	InputMethod string `json:"input_method"`
 	Inputs []struct {
 		Field     string   `json:"field"`
 		Filetypes []string `json:"filetypes"`
@@ -83,15 +84,15 @@ func writeCSV(index_map []map[string]string, file string) (string, error) {
 	writer := csv.NewWriter(file_dict)
 	defer writer.Flush()
 
-	header := []string{"protein_path", "ligand"}
+	header := []string{"protein", "ligand"}
 	if err := writer.Write(header); err != nil {
 		return "", err
 	}
 
 	for _, row := range index_map {
-		proteinPath := path.Join("../inputs/", row["protein_path"])
+		protein := path.Join("../inputs/", row["protein"])
 		ligand := path.Join("../inputs/", row["ligand"])
-		record := []string{proteinPath, ligand}
+		record := []string{protein, ligand}
 		if err := writer.Write(record); err != nil {
 			return "", err
 		}
@@ -166,24 +167,32 @@ func createCombinations(indexMap map[string][]string, fieldA, fieldB string) []m
 }
 
 func createIndex(filePaths []string, appConfig AppConfig, jobDirPath string) (string, []map[string]string) {
-	// categorise the input files based on the app config specifications
-	indexMap := map[string][]string{}
-	for _, filePath := range filePaths {
-		for _, input := range appConfig.Inputs {
-			for _, filetype := range input.Filetypes {
-				if strings.HasSuffix(filePath, filetype) {
-					indexMap[input.Field] = append(indexMap[input.Field], filePath)
+	// do not create index if the app config specifies the input method as "directory"
+	if appConfig.InputMethod == "directory" {
+		fmt.Println("Input method is directory, skipping index creation")
+		return "", []map[string]string{}
+	}
+	if appConfig.InputMethod == "directory" {
+		// categorise the input files based on the app config specifications
+		indexMap := map[string][]string{}
+		for _, filePath := range filePaths {
+			for _, input := range appConfig.Inputs {
+				for _, filetype := range input.Filetypes {
+					if strings.HasSuffix(filePath, filetype) {
+						indexMap[input.Field] = append(indexMap[input.Field], filePath)
+					}
 				}
 			}
 		}
-	}
 
-	fieldA := appConfig.Inputs[0].Field
-	fieldB := appConfig.Inputs[1].Field
-	combinations := createCombinations(indexMap, fieldA, fieldB)
-	writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
-	writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
-	return path.Join(jobDirPath, "index.csv"), combinations
+		fieldA := appConfig.Inputs[0].Field
+		fieldB := appConfig.Inputs[1].Field
+		combinations := createCombinations(indexMap, fieldA, fieldB)
+		writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
+		writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
+		return path.Join(jobDirPath, "index.csv"), combinations
+	}
+	return "", []map[string]string{}
 }
 
 func CreateInputCID(inputDirPath string, cmd string) (string, error) {
