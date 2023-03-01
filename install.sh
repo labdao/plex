@@ -56,13 +56,15 @@ installBacalhau() {
 }
 
 getAppJsonl() {
-    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl -O ./config
-    mv app.jsonl config
+    cd config
+    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl
+    cd ..
 }
 
 getInstructionsTemplateJsonl() {
-    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl -O ./config
-    mv instruction_template.jsonl config
+    cd config
+    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl
+    cd ..
 }
 
 getTestData() {
