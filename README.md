@@ -1,4 +1,5 @@
-# PLEX Lab EXchange
+# PLEX
+PLEX is the PLEX Lab EXchange.
 
 ## Installing the client
 
