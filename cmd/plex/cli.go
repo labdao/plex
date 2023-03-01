@@ -18,6 +18,7 @@ func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, gpu, 
 
 	// creating index file
 	fmt.Println("## Searching input files ##")
+	fmt.Println(inputDir)
 	identifiedFiles, err := searchDirectoryPath(inputDir, appConfig, layers)
 	if err != nil {
 		fmt.Println(err)

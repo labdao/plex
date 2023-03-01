@@ -22,6 +22,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	}
 	job.Spec.Engine = model.EngineDocker
 	job.Spec.Docker.Image = container
+	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{"labdao"}}
 	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
@@ -42,7 +43,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	system.InitConfig()
 	apiPort := 1234
-	apiHost := "35.245.115.191"
+	apiHost := "bootstrap.production.bacalhau.org"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
 	submittedJob, err = client.Submit(context.Background(), job)
 	return submittedJob, err
@@ -51,52 +52,24 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedResult, err error) {
 	system.InitConfig()
 	apiPort := 1234
-	apiHost := "35.245.115.191"
+	apiHost := "bootstrap.production.bacalhau.org"
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
 	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
+
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
-		jobState, err := client.GetJobState(context.Background(), submittedJob.Metadata.ID)
+
+		// check once to see if job is already complete
+		results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
 		}
-
-		// check once to see if job is already complete
-		results, _ = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 		if len(results) > 0 {
 			return results, err
 		}
 
-		// check to see if any node shards have finished or errored while running job
-		// this assumes the job spec will only have one shard attempt to run the job
-		completedShardRuns := []model.JobShardState{}
-		erroredShardRuns := []model.JobShardState{}
-		cancelledShardRuns := []model.JobShardState{}
-		for _, jobNodeState := range jobState.Nodes {
-			for _, jobShardState := range jobNodeState.Shards {
-				if jobShardState.State == model.JobStateCompleted {
-					completedShardRuns = append(completedShardRuns, jobShardState)
-				} else if jobShardState.State == model.JobStateError {
-					erroredShardRuns = append(erroredShardRuns, jobShardState)
-				} else if jobShardState.State == model.JobStateCancelled {
-					cancelledShardRuns = append(cancelledShardRuns, jobShardState)
-				}
-			}
-		}
-		if len(completedShardRuns) > 0 {
-			fmt.Println("")
-			fmt.Println("\U0001F332 Job run complete")
-			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
-			return results, err
-		}
-		if len(cancelledShardRuns) > 0 || len(erroredShardRuns) > 0 {
-			fmt.Println("")
-			fmt.Println("\U0001F342 Job failed to complete")
-			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
-			return results, err
-		}
 		animation[saplingIndex] = "\U0001F331"
 		fmt.Printf("////%s////\r", strings.Join(animation, ""))
 		animation[saplingIndex] = "_"
