@@ -11,7 +11,6 @@ func main() {
 	// required flags
 	app := flag.String("app", "", "Application name")
 	inputDir := flag.String("input-dir", "", "Input directory path")
-	fmt.Println("in", *inputDir)
 
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")

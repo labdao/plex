@@ -61,7 +61,6 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
 
-		// check once to see if job is already complete
 		results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
