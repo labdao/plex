@@ -99,7 +99,7 @@ func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, netwo
 	if network {
 		networkFlag = "--network full"
 	}
-	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c %s", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
+	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
 }
 
 func RunBacalhauCmd(cmdString string) {
