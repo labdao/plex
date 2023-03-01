@@ -81,7 +81,7 @@ getTestData() {
     mkdir -p testdata/binding/pdbbind_processed_size1/6d08 && cd testdata/binding/pdbbind_processed_size1/6d08
     curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
     curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
-    cd ../../..
+    cd ../../../..
 }
 
 displayLogo() {
