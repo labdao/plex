@@ -1,4 +1,4 @@
-# PLEx Lab Exchange
+# PLEX Lab EXchange
 
 ## Installing the client
 
