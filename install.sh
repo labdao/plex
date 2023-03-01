@@ -23,10 +23,10 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_darwin_arm64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_darwin_arm64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -34,7 +34,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_linux_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_linux_amd64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
@@ -42,7 +42,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.1.0-alpha/plex_0.1.0-alpha_windows_amd64.tar.gz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_windows_amd64.tar.gz
             else
                 echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
@@ -55,25 +55,13 @@ installBacalhau() {
     curl -sL https://get.bacalhau.org/install.sh | bash
 }
 
-# setW3SToken() {
-#     read -p "Enter your web3.storage API token: " WEB3STORAGE_TOKEN
-#     if [ -z "$WEB3STORAGE_TOKEN" ]
-#     then
-#         echo "web3.storage API token cannot be empty."
-#         setW3SToken
-#     else
-#         export WEB3STORAGE_TOKEN
-#         echo "web3.storage API token set successfully."
-#     fi
-# }
-
 getAppJsonl() {
-    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl -O ./config
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl -O config
     mv app.jsonl config
 }
 
 getInstructionsTemplateJsonl() {
-    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl -O ./config
+    curl -sSL https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl -O config
     mv instruction_template.jsonl config
 }
 
@@ -127,7 +115,6 @@ makeParentFolder
 makeConfigFolder
 downloadPlex
 installBacalhau
-# setW3SToken
 getAppJsonl
 getInstructionsTemplateJsonl
 getTestData
