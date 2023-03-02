@@ -9,7 +9,7 @@ import (
 func TestCreateInstruction(t *testing.T) {
 	want := Instruction{
 		App:       "simpdock",
-		InputCIDs: []string{"bafybeifzg6egpgb6wi47cayzlltjcdlglls7qtteuqzbrecpiyzyfipuzi"},
+		InputCIDs: []string{"QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt"},
 		Container: "simpdock:v1",
 		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
 		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
