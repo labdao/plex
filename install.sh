@@ -71,7 +71,12 @@ getTestData() {
     mkdir -p testdata/binding/pdbbind_processed_size1/6d08 && cd testdata/binding/pdbbind_processed_size1/6d08
     curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
     curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
-    cd ../../../..
+    cd ../..
+    mkdir -p abl && cd abl
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/7n9g.pdb
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000003986735.sdf
+    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000019632618.sdf
+    cd ../../..
 }
 
 displayLogo() {
