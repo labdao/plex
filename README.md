@@ -1,4 +1,5 @@
-# PLEx Lab Exchange
+# PLEX
+PLEX is the PLEX Lab EXchange.
 
 ## Installing the client
 
@@ -27,12 +28,7 @@ chmod +x ./plex
 Once the client is installed, you can run the following command in the newly-created `plex` folder to run equibind.
 
 ```
-./plex -app equibind -input-dir ./testdata -gpu false
-```
-
-To do a dry run that just prints a Bacalhau command
-```
-./plex -app equibind -input-dir ./testdata/pdbbind_processed_size1 -dry=true
+./plex -app equibind -input-dir ./testdata/binding/abl
 ```
 
 ## Running a node
