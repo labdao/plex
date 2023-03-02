@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 type Instruction struct {
@@ -22,7 +24,7 @@ func CreateInstruction(app string, instuctionFilePath, inputDirPath string, para
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	cid, err := CreateInputCID(inputDirPath, instruction.Cmd)
+	cid, err := ipfs.AddDirHttp(os.Getenv("IPFS_NODE_URL"), inputDirPath)
 	if err != nil {
 		return instruction, err
 	}
