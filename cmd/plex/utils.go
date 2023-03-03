@@ -167,33 +167,30 @@ func createCombinations(indexMap map[string][]string, fieldA, fieldB string) []m
 }
 
 func createIndex(filePaths []string, appConfig AppConfig, jobDirPath string) (string, []map[string]string) {
-	// do not create index if the app config specifies the input method as "directory"
-	if appConfig.InputMethod == "directory" {
-		fmt.Println("Input method is directory, skipping index creation")
-		return "", []map[string]string{}
-	}
-	if appConfig.InputMethod == "directory" {
-		// categorise the input files based on the app config specifications
-		indexMap := map[string][]string{}
-		for _, filePath := range filePaths {
-			for _, input := range appConfig.Inputs {
-				for _, filetype := range input.Filetypes {
-					if strings.HasSuffix(filePath, filetype) {
-						indexMap[input.Field] = append(indexMap[input.Field], filePath)
-					}
-				}
-			}
-		}
+    if appConfig.InputMethod == "directory" {
+        fmt.Println("Skipping index creation because input method is directory")
+        return "", []map[string]string{}
+    } else {
+        indexMap := map[string][]string{}
+        for _, filePath := range filePaths {
+            for _, input := range appConfig.Inputs {
+                for _, filetype := range input.Filetypes {
+                    if strings.HasSuffix(filePath, filetype) {
+                        indexMap[input.Field] = append(indexMap[input.Field], filePath)
+                    }
+                }
+            }
+        }
 
-		fieldA := appConfig.Inputs[0].Field
-		fieldB := appConfig.Inputs[1].Field
-		combinations := createCombinations(indexMap, fieldA, fieldB)
-		writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
-		writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
-		return path.Join(jobDirPath, "index.csv"), combinations
-	}
-	return "", []map[string]string{}
+        fieldA, fieldB := appConfig.Inputs[0].Field, appConfig.Inputs[1].Field
+        combinations := createCombinations(indexMap, fieldA, fieldB)
+        writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
+        writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
+
+        return path.Join(jobDirPath, "index.csv"), combinations
+    }
 }
+
 
 func CreateInputCID(inputDirPath string, cmd string) (string, error) {
 	client, err := w3s.NewClient(
