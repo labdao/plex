@@ -50,11 +50,6 @@ downloadPlex() {
     fi
 }
 
-installBacalhau() {
-    echo "Installing Bacalhau..."
-    curl -sL https://get.bacalhau.org/install.sh | bash
-}
-
 getAppJsonl() {
     cd config
     curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl
@@ -121,7 +116,6 @@ displayLogo() {
 makeParentFolder
 makeConfigFolder
 downloadPlex
-installBacalhau
 getAppJsonl
 getInstructionsTemplateJsonl
 getTestData
