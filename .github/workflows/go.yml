@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
     environment: ci
     steps:
@@ -34,5 +34,5 @@ jobs:
     - name: Test
       env:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-          IPFS_NODE_URL: ${{ secrets.IPFS_NODE_URL }}
+          IPFS_NODE_URL: ${{ secrets.BACALHAU_API_HOST }}
       run: go test ./... -v
