@@ -31,5 +31,5 @@ jobs:
     - name: Test
       env:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-          IPFS_NODE_URL: ${{ secrets.BACALHAU_API_HOST }}
+          BACALHAU_API_HOST: ${{ secrets.BACALHAU_API_HOST }}
       run: go test ./... -v
