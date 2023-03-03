@@ -2,9 +2,10 @@
 {"app": "diffdock", "input-method": "index", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
 {"app": "equibind", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
 {"app": "equibindls", "input-method": "directory"}
-{"app": "gnina", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".txt"]}
+{"app": "gnina", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".sdf"]}
 {"app": "oddt", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb", ".mol2"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
 {"app": "colabfold-mini", "input-method": "directory", "inputs": [{"field": "sequence", "filetypes": [".fasta"]}], "outputs": [".pdb"]}
 {"app": "colabfold-base", "input-method": "directory", "inputs": [{"field": "sequence", "filetypes": [".fasta"]}], "outputs": [".pdb"]}
 {"app": "colabfold-standard", "input-method": "directory", "inputs": [{"field": "sequence", "filetypes": [".fasta"]}], "outputs": [".pdb"]}
 {"app": "colabfold-large", "input-method": "directory", "inputs": [{"field": "sequence", "filetypes": [".fasta"]}], "outputs": [".pdb"]}
+{"app": "gnina-scoring", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".sdf"]}
