@@ -3,3 +3,4 @@
 {"app": "equibind", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
 {"app": "gnina", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".txt"]}
 {"app": "oddt", "inputs": [{"field": "protein_path", "filetypes": [".pdb", ".mol2"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
+{"app": "gnina-scoring", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".txt"]}
