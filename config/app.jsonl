@@ -1,5 +1,5 @@
 {"app": "canarytest", "input-method": "index", "inputs": [{"field": "message", "filetypes": [".txt"]}, {"field": "csv", "filetypes": [".csv"]}], "outputs": [".txt"]}
-{"app": "diffdock", "input-method": "index", "inputs": [{"field": "protein_path", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
+{"app": "diffdock", "input-method": "index", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
 {"app": "equibind", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf"]}
 {"app": "equibindls", "input-method": "directory"}
 {"app": "gnina", "input-method": "file", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".sdf"]}
