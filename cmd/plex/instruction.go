@@ -2,7 +2,6 @@ package plex
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,15 +17,6 @@ type Instruction struct {
 	Cmd       string            `json:"cmd"`
 }
 
-func deriveIpfsNodeUrl() (string, error) {
-	apiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
-	if !exists {
-		return apiHost, errors.New("can not derive IPFS node url, BACALHAU_API_HOST not set")
-	}
-	ipfsUrl := fmt.Sprintf("http://%s:5001", apiHost)
-	return ipfsUrl, nil
-}
-
 func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
 	instruction, err := ReadInstructions(app, instuctionFilePath)
 	if err != nil {
@@ -34,7 +24,7 @@ func CreateInstruction(app string, instuctionFilePath, inputDirPath string, para
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	ipfsNodeUrl, err := deriveIpfsNodeUrl()
+	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
 	if err != nil {
 		return instruction, err
 	}
