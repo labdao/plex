@@ -2,6 +2,7 @@ package ipfs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -10,6 +11,15 @@ import (
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/web3-storage/go-w3s-client"
 )
+
+func DeriveIpfsNodeUrl() (string, error) {
+	apiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	if !exists {
+		return apiHost, errors.New("can not derive IPFS node url, BACALHAU_API_HOST not set")
+	}
+	ipfsUrl := fmt.Sprintf("http://%s:5001", apiHost)
+	return ipfsUrl, nil
+}
 
 func PutFile(client w3s.Client, file fs.File, opts ...w3s.PutOption) (cid.Cid, error) {
 	fmt.Printf("Uploading to IPFS via web3.storage... \n")

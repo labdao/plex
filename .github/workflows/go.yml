@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  build:
+  test:
     runs-on: ubuntu-latest
     environment: ci
     steps:
@@ -25,14 +25,11 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
-    - name: Tidy dependencies
-      run: go mod tidy
-
     - name: Build
       run: go build
 
     - name: Test
       env:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-          IPFS_NODE_URL: ${{ secrets.IPFS_NODE_URL }}
+          BACALHAU_API_HOST: ${{ secrets.BACALHAU_API_HOST }}
       run: go test ./... -v

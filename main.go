@@ -3,11 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/labdao/plex/cmd/plex"
 )
 
 func main() {
+	// Required env settings
+	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	if exists {
+		fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
+	} else {
+		fmt.Println("Setting BACALHAU_API_HOST is required")
+		os.Exit(1)
+	}
+
 	// required flags
 	app := flag.String("app", "", "Application name")
 	inputDir := flag.String("input-dir", "", "Input directory path")
