@@ -7,8 +7,8 @@
 set -E
 trap '[ "$?" -ne 77 ] || exit 77' ERR
 
-# Docker install directions from https://docs.docker.com/engine/install/ubuntu/
 installDocker() {
+    # Docker install directions from https://docs.docker.com/engine/install/ubuntu/
     echo "Installing Docker"
     sudo apt-get update
     sudo apt-get install -y \
@@ -19,10 +19,10 @@ installDocker() {
     sudo mkdir -p /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
-    sudo apt-get install -y  docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     sudo groupadd -f docker
     sudo usermod -aG docker $USER
 }
@@ -67,10 +67,10 @@ installNvidiaContainerToolKit() {
     # Nvidia Container Toolkit instructions from https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
     echo "Installing Nvidia Container Toolkit"
     distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
-          && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --yes --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
-          && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
-                sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-                sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+        && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --yes --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+        && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
     sudo apt-get update
     sudo apt-get install -y nvidia-docker2
     sudo systemctl restart docker
@@ -129,7 +129,36 @@ testIPFSInstall() {
 runIPFS() {
     echo "Starting IPFS Daemon"
     ipfs init
+    ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+    ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
+    ipfs config Pinning.Recursive true
+    ipfs daemon --routing=dhtclient
     screen -dm ipfs daemon
+}
+
+installBacalhau() {
+    curl -sL https://get.bacalhau.org/install.sh | bash
+}
+
+testBacalhauInstall() {
+    echo "Testing Bacalhau Install"
+    if bacalhau version ; then
+        echo "Bacalhau succesfully installed "
+    else
+        echo "Bacalhau install failed"
+        exit 77
+    fi
+}
+
+runBacalhau() {
+    LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=labdao$PLEX_ENV
+}
+
+runJuypter() {
+    # directions found at https://jupyter-docker-stacks.readthedocs.io/en/latest/
+    mkdir jovyan
+    docker run -p 10000:8888 -v "${PWD}/jovyan":/home/jovyan/work jupyter/datascience-notebook:2023-02-28
 }
 
 printLogo() {
@@ -171,17 +200,34 @@ logo="
   echo "Welcome to LabDAO! Documentation at https://github.com/labdao/"
 }
 
-def setup() {
+setup() {
     installDocker
     testDockerInstall
     installNvidiaDrivers
     testInstallNvidia
     installNvidiaContainerToolKit
     testNvidiaContainerToolkitInstall
+    installIPFS
     testIPFSInstall
+    installBacalhau
+    testBacalhauInstall
     printLogo
 }
 
-def start() {
+start() {
+    case $PLEX_ENV in
+        STAGE)
+            echo "Starting for staging enviroment"
+            ;;
+        PROD)
+            echo "Starting for production enviroment"
+            ;;
+        *)
+            echo "PLEX_ENV must be set to STAGE or PROD"
+            exit 77
+            ;;
+    esac
     runIPFS
+    runBacalhau
+    runJuypter
 }
