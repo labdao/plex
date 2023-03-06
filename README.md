@@ -31,6 +31,14 @@ Once the client is installed, you can run the following command in the newly-cre
 ./plex -app equibind -input-dir ./testdata/binding/abl
 ```
 
+## Building PLEX from source 
+
+```
+git clone https://github.com/labdao/plex
+cd plex
+go build
+```
+
 ## Running a node
 This is a script for setting up a compute instance to run LabDAO jobs. Requires linux OS with Nvidia GPU.
 
