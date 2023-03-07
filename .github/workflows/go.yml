@@ -29,7 +29,4 @@ jobs:
       run: go build
 
     - name: Test
-      env:
-          WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-          BACALHAU_API_HOST: ${{ secrets.BACALHAU_API_HOST }}
       run: go test ./... -v
