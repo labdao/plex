@@ -2,22 +2,19 @@ package ipfs
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/web3-storage/go-w3s-client"
 )
 
 func DeriveIpfsNodeUrl() (string, error) {
-	apiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
-	if !exists {
-		return apiHost, errors.New("can not derive IPFS node url, BACALHAU_API_HOST not set")
-	}
-	ipfsUrl := fmt.Sprintf("http://%s:5001", apiHost)
+	bacalApiHost := bacalhau.GetBacalhauApiHost()
+	ipfsUrl := fmt.Sprintf("http://%s:5001", bacalApiHost)
 	return ipfsUrl, nil
 }
 

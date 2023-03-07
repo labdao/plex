@@ -15,6 +15,15 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
+func GetBacalhauApiHost() string {
+	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	if exists {
+		return bacalApiHost
+	}
+	defaultApiHost := "54.210.19.52"
+	return defaultApiHost
+}
+
 func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
@@ -43,10 +52,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
 	apiPort := 1234
-	apiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
-	if !exists {
-		apiHost = "bootstrap.production.bacalhau.org"
-	}
+	apiHost := GetBacalhauApiHost()
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
 	return client
 }

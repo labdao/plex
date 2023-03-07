@@ -15,7 +15,6 @@ func main() {
 		fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
 	} else {
 		fmt.Println("BACALHAU_API_HOST not set, using default host")
-		os.Setenv("BACALHAU_API_HOST", "54.210.19.52")
 	}
 
 	// required flags
