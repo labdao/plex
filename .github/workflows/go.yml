@@ -30,6 +30,5 @@ jobs:
 
     - name: Test
       env:
-          WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
-          BACALHAU_API_HOST: ${{ secrets.BACALHAU_API_HOST }}
+        WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
       run: go test ./... -v
