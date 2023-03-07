@@ -29,4 +29,5 @@ jobs:
       run: go build
 
     - name: Test
+          WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
       run: go test ./... -v
