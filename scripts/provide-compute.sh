@@ -133,8 +133,7 @@ runIPFS() {
     ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
     ipfs config Pinning.Recursive true
-    ipfs daemon --routing=dhtclient
-    screen -dm ipfs daemon
+    screen -dmS ipfs ipfs daemon --routing=dhtclient
 }
 
 installBacalhau() {
@@ -152,7 +151,7 @@ testBacalhauInstall() {
 }
 
 runBacalhau() {
-    LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=labdao$PLEX_ENV
+    screen -dmS bacalhau LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=labdao$PLEX_ENV
 }
 
 installConda() {
@@ -173,11 +172,13 @@ testCondaInstall() {
 }
 
 installJuypter() {
+    conda install -c conda-forge jupyter-book --yes
     conda install -c conda-forge jupyterlab --yes
 }
 
 runJuypter() {
-   jupyter lab --ip=0.0.0.0
+    jupyter notebook password
+    screen -dmS juypter jupyter lab --ip=0.0.0.0
 }
 
 printLogo() {
