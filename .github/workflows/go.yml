@@ -27,6 +27,8 @@ jobs:
       run: go build
 
     - name: Test
+      env:
+        WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
       run: go test ./... -v
 
     - name: Run Equibind
