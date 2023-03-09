@@ -93,7 +93,8 @@ installGolang() {
     wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
     sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
     rm go1.19.6.linux-amd64.tar.gz
-    export PATH=$PATH:/usr/local/go/bin
+    export PATH=$PATH:/usr/local/go/bin # for current shell
+    echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashr # for future shells
 }
 
 testGolangInstall() {
@@ -114,7 +115,8 @@ installIPFS() {
     sudo bash install.sh
     ipfs --version
     ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
-    export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001
+    export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001 # for current shell
+    echo "export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001" >> ~/.bashrc # for future shells
 }
 
 testIPFSInstall() {
@@ -134,7 +136,6 @@ runIPFS() {
     ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
     ipfs config Pinning.Recursive true
-    export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001 >> ~/.bashrc
     screen -dmS ipfs ipfs daemon --routing=dhtclient
 }
 
@@ -153,12 +154,11 @@ testBacalhauInstall() {
 }
 
 runBacalhau() {
+    owner="labdaostage"
     if [ $PLEX_ENV = "prod" ]; then
-        owner = "labdao"
-    else
-        owner = "labdaostage"
+        owner="labdao"
     fi
-    screen -dmS bacalhau LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner
+    screen -dmS bacalhau bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner
 }
 
 installConda() {
@@ -166,7 +166,8 @@ installConda() {
     echo "Installing Conda"
     wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
     bash Anaconda3-2022.10-Linux-x86_64.sh -b
-    export PATH=~/anaconda3/bin:$PATH >> ~/.bashrc
+    export PATH=~/anaconda3/bin:$PATH # for current shell
+    echo "export PATH=~/anaconda3/bin:$PATH" >> ~/.bashrc # for future shells
 }
 
 testCondaInstall() {
@@ -245,6 +246,8 @@ setup() {
     testNvidiaContainerToolkitInstall
     installIPFS
     testIPFSInstall
+    installGolang
+    testGolangInstall
     installBacalhau
     testBacalhauInstall
     installConda

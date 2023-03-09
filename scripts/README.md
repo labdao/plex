@@ -5,6 +5,8 @@
 
 ```export PLEX_ENV=<stage or prod>```
 
+```sudo sysctl -w net.core.rmem_max=2500000```
+
 ```bash -c "source ./provide-compute.sh; start"```
 
 You may visit the instance at:
