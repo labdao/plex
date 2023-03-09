@@ -155,10 +155,29 @@ runBacalhau() {
     LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=labdao$PLEX_ENV
 }
 
+installConda() {
+    # maybe switch to miniconda
+    echo "Installing Conda"
+    wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
+    bash Anaconda3-2022.10-Linux-x86_64.sh -b
+    echo "export PATH=~/anaconda3/bin:$PATH" >> ~/.bashrc
+}
+
+testCondaInstall() {
+    if conda --version ; then
+        echo "Conda succesfully installed "
+    else
+        echo "Conda install failed"
+        exit 77
+    fi
+}
+
+installJuypter() {
+    conda install -c conda-forge jupyterlab --yes
+}
+
 runJuypter() {
-    # directions found at https://jupyter-docker-stacks.readthedocs.io/en/latest/
-    mkdir jovyan
-    docker run -p 10000:8888 -v "${PWD}/jovyan":/home/jovyan/work jupyter/datascience-notebook:2023-02-28
+   jupyter lab --ip=0.0.0.0
 }
 
 printLogo() {
