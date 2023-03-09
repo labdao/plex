@@ -9,13 +9,12 @@ import (
 )
 
 func main() {
-	// Required env settings
+	// Env settings
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
 	if exists {
 		fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
 	} else {
-		fmt.Println("Setting BACALHAU_API_HOST is required")
-		os.Exit(1)
+		fmt.Println("BACALHAU_API_HOST not set, using default host")
 	}
 
 	// required flags
