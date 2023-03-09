@@ -3,7 +3,7 @@
 
 ```bash -c "source ./provide-compute.sh; setup"```
 
-```export PLEX_ENV=<STAGE or PROD>```
+```export PLEX_ENV=<stage or prod>```
 
 ```bash -c "source ./provide-compute.sh; start"```
 

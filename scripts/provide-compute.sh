@@ -53,7 +53,7 @@ installNvidiaDrivers() {
     sudo /usr/bin/nvidia-persistenced --verbose
 }
 
-testInstallNvidia() {
+testNvidiaInstall() {
     echo "Testing Nvidia Driver Install"
     if cat /proc/driver/nvidia/version; then
         echo "Nvidia succesfully installed"
@@ -134,6 +134,7 @@ runIPFS() {
     ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
     ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
     ipfs config Pinning.Recursive true
+    export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001 >> ~/.bashrc
     screen -dmS ipfs ipfs daemon --routing=dhtclient
 }
 
@@ -152,7 +153,12 @@ testBacalhauInstall() {
 }
 
 runBacalhau() {
-    screen -dmS bacalhau LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=labdao$PLEX_ENV
+    if [ $PLEX_ENV = "prod" ]; then
+        owner = "labdao"
+    else
+        owner = "labdaostage"
+    fi
+    screen -dmS bacalhau LOG_LEVEL=debug bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner
 }
 
 installConda() {
@@ -175,6 +181,15 @@ testCondaInstall() {
 installJuypter() {
     conda install -c conda-forge jupyter-book --yes
     conda install -c conda-forge jupyterlab --yes
+}
+
+testJuypterInstall() {
+    if jupyter --version ; then
+        echo "Jupyter succesfully installed "
+    else
+        echo "Jupyter install failed"
+        exit 77
+    fi
 }
 
 runJuypter() {
@@ -225,7 +240,7 @@ setup() {
     installDocker
     testDockerInstall
     installNvidiaDrivers
-    testInstallNvidia
+    testNvidiainstall
     installNvidiaContainerToolKit
     testNvidiaContainerToolkitInstall
     installIPFS
@@ -233,25 +248,27 @@ setup() {
     installBacalhau
     testBacalhauInstall
     installConda
-    testInstallConda
+    testCondaInstall
     installJuypter
+    testJuypterInstall
     printLogo
 }
 
 start() {
     case $PLEX_ENV in
-        STAGE)
+        stage)
             echo "Starting for staging enviroment"
             ;;
-        PROD)
+        prod)
             echo "Starting for production enviroment"
             ;;
         *)
-            echo "PLEX_ENV must be set to STAGE or PROD"
+            echo "PLEX_ENV must be set to stage or prod"
             exit 77
             ;;
     esac
     runIPFS
     runBacalhau
     runJuypter
+    echo "screen -ls"
 }
