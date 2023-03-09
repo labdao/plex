@@ -114,6 +114,7 @@ installIPFS() {
     sudo bash install.sh
     ipfs --version
     ipfs cat /ipfs/QmQPeNsJPyVWPFDVHb77w8G42Fvo15z4bG2X8D2GhfbSXc/readme
+    export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001
 }
 
 testIPFSInstall() {
@@ -159,7 +160,7 @@ installConda() {
     echo "Installing Conda"
     wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
     bash Anaconda3-2022.10-Linux-x86_64.sh -b
-    echo "export PATH=~/anaconda3/bin:$PATH" >> ~/.bashrc
+    export PATH=~/anaconda3/bin:$PATH >> ~/.bashrc
 }
 
 testCondaInstall() {
@@ -178,7 +179,7 @@ installJuypter() {
 
 runJuypter() {
     jupyter notebook password
-    screen -dmS juypter jupyter lab --ip=0.0.0.0
+    screen -dmS jupyter jupyter lab --ip=0.0.0.0
 }
 
 printLogo() {
@@ -231,6 +232,9 @@ setup() {
     testIPFSInstall
     installBacalhau
     testBacalhauInstall
+    installConda
+    testInstallConda
+    installJuypter
     printLogo
 }
 
