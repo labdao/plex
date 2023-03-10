@@ -23,10 +23,10 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_darwin_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_darwin_arm64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_darwin_arm64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -34,7 +34,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_linux_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_linux_amd64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
@@ -42,17 +42,12 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.2.0-alpha/plex_0.2.0-alpha_windows_amd64.tar.gz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_windows_amd64.tar.gz
             else
                 echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
         fi
     fi
-}
-
-installBacalhau() {
-    echo "Installing Bacalhau..."
-    curl -sL https://get.bacalhau.org/install.sh | bash
 }
 
 getAppJsonl() {
@@ -121,7 +116,6 @@ displayLogo() {
 makeParentFolder
 makeConfigFolder
 downloadPlex
-installBacalhau
 getAppJsonl
 getInstructionsTemplateJsonl
 getTestData
@@ -131,7 +125,7 @@ echo "Installation complete. Welcome to LabDAO! Documentation at https://github.
 echo "To get started, please run the following 3 steps:"
 echo "1. Please change the permissions of plex on your system:"
 echo "chmod +x ./plex"
-echo "2. Please run the following command to set your web3.storage token:"
-echo "export WEB3STORAGE_TOKEN=<your API token>"
-echo "3. After you have set your API token, to start using Plex run the following command:"
+echo "2. Please run the following command to download large bacalhau results:"
+echo "sudo sysctl -w net.core.rmem_max=2500000"
+echo "3. To start using Plex, run the following command to run Equibind on test data:"
 echo "./plex -app equibind -input-dir ./testdata/binding/pdbbind_processed_size1/"

@@ -11,13 +11,8 @@ source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh
 
 The installer may ask for your password at some point. 
 
-When the installer is complete, next set your web3.storage API token.
+When the installer is complete, next update the executable's permissions.
 
-```
-export WEB3STORAGE_TOKEN=<your token here>
-```
-
-Finally, update the executable's permissions.
 
 ```
 chmod +x ./plex
@@ -29,6 +24,14 @@ Once the client is installed, you can run the following command in the newly-cre
 
 ```
 ./plex -app equibind -input-dir ./testdata/binding/abl
+```
+
+## Building PLEX from source 
+
+```
+git clone https://github.com/labdao/plex
+cd plex
+go build
 ```
 
 ## Running a node

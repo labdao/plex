@@ -24,7 +24,11 @@ func CreateInstruction(app string, instuctionFilePath, inputDirPath string, para
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	cid, err := ipfs.AddDirHttp(os.Getenv("IPFS_NODE_URL"), inputDirPath)
+	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+	if err != nil {
+		return instruction, err
+	}
+	cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputDirPath)
 	if err != nil {
 		return instruction, err
 	}

@@ -3,7 +3,7 @@ package bacalhau
 import (
 	"context"
 	"fmt"
-	"os/exec"
+	"os"
 	"strings"
 	"time"
 
@@ -14,6 +14,15 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/system"
 	"k8s.io/apimachinery/pkg/selection"
 )
+
+func GetBacalhauApiHost() string {
+	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	if exists {
+		return bacalApiHost
+	}
+	defaultApiHost := "54.210.19.52"
+	return defaultApiHost
+}
 
 func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
@@ -40,20 +49,22 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	return job, err
 }
 
-func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
+func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
 	apiPort := 1234
-	apiHost := "bootstrap.production.bacalhau.org"
+	apiHost := GetBacalhauApiHost()
 	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
+	return client
+}
+
+func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
+	client := CreateBacalhauClient()
 	submittedJob, err = client.Submit(context.Background(), job)
 	return submittedJob, err
 }
 
 func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedResult, err error) {
-	system.InitConfig()
-	apiPort := 1234
-	apiHost := "bootstrap.production.bacalhau.org"
-	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
+	client := CreateBacalhauClient()
 	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
@@ -100,16 +111,4 @@ func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, netwo
 		networkFlag = "--network full"
 	}
 	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
-}
-
-func RunBacalhauCmd(cmdString string) {
-	args := strings.Fields(cmdString)
-	fmt.Println(args)
-	cmd := exec.Command(args[0], args[1:]...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Command failed: %s\n", err)
-		return
-	}
-	fmt.Printf("Output: %s\n", out)
 }

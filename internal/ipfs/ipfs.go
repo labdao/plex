@@ -8,8 +8,15 @@ import (
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/web3-storage/go-w3s-client"
 )
+
+func DeriveIpfsNodeUrl() (string, error) {
+	bacalApiHost := bacalhau.GetBacalhauApiHost()
+	ipfsUrl := fmt.Sprintf("http://%s:5001", bacalApiHost)
+	return ipfsUrl, nil
+}
 
 func PutFile(client w3s.Client, file fs.File, opts ...w3s.PutOption) (cid.Cid, error) {
 	fmt.Printf("Uploading to IPFS via web3.storage... \n")
