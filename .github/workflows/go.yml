@@ -36,3 +36,15 @@ jobs:
           WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
           IPFS_NODE_URL: ${{ secrets.IPFS_NODE_URL }}
       run: go test ./... -v
+
+    - name: Run Colabfold
+    run: |
+      cd "$(./plex -app colabfold-min -input-dir testdata/folding | sed -n 's/^Your job results have been downloaded to //p')"
+      cd combined_results/outputs
+      if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
+        echo "No results found"
+        exit 1
+      else
+        echo "results found:"
+        find . -name '*.pdb' | grep '.pdb'
+      fi
