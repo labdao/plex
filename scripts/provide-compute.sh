@@ -181,6 +181,7 @@ testCondaInstall() {
 }
 
 installJuypter() {
+    conda install -c conda-forge jupyter-book --yes
     conda install -c conda-forge jupyterlab --yes
 }
 
@@ -273,5 +274,5 @@ start() {
     runIPFS
     runBacalhau
     runJuypter
-    echo "screen -ls"
+    screen -ls
 }

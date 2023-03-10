@@ -5,6 +5,8 @@
 
 ```export PLEX_ENV=<stage or prod>```
 
+```source ~/.bashrc```
+
 ```bash -c "source ./provide-compute.sh; start"```
 
 You may visit the instance at:
