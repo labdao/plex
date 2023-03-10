@@ -97,7 +97,7 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	return err
 }
 
-func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
+func InstructionToBacalhauCmd(cid, container, cmd string, memory int, timeout int, gpu, network bool) string {
 	gpuFlag := ""
 	if gpu {
 		gpuFlag = "--gpu 1 "
@@ -110,5 +110,11 @@ func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, netwo
 	if network {
 		networkFlag = "--network full"
 	}
-	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
+	timeoutFlag := ""
+	if timeout > 3600 {
+    	panic("Timeout cannot be greater than 3600 seconds (1 hour)")
+	} else if timeout != 0 {
+    	timeoutFlag = fmt.Sprintf("--timeout %d", timeout)
+	}
+	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFla, timeoutFlag, cid, container, cmd)
 }
