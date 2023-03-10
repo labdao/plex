@@ -18,7 +18,7 @@ import (
 
 type AppConfig struct {
 	App    string `json:"app"`
-	InputMethod string `json:"input_method"`
+	InputMethod string `json:"inputMethod"`
 	Inputs []struct {
 		Field     string   `json:"field"`
 		Filetypes []string `json:"filetypes"`
