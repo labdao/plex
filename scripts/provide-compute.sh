@@ -141,6 +141,7 @@ runIPFS() {
 
 installBacalhau() {
     curl -sL https://get.bacalhau.org/install.sh | bash
+    sudo sysctl -w net.core.rmem_max=2500000
 }
 
 testBacalhauInstall() {
@@ -180,7 +181,6 @@ testCondaInstall() {
 }
 
 installJuypter() {
-    conda install -c conda-forge jupyter-book --yes
     conda install -c conda-forge jupyterlab --yes
 }
 
