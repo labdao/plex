@@ -205,6 +205,10 @@ go.work
 go.work
 
 # Module binary
-plex/plex
-
+plex
 dist/
+
+# Job files
+job-*
+*-*-*-*
+job.yaml
