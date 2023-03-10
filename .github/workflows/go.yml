@@ -44,3 +44,14 @@ jobs:
           echo "Docked files found:"
           find . -name '*docked.sdf' | grep 'docked.sdf'
         fi
+    - name: Run Equibind
+      run: |
+        cd "$(./plex -app diffdock -input-dir testdata/binding/abl -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
+        cd combined_results/outputs
+        if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+          echo "No docked files found"
+          exit 1
+        else
+          echo "Docked files found:"
+          find . -name '*docked.sdf' | grep 'docked.sdf'
+        fi
