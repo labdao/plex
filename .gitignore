@@ -211,3 +211,4 @@ dist/
 # Job files
 job-*
 *-*-*-*
+job.yaml
