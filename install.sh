@@ -110,7 +110,19 @@ displayLogo() {
                                  @@@@@@@@@@@@@@@
                                         @
     "
-    echo "$logo"
+    printf "\e[?25l"
+
+    for (( i=0; i<${#logo}; i++)); do
+        char="${logo:$i:1}"
+        if [[ "$char" != " " ]]; then
+            echo -n "$char"
+        else
+            echo -n "$char"
+            sleep 0.0005
+        fi
+    done
+    printf "\e[?25h"
+    echo
 }
 
 makeParentFolder
