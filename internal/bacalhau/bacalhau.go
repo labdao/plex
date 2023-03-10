@@ -116,5 +116,5 @@ func InstructionToBacalhauCmd(cid, container, cmd string, memory int, timeout in
 	} else if timeout != 0 {
     	timeoutFlag = fmt.Sprintf("--timeout %d", timeout)
 	}
-	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFla, timeoutFlag, cid, container, cmd)
+	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, timeoutFlag, cid, container, cmd)
 }
