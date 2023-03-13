@@ -12,7 +12,3 @@ func TestInstructionToDockerCmd(t *testing.T) {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
 }
-
-func TestRunDockerCmd(t *testing.T) {
-
-}
