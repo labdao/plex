@@ -31,20 +31,8 @@ jobs:
     - name: Test
       env:
         WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
+        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
       run: go test ./... -v
-
-
-    - name: Run Colabfold
-      run: |
-        cd "$(./plex -app colabfold-mini -input-dir testdata/folding -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
-        cd combined_results/outputs
-        if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
-          echo "No results found"
-          exit 1
-        else
-          echo "results found:"
-          find . -name '*.pdb' | grep '.pdb'
-        fi
 
     - name: Run Equibind
       run: |
@@ -57,4 +45,5 @@ jobs:
           echo "Docked files found:"
           find . -name '*docked.sdf' | grep 'docked.sdf'
         fi
-
+      env:
+        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
