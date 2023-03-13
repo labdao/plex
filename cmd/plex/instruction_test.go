@@ -14,7 +14,7 @@ func TestCreateInstruction(t *testing.T) {
 		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
 		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
 	}
-	got, err := CreateInstruction("simpdock", "../../testdata/test_instruction_template.jsonl", "../../testdata/ipfs_test", map[string]string{"steps": "9000", "scifimode": "Y"})
+	got, err := CreateInstruction("simpdock", "../../testdata/test_instruction_template.jsonl", "QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt", map[string]string{"steps": "9000", "scifimode": "Y"})
 	if err != nil {
 		t.Errorf(fmt.Sprint(err))
 	}
