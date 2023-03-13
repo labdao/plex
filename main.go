@@ -25,6 +25,7 @@ func main() {
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
 	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
 	memory := flag.Int("memory", 0, "Memory for job in GB, 0 autopicks a value")
+	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
 	dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
 	gpu := flag.Bool("gpu", false, "Use GPU")
 	network := flag.Bool("network", false, "All http requests during job runtime")
@@ -41,5 +42,5 @@ func main() {
 	fmt.Println("Using app configs:", *appConfigsFilePath)
 	fmt.Println("Setting layers to:", *layers)
 
-	plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *gpu, *network, *dry)
+	plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
 }

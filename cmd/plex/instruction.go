@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/labdao/plex/internal/ipfs"
 )
 
 type Instruction struct {
@@ -17,21 +15,13 @@ type Instruction struct {
 	Cmd       string            `json:"cmd"`
 }
 
-func CreateInstruction(app string, instuctionFilePath, inputDirPath string, paramOverrides map[string]string) (Instruction, error) {
+func CreateInstruction(app string, instuctionFilePath, cid string, paramOverrides map[string]string) (Instruction, error) {
 	instruction, err := ReadInstructions(app, instuctionFilePath)
 	if err != nil {
 		return instruction, err
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-	if err != nil {
-		return instruction, err
-	}
-	cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputDirPath)
-	if err != nil {
-		return instruction, err
-	}
 	instruction.InputCIDs = append(instruction.InputCIDs, cid)
 	return instruction, nil
 }

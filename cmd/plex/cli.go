@@ -5,9 +5,11 @@ import (
 	"os"
 
 	"github.com/labdao/plex/internal/bacalhau"
+	"github.com/labdao/plex/internal/docker"
+	"github.com/labdao/plex/internal/ipfs"
 )
 
-func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, gpu, network, dry bool) {
+func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, local, gpu, network, dry bool) {
 	// validate the flags
 	fmt.Println("## Validating ##")
 	appConfig, err := FindAppConfig(app, appConfigsFilePath)
@@ -43,14 +45,35 @@ func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, gpu, 
 
 	createIndex(movedFiles, appConfig, jobDir)
 
+	// create cid
+	var cid string
+	if local {
+		// TODO make a local cid
+		cid = ""
+	} else {
+		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		cid, err = ipfs.AddDirHttp(ipfsNodeUrl, jobDir)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
 	// create instructions
-	instruction, err := CreateInstruction(app, "config/instruction_template.jsonl", jobDir, map[string]string{})
+	instruction, err := CreateInstruction(app, "config/instruction_template.jsonl", cid, map[string]string{})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if dry {
+	if local {
+		cmd := docker.InstructionToDockerCmd(instruction.Container, instruction.Cmd, jobDir, gpu)
+		fmt.Println(cmd)
+	} else if dry {
 		cmd := bacalhau.InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, memory, gpu, network)
 		fmt.Println(cmd)
 	} else {
