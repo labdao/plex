@@ -22,8 +22,12 @@ func RunDockerJob(container, cmd, jobDir string, gpu bool) error {
 	dockerCmd := InstructionToDockerCmd(container, cmd, jobDir, gpu)
 	cmdExec := exec.Command("/bin/sh", "-c", dockerCmd)
 
-	// Set up a pipe to read the command's stdout
+	// Set up a pipe to read the command's stdout and stderr
 	stdout, err := cmdExec.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	stderr, err := cmdExec.StderrPipe()
 	if err != nil {
 		return err
 	}
@@ -35,10 +39,20 @@ func RunDockerJob(container, cmd, jobDir string, gpu bool) error {
 	}
 
 	// Use a scanner to read the output line by line
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-	}
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
+
+	// Use a scanner to read the error output line by line
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			fmt.Println(scanner.Text())
+		}
+	}()
 
 	// Wait for the command to finish
 	if err := cmdExec.Wait(); err != nil {
