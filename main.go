@@ -11,7 +11,7 @@ import (
 func main() {
 	// token access
 	accessToken, exists := os.LookupEnv("PLEX_ACCESS_TOKEN")
-	expectedToken := "LABDAO-mellon888" // speak friend and enter
+	expectedToken := "mellon" // speak friend and enter
 	if !exists {
 		fmt.Println("PLEX_ACCESS_TOKEN is required")
 		os.Exit(1)
