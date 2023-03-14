@@ -14,6 +14,8 @@ func main() {
 	expectedToken := "mellon" // speak friend and enter
 	if !exists {
 		fmt.Println("PLEX_ACCESS_TOKEN is required")
+		fmt.Println("Run export PLEX_ACCESS_TOKEN=<token>")
+		fmt.Println("Fill out this form to have an access token sent to your email: https://whe68a12b61.typeform.com/to/PpbO2HYf")
 		os.Exit(1)
 	} else if expectedToken != accessToken {
 		fmt.Println("PLEX_ACCESS_TOKEN is incorrect")
