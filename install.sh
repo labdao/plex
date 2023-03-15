@@ -23,10 +23,10 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_darwin_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_darwin_arm64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_darwin_arm64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -34,7 +34,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_linux_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_linux_amd64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
@@ -42,7 +42,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.3.0/plex_0.3.0_windows_amd64.tar.gz
+                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_windows_amd64.tar.gz
             else
                 echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
@@ -63,15 +63,10 @@ getInstructionsTemplateJsonl() {
 }
 
 getTestData() {
-    mkdir -p testdata/binding/pdbbind_processed_size1/6d08 && cd testdata/binding/pdbbind_processed_size1/6d08
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
-    cd ../..
-    mkdir -p abl && cd abl
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/7n9g.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000003986735.sdf
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000019632618.sdf
-    cd ../../..
+    mkdir -p testdata
+    curl -sL -O https://github.com/labdao/plex/archive/refs/heads/main.zip
+    unzip -qq main.zip && mv plex-main/testdata/* testdata/ && rm -rf plex-main
+    rm -f main.zip
 }
 
 displayLogo() {
@@ -110,6 +105,7 @@ displayLogo() {
                                  @@@@@@@@@@@@@@@
                                         @
     "
+
     printf "\e[?25l"
 
     for (( i=0; i<${#logo}; i++)); do
