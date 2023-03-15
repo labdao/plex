@@ -70,14 +70,20 @@ func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, local
 		os.Exit(1)
 	}
 
-	if local {
+	if local && dry {
 		cmd := docker.InstructionToDockerCmd(instruction.Container, instruction.Cmd, jobDir, gpu)
 		fmt.Println(cmd)
-	} else if dry {
+	} else if local && !dry {
+		fmt.Println("## Running Job Locally via Docker ##")
+		err := docker.RunDockerJob(instruction.Container, instruction.Cmd, jobDir, gpu)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else if !local && dry {
 		cmd := bacalhau.InstructionToBacalhauCmd(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, memory, gpu, network)
 		fmt.Println(cmd)
-	} else {
-		// create bacalhau job
+	} else { // !local && !dry
 		fmt.Println("## Creating Bacalhau Job ##")
 		job, err := bacalhau.CreateBacalhauJob(instruction.InputCIDs[0], instruction.Container, instruction.Cmd, memory, gpu, network)
 		if err != nil {
