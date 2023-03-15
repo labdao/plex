@@ -130,12 +130,13 @@ getTestData
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
-echo "To get started, please run the following 3 steps:"
+echo "To get started, please run the following steps:"
 echo "1. Please change the permissions of plex on your system:"
 echo "chmod +x ./plex"
 echo "2. Please add your access token to use plex. To request an access token, visit https://whe68a12b61.typeform.com/to/PpbO2HYf"
 echo "export PLEX_ACCESS_TOKEN=<your access token>"
-echo "3. Please run the following command to download large bacalhau results:"
+echo "3. [Linux only] If you recieve a warning about download speeds on Linux you can optionally run:"
 echo "sudo sysctl -w net.core.rmem_max=2500000"
-echo "4. To start using Plex, run the following command to run Equibind on test data:"
+
+echo "After these steps, you're ready to generate computational biology data! Run the following command to run Equibind on test data:"
 echo "./plex -app equibind -input-dir ./testdata/binding/pdbbind_processed_size1/"
