@@ -63,15 +63,10 @@ getInstructionsTemplateJsonl() {
 }
 
 getTestData() {
-    mkdir -p testdata/binding/pdbbind_processed_size1/6d08 && cd testdata/binding/pdbbind_processed_size1/6d08
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf
-    cd ../..
-    mkdir -p abl && cd abl
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/7n9g.pdb
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000003986735.sdf
-    curl -sL -O https://raw.githubusercontent.com/labdao/plex/main/testdata/binding/abl/ZINC000019632618.sdf
-    cd ../../..
+    mkdir -p testdata
+    curl -sL -O https://github.com/labdao/plex/archive/refs/heads/main.zip
+    unzip -qq main.zip && mv plex-main/testdata/* testdata/ && rm -rf plex-main
+    rm -f main.zip
 }
 
 displayLogo() {
@@ -138,7 +133,7 @@ echo "Installation complete. Welcome to LabDAO! Documentation at https://github.
 echo "To get started, please run the following 3 steps:"
 echo "1. Please change the permissions of plex on your system:"
 echo "chmod +x ./plex"
-echo "2. Please run the following command to set your web3.storage token:"
-echo "export WEB3STORAGE_TOKEN=<your API token>"
-echo "3. After you have set your API token, to start using Plex run the following command:"
+echo "2. Please run the following command to download large bacalhau results:"
+echo "sudo sysctl -w net.core.rmem_max=2500000"
+echo "3. To start using Plex, run the following command to run Equibind on test data:"
 echo "./plex -app equibind -input-dir ./testdata/binding/pdbbind_processed_size1/"
