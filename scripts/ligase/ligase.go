@@ -97,6 +97,21 @@ func findOutputs(dir string, toolsConfig ToolsConfig) (map[string]Output, error)
 	return outputMap, nil
 }
 
+func saveOutputMap(dirPath string, outputMap map[string]Output) error {
+	outputJSON, err := json.MarshalIndent(outputMap, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal output map: %v", err)
+	}
+
+	outputFilePath := filepath.Join(dirPath, "outputs.json")
+	err = ioutil.WriteFile(outputFilePath, outputJSON, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write outputs.json file: %v", err)
+	}
+
+	return nil
+}
+
 func main() {
 	toolsConfig, err := loadToolsConfig("inputs/tools.json")
 	if err != nil {
@@ -117,4 +132,13 @@ func main() {
 	}
 
 	fmt.Printf("ToolsConfig: %+v\n", toolsConfig)
+
+	outputDir := "outputs"
+	err = saveOutputMap(outputDir, outputMap)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Println("Output map saved to outputs/outputs.json")
 }

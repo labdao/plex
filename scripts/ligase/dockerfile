@@ -1,12 +1,16 @@
 FROM golang:1.19
 
-RUN mkdir /inputs
-RUN mkdir /outputs
+# contains tool.json and output data to parse
+RUN mkdir inputs
+
+RUN mkdir outputs
 
 COPY ligase.go .
 
 RUN go build -o ligase ligase.go
 
-CMD ["./ligase"]
+RUN mv ligase /
 
-ENTRYPOINT ["./ligase"]
+WORKDIR /
+
+CMD ["./ligase"]
