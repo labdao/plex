@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/labdao/plex/cmd/plex"
 )
@@ -21,6 +24,35 @@ func main() {
 		fmt.Println("PLEX_ACCESS_TOKEN is incorrect")
 		os.Exit(1)
 	}
+
+	// auto update to latest plex version
+	releaseURL := "https://api.github.com/repos/labdao/plex/releases/latest"
+
+	resp, err := http.Get(releaseURL)
+	if err != nil {
+		fmt.Println("Error getting latest release:", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	var responseMap map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&responseMap)
+	if err != nil {
+		fmt.Println("Error decoding latest release:", err)
+		os.Exit(1)
+	}
+
+	htmlURL, ok := responseMap["html_url"].(string)
+	if !ok {
+		fmt.Println("Error getting latest release html_url")
+		os.Exit(1)
+	}
+
+	urlPartition := strings.Split(htmlURL, "/")
+	latestVersion := urlPartition[len(urlPartition)-1]
+
+	// print latest plex version available for download
+	fmt.Println("Latest version:", latestVersion)
 
 	// Env settings
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
