@@ -44,7 +44,7 @@ jobs:
 
       - name: Run Equibind
         run: |
-          cd "$(./plex -app equibind -input-dir testdata/binding/abl | sed -n 's/^Your job results have been downloaded to //p')"
+          cd "$(./plex -tool equibind -input-dir testdata/binding/abl | sed -n 's/^Your job results have been downloaded to //p')"
           cd combined_results/outputs
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
@@ -59,7 +59,7 @@ jobs:
       - name: Run Colabfold
         run: |
           cd ../../..
-          cd "$(./plex -app colabfold-mini -input-dir testdata/folding -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
+          cd "$(./plex -tool colabfold-mini -input-dir testdata/folding -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
           cd combined_results/outputs
           if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
             echo "No .pdb files found"
@@ -74,7 +74,7 @@ jobs:
       - name: Run Diffdock
         run: |
           cd ../../..
-          cd "$(./plex -app diffdock -input-dir testdata/docking -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
+          cd "$(./plex -tool diffdock -input-dir testdata/docking -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
           cd combined_results/outputs
           if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
             echo "No docked files found"

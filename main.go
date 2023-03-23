@@ -31,11 +31,14 @@ func main() {
 	}
 
 	// required flags
-	app := flag.String("app", "", "Application name")
+	tool := flag.String("tool", "", "Tool name")
 	inputDir := flag.String("input-dir", "", "Input directory path")
 
+	// ensuring backward compatability to v.0.4 and earlier
+	tool := flag.String("app", "", "Tool name")
+
 	// optional flags
-	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
+	toolConfigsFilePath := flag.String("tool-config", "config", "Tool Configurations path")
 	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
 	memory := flag.Int("memory", 0, "Memory for job in GB, 0 autopicks a value")
 	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
@@ -46,14 +49,14 @@ func main() {
 
 	// print the values of the flags
 	fmt.Println("## User input ##")
-	fmt.Println("Provided application name:", *app)
+	fmt.Println("Provided tool name:", *tool)
 	fmt.Println("Provided directory path:", *inputDir)
 	fmt.Println("Using GPU:", *gpu)
 	fmt.Println("Using Network:", *network)
 
 	fmt.Println("## Default parameters ##")
-	fmt.Println("Using app configs:", *appConfigsFilePath)
+	fmt.Println("Using tool config path:", *toolConfigsFilePath)
 	fmt.Println("Setting layers to:", *layers)
 
-	plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
+	plex.Execute(*tool, *inputDir, *toolConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
 }
