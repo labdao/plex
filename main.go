@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/labdao/plex/cmd/plex"
 )
 
@@ -26,33 +27,45 @@ func main() {
 	}
 
 	// auto update to latest plex version
+	localReleaseVersion, err := semver.NewVersion("v0.4.1")
+	if err != nil {
+		fmt.Printf("Error parsing local release version: %v\n", err)
+		os.Exit(1)
+	}
 	releaseURL := "https://api.github.com/repos/labdao/plex/releases/latest"
-
 	resp, err := http.Get(releaseURL)
 	if err != nil {
 		fmt.Println("Error getting latest release:", err)
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-
 	var responseMap map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&responseMap)
 	if err != nil {
 		fmt.Println("Error decoding latest release:", err)
 		os.Exit(1)
 	}
-
 	htmlURL, ok := responseMap["html_url"].(string)
 	if !ok {
 		fmt.Println("Error getting latest release html_url")
 		os.Exit(1)
 	}
-
 	urlPartition := strings.Split(htmlURL, "/")
-	latestVersion := urlPartition[len(urlPartition)-1]
-
-	// print latest plex version available for download
-	fmt.Println("Latest version:", latestVersion)
+	latestReleaseVersionStr := urlPartition[len(urlPartition)-1]
+	latestReleaseVersion, err := semver.NewVersion(latestReleaseVersionStr)
+	if err != nil {
+		fmt.Printf("Error parsing latest release version: %v\n", err)
+		os.Exit(1)
+	}
+	if localReleaseVersion.LessThan(latestReleaseVersion) {
+		fmt.Printf("The version of plex you are running (v%s) is outdated.\n", localReleaseVersion)
+		fmt.Printf("Updating to latest plex version (v%s)...\n", latestReleaseVersion)
+		// TODO: update plex
+		// need to redownload plex binary based on user's OS and architecture
+		// and replace the current binary
+	} else {
+		fmt.Printf("Plex version (v%s) up to date.\n", localReleaseVersion)
+	}
 
 	// Env settings
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
