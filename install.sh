@@ -26,10 +26,10 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_darwin_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_darwin_arm64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_darwin_arm64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -37,7 +37,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_linux_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_linux_amd64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
@@ -45,7 +45,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_windows_amd64.tar.gz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_windows_amd64.tar.gz
             else
                 echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
