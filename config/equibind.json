@@ -1,0 +1,34 @@
+{
+    "class": "CommandLineTool",
+    "name": "equibind",
+    "description": "Docking of small molecules to a protein",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "while IFS=, read -r protein ligand; do if [ \"${protein}\" != \"protein\" ]; then protein_short=$(basename \"${protein}\" .pdb); ligand_short=$(basename \"${ligand}\" .sdf); python main.py --protein \"/inputs/${protein_short}.pdb\" --small_molecule_library \"/inputs/${ligand_short}.sdf\" && mv /outputs/ligands_predicted.sdf \"/outputs/${protein_short}_${ligand_short}_docked.sdf\" && rm -r /outputs/dummy && cp \"/inputs/${protein_short}.pdb\" \"/outputs/\"; fi; done < /inputs/index.csv"
+      ],
+    "requirements": [
+    {
+        "class": "DockerRequirement",
+        "dockerPull": "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07"
+    },
+    {
+        "class": "RessourceRequirement",
+        "gpuBool": true,
+        "networkBool": true
+    }
+    ],
+    "inputs": {
+      "protein": {
+        "type": "File"
+      },
+      "small_molecule": {
+        "type": "File"
+      }
+    },
+    "outputs": {
+      "docked_small_molecule": {
+        "type": "File",
+        "glob": "*_predicted.sdf"
+      }
+    }
+}
