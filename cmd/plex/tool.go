@@ -17,16 +17,6 @@ type Tool struct {
 	Outputs     map[string]interface{} `json:"outputs"`
 }
 
-func CreateTool(toolName string, toolFilePath, cid string, paramOverrides map[string]string) (Tool, error) {
-	tool, err := ReadTools(toolName, toolFilePath)
-	if err != nil {
-		return tool, err
-	}
-	tool.Arguments[0] = formatCmd(tool.Arguments[0], paramOverrides)
-	tool.Requirements[0]["dockerPull"] = formatCmd(tool.Requirements[0]["dockerPull"], paramOverrides)
-	return tool, nil
-}
-
 func ReadTool(toolName string, filepath string) (Tool, error) {
 	fileContents, err := os.ReadFile(filepath)
 	var tool Tool
@@ -43,13 +33,4 @@ func ReadTool(toolName string, filepath string) (Tool, error) {
 	}
 
 	return tool, fmt.Errorf("no tool found for tool name %s", toolName)
-}
-
-func formatCmd(cmd string, params map[string]string) (formatted string) {
-	// this requires string inputs to have `%{paramKeyX}s %{paramKeyY}s"` formatting
-	formatted = cmd
-	for key, val := range params {
-		formatted = strings.Replace(formatted, "%{"+key+"}s", val, -1)
-	}
-	return
 }

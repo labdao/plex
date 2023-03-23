@@ -15,17 +15,18 @@ type Instruction struct {
 	Cmd       string            `json:"cmd"`
 }
 
-func CreateInstruction(app string, instuctionFilePath, cid string, paramOverrides map[string]string) (Instruction, error) {
+func CreateInstruction(app string, instuctionFilePath, cids []string, paramOverrides map[string]string) (Instruction, error) {
 	instruction, err := ReadInstructions(app, instuctionFilePath)
 	if err != nil {
 		return instruction, err
 	}
 	instruction.Params = overwriteParams(instruction.Params, paramOverrides)
 	instruction.Cmd = formatCmd(instruction.Cmd, instruction.Params)
-	instruction.InputCIDs = append(instruction.InputCIDs, cid)
+	instruction.InputCIDs = append(instruction.InputCIDs, cids)
 	return instruction, nil
 }
 
+//TODO remove this function and use the one in the tool.go file
 func ReadInstructions(app string, filepath string) (Instruction, error) {
 	fileContents, err := os.ReadFile(filepath)
 	var instruction Instruction

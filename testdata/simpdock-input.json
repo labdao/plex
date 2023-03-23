@@ -1,0 +1,16 @@
+{
+    "protein": {
+      "class": "File",
+			"basename": "7n9g.pdb",
+			"address": {
+				"file": "file:///Users/rindtorff/github/labdao/plex/testdata/binding/abl/7n9g.pdb",
+	      "ipfs": "ipfs://QmgsdfgsdfgsfdZ",
+				"s3": "s3://bucket/file"}      
+    },
+    "small_molecule": {
+      "class": "File",
+			"basename": "ZINC000003986735.sdf",
+			"address": {
+	      "file": "file:///Users/rindtorff/github/labdao/plex/testdata/binding/abl/ZINC000003986735.sdf"}
+    }
+}

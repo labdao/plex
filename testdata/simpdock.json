@@ -4,7 +4,7 @@
     "description": "A description for the simpdock tool",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "python -m inference -l %{layers}s -s %{steps}s && python -m run --scifimode %{scifimode}s"
+      "python -m inference -l $(inputs.layers) -s $(inputs.steps) && python -m run --protein $(inputs.protein.path) --small_molecule_library $(inputs.small_molecule.path) --scifimode $(inputs.scifimode)"
     ],
     "requirements": [
       {
@@ -13,14 +13,32 @@
       }
     ],
     "inputs": {
+      "protein": {
+        "type": "File", 
+        "default": {
+          "class": "File",
+          "address": {
+            "ipfs": "ipfs://QmgsdfgsdfgsfdZ",
+            "s3": "s3://bucket/file"}  
+        }
+      },
+      "small_molecule": {
+        "type": "File",
+        "address": {
+          "ipfs": "ipfs://QmgsdfgsdfgsfdZ",
+          "s3": "s3://bucket/file"}  
+        },
       "layers": {
-        "type": "int"
+        "type": "int",
+        "default": 1
       },
       "steps": {
-        "type": "int"
+        "type": "int",
+        "default": 1
       },
       "scifimode": {
-        "type": "string"
+        "type": "string",
+        "default": "N"
       }
     },
     "outputs": {

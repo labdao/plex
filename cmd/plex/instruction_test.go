@@ -8,13 +8,12 @@ import (
 
 func TestCreateInstruction(t *testing.T) {
 	want := Instruction{
-		App:       "simpdock",
-		InputCIDs: []string{"QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt"},
+		Tool:       "simpdock",
+		InputCIDs: []string{"QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt", "QmAnotherCIDHere123456789"},
 		Container: "simpdock:v1",
-		Params:    map[string]string{"layers": "33", "steps": "9000", "scifimode": "Y"},
-		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --scifimode Y",
+		Cmd:       "python -m inference -l 33 -s 9000 && python -m run --protein /inputs/7n9g.pdb --small_molecule_library /inputs/ZINC000003986735.sdf --scifimode Y",
 	}
-	got, err := CreateInstruction("simpdock", "../../testdata/test_instruction_template.jsonl", "QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt", map[string]string{"steps": "9000", "scifimode": "Y"})
+	got, err := CreateInstruction("simpdock", "../../testdata/simpdock.json", "../../testdata/simpdock-input.json")
 	if err != nil {
 		t.Errorf(fmt.Sprint(err))
 	}
@@ -23,6 +22,7 @@ func TestCreateInstruction(t *testing.T) {
 	}
 }
 
+// TODO not sure we need this function and test anymore
 func TestOverwriteParams(t *testing.T) {
 	defaultParams := map[string]string{"iterations": "42", "repeats": "32", "batch_size": "12"}
 	overrideParams := map[string]string{"iterations": "22", "batch_size": "16"}

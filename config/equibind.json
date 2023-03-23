@@ -4,7 +4,9 @@
     "description": "Docking of small molecules to a protein",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "while IFS=, read -r protein ligand; do if [ \"${protein}\" != \"protein\" ]; then protein_short=$(basename \"${protein}\" .pdb); ligand_short=$(basename \"${ligand}\" .sdf); python main.py --protein \"/inputs/${protein_short}.pdb\" --small_molecule_library \"/inputs/${ligand_short}.sdf\" && mv /outputs/ligands_predicted.sdf \"/outputs/${protein_short}_${ligand_short}_docked.sdf\" && rm -r /outputs/dummy && cp \"/inputs/${protein_short}.pdb\" \"/outputs/\"; fi; done < /inputs/index.csv"
+      "python main.py --protein $(inputs.protein.path) --small_molecule_library $(inputs.small_molecule.path);",
+      "mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_docked.$(inputs.small_molecule.nameext);",
+      "rm -r /outputs/dummy"
       ],
     "requirements": [
     {
