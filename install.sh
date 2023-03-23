@@ -50,16 +50,11 @@ downloadPlex() {
     fi
 }
 
-getAppJsonl() {
-    cd config
-    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl
-    cd ..
-}
-
-getInstructionsTemplateJsonl() {
-    cd config
-    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl
-    cd ..
+getToolConfig() {
+    mkdir -p config
+    curl -sL -O https://github.com/labdao/plex/archive/refs/heads/main.zip
+    unzip -qq main.zip && mv plex-main/config/* config/ && rm -rf plex-main
+    rm -f main.zip
 }
 
 getTestData() {
@@ -124,8 +119,7 @@ displayLogo() {
 makeParentFolder
 makeConfigFolder
 downloadPlex
-getAppJsonl
-getInstructionsTemplateJsonl
+getToolConfig
 getTestData
 displayLogo
 

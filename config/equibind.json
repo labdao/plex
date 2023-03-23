@@ -26,9 +26,9 @@
       }
     },
     "outputs": {
-      "docked_small_molecule": {
+      "best_docked_small_molecule": {
         "type": "File",
-        "glob": "*_predicted.sdf"
+        "glob": "*_docked.sdf"
       }
     }
 }
