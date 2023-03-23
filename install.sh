@@ -18,15 +18,18 @@ downloadPlex() {
     if [[ ! -x plex ]]; then
         echo "Downloading Plex..."
         setOSandArch
-        
+
+        LATEST_RELEASE=$(curl -s https://api.github.com/repos/labdao/plex/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        RELEASE_WITHOUT_V=${LATEST_RELEASE#v}
+
         if [ "$OS" = "darwin" ]
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_darwin_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_darwin_arm64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_darwin_arm64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Darwin OS: $ARCH"
             fi
@@ -34,7 +37,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_linux_amd64.tar.gz | tar xvz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_linux_amd64.tar.gz | tar xvz
             else
                 echo "Cannot install Plex. Unsupported architecture for Linux: $ARCH"
             fi
@@ -42,7 +45,7 @@ downloadPlex() {
         then
             if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
             then
-                curl -sSL https://github.com/labdao/plex/releases/download/v0.4.1/plex_0.4.1_windows_amd64.tar.gz
+                curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_$(RELEASE_WITHOUT_V)_windows_amd64.tar.gz
             else
                 echo "Cannot install Plex. Unsupported architecture for Windows: $ARCH"
             fi
