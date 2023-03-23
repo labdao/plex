@@ -1,0 +1,33 @@
+{
+    "class": "CommandLineTool",
+    "name": "simpdock",
+    "description": "A description for the simpdock tool",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "python -m inference -l %{layers}s -s %{steps}s && python -m run --scifimode %{scifimode}s"
+    ],
+    "requirements": [
+      {
+        "class": "DockerRequirement",
+        "dockerPull": "simpdock:v1"
+      }
+    ],
+    "inputs": {
+      "layers": {
+        "type": "int"
+      },
+      "steps": {
+        "type": "int"
+      },
+      "scifimode": {
+        "type": "string"
+      }
+    },
+    "outputs": {
+      "output_example": {
+        "type": "File",
+        "glob": "output_file_pattern" 
+      }
+    }
+  }
+  
