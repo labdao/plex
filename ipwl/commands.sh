@@ -1,0 +1,2 @@
+/bin/bash -c python main.py --protein /inputs/ --small_molecule_library $(inputs.small_molecule.path); mv /outputs/ligands_predicted.sdf /outputs/_$(inputs.small_molecule.nameroot)_docked.$(inputs.small_molecule.nameext); rm -r /outputs/dummy
+/bin/bash -c python main.py --protein $(inputs.protein.path) --small_molecule_library /inputs/; mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.nameroot)__docked.; rm -r /outputs/dummy
