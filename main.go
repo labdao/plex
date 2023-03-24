@@ -1,10 +1,12 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
@@ -14,12 +16,18 @@ import (
 	"github.com/labdao/plex/cmd/plex"
 )
 
-func downloadBinary(url, destination string) error {
+func downloadAndDecompressBinary(url, destination string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
+	gzipReader, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return err
+	}
+	defer gzipReader.Close()
 
 	out, err := os.Create(destination)
 	if err != nil {
@@ -27,7 +35,7 @@ func downloadBinary(url, destination string) error {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, gzipReader)
 	return err
 }
 
@@ -83,9 +91,61 @@ func main() {
 		userOS := runtime.GOOS
 		userArch := runtime.GOARCH
 
-		binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s", latestReleaseVersionStr, userOS, userArch)
-		// need to redownload plex binary based on user's OS and architecture
-		// and replace the current binary
+		oldBinaryPath := os.Args[0]
+		backupBinaryPath := fmt.Sprintf("%s.bak", oldBinaryPath)
+		err := os.Rename(oldBinaryPath, backupBinaryPath)
+		if err != nil {
+			fmt.Printf("Error renaming the current binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s_%s.tar.gz", latestReleaseVersionStr, strings.TrimPrefix(latestReleaseVersionStr, "v"), userOS, userArch)
+
+		tempFile, err := ioutil.TempFile("", "plex_*")
+		if err != nil {
+			fmt.Printf("Error creating temporary file: %v\n", err)
+			os.Exit(1)
+		}
+		defer os.Remove(tempFile.Name())
+
+		err = downloadAndDecompressBinary(binaryURL, tempFile.Name())
+		if err != nil {
+			fmt.Printf("Error downloading and decompressing latest binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		out, err := os.Create("plex_new")
+		if err != nil {
+			fmt.Printf("Error creating new binary: %v\n", err)
+			os.Exit(1)
+		}
+		defer out.Close()
+
+		_, err = io.Copy(out, tempFile)
+		if err != nil {
+			fmt.Printf("Error writing to new binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		err = os.Chmod("plex_new", 0755)
+		if err != nil {
+			fmt.Printf("Error setting permissions on new binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		err = os.Rename("plex_new", "plex")
+		if err != nil {
+			fmt.Printf("Error renaming new binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		err = os.Remove(backupBinaryPath)
+		if err != nil {
+			fmt.Printf("Error removing backup binary: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Plex updated successfully to (v%s). Running new binary...\n", localReleaseVersion)
 	} else {
 		fmt.Printf("Plex version (v%s) up to date.\n", localReleaseVersion)
 	}
