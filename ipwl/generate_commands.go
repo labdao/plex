@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
+//	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -22,30 +22,42 @@ type InputFile struct {
 type InputJSON map[string]interface{}
 
 type ToolConfig struct {
-	Class       string   `json:"class"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	BaseCommand []string `json:"baseCommand"`
-	Arguments   []string `json:"arguments"`
+	Class        string   `json:"class"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	BaseCommand  []string `json:"baseCommand"`
+	Arguments    []string `json:"arguments"`
 	Requirements []struct {
 		Class      string `json:"class"`
 		DockerPull string `json:"dockerPull"`
 	} `json:"requirements"`
-	Inputs  map[string]InputFile `json:"inputs"`
+	Inputs  map[string]InputFile    `json:"inputs"`
 	Outputs map[string]interface{} `json:"outputs"`
 }
 
-func main() {
-	// Parse command line arguments
-	inputsFile := flag.String("inputs", "inputs.json", "Path to the inputs.json file")
-	toolConfigFile := flag.String("tool", "equibind.json", "Path to the tool configuration JSON file")
-	outputFile := flag.String("output", "command.sh", "Path to the output shell script")
-	flag.Parse()
-
-	// Read input.json file
-	jsonFile, err := os.Open(*inputsFile)
+func readToolConfig(path string) (*ToolConfig, error) {
+	// Read tool.json file
+	jsonFile, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	// Unmarshal tool.json to ToolConfig type
+	var toolConfig ToolConfig
+	err = json.Unmarshal(byteValue, &toolConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &toolConfig, nil
+}
+
+func readInputFile(path string) (*InputJSON, error) {
+	// Read input.json file
+	jsonFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
 	}
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -54,50 +66,82 @@ func main() {
 	var input InputJSON
 	err = json.Unmarshal(byteValue, &input)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
+	return &input, nil
+}
 
-	// Read tool.json file
-	jsonFile, err = os.Open(*toolConfigFile)
+//do not use this function
+func enrichInputFile(inputPath string) error {
+    // Read input.json file
+    input, err := readInputFile(inputPath)
+    if err != nil {
+        return err
+    }
+
+    // Enrich input files
+    for inputName, inputFile := range *input {
+        inputFileMap := inputFile.(map[string]interface{})
+        inputBasename := inputFileMap["basename"].(string)
+        inputNameRoot := strings.TrimSuffix(inputBasename, filepath.Ext(inputBasename))
+        inputNameExt := filepath.Ext(inputBasename)
+
+        inputFileMap["nameroot"] = inputNameRoot
+        inputFileMap["nameext"] = inputNameExt
+        inputFileMap["path"] = fmt.Sprintf("/inputs/%s", inputBasename)
+
+        // Update input object with enriched input file
+        (*input)[inputName] = inputFileMap
+    }
+
+    // Write enriched input to new file
+    outputFilename := strings.TrimSuffix(inputPath, ".json") + "_enriched.json"
+    outputFile, err := os.Create(outputFilename)
+    if err != nil {
+        return err
+    }
+    defer outputFile.Close()
+
+    outputBytes, err := json.MarshalIndent(input, "", "    ")
+    if err != nil {
+        return err
+    }
+
+    _, err = outputFile.Write(outputBytes)
+    if err != nil {
+        return err
+    }
+
+    fmt.Printf("Enriched input written to %s\n", outputFilename)
+
+    return nil
+}
+
+
+func printInputs() error {
+	// Read input.json file
+	input, err := readInputFile("inputs.json")
 	if err != nil {
-		panic(err)
-	}
-	defer jsonFile.Close()
-	byteValue, _ = ioutil.ReadAll(jsonFile)
-
-	// Unmarshal tool.json to ToolConfig type
-	var toolConfig ToolConfig
-	err = json.Unmarshal(byteValue, &toolConfig)
-	if err != nil {
-		panic(err)
+		return err
 	}
 
-	// Create output file
-	output, err := os.Create(*outputFile)
-	if err != nil {
-		panic(err)
-	}
-	defer output.Close()
-
-	// Loop through each input file and generate shell commands
-	for inputName, inputFile := range toolConfig.Inputs {
-		inputPath := fmt.Sprintf("/inputs/%s", inputFile.Basename)
-		inputNameRoot := strings.TrimSuffix(inputFile.Basename, filepath.Ext(inputFile.Basename))
-		inputExt := filepath.Ext(inputFile.Basename)
-
-		// Generate shell command based on baseCommand and arguments in tool config
-		command := strings.Join(toolConfig.BaseCommand, " ")
-		for _, arg := range toolConfig.Arguments {
-			arg = strings.ReplaceAll(arg, "$(inputs."+inputName+".path)", inputPath)
-			arg = strings.ReplaceAll(arg, "$(inputs."+inputName+".nameroot)", inputNameRoot)
-			arg = strings.ReplaceAll(arg, "$(inputs."+inputName+".nameext)", inputExt)
-			command += " " + arg
+	// Loop through each input file and print out the basename
+	for inputName, inputFile := range *input {
+		switch inputFile.(type) {
+		case map[string]interface{}:
+			inputPath := inputFile.(map[string]interface{})["basename"].(string)
+			fmt.Printf("%s: %s\n", inputName, inputPath)
+		case []interface{}:
+			for _, file := range inputFile.([]interface{}) {
+				inputPath := file.(map[string]interface{})["basename"].(string)
+				fmt.Printf("%s: %s\n", inputName, inputPath)
+			}
 		}
-
-		// Write the generated shell command to the output file
-		_, err := output.WriteString(command + "\n")
-		if err != nil {
-			panic(err)
-		}
 	}
+	return nil
+}
+
+
+func main() {
+    printInputs()
 }
