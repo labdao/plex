@@ -145,7 +145,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("Plex updated successfully to (v%s). Running new binary...\n", localReleaseVersion)
+		fmt.Printf("Plex updated successfully to (v%s). Running new binary...\n", latestReleaseVersion)
 	} else {
 		fmt.Printf("Plex version (v%s) up to date.\n", localReleaseVersion)
 	}
