@@ -4,13 +4,32 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/Masterminds/semver"
 	"github.com/labdao/plex/cmd/plex"
 )
+
+func downloadBinary(url, destination string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	out, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
 
 func main() {
 	// token access
@@ -60,7 +79,11 @@ func main() {
 	if localReleaseVersion.LessThan(latestReleaseVersion) {
 		fmt.Printf("The version of plex you are running (v%s) is outdated.\n", localReleaseVersion)
 		fmt.Printf("Updating to latest plex version (v%s)...\n", latestReleaseVersion)
-		// TODO: update plex
+
+		userOS := runtime.GOOS
+		userArch := runtime.GOARCH
+
+		binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s", latestReleaseVersionStr, userOS, userArch)
 		// need to redownload plex binary based on user's OS and architecture
 		// and replace the current binary
 	} else {
