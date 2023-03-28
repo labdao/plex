@@ -5,7 +5,8 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "python main.py --protein $(inputs.protein.path) --small_molecule_library $(inputs.small_molecule.path);",
-      "mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_docked.$(inputs.small_molecule.nameext);"
+      "mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_docked.$(inputs.small_molecule.nameext);",
+      "cp /inputs/$(inputs.protein.path) /outputs/"
       ],
     "requirements": [
     {
@@ -20,16 +21,22 @@
     ],
     "inputs": {
       "protein": {
-        "type": "File"
+        "type": "File",
+        "glob": "*.pdb"
       },
       "small_molecule": {
-        "type": "File"
+        "type": "File",
+        "glob": ["*.sdf", "*.mol"]
       }
     },
     "outputs": {
       "best_docked_small_molecule": {
         "type": "File",
         "glob": "*_docked.sdf"
+      },
+      "protein": {
+        "type": "File", 
+        "glob": "*.pdb"
       }
     }
 }
