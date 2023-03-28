@@ -14,7 +14,7 @@
         "dockerPull": "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07"
     },
     {
-        "class": "RessourceRequirement",
+        "class": "ResourceRequirement",
         "gpuBool": true,
         "networkBool": true
     }
