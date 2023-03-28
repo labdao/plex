@@ -1,29 +1,66 @@
-{
-    "protein": {
-      "class": "File",
-      "basename": "7n9g.pdb",
-      "address": {
-        "file": "file:///Users/rindtorff/github/labdao/plex/testdata/binding/abl/7n9g.pdb",
-        "ipfs": "ipfs://bafybeihsg6rt3uou6fyygqroy552jrdpbnpxilzknvk6zseouxbr6c5ycq"
-      }
-    },
-    "small_molecules": [
-      {
-        "class": "File",
-        "basename": "ZINC000003986735.sdf",
-        "address": {
-          "file": "file:///Users/rindtorff/github/labdao/plex/testdata/binding/abl/ZINC000003986735.sdf",
-          "ipfs": "ipfs://bafybeibq6suwbxuuj5nftoyxvr3iolt5zxq36eo4lkykqpyqotxuo7hdgq"
-        }
+[
+  {
+      "tool": "equibind",
+      "inputs": {
+          "protein": {
+              "class": "File",
+              "basename": "7n9g.pdb",
+              "address": {
+                  "test": "testdata/binding/abl/7n9g.pdb"
+              }
+          },
+          "small_molecule": {
+              "class": "File",
+              "basename": "ZINC000003986735.sdf",
+              "address": {
+                  "test": "testdata/binding/abl/ZINC000003986735.sdf"
+              }
+          }
       },
-      {
-        "class": "File",
-        "basename": "ZINC000019632618.sdf",
-        "address": {
-          "file": "file:///Users/rindtorff/github/labdao/plex/testdata/binding/abl/ZINC000019632618.sdf",
-          "ipfs": "ipfs://bafybeibq6suwbxuuj5nftoyxvr3iolt5zxq36eo4lkykqpyqotxuo7hdgq"
-        }
-      }
-    ]
-}
-  
+      "outputs": {
+          "docked_small_molecule": {
+              "class": "File",
+              "basename": "",
+              "address": {}
+          },
+          "protein": {
+              "class": "File",
+              "basename": "",
+              "address": {}
+          }
+      },
+      "state": "created"
+  },
+  {
+      "tool": "equibind",
+      "inputs": {
+          "protein": {
+              "class": "File",
+              "basename": "7n9g.pdb",
+              "address": {
+                  "test": "testdata/binding/abl/7n9g.pdb"
+              }
+          },
+          "small_molecule": {
+              "class": "File",
+              "basename": "ZINC000019632618.sdf",
+              "address": {
+                  "test": "testdata/binding/abl/ZINC000019632618.sdf"
+              }
+          }
+      },
+      "outputs": {
+          "docked_small_molecule": {
+              "class": "File",
+              "basename": "",
+              "address": {}
+          },
+          "protein": {
+              "class": "File",
+              "basename": "",
+              "address": {}
+          }
+      },
+      "state": "created"
+  }
+]
