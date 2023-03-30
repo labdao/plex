@@ -1,6 +1,6 @@
 {
-    "name": "test",
-    "description": "test tool",
+    "name": "equibind",
+    "description": "test for equibind tool",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
@@ -12,21 +12,21 @@
     "inputs": {
         "protein": {
             "type": "File",
-            "glob": "*.pdb"
+            "glob": ["*.pdb"]
         },
         "small_molecule": {
             "type": "File",
-            "glob": ["*.sdf", "*.mol"]
+            "glob": ["*.sdf", "*.mol2"]
         }
     },
     "outputs": {
         "docked_small_molecule": {
             "type": "File",
-            "glob": "*_docked.sdf"
+            "glob": ["*_docked.sdf"]
         },
         "protein": {
             "type": "File",
-            "glob": "*.pdb"
+            "glob": ["*.pdb"]
         }
     }
 }

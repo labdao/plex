@@ -17,6 +17,7 @@ type Tool struct {
 	DockerPull  string                 `json:"dockerPull"`
 	GpuBool     bool                   `json:"gpuBool"`
 	Inputs      map[string]interface{} `json:"inputs"`
+	Outputs     map[string]interface{} `json:"outputs"`
 }
 
 func readToolConfig(filePath string) (Tool, error) {
