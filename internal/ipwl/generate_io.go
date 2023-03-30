@@ -1,6 +1,9 @@
 package ipwl
 
-import "path/filepath"
+import (
+	"log"
+	"path/filepath"
+)
 
 func findMatchingFiles(inputDir string, tool Tool) (map[string][]string, error) {
 	inputFilepaths := make(map[string][]string)
@@ -63,14 +66,19 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 		ioEntry := IO{
 			Tool:    toolPath,
 			State:   "created",
-			Inputs:  map[string]interface{}{},
+			Inputs:  map[string]FileInput{},
 			Outputs: map[string]interface{}{},
 		}
 
-		for inputName, filepath := range combination {
-			ioEntry.Inputs[inputName] = map[string]interface{}{
-				"class":    "File",
-				"filepath": filepath,
+		for inputName, path := range combination {
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				log.Printf("Error converting to absolute path: %v", err)
+				continue
+			}
+			ioEntry.Inputs[inputName] = FileInput{
+				Class:    "File",
+				FilePath: absPath,
 			}
 		}
 

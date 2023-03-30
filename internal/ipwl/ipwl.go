@@ -39,6 +39,7 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 	}
 
 	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, outputDirPath)
+	fmt.Println("jjjjjjjjjjjjjjjjjjjjjjjjj:", dockerCmd)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error converting tool to Docker cmd: %w", err)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -44,23 +45,38 @@ func ReadToolConfig(filePath string) (Tool, error) {
 
 func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string, error) {
 	inputVolumes := ""
-	for _, input := range ioEntry.Inputs {
-		inputFilepath := input.(map[string]interface{})["filepath"].(string)
-		inputVolumes += fmt.Sprintf("-v %s:/inputs ", inputFilepath)
+	for inputName, input := range ioEntry.Inputs {
+		inputVolumes += fmt.Sprintf("--mount type=bind,source=%s,target=/inputs/%s ", input.FilePath, inputName)
 	}
 
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?\.filepath)\)`)
+	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext))\)`)
 	matches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
 
 	for _, match := range matches {
 		placeholder := match[0]
 		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
-		arguments = strings.Replace(arguments, placeholder, ioEntry.Inputs[key].(map[string]interface{})["filepath"].(string), -1)
+		key = strings.TrimSuffix(key, ".basename")
+		key = strings.TrimSuffix(key, ".ext")
+
+		var replacement string
+		input := ioEntry.Inputs[key]
+
+		switch match[2] {
+		case ".filepath":
+			replacement = input.FilePath
+		case ".basename":
+			replacement = filepath.Base(input.FilePath)
+		case ".ext":
+			ext := filepath.Ext(input.FilePath)
+			replacement = strings.TrimPrefix(ext, ".")
+		}
+
+		arguments = strings.Replace(arguments, placeholder, replacement, -1)
 	}
 
-	dockerCmd := fmt.Sprintf("docker run %s-v %s:/outputs %s %s %s", inputVolumes, outputDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	dockerCmd := fmt.Sprintf(`docker run %s-v %s:/outputs %s %s "%s"`, inputVolumes, outputDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return dockerCmd, nil
 }

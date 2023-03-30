@@ -7,12 +7,17 @@ import (
 	"os"
 )
 
+type FileInput struct {
+	Class    string `json:"class"`
+	FilePath string `json:"filepath"`
+}
+
 type IO struct {
 	Tool    string                 `json:"tool"`
-	Inputs  map[string]interface{} `json:"inputs"`
+	Inputs  map[string]FileInput   `json:"inputs"`
 	Outputs map[string]interface{} `json:"outputs"`
 	State   string                 `json:"state"`
-	ErrMsg  string                 `json:"errMsg`
+	ErrMsg  string                 `json:"errMsg"`
 }
 
 func readIOList(filePath string) ([]IO, error) {
