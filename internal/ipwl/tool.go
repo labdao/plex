@@ -42,7 +42,7 @@ func readToolConfig(filePath string) (Tool, error) {
 	return tool, nil
 }
 
-func ToolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string, error) {
+func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string, error) {
 	inputVolumes := ""
 	for _, input := range ioEntry.Inputs {
 		inputFilepath := input.(map[string]interface{})["filepath"].(string)
