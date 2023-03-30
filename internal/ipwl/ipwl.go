@@ -46,25 +46,10 @@ func processIOList(ioList []IO, jobDir string) error {
 	return nil
 }
 
-/*
-<plex-uuid>
-	io.json // slowly be updated
-	/shard_0 7n9g.pdb & ZINC000003986735.sdf
-		/outputs <- where the docker mount dumps all files
-			/7n9g.pdb
-			/ZINC000003986735-docked.sdf
-	/shard_1 7n9g.pdb & ZINC000019632618.sdf
-		/outputs
-			/7n9g.pdb
-			/ZINC000019632618-docked.sdf
-*/
-
-/*
-func processIOTask(ioEntry IO, ioJsonPath string, index int, jobDir string) error {
-	toolConfig, err := readToolConfig(ioEntry.Tool)
+func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string, state string) error {
+	err := updateIOState(ioJsonPath, index, state)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
-		return fmt.Errorf("error reading tool config: %w", err)
+		return fmt.Errorf("error updating IO state: %w", err)
 	}
 
 	outputDirPath := filepath.Join(jobDir, fmt.Sprintf("shard%d/outputs", index))
