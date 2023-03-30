@@ -188,11 +188,11 @@ func TestCreateIOJson(t *testing.T) {
 			Inputs: map[string]interface{}{
 				"protein": map[string]interface{}{
 					"class":    "File",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+					"filepath": "../../testdata/binding/abl/7n9g.pdb",
 				},
 				"small_molecule": map[string]interface{}{
 					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000003986735.sdf",
+					"filepath": "../../testdata/binding/abl/ZINC000003986735.sdf",
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -210,11 +210,11 @@ func TestCreateIOJson(t *testing.T) {
 			Inputs: map[string]interface{}{
 				"protein": map[string]interface{}{
 					"class":    "File",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+					"filepath": "../../testdata/binding/abl/7n9g.pdb",
 				},
 				"small_molecule": map[string]interface{}{
 					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000019632618.sdf",
+					"filepath": "../../testdata/binding/abl/ZINC000019632618.sdf",
 				},
 			},
 			Outputs: map[string]interface{}{
