@@ -56,12 +56,12 @@ func generateInputCombinations(inputFilepaths map[string][]string) []map[string]
 	return combinations
 }
 
-func createIOEntries(tool Tool, inputCombinations []map[string]string) []IO {
+func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
 	var ioData []IO
 
 	for _, combination := range inputCombinations {
 		ioEntry := IO{
-			Tool:    tool.Name,
+			Tool:    toolPath,
 			State:   "created",
 			Inputs:  map[string]interface{}{},
 			Outputs: map[string]interface{}{},
@@ -92,14 +92,14 @@ func createIOEntries(tool Tool, inputCombinations []map[string]string) []IO {
 	return ioData
 }
 
-func createIOJson(inputDir string, tool Tool) ([]IO, error) {
+func CreateIOJson(inputDir string, tool Tool, toolPath string) ([]IO, error) {
 	inputFilepaths, err := findMatchingFiles(inputDir, tool)
 	if err != nil {
 		return nil, err
 	}
 
 	inputCombinations := generateInputCombinations(inputFilepaths)
-	ioData := createIOEntries(tool, inputCombinations)
+	ioData := createIOEntries(toolPath, tool, inputCombinations)
 
 	return ioData, nil
 }

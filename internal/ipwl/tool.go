@@ -20,7 +20,7 @@ type Tool struct {
 	Outputs     map[string]interface{} `json:"outputs"`
 }
 
-func readToolConfig(filePath string) (Tool, error) {
+func ReadToolConfig(filePath string) (Tool, error) {
 	var tool Tool
 
 	file, err := os.Open(filePath)
@@ -60,7 +60,7 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string,
 		arguments = strings.Replace(arguments, placeholder, ioEntry.Inputs[key].(map[string]interface{})["filepath"].(string), -1)
 	}
 
-	dockerCmd := fmt.Sprintf("docker %s-v %s:/outputs run %s %s %s", inputVolumes, outputDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	dockerCmd := fmt.Sprintf("docker run %s-v %s:/outputs %s %s %s", inputVolumes, outputDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return dockerCmd, nil
 }

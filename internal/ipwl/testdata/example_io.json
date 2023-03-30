@@ -22,7 +22,7 @@
     "state": "created"
   },
   {
-    "tool": "testdata/ipwl_test/equibind",
+    "tool": "testdata/example_io.json",
     "inputs": {
       "protein": {
         "class": "File",

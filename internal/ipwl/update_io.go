@@ -20,7 +20,7 @@ func updateIOWithError(ioJsonPath string, index int, err error) error {
 	ioList[index].State = "failed"
 	ioList[index].ErrMsg = err.Error()
 
-	errWrite := writeIOList(ioJsonPath, ioList)
+	errWrite := WriteIOList(ioJsonPath, ioList)
 	if errWrite != nil {
 		return fmt.Errorf("failed to write updated IO list: %w", errWrite)
 	}
@@ -63,9 +63,13 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 	}
 
 	// Update outputs
-	for outputKey, output := range toolConfig.Outputs {
-		if output.Class == "File" {
-			globPattern := output.Glob
+	for outputKey, outputInterface := range toolConfig.Outputs {
+		output, ok := outputInterface.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("error converting output to map[string]interface{}")
+		}
+		if output["class"] == "File" {
+			globPattern := output["glob"].(string)
 			matches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
 			if err != nil {
 				return fmt.Errorf("error matching glob pattern: %w", err)
@@ -90,7 +94,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 	ioList[index].State = "completed"
 
 	// Save updated IO list
-	err = writeIOList(ioJsonPath, ioList)
+	err = WriteIOList(ioJsonPath, ioList)
 	if err != nil {
 		return fmt.Errorf("error writing updated IO list: %w", err)
 	}

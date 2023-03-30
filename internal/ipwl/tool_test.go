@@ -40,7 +40,7 @@ func TestReadToolConfig(t *testing.T) {
 		},
 	}
 
-	tool, err := readToolConfig(filePath)
+	tool, err := ReadToolConfig(filePath)
 	if err != nil {
 		t.Fatalf("Error reading tool config: %v", err)
 	}

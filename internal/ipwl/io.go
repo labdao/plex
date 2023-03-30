@@ -36,7 +36,7 @@ func readIOList(filePath string) ([]IO, error) {
 	return ioLibrary, nil
 }
 
-func writeIOList(ioJsonPath string, ioList []IO) error {
+func WriteIOList(ioJsonPath string, ioList []IO) error {
 	file, err := os.OpenFile(ioJsonPath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
@@ -46,11 +46,9 @@ func writeIOList(ioJsonPath string, ioList []IO) error {
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 
-	for _, ioEntry := range ioList {
-		err = encoder.Encode(ioEntry)
-		if err != nil {
-			return fmt.Errorf("failed to encode IO entry: %w", err)
-		}
+	err = encoder.Encode(ioList)
+	if err != nil {
+		return fmt.Errorf("failed to encode IO list: %w", err)
 	}
 
 	return nil

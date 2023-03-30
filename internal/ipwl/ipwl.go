@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func processIOList(ioList []IO, jobDir, ioJsonPath string) error {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string) error {
 	for i, ioEntry := range ioList {
 		err := processIOTask(ioEntry, i, jobDir, ioJsonPath)
 		if err != nil {
@@ -31,8 +31,8 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	// Call readToolConfig to get the toolConfig
-	toolConfig, err := readToolConfig(ioEntry.Tool)
+	// Call ReadToolConfig to get the toolConfig
+	toolConfig, err := ReadToolConfig(ioEntry.Tool)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error reading tool config: %w", err)
