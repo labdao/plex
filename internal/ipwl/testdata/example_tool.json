@@ -1,0 +1,32 @@
+{
+    "name": "equibind",
+    "description": "test for equibind tool",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
+        "mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.filepath)_$(inputs.small_molecule.filepath)_docked.$(inputs.small_molecule.filepath);",
+        "cp /inputs/$(inputs.protein.filepath) /outputs/"
+    ],
+    "dockerPull": "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07",
+    "gpuBool": false,
+    "inputs": {
+        "protein": {
+            "type": "File",
+            "glob": ["*.pdb"]
+        },
+        "small_molecule": {
+            "type": "File",
+            "glob": ["*.sdf", "*.mol2"]
+        }
+    },
+    "outputs": {
+        "docked_small_molecule": {
+            "type": "File",
+            "glob": ["*_docked.sdf"]
+        },
+        "protein": {
+            "type": "File",
+            "glob": ["*.pdb"]
+        }
+    }
+}
