@@ -6,7 +6,7 @@ import (
 )
 
 func TestReadIOLibrary(t *testing.T) {
-	filePath := "testdata/example_io.jsonl"
+	filePath := "testdata/example_io.json"
 	expected := []IO{
 		{
 			Tool: "testdata/ipwl_test/equibind",
