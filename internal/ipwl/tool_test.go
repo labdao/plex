@@ -1,4 +1,4 @@
-package tool
+package ipwl
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestReadToolConfig(t *testing.T) {
-	filePath := "example_tool.json"
+	filePath := "testdata/example_tool.json"
 	expected := Tool{
 		Name:        "test",
 		Description: "test tool",
