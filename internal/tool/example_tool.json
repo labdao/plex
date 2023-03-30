@@ -1,0 +1,31 @@
+{
+    "name": "test",
+    "description": "test tool",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "python main.py --protein $(inputs.protein.path) --small_molecule_library $(inputs.small_molecule.path);",
+      "cp /inputs /outputs;"
+    ],
+    "dockerPull": "ghcr.io/labdao/testtool",
+    "gpuBool": false,
+    "inputs": {
+        "protein": {
+            "type": "File",
+            "glob": "*.pdb"
+        },
+        "small_molecule": {
+            "type": "File",
+            "glob": ["*.sdf", "*.mol"]
+        },
+        "outputs": {
+            "docked_small_molecule": {
+                "type": "File",
+                "glob": "*_docked.sdf",
+                "protein": {
+                    "type": "File",
+                    "glob": "*.pdb"
+                }
+            }
+        }
+    }
+}
