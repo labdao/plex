@@ -17,16 +17,16 @@
         "small_molecule": {
             "type": "File",
             "glob": ["*.sdf", "*.mol"]
+        }
+    },
+    "outputs": {
+        "docked_small_molecule": {
+            "type": "File",
+            "glob": "*_docked.sdf"
         },
-        "outputs": {
-            "docked_small_molecule": {
-                "type": "File",
-                "glob": "*_docked.sdf",
-                "protein": {
-                    "type": "File",
-                    "glob": "*.pdb"
-                }
-            }
+        "protein": {
+            "type": "File",
+            "glob": "*.pdb"
         }
     }
 }
