@@ -1,7 +1,6 @@
 package ipwl
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -105,18 +104,20 @@ func TestCreateIOEntries(t *testing.T) {
 		},
 	}
 
+	toolPath := "../ipwl/equibind"
+
 	expected := []IO{
 		{
-			Tool:  "equibind",
+			Tool:  toolPath,
 			State: "created",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/7n9g.pdb"),
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000003986735.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/ZINC000003986735.sdf"),
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -129,16 +130,16 @@ func TestCreateIOEntries(t *testing.T) {
 			},
 		},
 		{
-			Tool:  "equibind",
+			Tool:  toolPath,
 			State: "created",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/7n9g.pdb"),
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000019632618.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/ZINC000019632618.sdf"),
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -152,7 +153,7 @@ func TestCreateIOEntries(t *testing.T) {
 		},
 	}
 
-	ioEntries := createIOEntries(tool, inputCombinations)
+	ioEntries := createIOEntries(toolPath, tool, inputCombinations)
 
 	if !reflect.DeepEqual(ioEntries, expected) {
 		t.Errorf("Expected:\n%v\nGot:\n%v", expected, ioEntries)
@@ -160,39 +161,45 @@ func TestCreateIOEntries(t *testing.T) {
 }
 
 func TestCreateIOJson(t *testing.T) {
-	inputDir := "../../testdata/binding/abl/"
-	toolFilePath := "testdata/example_tool.json"
+	inputDir := "testdata/binding/abl/"
+	toolPath := "../ipwl/equibind"
 
-	// Read and unmarshal the Tool object from the example_tool.json file
-	file, err := os.Open(toolFilePath)
-	if err != nil {
-		t.Fatalf("Error opening tool file: %v", err)
-	}
-	defer file.Close()
-
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		t.Fatalf("Error reading tool file: %v", err)
-	}
-
-	var tool Tool
-	err = json.Unmarshal(data, &tool)
-	if err != nil {
-		t.Fatalf("Error unmarshalling tool JSON: %v", err)
+	tool := Tool{
+		Name: "equibind",
+		Inputs: map[string]interface{}{
+			"protein": map[string]interface{}{
+				"type": "File",
+				"glob": []interface{}{"*.pdb"},
+			},
+			"small_molecule": map[string]interface{}{
+				"type": "File",
+				"glob": []interface{}{"*.sdf", "*.mol2"},
+			},
+		},
+		Outputs: map[string]interface{}{
+			"docked_small_molecule": map[string]interface{}{
+				"type": "File",
+				"glob": []interface{}{"*_docked.sdf"},
+			},
+			"protein": map[string]interface{}{
+				"type": "File",
+				"glob": []interface{}{"*.pdb"},
+			},
+		},
 	}
 
 	expected := []IO{
 		{
-			Tool:  "equibind",
+			Tool:  toolPath,
 			State: "created",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"filepath": "../../testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/7n9g.pdb"),
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "../../testdata/binding/abl/ZINC000003986735.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/ZINC000003986735.sdf"),
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -205,16 +212,16 @@ func TestCreateIOJson(t *testing.T) {
 			},
 		},
 		{
-			Tool:  "equibind",
+			Tool:  toolPath,
 			State: "created",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"filepath": "../../testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/7n9g.pdb"),
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "../../testdata/binding/abl/ZINC000019632618.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: filepath.FromSlash("testdata/binding/abl/ZINC000019632618.sdf"),
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -228,9 +235,9 @@ func TestCreateIOJson(t *testing.T) {
 		},
 	}
 
-	ioData, err := createIOJson(inputDir, tool)
+	ioData, err := CreateIOJson(inputDir, tool, toolPath)
 	if err != nil {
-		t.Fatalf("Error creating IO JSON: %v", err)
+		t.Fatalf("CreateIOJson returned an error: %v", err)
 	}
 
 	if !reflect.DeepEqual(ioData, expected) {
@@ -243,14 +250,14 @@ func TestReadIOLibrary(t *testing.T) {
 	expected := []IO{
 		{
 			Tool: "testdata/ipwl_test/equibind",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/7n9g.pdb",
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000003986735.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -265,15 +272,14 @@ func TestReadIOLibrary(t *testing.T) {
 		},
 		{
 			Tool: "testdata/ipwl_test/equibind",
-			Inputs: map[string]interface{}{
-				"protein": map[string]interface{}{
-					"class":    "File",
-					"basename": "7n9g.pdb",
-					"filepath": "testdata/binding/abl/7n9g.pdb",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/7n9g.pdb",
 				},
-				"small_molecule": map[string]interface{}{
-					"class":    "File",
-					"filepath": "testdata/binding/abl/ZINC000019632618.sdf",
+				"small_molecule": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/ZINC000019632618.sdf",
 				},
 			},
 			Outputs: map[string]interface{}{
@@ -295,5 +301,53 @@ func TestReadIOLibrary(t *testing.T) {
 
 	if !reflect.DeepEqual(ioLibrary, expected) {
 		t.Errorf("Expected:\n%v\nGot:\n%v", expected, ioLibrary)
+	}
+}
+
+func TestWriteIOList(t *testing.T) {
+	tmpFile, err := ioutil.TempFile("", "io_json_test_*.json")
+	if err != nil {
+		t.Fatalf("Error creating temporary file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Close()
+
+	ioList := []IO{
+		{
+			Tool: "testdata/ipwl_test/equibind",
+			Inputs: map[string]FileInput{
+				"protein": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/7n9g.pdb",
+				},
+				"small_molecule": {
+					Class:    "File",
+					FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+				},
+			},
+			Outputs: map[string]interface{}{
+				"docked_small_molecule": map[string]interface{}{
+					"class": "File",
+				},
+				"protein": map[string]interface{}{
+					"class": "File",
+				},
+			},
+			State: "created",
+		},
+	}
+
+	err = WriteIOList(tmpFile.Name(), ioList)
+	if err != nil {
+		t.Fatalf("Error writing IO list: %v", err)
+	}
+
+	readIOList, err := readIOList(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("Error reading IO list: %v", err)
+	}
+
+	if !reflect.DeepEqual(ioList, readIOList) {
+		t.Errorf("Expected:\n%v\nGot:\n%v", ioList, readIOList)
 	}
 }
