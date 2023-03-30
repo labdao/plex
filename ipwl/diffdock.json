@@ -1,0 +1,63 @@
+{
+    "class": "CommandLineTool",
+    "name": "diffdock",
+    "description": "Docking of small molecules to a protein",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "python datasets/esm_embedding_preparation.py --protein_path $(inputs.protein.path) --out_file ../outputs/prepared_for_esm.fasta;",
+        "HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D ../outputs/prepared_for_esm.fasta ../outputs/esm2_output --repr_layers 33 --include per_tok && cp -r ../outputs/esm2_output data/esm2_output;",
+        "python -m inference --protein_path $(inputs.protein.path) --ligand $(inputs.small_molecule.path) --out_dir /outputs --inference_steps $(inputs.inference_steps) --samples_per_complex $(inputs.samples_per_complex) --batch_size $(inputs.batch_size) --actual_steps $(inputs.actual_steps) --no_final_step_noise;",
+        "cp $(inputs.protein.path) /outputs"
+      ],
+    "requirements": [
+    {
+        "class": "DockerRequirement",
+        "dockerPull": "ghcr.io/labdao/diffdock:main@sha256:b00432de73478d3da578e4a16ee669178828109f3c7bf9c58d44bb7514f68629"
+    },
+    {
+        "class": "ResourceRequirement",
+        "gpuBool": true,
+        "networkBool": true
+    }
+    ],
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "glob": "*.pdb"
+      },
+      "small_molecule": {
+        "type": "File",
+        "glob": ["*.sdf", "*.mol2"]
+      },
+      "inference_steps": {
+        "type": "int",
+        "default": 20
+      },
+      "samples_per_complex": {
+        "type": "int",
+        "default": 40
+      },
+      "batch_size": {
+        "type": "int",
+        "default": 10
+      },
+      "actual_steps": {
+        "type": "int",
+        "default": 18
+      }
+    },
+    "outputs": {
+      "best_docked_small_molecule": {
+        "type": "File",
+        "glob": "index*/rank1_confidence-*.sdf"
+      },
+      "all_docked_small_molecules": {
+        "type": "File",
+        "glob": "index*/rank*_confidence-*.sdf"
+      },
+      "protein": {
+        "type": "File", 
+        "glob": "*.pdb"
+      }
+    }
+}
