@@ -1,0 +1,42 @@
+{
+    "class": "CommandLineTool",
+    "name": "oddt",
+    "description": "Scoring of protein-ligand complexes using ODDT",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "oddt_cli $(inputs.small_molecule.path) --receptor $(inputs.protein.path) --score rfscore_v1 --score rfscore_v2 --score rfscore_v3 --score nnscore -O /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_scored.$(inputs.small_molecule.nameext);",
+      "cd /outputs && ../aggregate_score.sh"
+    ],
+    "requirements": [
+      {
+        "class": "DockerRequirement",
+        "dockerPull": "ghcr.io/labdao/oddt@sha256:e6c9551a717e6526c865d930d5f05879074d439a524b7f389648b620c345be7a"
+      },
+      {
+          "class": "ResourceRequirement",
+          "gpuBool": false,
+          "networkBool": false
+      }
+    ],
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "glob": ["*.pdb"]
+      },
+      "small_molecule": {
+        "type": "File",
+        "glob": ["*.sdf"]
+      }
+    },
+    "outputs": {
+      "scores": {
+        "type": "File",
+        "glob": "scores.jsonl"
+      },
+      "scored_small_molecule": {
+        "type": "File",
+        "glob": "*.sdf"
+      }
+    }
+  }
+  

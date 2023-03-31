@@ -157,10 +157,11 @@ func main() {
 	} else {
 		fmt.Println("BACALHAU_API_HOST not set, using default host")
 	}
+	toolPath := flag.String("tool-path", "", "tool path")
+	inputDir := flag.String("input-dir", "", "input directory path")
 
 	// required flags
 	app := flag.String("app", "", "Application name")
-	inputDir := flag.String("input-dir", "", "Input directory path")
 
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
@@ -172,16 +173,31 @@ func main() {
 	network := flag.Bool("network", false, "All http requests during job runtime")
 	flag.Parse()
 
-	// print the values of the flags
-	fmt.Println("## User input ##")
-	fmt.Println("Provided application name:", *app)
-	fmt.Println("Provided directory path:", *inputDir)
-	fmt.Println("Using GPU:", *gpu)
-	fmt.Println("Using Network:", *network)
+	fmt.Println("toolPath", *toolPath)
 
-	fmt.Println("## Default parameters ##")
-	fmt.Println("Using app configs:", *appConfigsFilePath)
-	fmt.Println("Setting layers to:", *layers)
+	if *toolPath != "" {
+		fmt.Println("Running IPWL tool path")
+		plex.Run(*toolPath, *inputDir)
+	} else {
+		// Env settings
+		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+		if exists {
+			fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
+		} else {
+			fmt.Println("BACALHAU_API_HOST not set, using default host")
+		}
 
-	plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
+		// print the values of the flags
+		fmt.Println("## User input ##")
+		fmt.Println("Provided application name:", *app)
+		fmt.Println("Provided directory path:", *inputDir)
+		fmt.Println("Using GPU:", *gpu)
+		fmt.Println("Using Network:", *network)
+
+		fmt.Println("## Default parameters ##")
+		fmt.Println("Using app configs:", *appConfigsFilePath)
+		fmt.Println("Setting layers to:", *layers)
+
+		plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
+	}
 }

@@ -3,11 +3,63 @@ package plex
 import (
 	"fmt"
 	"os"
+	"path"
 
+	"github.com/google/uuid"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/docker"
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/ipwl"
 )
+
+func Run(toolPath, inputDir string) {
+	// Create plex working directory
+	id := uuid.New()
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	workDirPath := path.Join(cwd, id.String())
+	err = os.Mkdir(workDirPath, 0755)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Created directory: ", workDirPath)
+
+	// first thing to generate io json and save to plex work dir
+	fmt.Println("Reading tool config")
+	toolConfig, err := ipwl.ReadToolConfig(toolPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Creating IO Entries")
+	ioEntries, err := ipwl.CreateIOJson(inputDir, toolConfig, toolPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Writing IO File")
+	ioJsonPath := path.Join(workDirPath, "io.json")
+	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Processing IO File")
+	err = ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("We did it :)")
+}
 
 func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, local, gpu, network, dry bool) {
 	// validate the flags
