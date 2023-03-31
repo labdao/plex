@@ -62,41 +62,50 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		return fmt.Errorf("error reading IO list: %w", err)
 	}
 
-	// Update outputs
 	for outputKey, output := range toolConfig.Outputs {
-		if output.Type == "File" {
-			var matches []string
-			for _, globPattern := range output.Glob {
-				patternMatches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
-				if err != nil {
-					return fmt.Errorf("error matching glob pattern: %w", err)
-				}
-				matches = append(matches, patternMatches...)
-			}
+		if output.Type != "File" {
+			continue
+		}
 
-			// Assume there is only one matching file per output key
-			if len(matches) > 0 {
-				filePath := matches[0]
-				filename := filepath.Base(filePath)
+		matchingFiles := findMatchingFilesForPatterns(outputDirPath, output.Glob)
+		if len(matchingFiles) == 0 {
+			continue
+		}
 
-				// Update IO entry
-				ioList[index].Outputs[outputKey] = FileOutput{
-					Class:    "File",
-					FilePath: filePath,
-					Basename: filename,
-				}
-			}
+		// Assume there is only one matching file per output key
+		filePath := matchingFiles[0]
+		filename := filepath.Base(filePath)
+
+		// Update IO entry
+		ioList[index].Outputs[outputKey] = FileOutput{
+			Class:    "File",
+			FilePath: filePath,
+			Basename: filename,
 		}
 	}
 
-	// Update the state
 	ioList[index].State = "completed"
 
-	// Save updated IO list
 	err = WriteIOList(ioJsonPath, ioList)
 	if err != nil {
 		return fmt.Errorf("error writing updated IO list: %w", err)
 	}
 
 	return nil
+}
+
+func findMatchingFilesForPatterns(outputDirPath string, globPatterns []string) []string {
+	var matchingFiles []string
+
+	for _, globPattern := range globPatterns {
+		patternMatches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
+		if err != nil {
+			fmt.Printf("Error matching glob pattern: %v", err)
+			continue
+		}
+
+		matchingFiles = append(matchingFiles, patternMatches...)
+	}
+
+	return matchingFiles
 }
