@@ -8,21 +8,16 @@ import (
 func findMatchingFiles(inputDir string, tool Tool) (map[string][]string, error) {
 	inputFilepaths := make(map[string][]string)
 
-	for inputName, inputProps := range tool.Inputs {
-		inputData := inputProps.(map[string]interface{})
-		inputType, ok := inputData["type"].(string)
-		if !ok || inputType != "File" {
-			continue
-		}
+	for inputName, input := range tool.Inputs {
+		if input.Type == "File" {
+			for _, globPattern := range input.Glob {
+				matches, err := filepath.Glob(filepath.Join(inputDir, globPattern))
+				if err != nil {
+					return nil, err
+				}
 
-		globPatterns := inputData["glob"].([]interface{})
-		for _, globPattern := range globPatterns {
-			matches, err := filepath.Glob(filepath.Join(inputDir, globPattern.(string)))
-			if err != nil {
-				return nil, err
+				inputFilepaths[inputName] = append(inputFilepaths[inputName], matches...)
 			}
-
-			inputFilepaths[inputName] = append(inputFilepaths[inputName], matches...)
 		}
 	}
 
@@ -67,7 +62,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			Tool:    toolPath,
 			State:   "created",
 			Inputs:  map[string]FileInput{},
-			Outputs: map[string]interface{}{},
+			Outputs: map[string]FileOutput{},
 		}
 
 		for inputName, path := range combination {
@@ -82,15 +77,11 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			}
 		}
 
-		for outputName, outputProps := range tool.Outputs {
-			outputData := outputProps.(map[string]interface{})
-			outputType, ok := outputData["type"].(string)
-			if !ok || outputType != "File" {
-				continue
-			}
-
-			ioEntry.Outputs[outputName] = map[string]interface{}{
-				"class": "File",
+		for outputName, output := range tool.Outputs {
+			if output.Type == "File" {
+				ioEntry.Outputs[outputName] = FileOutput{
+					Class: "File",
+				}
 			}
 		}
 

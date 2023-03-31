@@ -2,6 +2,7 @@ package ipwl
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -23,22 +24,40 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 		return fmt.Errorf("error updating IO state: %w", err)
 	}
 
-	outputDirPath := filepath.Join(jobDir, fmt.Sprintf("shard%d/outputs", index))
+	workingDirPath := filepath.Join(jobDir, fmt.Sprintf("entry-%d", index))
+	err = os.MkdirAll(workingDirPath, 0755)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err)
+		return fmt.Errorf("error creating working directory: %w", err)
+	}
 
-	err = os.MkdirAll(outputDirPath, 0755)
+	outputsDirPath := filepath.Join(workingDirPath, "outputs")
+	err = os.MkdirAll(outputsDirPath, 0755)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err)
+		return fmt.Errorf("error creating outputs directory: %w", err)
+	}
+
+	inputsDirPath := filepath.Join(workingDirPath, "inputs")
+	err = os.MkdirAll(inputsDirPath, 0755)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	// Call ReadToolConfig to get the toolConfig
 	toolConfig, err := ReadToolConfig(ioEntry.Tool)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error reading tool config: %w", err)
 	}
 
-	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, outputDirPath)
+	err = copyInputFilesToDir(ioEntry, inputsDirPath)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err)
+		return fmt.Errorf("error copying files to results input directory: %w", err)
+	}
+
+	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
 	fmt.Println("jjjjjjjjjjjjjjjjjjjjjjjjj:", dockerCmd)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
@@ -51,7 +70,48 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 		return fmt.Errorf("error running Docker cmd: %w", err)
 	}
 
-	updateIOWithResult(ioJsonPath, toolConfig, index, outputDirPath)
+	updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath)
+
+	return nil
+}
+
+func copyInputFilesToDir(ioEntry IO, dirPath string) error {
+	// Ensure the destination directory exists
+	err := os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	for _, input := range ioEntry.Inputs {
+		srcPath := input.FilePath
+		destPath := filepath.Join(dirPath, filepath.Base(srcPath))
+
+		err := copyFile(srcPath, destPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(srcPath, destPath string) error {
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

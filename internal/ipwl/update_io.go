@@ -63,16 +63,15 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 	}
 
 	// Update outputs
-	for outputKey, outputInterface := range toolConfig.Outputs {
-		output, ok := outputInterface.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("error converting output to map[string]interface{}")
-		}
-		if output["class"] == "File" {
-			globPattern := output["glob"].(string)
-			matches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
-			if err != nil {
-				return fmt.Errorf("error matching glob pattern: %w", err)
+	for outputKey, output := range toolConfig.Outputs {
+		if output.Type == "File" {
+			var matches []string
+			for _, globPattern := range output.Glob {
+				patternMatches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
+				if err != nil {
+					return fmt.Errorf("error matching glob pattern: %w", err)
+				}
+				matches = append(matches, patternMatches...)
 			}
 
 			// Assume there is only one matching file per output key
@@ -81,10 +80,10 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 				filename := filepath.Base(filePath)
 
 				// Update IO entry
-				ioList[index].Outputs[outputKey] = map[string]interface{}{
-					"class":    "File",
-					"filepath": filePath,
-					"basename": filename,
+				ioList[index].Outputs[outputKey] = FileOutput{
+					Class:    "File",
+					FilePath: filePath,
+					Basename: filename,
 				}
 			}
 		}

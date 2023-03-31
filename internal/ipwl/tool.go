@@ -10,15 +10,25 @@ import (
 	"strings"
 )
 
+type ToolInput struct {
+	Type string   `json:"type"`
+	Glob []string `json:"glob"`
+}
+
+type ToolOutput struct {
+	Type string   `json:"type"`
+	Glob []string `json:"glob"`
+}
+
 type Tool struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	BaseCommand []string               `json:"baseCommand"`
-	Arguments   []string               `json:"arguments"`
-	DockerPull  string                 `json:"dockerPull"`
-	GpuBool     bool                   `json:"gpuBool"`
-	Inputs      map[string]interface{} `json:"inputs"`
-	Outputs     map[string]interface{} `json:"outputs"`
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	BaseCommand []string              `json:"baseCommand"`
+	Arguments   []string              `json:"arguments"`
+	DockerPull  string                `json:"dockerPull"`
+	GpuBool     bool                  `json:"gpuBool"`
+	Inputs      map[string]ToolInput  `json:"inputs"`
+	Outputs     map[string]ToolOutput `json:"outputs"`
 }
 
 func ReadToolConfig(filePath string) (Tool, error) {
@@ -43,12 +53,7 @@ func ReadToolConfig(filePath string) (Tool, error) {
 	return tool, nil
 }
 
-func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string, error) {
-	inputVolumes := ""
-	for inputName, input := range ioEntry.Inputs {
-		inputVolumes += fmt.Sprintf("--mount type=bind,source=%s,target=/inputs/%s ", input.FilePath, inputName)
-	}
-
+func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
 	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext))\)`)
@@ -65,7 +70,7 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string,
 
 		switch match[2] {
 		case ".filepath":
-			replacement = input.FilePath
+			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))
 		case ".basename":
 			replacement = filepath.Base(input.FilePath)
 		case ".ext":
@@ -76,7 +81,7 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, outputDirPath string) (string,
 		arguments = strings.Replace(arguments, placeholder, replacement, -1)
 	}
 
-	dockerCmd := fmt.Sprintf(`docker run %s-v %s:/outputs %s %s "%s"`, inputVolumes, outputDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	dockerCmd := fmt.Sprintf(`docker run -v %s:/inputs -v %s:/outputs %s %s "%s"`, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return dockerCmd, nil
 }
