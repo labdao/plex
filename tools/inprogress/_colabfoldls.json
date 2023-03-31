@@ -1,0 +1,37 @@
+{
+    "class": "CommandLineTool",
+    "name": "colabfold-standard",
+    "description": "Protein folding prediction using Colabfold (standard settings)",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "ls -lah /inputs > /outputs/inputs.txt"
+    ],
+    "requirements": [
+      {
+        "class": "DockerRequirement",
+        "dockerPull": "public.ecr.aws/p7l9w5o7/colabfold:latest"
+      },
+      {
+        "class": "ResourceRequirement",
+        "gpuBool": true,
+        "networkBool": true
+      }
+    ],
+    "inputs": {
+      "sequence": {
+        "type": "File",
+        "glob": "*.fasta"
+      },
+      "recycle": {
+        "type": "int",
+        "default": 3
+      }
+    },
+    "outputs": {
+        "input_list": {
+          "type": "File",
+          "glob": "inputs.txt"
+        }
+    }
+  }
+  

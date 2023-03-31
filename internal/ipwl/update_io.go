@@ -74,13 +74,11 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 
 		// Assume there is only one matching file per output key
 		filePath := matchingFiles[0]
-		filename := filepath.Base(filePath)
 
 		// Update IO entry
 		ioList[index].Outputs[outputKey] = FileOutput{
 			Class:    "File",
 			FilePath: filePath,
-			Basename: filename,
 		}
 	}
 

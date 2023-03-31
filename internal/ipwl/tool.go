@@ -72,7 +72,7 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		case ".filepath":
 			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))
 		case ".basename":
-			replacement = filepath.Base(input.FilePath)
+			replacement = strings.TrimSuffix(filepath.Base(input.FilePath), filepath.Ext(input.FilePath))
 		case ".ext":
 			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")

@@ -14,7 +14,6 @@ type FileInput struct {
 
 type FileOutput struct {
 	Class    string `json:"class"`
-	Basename string `json:"basename"`
 	FilePath string `json:"filepath"`
 }
 
