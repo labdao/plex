@@ -13,7 +13,7 @@ import (
 type ToolInput struct {
 	Type    string   `json:"type"`
 	Glob    []string `json:"glob"`
-	Default string   `json:"string"`
+	Default string   `json:"default"`
 }
 
 type ToolOutput struct {
@@ -57,7 +57,7 @@ func ReadToolConfig(filePath string) (Tool, error) {
 func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext))\)`)
+	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
 	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
 
 	for _, match := range fileMatches {
@@ -65,10 +65,12 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
 		key = strings.TrimSuffix(key, ".basename")
 		key = strings.TrimSuffix(key, ".ext")
+		key = strings.TrimSuffix(key, ".default")
 
 		var replacement string
 		input := ioEntry.Inputs[key]
 
+		fmt.Println(match[2])
 		switch match[2] {
 		case ".filepath":
 			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))
@@ -77,6 +79,8 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		case ".ext":
 			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")
+		case ".default":
+			replacement = toolConfig.Inputs[key].Default
 		}
 
 		arguments = strings.Replace(arguments, placeholder, replacement, -1)
