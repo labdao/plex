@@ -1,0 +1,49 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    environment: ci
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+    
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Build
+      run: go build
+
+    - name: Test
+      env:
+        WEB3STORAGE_TOKEN: ${{ secrets.WEB3STORAGE_TOKEN }}
+        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+      run: go test ./... -v
+
+    - name: Run Equibind
+      run: |
+        cd "$(./plex -app equibind -input-dir testdata/binding/abl | sed -n 's/^Your job results have been downloaded to //p')"
+        cd combined_results/outputs
+        if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+          echo "No docked files found"
+          exit 1
+        else
+          echo "Docked files found:"
+          find . -name '*docked.sdf' | grep 'docked.sdf'
+        fi
+      env:
+        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
