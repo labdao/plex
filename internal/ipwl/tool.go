@@ -11,8 +11,9 @@ import (
 )
 
 type ToolInput struct {
-	Type string   `json:"type"`
-	Glob []string `json:"glob"`
+	Type    string   `json:"type"`
+	Glob    []string `json:"glob"`
+	Default string   `json:"string"`
 }
 
 type ToolOutput struct {
@@ -57,9 +58,9 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
 	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext))\)`)
-	matches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
+	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
 
-	for _, match := range matches {
+	for _, match := range fileMatches {
 		placeholder := match[0]
 		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
 		key = strings.TrimSuffix(key, ".basename")
@@ -81,7 +82,25 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		arguments = strings.Replace(arguments, placeholder, replacement, -1)
 	}
 
-	dockerCmd := fmt.Sprintf(`docker run -v %s:/inputs -v %s:/outputs %s %s "%s"`, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
+	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
+
+	for _, match := range nonFileMatches {
+		placeholder := match[0]
+		key := strings.TrimPrefix(match[1], "inputs.")
+
+		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
+			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
+		}
+	}
+
+	// Add the GPU flag if GpuBool is true
+	gpuFlag := ""
+	if toolConfig.GpuBool {
+		gpuFlag = "--gpus all"
+	}
+
+	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s "%s"`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return dockerCmd, nil
 }
