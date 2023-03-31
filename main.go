@@ -11,7 +11,20 @@ import (
 func main() {
 	toolPath := flag.String("tool-path", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
+
+	// required flags
+	app := flag.String("app", "", "Application name")
+
+	// optional flags
+	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
+	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
+	memory := flag.Int("memory", 0, "Memory for job in GB, 0 autopicks a value")
+	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
+	dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
+	gpu := flag.Bool("gpu", false, "Use GPU")
+	network := flag.Bool("network", false, "All http requests during job runtime")
 	flag.Parse()
+
 	fmt.Println("toolPath", *toolPath)
 
 	if *toolPath != "" {
@@ -37,20 +50,6 @@ func main() {
 		} else {
 			fmt.Println("BACALHAU_API_HOST not set, using default host")
 		}
-
-		// required flags
-		app := flag.String("app", "", "Application name")
-		inputDir := flag.String("input-dir", "", "Input directory path")
-
-		// optional flags
-		appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
-		layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
-		memory := flag.Int("memory", 0, "Memory for job in GB, 0 autopicks a value")
-		local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
-		dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
-		gpu := flag.Bool("gpu", false, "Use GPU")
-		network := flag.Bool("network", false, "All http requests during job runtime")
-		flag.Parse()
 
 		// print the values of the flags
 		fmt.Println("## User input ##")
