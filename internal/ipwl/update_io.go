@@ -77,17 +77,20 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		return fmt.Errorf("error reading IO list: %w", err)
 	}
 
+	var outputsWithNoData []string
+
 	for outputKey, output := range toolConfig.Outputs {
 		matchingFiles, err := findMatchingFilesForPatterns(outputDirPath, output.Glob)
 		if err != nil {
 			return fmt.Errorf("error matching output files: %w", err)
 		}
 
-		if output.Type == "File" {
-			if len(matchingFiles) == 0 {
-				continue
-			}
+		if len(matchingFiles) == 0 {
+			outputsWithNoData = append(outputsWithNoData, outputKey)
+			continue
+		}
 
+		if output.Type == "File" {
 			// Assume there is only one matching file per output key
 			filePath := matchingFiles[0]
 
@@ -115,11 +118,19 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		}
 	}
 
-	ioList[index].State = "completed"
+	if len(outputsWithNoData) > 0 {
+		ioList[index].State = "failed"
+	} else {
+		ioList[index].State = "completed"
+	}
 
 	err = WriteIOList(ioJsonPath, ioList)
 	if err != nil {
 		return fmt.Errorf("error writing updated IO list: %w", err)
+	}
+
+	if len(outputsWithNoData) > 0 {
+		return fmt.Errorf("no output data found for: %v", outputsWithNoData)
 	}
 
 	return nil

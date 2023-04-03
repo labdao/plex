@@ -70,7 +70,11 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 		return fmt.Errorf("error running Docker cmd: %w", err)
 	}
 
-	updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath)
+	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err)
+		return fmt.Errorf("error updating IO with result: %w", err)
+	}
 
 	return nil
 }
