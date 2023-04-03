@@ -52,13 +52,8 @@ func Run(toolPath, inputDir string) {
 	}
 
 	fmt.Println("Processing IO File")
-	err = ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("We did it :)")
+	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath)
+	fmt.Printf("Finished processing, results written to %s", ioJsonPath)
 }
 
 func Execute(app, inputDir, appConfigsFilePath string, layers, memory int, local, gpu, network, dry bool) {

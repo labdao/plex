@@ -7,15 +7,15 @@ import (
 	"path/filepath"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string) error {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string) {
 	for i, ioEntry := range ioList {
 		err := processIOTask(ioEntry, i, jobDir, ioJsonPath)
 		if err != nil {
-			return fmt.Errorf("error processing IO task at index %d: %w", i, err)
+			fmt.Printf("error processing IO task at index %d \n", i)
+		} else {
+			fmt.Printf("success processing IO task at index %d \n", i)
 		}
 	}
-
-	return nil
 }
 
 func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) error {
