@@ -103,9 +103,6 @@ func ReadIOList(filePath string) ([]IO, error) {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	// Print the JSON data for debugging purposes
-	fmt.Println("JSON data:", string(data))
-
 	var ioLibrary []IO
 	err = json.Unmarshal(data, &ioLibrary)
 	if err != nil {

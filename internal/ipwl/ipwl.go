@@ -7,18 +7,19 @@ import (
 	"path/filepath"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string) {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool) {
 	for i, ioEntry := range ioList {
-		err := processIOTask(ioEntry, i, jobDir, ioJsonPath)
+		fmt.Printf("Starting to process IO entry %d \n", i)
+		err := processIOTask(ioEntry, i, jobDir, ioJsonPath, verbose)
 		if err != nil {
-			fmt.Printf("error processing IO task at index %d \n", i)
+			fmt.Printf("Error processing IO entry %d \n", i)
 		} else {
-			fmt.Printf("success processing IO task at index %d \n", i)
+			fmt.Printf("Success processing IO entry %d \n", i)
 		}
 	}
 }
 
-func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) error {
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose bool) error {
 	err := updateIOState(ioJsonPath, index, "processing")
 	if err != nil {
 		return fmt.Errorf("error updating IO state: %w", err)
@@ -58,13 +59,18 @@ func processIOTask(ioEntry IO, index int, jobDir string, ioJsonPath string) erro
 	}
 
 	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
-	fmt.Println("jjjjjjjjjjjjjjjjjjjjjjjjj:", dockerCmd)
+	if verbose {
+		fmt.Println("Generated docker cmd", dockerCmd)
+	}
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error converting tool to Docker cmd: %w", err)
 	}
 
-	err = runDockerCmd(dockerCmd)
+	output, err := runDockerCmd(dockerCmd)
+	if verbose {
+		fmt.Printf("Docker ran with output: %s \n", output)
+	}
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)
 		return fmt.Errorf("error running Docker cmd: %w", err)

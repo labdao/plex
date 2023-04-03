@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 )
 
-func Run(toolPath, inputDir, iOJsonPath string) {
+func Run(toolPath, inputDir, ioJsonPath string, verbose bool) {
 	// Create plex working directory
 	id := uuid.New()
 	cwd, err := os.Getwd()
@@ -26,10 +26,10 @@ func Run(toolPath, inputDir, iOJsonPath string) {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	fmt.Println("Created directory: ", workDirPath)
+	fmt.Println("Created job directory: ", workDirPath)
 
 	// first thing to generate io json and save to plex work dir
-	fmt.Println("Reading tool config")
+	fmt.Println("Reading tool config: ", toolPath)
 	toolConfig, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -38,15 +38,15 @@ func Run(toolPath, inputDir, iOJsonPath string) {
 
 	var ioEntries []ipwl.IO
 	if inputDir != "" {
-		fmt.Println("Creating IO Entries")
+		fmt.Println("Creating IO Entries from input directory: ", inputDir)
 		ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolPath)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
-	} else if iOJsonPath != "" {
-		fmt.Println("Reading IO Entries")
-		ioEntries, err = ipwl.ReadIOList(iOJsonPath)
+	} else if ioJsonPath != "" {
+		fmt.Println("Reading IO Entries from: ", ioJsonPath)
+		ioEntries, err = ipwl.ReadIOList(ioJsonPath)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
@@ -56,16 +56,16 @@ func Run(toolPath, inputDir, iOJsonPath string) {
 		os.Exit(1)
 	}
 
-	fmt.Println("Writing IO File")
-	ioJsonPath := path.Join(workDirPath, "io.json")
+	ioJsonPath = path.Join(workDirPath, "io.json")
 	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
+	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
-	fmt.Println("Processing IO File")
-	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath)
+	fmt.Println("Processing IO Entries")
+	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath, verbose)
 	fmt.Printf("Finished processing, results written to %s", ioJsonPath)
 }
 

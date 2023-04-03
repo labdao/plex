@@ -71,7 +71,6 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		var replacement string
 		input := ioEntry.Inputs[key]
 
-		fmt.Println(match[2])
 		switch match[2] {
 		case ".filepath":
 			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))

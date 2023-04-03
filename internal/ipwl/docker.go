@@ -5,15 +5,13 @@ import (
 	"os/exec"
 )
 
-func runDockerCmd(dockerCmd string) error {
+func runDockerCmd(dockerCmd string) ([]byte, error) {
 	cmd := exec.Command("/bin/sh", "-c", dockerCmd)
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		return fmt.Errorf("error running Docker command: %w, output: %s", err, string(output))
+		return output, fmt.Errorf("error running Docker command: %w, output: %s", err, string(output))
 	}
 
-	fmt.Println("Docker command output:", string(output))
-
-	return nil
+	return output, nil
 }

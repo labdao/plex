@@ -11,7 +11,8 @@ import (
 func main() {
 	toolPath := flag.String("tool", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
-	iOJsonPath := flag.String("input-io", "", "IO JSON path")
+	ioJsonPath := flag.String("input-io", "", "IO JSON path")
+	verbose := flag.Bool("verbose", false, "show verbose debugging logs")
 
 	// required flags
 	app := flag.String("app", "", "Application name")
@@ -30,7 +31,7 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir, *iOJsonPath)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose)
 	} else {
 		// token access
 		accessToken, exists := os.LookupEnv("PLEX_ACCESS_TOKEN")
