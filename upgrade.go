@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/tar"
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
@@ -8,15 +9,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/Masterminds/semver"
 )
 
-var CURRENT_PLEX_VERSION = "v0.4.0"
+var CURRENT_PLEX_VERSION = "v0.4.1"
 
 func downloadAndDecompressBinary(url, destination string) error {
+	fmt.Printf("Downloading binary from: %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -29,14 +32,34 @@ func downloadAndDecompressBinary(url, destination string) error {
 	}
 	defer gzipReader.Close()
 
-	out, err := os.Create(destination)
+	tarReader := tar.NewReader(gzipReader)
+
+	var fileContent []byte
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		if filepath.Base(header.Name) == "plex" {
+			fileContent, err = io.ReadAll(tarReader)
+			if err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	err = ioutil.WriteFile(destination, fileContent, 0755)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
 
-	_, err = io.Copy(out, gzipReader)
-	return err
+	return nil
 }
 
 func upgradePlexVersion() error {
@@ -94,7 +117,6 @@ func upgradePlexVersion() error {
 		}
 
 		binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s_%s.tar.gz", latestReleaseVersionStr, strings.TrimPrefix(latestReleaseVersionStr, "v"), userOS, userArch)
-		fmt.Println("Binary URL:", binaryURL)
 
 		tempFile, err := ioutil.TempFile("", "plex_*")
 		if err != nil {
