@@ -56,6 +56,21 @@ func updateIOState(ioJsonPath string, index int, state string) error {
 	return nil
 }
 
+func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]string, error) {
+	var matchingFiles []string
+
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(filepath.Join(outputDirPath, pattern))
+		if err != nil {
+			return nil, fmt.Errorf("error while matching pattern: %w", err)
+		}
+
+		matchingFiles = append(matchingFiles, matches...)
+	}
+
+	return matchingFiles, nil
+}
+
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string) error {
 	ioList, err := readIOList(ioJsonPath)
 	if err != nil {
@@ -63,24 +78,40 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 	}
 
 	for outputKey, output := range toolConfig.Outputs {
-		if output.Type != "File" {
-			continue
+		matchingFiles, err := findMatchingFilesForPatterns(outputDirPath, output.Glob)
+		if err != nil {
+			return fmt.Errorf("error matching output files: %w", err)
 		}
 
-		matchingFiles := findMatchingFilesForPatterns(outputDirPath, output.Glob)
-		if len(matchingFiles) == 0 {
-			continue
-		}
+		if output.Type == "File" {
+			if len(matchingFiles) == 0 {
+				continue
+			}
 
-		// Assume there is only one matching file per output key
-		filePath := matchingFiles[0]
-		filename := filepath.Base(filePath)
+			// Assume there is only one matching file per output key
+			filePath := matchingFiles[0]
 
-		// Update IO entry
-		ioList[index].Outputs[outputKey] = FileOutput{
-			Class:    "File",
-			FilePath: filePath,
-			Basename: filename,
+			// Update IO entry
+			ioList[index].Outputs[outputKey] = FileOutput{
+				Class:    "File",
+				FilePath: filePath,
+			}
+		} else if output.Type == "Array" && output.Item == "File" {
+			var files []FileOutput
+			for _, filePath := range matchingFiles {
+				files = append(files, FileOutput{
+					Class:    "File",
+					FilePath: filePath,
+				})
+			}
+
+			// Update IO entry
+			ioList[index].Outputs[outputKey] = ArrayFileOutput{
+				Class: "Array",
+				Files: files,
+			}
+		} else {
+			return fmt.Errorf("unsupported output Type and Item combination: Type=%s, Item=%s", output.Type, output.Item)
 		}
 	}
 
@@ -92,20 +123,4 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 	}
 
 	return nil
-}
-
-func findMatchingFilesForPatterns(outputDirPath string, globPatterns []string) []string {
-	var matchingFiles []string
-
-	for _, globPattern := range globPatterns {
-		patternMatches, err := filepath.Glob(filepath.Join(outputDirPath, globPattern))
-		if err != nil {
-			fmt.Printf("Error matching glob pattern: %v", err)
-			continue
-		}
-
-		matchingFiles = append(matchingFiles, patternMatches...)
-	}
-
-	return matchingFiles
 }

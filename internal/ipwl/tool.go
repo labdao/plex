@@ -11,12 +11,14 @@ import (
 )
 
 type ToolInput struct {
-	Type string   `json:"type"`
-	Glob []string `json:"glob"`
+	Type    string   `json:"type"`
+	Glob    []string `json:"glob"`
+	Default string   `json:"default"`
 }
 
 type ToolOutput struct {
 	Type string   `json:"type"`
+	Item string   `json:"item"`
 	Glob []string `json:"glob"`
 }
 
@@ -56,32 +58,54 @@ func ReadToolConfig(filePath string) (Tool, error) {
 func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext))\)`)
-	matches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
+	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
+	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
 
-	for _, match := range matches {
+	for _, match := range fileMatches {
 		placeholder := match[0]
 		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
 		key = strings.TrimSuffix(key, ".basename")
 		key = strings.TrimSuffix(key, ".ext")
+		key = strings.TrimSuffix(key, ".default")
 
 		var replacement string
 		input := ioEntry.Inputs[key]
 
+		fmt.Println(match[2])
 		switch match[2] {
 		case ".filepath":
 			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))
 		case ".basename":
-			replacement = filepath.Base(input.FilePath)
+			replacement = strings.TrimSuffix(filepath.Base(input.FilePath), filepath.Ext(input.FilePath))
 		case ".ext":
 			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")
+		case ".default":
+			replacement = toolConfig.Inputs[key].Default
 		}
 
 		arguments = strings.Replace(arguments, placeholder, replacement, -1)
 	}
 
-	dockerCmd := fmt.Sprintf(`docker run -v %s:/inputs -v %s:/outputs %s %s "%s"`, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
+	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
+
+	for _, match := range nonFileMatches {
+		placeholder := match[0]
+		key := strings.TrimPrefix(match[1], "inputs.")
+
+		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
+			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
+		}
+	}
+
+	// Add the GPU flag if GpuBool is true
+	gpuFlag := ""
+	if toolConfig.GpuBool {
+		gpuFlag = "--gpus all"
+	}
+
+	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s "%s"`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return dockerCmd, nil
 }

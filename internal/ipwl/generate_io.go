@@ -62,7 +62,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			Tool:    toolPath,
 			State:   "created",
 			Inputs:  map[string]FileInput{},
-			Outputs: map[string]FileOutput{},
+			Outputs: map[string]Output{},
 		}
 
 		for inputName, path := range combination {
@@ -81,6 +81,11 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			if output.Type == "File" {
 				ioEntry.Outputs[outputName] = FileOutput{
 					Class: "File",
+				}
+			} else if output.Type == "Array" && output.Item == "File" {
+				ioEntry.Outputs[outputName] = ArrayFileOutput{
+					Class: "Array",
+					Files: []FileOutput{},
 				}
 			}
 		}
