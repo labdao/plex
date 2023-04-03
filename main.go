@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
-	toolPath := flag.String("tool-path", "", "tool path")
+	toolPath := flag.String("tool", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
+	iOJsonPath := flag.String("input-io", "", "IO JSON path")
 
 	// required flags
 	app := flag.String("app", "", "Application name")
@@ -29,7 +30,7 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir)
+		plex.Run(*toolPath, *inputDir, *iOJsonPath)
 	} else {
 		// token access
 		accessToken, exists := os.LookupEnv("PLEX_ACCESS_TOKEN")

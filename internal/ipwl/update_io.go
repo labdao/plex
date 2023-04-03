@@ -8,7 +8,7 @@ import (
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error) error {
-	ioList, errRead := readIOList(ioJsonPath)
+	ioList, errRead := ReadIOList(ioJsonPath)
 	if errRead != nil {
 		return fmt.Errorf("failed to read IO list: %w", errRead)
 	}
@@ -29,7 +29,7 @@ func updateIOWithError(ioJsonPath string, index int, err error) error {
 }
 
 func updateIOState(ioJsonPath string, index int, state string) error {
-	ioList, err := readIOList(ioJsonPath)
+	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
 	}
@@ -72,7 +72,7 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 }
 
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string) error {
-	ioList, err := readIOList(ioJsonPath)
+	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
 	}

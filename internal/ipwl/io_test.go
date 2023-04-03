@@ -165,9 +165,9 @@ func TestReadIOList(t *testing.T) {
 		t.Fatalf("Error loading example_io.json: %v", err)
 	}
 
-	ioList, err := readIOList(filePath)
+	ioList, err := ReadIOList(filePath)
 	if err != nil {
-		t.Fatalf("Error in readIOList: %v", err)
+		t.Fatalf("Error in ReadIOList: %v", err)
 	}
 
 	if !reflect.DeepEqual(ioList, expected) {

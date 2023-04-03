@@ -39,7 +39,7 @@ func TestUpdateIOState(t *testing.T) {
 		t.Fatalf("Error updating IO state: %v", err)
 	}
 
-	ioList, err := readIOList(tempFilePath)
+	ioList, err := ReadIOList(tempFilePath)
 	if err != nil {
 		t.Fatalf("Error reading IO list: %v", err)
 	}
