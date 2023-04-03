@@ -18,6 +18,7 @@ type ToolInput struct {
 
 type ToolOutput struct {
 	Type string   `json:"type"`
+	Item string   `json:"item"`
 	Glob []string `json:"glob"`
 }
 

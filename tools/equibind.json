@@ -15,20 +15,24 @@
     "inputs": {
       "protein": {
         "type": "File",
+        "item": "",
         "glob": ["*.pdb"]
       },
       "small_molecule": {
         "type": "File",
+        "item": "",
         "glob": ["*.sdf", "*.mol2"]
       }
     },
     "outputs": {
       "best_docked_small_molecule": {
         "type": "File",
+        "item": "",
         "glob": ["*_docked.sdf"]
       },
       "protein": {
         "type": "File", 
+        "item": "",
         "glob": ["*.pdb"]
       }
     }
