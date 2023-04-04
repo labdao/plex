@@ -1,0 +1,27 @@
+[
+  {
+    "tool": "tools/equibind.json",
+    "inputs": {
+      "protein": {
+        "class": "File",
+        "filepath": "/path/to/protein.pdb"
+      },
+      "small_molecule": {
+        "class": "File",
+        "filepath": "/path/to/small_molecule.sdf"
+      }
+    },
+    "outputs": {
+      "best_docked_small_molecule": {
+        "class": "File",
+        "filepath": "/path/to/best_docked_small_molecule.sdf"
+      },
+      "protein": {
+        "class": "File",
+        "filepath": "/path/to/protein.pdb"
+      }
+    },
+    "state": "created",
+    "errMsg": ""
+  }
+]
