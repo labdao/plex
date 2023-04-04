@@ -8,7 +8,7 @@ import (
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error) error {
-	ioList, errRead := readIOList(ioJsonPath)
+	ioList, errRead := ReadIOList(ioJsonPath)
 	if errRead != nil {
 		return fmt.Errorf("failed to read IO list: %w", errRead)
 	}
@@ -29,7 +29,7 @@ func updateIOWithError(ioJsonPath string, index int, err error) error {
 }
 
 func updateIOState(ioJsonPath string, index int, state string) error {
-	ioList, err := readIOList(ioJsonPath)
+	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
 	}
@@ -72,10 +72,12 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 }
 
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string) error {
-	ioList, err := readIOList(ioJsonPath)
+	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
 	}
+
+	var outputsWithNoData []string
 
 	for outputKey, output := range toolConfig.Outputs {
 		matchingFiles, err := findMatchingFilesForPatterns(outputDirPath, output.Glob)
@@ -83,11 +85,12 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			return fmt.Errorf("error matching output files: %w", err)
 		}
 
-		if output.Type == "File" {
-			if len(matchingFiles) == 0 {
-				continue
-			}
+		if len(matchingFiles) == 0 {
+			outputsWithNoData = append(outputsWithNoData, outputKey)
+			continue
+		}
 
+		if output.Type == "File" {
 			// Assume there is only one matching file per output key
 			filePath := matchingFiles[0]
 
@@ -115,11 +118,19 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		}
 	}
 
-	ioList[index].State = "completed"
+	if len(outputsWithNoData) > 0 {
+		ioList[index].State = "failed"
+	} else {
+		ioList[index].State = "completed"
+	}
 
 	err = WriteIOList(ioJsonPath, ioList)
 	if err != nil {
 		return fmt.Errorf("error writing updated IO list: %w", err)
+	}
+
+	if len(outputsWithNoData) > 0 {
+		return fmt.Errorf("no output data found for: %v", outputsWithNoData)
 	}
 
 	return nil

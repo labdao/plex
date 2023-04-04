@@ -14,11 +14,11 @@
     "outputs": {
       "best_docked_small_molecule": {
         "class": "File",
-        "filepath": "/path/to/best_docked_small_molecule.sdf"
+        "filepath": ""
       },
       "protein": {
         "class": "File",
-        "filepath": "/path/to/protein.pdb"
+        "filepath": ""
       }
     },
     "state": "created",

@@ -91,7 +91,7 @@ func (io IO) MarshalJSON() ([]byte, error) {
 	return json.Marshal(aux)
 }
 
-func readIOList(filePath string) ([]IO, error) {
+func ReadIOList(filePath string) ([]IO, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %w", err)
@@ -102,9 +102,6 @@ func readIOList(filePath string) ([]IO, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
-
-	// Print the JSON data for debugging purposes
-	fmt.Println("JSON data:", string(data))
 
 	var ioLibrary []IO
 	err = json.Unmarshal(data, &ioLibrary)

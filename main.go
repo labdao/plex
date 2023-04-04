@@ -32,8 +32,11 @@ func main() {
 	} else {
 		fmt.Println("BACALHAU_API_HOST not set, using default host")
 	}
-	toolPath := flag.String("tool-path", "", "tool path")
+
+	toolPath := flag.String("tool", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
+	ioJsonPath := flag.String("input-io", "", "IO JSON path")
+	verbose := flag.Bool("verbose", false, "show verbose debugging logs")
 
 	// required flags
 	app := flag.String("app", "", "Application name")
@@ -52,7 +55,7 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose)
 	} else {
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")

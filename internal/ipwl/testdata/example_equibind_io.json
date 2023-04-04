@@ -1,0 +1,52 @@
+[
+    {
+      "tool": "tools/equibind.json",
+      "inputs": {
+        "protein": {
+          "class": "File",
+          "filepath": "*/testdata/binding/abl/7n9g.pdb"
+        },
+        "small_molecule": {
+          "class": "File",
+          "filepath": "*/testdata/binding/abl/ZINC000003986735.sdf"
+        }
+      },
+      "outputs": {
+        "best_docked_small_molecule": {
+          "class": "File",
+          "filepath": ""
+        },
+        "protein": {
+          "class": "File",
+          "filepath": ""
+        }
+      },
+      "state": "created",
+      "errMsg": ""
+    },
+    {
+      "tool": "tools/equibind.json",
+      "inputs": {
+        "protein": {
+          "class": "File",
+          "filepath": "*/testdata/binding/abl/7n9g.pdb"
+        },
+        "small_molecule": {
+          "class": "File",
+          "filepath": "*/testdata/binding/abl/ZINC000019632618.sdf"
+        }
+      },
+      "outputs": {
+        "best_docked_small_molecule": {
+          "class": "File",
+          "filepath": ""
+        },
+        "protein": {
+          "class": "File",
+          "filepath": ""
+        }
+      },
+      "state": "created",
+      "errMsg": ""
+    }
+]

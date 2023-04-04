@@ -9,7 +9,7 @@ func TestReadToolConfig(t *testing.T) {
 	filePath := "testdata/example_tool.json"
 	expected := Tool{
 		Name:        "equibind",
-		Description: "test for equibind tool",
+		Description: "Docking of small molecules to a protein",
 		BaseCommand: []string{"/bin/bash", "-c"},
 		Arguments: []string{
 			"python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
@@ -30,7 +30,7 @@ func TestReadToolConfig(t *testing.T) {
 			},
 		},
 		Outputs: map[string]ToolOutput{
-			"docked_small_molecule": {
+			"best_docked_small_molecule": {
 				Type: "File",
 				Glob: []string{"*_docked.sdf"},
 			},
@@ -77,7 +77,7 @@ func TestToolToDockerCmd(t *testing.T) {
 		t.Errorf("Error generating Docker command: %v", err)
 	}
 
-	expectedDockerCmd := "docker run -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
+	expectedDockerCmd := "docker run  -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
 
 	if dockerCmd != expectedDockerCmd {
 		t.Errorf("Expected Docker command: %s, got: %s", expectedDockerCmd, dockerCmd)
