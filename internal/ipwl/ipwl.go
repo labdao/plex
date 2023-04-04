@@ -60,7 +60,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 
 	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
 	if verbose {
-		fmt.Println("Generated docker cmd", dockerCmd)
+		fmt.Println("Generated docker cmd:", dockerCmd)
 	}
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err)

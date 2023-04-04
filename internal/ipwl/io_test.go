@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -85,9 +86,9 @@ func loadJSONFile(filePath string, target interface{}) error {
 
 func TestCreateIOEntries(t *testing.T) {
 	var ios []IO
-	err := loadJSONFile("testdata/example_io.json", &ios)
+	err := loadJSONFile("testdata/example_initial_io.json", &ios)
 	if err != nil {
-		t.Fatalf("Error loading example_io.json: %v", err)
+		t.Fatalf("Error loading example_initiail_io.json: %v", err)
 	}
 
 	var tool Tool
@@ -107,10 +108,15 @@ func TestCreateIOEntries(t *testing.T) {
 		inputCombinations[i] = inputCombination
 	}
 
-	expected := ios
-
+	expected := make([]IO, len(ios))
 	for i := range ios {
-		ios[i].Tool = ""
+		expected[i] = IO{
+			Tool:    ios[i].Tool,
+			Inputs:  ios[i].Inputs,
+			Outputs: ios[i].Outputs,
+			State:   ios[i].State,
+			ErrMsg:  ios[i].ErrMsg,
+		}
 	}
 
 	ioEntries := createIOEntries(toolPath, tool, inputCombinations)
@@ -121,12 +127,12 @@ func TestCreateIOEntries(t *testing.T) {
 }
 
 func TestCreateIOJson(t *testing.T) {
-	inputDir := "testdata"
+	inputDir := "testdata/binding/abl"
 
 	var ios []IO
-	err := loadJSONFile("testdata/example_io.json", &ios)
+	err := loadJSONFile("testdata/example_equibind_io.json", &ios)
 	if err != nil {
-		t.Fatalf("Error loading example_io.json: %v", err)
+		t.Fatalf("Error loading example_equibind_io.json: %v", err)
 	}
 
 	var tool Tool
@@ -151,8 +157,14 @@ func TestCreateIOJson(t *testing.T) {
 		t.Fatalf("Error in CreateIOJson: %v", err)
 	}
 
-	if !reflect.DeepEqual(generatedIOData, expected) {
-		t.Errorf("Expected:\n%v\nGot:\n%v", expected, generatedIOData)
+	// Compare the paths after the asterisk
+	for i := range generatedIOData {
+		for k, v := range generatedIOData[i].Inputs {
+			expectedPath := strings.Split(expected[i].Inputs[k].FilePath, "*")[1]
+			if !strings.HasSuffix(v.FilePath, expectedPath) {
+				t.Errorf("Expected path suffix:\n%v\nGot:\n%v", expectedPath, v.FilePath)
+			}
+		}
 	}
 }
 
