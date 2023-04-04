@@ -9,6 +9,30 @@ import (
 )
 
 func main() {
+	// check for new plex version
+	upgradePlexVersion()
+
+	// token access
+	accessToken, exists := os.LookupEnv("PLEX_ACCESS_TOKEN")
+	expectedToken := "mellon" // speak friend and enter
+	if !exists {
+		fmt.Println("PLEX_ACCESS_TOKEN is required")
+		fmt.Println("Run export PLEX_ACCESS_TOKEN=<token>")
+		fmt.Println("Fill out this form to have an access token sent to your email: https://whe68a12b61.typeform.com/to/PpbO2HYf")
+		os.Exit(1)
+	} else if expectedToken != accessToken {
+		fmt.Println("PLEX_ACCESS_TOKEN is incorrect")
+		os.Exit(1)
+	}
+
+	// Env settings
+	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	if exists {
+		fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
+	} else {
+		fmt.Println("BACALHAU_API_HOST not set, using default host")
+	}
+
 	toolPath := flag.String("tool", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
 	ioJsonPath := flag.String("input-io", "", "IO JSON path")
@@ -33,18 +57,6 @@ func main() {
 		fmt.Println("Running IPWL tool path")
 		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose)
 	} else {
-		// token access
-		accessToken, exists := os.LookupEnv("PLEX_ACCESS_TOKEN")
-		expectedToken := "mellon" // speak friend and enter
-		if !exists {
-			fmt.Println("PLEX_ACCESS_TOKEN is required")
-			fmt.Println("Run export PLEX_ACCESS_TOKEN=<token>")
-			fmt.Println("Fill out this form to have an access token sent to your email: https://whe68a12b61.typeform.com/to/PpbO2HYf")
-			os.Exit(1)
-		} else if expectedToken != accessToken {
-			fmt.Println("PLEX_ACCESS_TOKEN is incorrect")
-			os.Exit(1)
-		}
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
 		if exists {
