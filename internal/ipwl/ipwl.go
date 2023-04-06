@@ -5,22 +5,44 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool) {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool, maxConcurrency int) {
+	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
+	semaphore := make(chan struct{}, maxConcurrency)
+	var wg sync.WaitGroup
+
+	// Mutex to synchronize file access
+	var fileMutex sync.Mutex
+
 	for i, ioEntry := range ioList {
-		fmt.Printf("Starting to process IO entry %d \n", i)
-		err := processIOTask(ioEntry, i, jobDir, ioJsonPath, verbose)
-		if err != nil {
-			fmt.Printf("Error processing IO entry %d \n", i)
-		} else {
-			fmt.Printf("Success processing IO entry %d \n", i)
-		}
+		wg.Add(1)
+		go func(index int, entry IO) {
+			defer wg.Done()
+
+			// Acquire the semaphore
+			semaphore <- struct{}{}
+
+			fmt.Printf("Starting to process IO entry %d \n", index)
+			err := processIOTask(entry, index, jobDir, ioJsonPath, verbose, &fileMutex)
+			if err != nil {
+				fmt.Printf("Error processing IO entry %d \n", index)
+			} else {
+				fmt.Printf("Success processing IO entry %d \n", index)
+			}
+
+			// Release the semaphore
+			<-semaphore
+		}(i, ioEntry)
 	}
+
+	// Wait for all goroutines to finish
+	wg.Wait()
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose bool) error {
-	err := updateIOState(ioJsonPath, index, "processing")
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose bool, fileMutex *sync.Mutex) error {
+	err := updateIOState(ioJsonPath, index, "processing", fileMutex)
 	if err != nil {
 		return fmt.Errorf("error updating IO state: %w", err)
 	}
@@ -28,33 +50,33 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 	workingDirPath := filepath.Join(jobDir, fmt.Sprintf("entry-%d", index))
 	err = os.MkdirAll(workingDirPath, 0755)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating working directory: %w", err)
 	}
 
 	outputsDirPath := filepath.Join(workingDirPath, "outputs")
 	err = os.MkdirAll(outputsDirPath, 0755)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating outputs directory: %w", err)
 	}
 
 	inputsDirPath := filepath.Join(workingDirPath, "inputs")
 	err = os.MkdirAll(inputsDirPath, 0755)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
 	toolConfig, err := ReadToolConfig(ioEntry.Tool)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error reading tool config: %w", err)
 	}
 
 	err = copyInputFilesToDir(ioEntry, inputsDirPath)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error copying files to results input directory: %w", err)
 	}
 
@@ -63,7 +85,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 		fmt.Println("Generated docker cmd:", dockerCmd)
 	}
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error converting tool to Docker cmd: %w", err)
 	}
 
@@ -72,13 +94,13 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 		fmt.Printf("Docker ran with output: %s \n", output)
 	}
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error running Docker cmd: %w", err)
 	}
 
-	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath)
+	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath, fileMutex)
 	if err != nil {
-		updateIOWithError(ioJsonPath, index, err)
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error updating IO with result: %w", err)
 	}
 
