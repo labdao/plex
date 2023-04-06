@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/labdao/plex/cmd/plex"
 )
@@ -49,8 +51,13 @@ func main() {
 	dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
 	gpu := flag.Bool("gpu", false, "Use GPU")
 	network := flag.Bool("network", false, "All http requests during job runtime")
+
 	flag.Parse()
 
+	// process tool input to be relative to tools directory
+	if *toolPath != "" && !strings.Contains(*toolPath, "/") && !strings.HasSuffix(*toolPath, ".json") {
+		*toolPath = filepath.Join("tools", *toolPath+".json")
+	}
 	fmt.Println("toolPath", *toolPath)
 
 	if *toolPath != "" {
