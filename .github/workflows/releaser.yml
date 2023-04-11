@@ -1,9 +1,14 @@
 name: goreleaser
 
+# on:
+#   push:
+#     tags:
+#       - '*'
+
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - workflow-test
 
 permissions:
   contents: write
