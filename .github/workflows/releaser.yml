@@ -47,7 +47,7 @@ jobs:
 
       - name: Extract release file
         # run: tar -xvzf plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
-        run: tar -xvzf plex_v0.5.1_linux_amd64.tar.gz
+        run: tar -xvzf plex_0.5.1_linux_amd64.tar.gz
 
       - name: Run Equibind
         run: |
