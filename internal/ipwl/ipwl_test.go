@@ -3,6 +3,7 @@ package ipwl
 import (
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -34,7 +35,8 @@ func TestUpdateIOState(t *testing.T) {
 	index := 0
 	newState := "testing"
 
-	err = updateIOState(tempFilePath, index, newState)
+	fileMutex := &sync.Mutex{}
+	err = updateIOState(tempFilePath, index, newState, fileMutex)
 	if err != nil {
 		t.Fatalf("Error updating IO state: %v", err)
 	}
