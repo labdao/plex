@@ -1,14 +1,9 @@
 name: goreleaser
 
-# on:
-#   push:
-#     tags:
-#       - '*'
-
 on:
   push:
-    branches:
-      - workflow-test
+    tags:
+      - '*'
 
 permissions:
   contents: write
@@ -28,30 +23,26 @@ jobs:
           go-version: '>=1.19.6'
           cache: true
           
-      # - name: Run GoReleaser
-      #   uses: goreleaser/goreleaser-action@v4
-      #   with:
-      #     distribution: goreleaser
-      #     version: latest
-      #     args: release --clean
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Get tag name
-      #   id: tag_name
-      #   run: echo "::set-output name=tag::$GITHUB_REF#refs/tags/"
-
-      # - name: Download release file
-      #   # run: curl -sSL https://github.com/labdao/plex/releases/download/${{ steps.tag_name.outputs.tag }}/plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
-      #   run: curl -sSL https://github.com/labdao/plex/releases/download/v0.5.1/plex_0.5.1_linux_amd64.tar.gz
+      - name: Get tag name
+        id: tag_name
+        run: echo "::set-output name=tag::$GITHUB_REF#refs/tags/"
 
       - name: Download release file
-        run: curl -sSL https://github.com/labdao/plex/releases/download/v0.5.1/plex_0.5.1_linux_amd64.tar.gz -o plex_0.5.1_linux_amd64.tar.gz
-
+        run: curl -sSL https://github.com/labdao/plex/releases/download/${{ steps.tag_name.outputs.tag }}/plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz -o plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
 
       - name: Extract release file
-        # run: tar -xvzf plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
         run: tar -xvzf plex_0.5.1_linux_amd64.tar.gz
+
+      # TODO: Modify tool runs based on the new CLI changes incorporating tool configs
 
       # - name: Run Equibind
       #   run: |
