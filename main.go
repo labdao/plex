@@ -46,6 +46,7 @@ func main() {
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
 	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
+	concurrency := flag.Int("concurrency", 1, "How many IO entries to run at once")
 	memory := flag.Int("memory", 0, "Memory for job in GB, 0 autopicks a value")
 	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
 	dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
@@ -62,7 +63,7 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *concurrency)
 	} else {
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")

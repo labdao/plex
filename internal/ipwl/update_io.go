@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
-func updateIOWithError(ioJsonPath string, index int, err error) error {
+func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.Mutex) error {
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
 	ioList, errRead := ReadIOList(ioJsonPath)
 	if errRead != nil {
 		return fmt.Errorf("failed to read IO list: %w", errRead)
@@ -28,7 +31,9 @@ func updateIOWithError(ioJsonPath string, index int, err error) error {
 	return nil
 }
 
-func updateIOState(ioJsonPath string, index int, state string) error {
+func updateIOState(ioJsonPath string, index int, state string, fileMutex *sync.Mutex) error {
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
 	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
@@ -71,7 +76,10 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 	return matchingFiles, nil
 }
 
-func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string) error {
+func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string, fileMutex *sync.Mutex) error {
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
+
 	ioList, err := ReadIOList(ioJsonPath)
 	if err != nil {
 		return fmt.Errorf("error reading IO list: %w", err)
