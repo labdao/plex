@@ -1,4 +1,4 @@
-# PLEX
+# PLEX 🧫
 PLEX = PLEX Lab EXchange.
 
 ## Installing the client
