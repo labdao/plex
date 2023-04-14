@@ -73,6 +73,10 @@ func main() {
 			fmt.Println("BACALHAU_API_HOST not set, using default host")
 		}
 
+		if *app != "" {
+			fmt.Println("WARNING: The -app flag is being deprecated and will be removed by v0.7.0. Please use -tool instead.")
+		}
+
 		// print the values of the flags
 		fmt.Println("## User input ##")
 		fmt.Println("Provided application name:", *app)
