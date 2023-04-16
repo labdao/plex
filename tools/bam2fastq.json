@@ -1,0 +1,40 @@
+{
+    "class": "CommandLineTool",
+    "name": "bam2fastq",
+    "description": "Sort BAM by qname and Extract Fasta reads R1 R2 with RG using samtools",
+    "inputs": {
+        "genome": {
+            "type": "File",
+            "glob": "*.bam"
+        }
+    },
+    "outputs": {
+        "genome_sorted": {
+            "type": "File",
+            "glob": "*_namesorted.bam"
+        },
+        "reads_r1": {
+            "type": "File",
+            "glob": "*_R1.fq"
+        },
+        "reads_r2": {
+            "type": "File",
+            "glob": "*_R2.fq"
+        },
+        "reads_both_neither": {
+            "type": "File",
+            "glob": "*_R0.fq"
+        }
+    },
+    "baseCommand": [
+        "/bin/bash",
+        "-c"
+    ],
+    "arguments": [
+        "samtools sort -n $(inputs.genome.path) --threads 8 -o /outputs/$(inputs.genome.nameroot)_namesorted.$(inputs.genome.nameext)",
+        "samtools fastq /outputs/$(inputs.genome.nameroot)_namesorted.$(inputs.genome.nameext) -n -t -1 /outputs/$(inputs.genome.nameroot)_R1.fq -2 /outputs/$(inputs.genome.nameroot)_R2.fq -0 /outputs/$(inputs.genome.nameroot)_R0.fq"
+    ],
+    "dockerPull": "quay.io/biocontainers/samtools@sha256:6f88956b747a67b2a39a3ff72c4de30e665239ee11db610624dd4298e30db1bf",
+    "gpuBool": false,
+    "networkBool": false
+}
