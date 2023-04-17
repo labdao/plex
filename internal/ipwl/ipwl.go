@@ -3,9 +3,9 @@ package ipwl
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/labdao/plex/internal/bacalhau"
@@ -119,7 +119,16 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, lo
 			fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
 		}
 
-		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, strings.Join(toolConfig.Arguments, " "), 16, toolConfig.GpuBool, toolConfig.NetworkBool)
+		cmd, err := toolToCmd(toolConfig, ioEntry)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error converting tool to cmd: %w", err)
+		}
+		if verbose {
+			fmt.Printf("Generated cmd: %s\n", cmd)
+		}
+
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, 12, toolConfig.GpuBool, toolConfig.NetworkBool)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error creating Bacalhau job: %w", err)
@@ -141,6 +150,12 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, lo
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error downloading Bacalhau results: %w", err)
+		}
+
+		err = cleanBacalhauOutputDir(outputsDirPath)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
 		}
 	}
 
@@ -188,6 +203,53 @@ func copyFile(srcPath, destPath string) error {
 
 	_, err = io.Copy(destFile, srcFile)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func cleanBacalhauOutputDir(outputsDirPath string) error {
+	combinedResultsPath := filepath.Join(outputsDirPath, "combined_results")
+	outputsInsideCombinedResults := filepath.Join(combinedResultsPath, "outputs")
+	stderrPath := filepath.Join(combinedResultsPath, "stderr")
+	stdoutPath := filepath.Join(combinedResultsPath, "stdout")
+
+	// Move files from combined_results/outputs to outputsDirPath
+	files, err := ioutil.ReadDir(outputsInsideCombinedResults)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		src := filepath.Join(outputsInsideCombinedResults, file.Name())
+		dst := filepath.Join(outputsDirPath, file.Name())
+		if err := os.Rename(src, dst); err != nil {
+			return err
+		}
+	}
+
+	// Move stderr and stdout files to outputsDirPath
+	if err := os.Rename(stderrPath, filepath.Join(outputsDirPath, "stderr")); err != nil {
+		return err
+	}
+
+	if err := os.Rename(stdoutPath, filepath.Join(outputsDirPath, "stdout")); err != nil {
+		return err
+	}
+
+	// Delete per_shard and raw directories if they exist
+	for _, dir := range []string{"per_shard", "raw"} {
+		dirPath := filepath.Join(outputsDirPath, dir)
+		if _, err := os.Stat(dirPath); err == nil {
+			if err := os.RemoveAll(dirPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Remove combined_results directory
+	if err := os.RemoveAll(combinedResultsPath); err != nil {
 		return err
 	}
 
