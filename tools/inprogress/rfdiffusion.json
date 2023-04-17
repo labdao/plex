@@ -5,7 +5,7 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "cd /app && source activate SE3nv;",
-        "./scripts/run_inference.py 'contigmap.contigs=[$(inputs.motif) $(inputs.binder_length_min)-$(inputs.binder_length_max)]' inference.input_pdb=$(inputs.protein.filepath) inference.output_prefix=/outputs/$(inputs.protein.basename)_design.pdb inference.num_designs=$(inputs.number_of_designs) denoiser.noise_scale_ca=0 denoiser.noise_scale_frame=0;"
+        "./scripts/run_inference.py 'contigmap.contigs=[$(inputs.motif) $(inputs.binder_length_min)-$(inputs.binder_length_max)]' inference.input_pdb=$(inputs.protein.filepath) inference.output_prefix=/outputs/$(inputs.protein.basename)_backbone inference.num_designs=$(inputs.number_of_designs) denoiser.noise_scale_ca=0 denoiser.noise_scale_frame=0;"
       ],
     "dockerPull": "public.ecr.aws/p7l9w5o7/rfdiffusion:latest",
     "gpuBool": true,
