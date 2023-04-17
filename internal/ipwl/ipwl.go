@@ -5,7 +5,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+
+	"github.com/labdao/plex/internal/bacalhau"
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool, maxConcurrency int) {
@@ -41,7 +45,7 @@ func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool, maxConc
 	wg.Wait()
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose bool, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, local bool, fileMutex *sync.Mutex) error {
 	err := updateIOState(ioJsonPath, index, "processing", fileMutex)
 	if err != nil {
 		return fmt.Errorf("error updating IO state: %w", err)
@@ -68,21 +72,6 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	if !local {
-		ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error deriving IPFS Url: %w", err)
-		}
-
-		cid, err := AddDirHttp(ipfsNodeUrl, inputsDirPath)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error adding inputs to IPFS: %w", err)
-		}
-		fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
-	}
-
 	toolConfig, err := ReadToolConfig(ioEntry.Tool)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
@@ -95,22 +84,64 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 		return fmt.Errorf("error copying files to results input directory: %w", err)
 	}
 
-	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
-	if verbose {
-		fmt.Println("Generated docker cmd:", dockerCmd)
-	}
-	if err != nil {
-		updateIOWithError(ioJsonPath, index, err, fileMutex)
-		return fmt.Errorf("error converting tool to Docker cmd: %w", err)
-	}
+	if local {
+		dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
+		if verbose {
+			fmt.Println("Generated docker cmd:", dockerCmd)
+		}
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error converting tool to Docker cmd: %w", err)
+		}
 
-	output, err := runDockerCmd(dockerCmd)
-	if verbose {
-		fmt.Printf("Docker ran with output: %s \n", output)
-	}
-	if err != nil {
-		updateIOWithError(ioJsonPath, index, err, fileMutex)
-		return fmt.Errorf("error running Docker cmd: %w", err)
+		output, err := runDockerCmd(dockerCmd)
+		if verbose {
+			fmt.Printf("Docker ran with output: %s \n", output)
+		}
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error running Docker cmd: %w", err)
+		}
+	} else {
+		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error deriving IPFS Url: %w", err)
+		}
+
+		cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputsDirPath)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error adding inputs to IPFS: %w", err)
+		}
+
+		if verbose {
+			fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
+		}
+
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, strings.Join(toolConfig.Arguments, " "), 16, toolConfig.GpuBool, toolConfig.NetworkBool)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error creating Bacalhau job: %w", err)
+		}
+
+		submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error submitting Bacalhau job: %w", err)
+		}
+
+		results, err := bacalhau.GetBacalhauJobResults(submittedJob)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error getting Bacalhau job results: %w", err)
+		}
+
+		err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error downloading Bacalhau results: %w", err)
+		}
 	}
 
 	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath, fileMutex)
