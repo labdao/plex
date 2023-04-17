@@ -15,15 +15,15 @@
         },
         "reads_r1": {
             "type": "File",
-            "glob": ["*_R1.fq"]
+            "glob": ["*_R1.fq.gz"]
         },
         "reads_r2": {
             "type": "File",
-            "glob": ["*_R2.fq"]
+            "glob": ["*_R2.fq.gz"]
         },
         "reads_both_neither": {
             "type": "File",
-            "glob": ["*_R0.fq"]
+            "glob": ["*_R0.fq.gz"]
         }
     },
     "baseCommand": [
@@ -32,7 +32,10 @@
     ],
     "arguments": [
         "samtools sort -n $(inputs.genome.filepath) --threads 8 -o /outputs/$(inputs.genome.basename)_namesorted.$(inputs.genome.ext);",
-        "samtools fastq /outputs/$(inputs.genome.basename)_namesorted.$(inputs.genome.basename) -n -t -1 /outputs/$(inputs.genome.basename)_R1.fq -2 /outputs/$(inputs.genome.basename)_R2.fq -0 /outputs/$(inputs.genome.basename)_R0.fq;"
+        "samtools fastq /outputs/$(inputs.genome.basename)_namesorted.$(inputs.genome.ext) -n -t -1 /outputs/$(inputs.genome.basename)_R1.fq -2 /outputs/$(inputs.genome.basename)_R2.fq -0 /outputs/$(inputs.genome.basename)_R0.fq;",
+        "bgzip -l 9 /outputs/$(inputs.genome.basename)_R0.fq;",
+        "bgzip -l 9 /outputs/$(inputs.genome.basename)_R1.fq;",
+        "bgzip -l 9 /outputs/$(inputs.genome.basename)_R2.fq;"
     ],
     "dockerPull": "quay.io/biocontainers/samtools@sha256:6f88956b747a67b2a39a3ff72c4de30e665239ee11db610624dd4298e30db1bf",
     "gpuBool": false,
