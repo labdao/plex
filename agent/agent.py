@@ -25,9 +25,9 @@ manual_tools = [
 ]
 
 def main(question: str):
-    chat = ChatOpenAI(temperature=0)
+    chat = ChatOpenAI(temperature=0, model="gpt-3.5-turbo") # gpt-4
     llm = OpenAI(temperature=0)
-    tools = load_tools(["serpapi", "llm-math", "human"], llm=llm)
+    tools = load_tools(["serpapi", "llm-math", "human", "wolfram-alpha", "terminal"], llm=llm)
     all_tools = manual_tools + tools
     agent = initialize_agent(all_tools, chat, agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
     response = agent.run(question)

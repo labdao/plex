@@ -1,0 +1,47 @@
+{
+    "class": "CommandLineTool",
+    "name": "rfdiffusion",
+    "description": "design protein binders; generally useful for conditional generation of protein backbones",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "cd /app && source activate SE3nv;",
+        "./scripts/run_inference.py 'contigmap.contigs=[$(inputs.motif) $(inputs.binder_length_min)-$(inputs.binder_length_max)]' inference.input_pdb=$(inputs.protein.filepath) inference.output_prefix=/outputs/$(inputs.protein.basename)_design.pdb inference.num_designs=$(inputs.number_of_designs) denoiser.noise_scale_ca=0 denoiser.noise_scale_frame=0;"
+      ],
+    "dockerPull": "public.ecr.aws/p7l9w5o7/rfdiffusion:latest",
+    "gpuBool": true,
+    "networkBool": false,
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.pdb"]
+      },
+      "motif": {
+        "type": "string"
+      },
+      "binder_length_min": {
+        "type": "int",
+        "default": 10
+      },
+      "binder_length_max": {
+        "type": "int",
+        "default": 10
+      },
+      "number_of_designs": {
+        "type": "int",
+        "default": 10
+      }
+    },
+    "outputs": {
+      "designed_protein": {
+        "type": "File",
+        "item": "",
+        "glob": ["*_design.pdb"]
+      },
+      "protein": {
+        "type": "File", 
+        "item": "",
+        "glob": ["*.pdb"]
+      }
+    }
+}
