@@ -17,19 +17,20 @@
         "glob": ["*.pdb"]
       },
       "motif": {
-        "type": "string"
+        "type": "string",
+        "default": "A1:80"
       },
       "binder_length_min": {
         "type": "int",
-        "default": 10
+        "default": "50"
       },
       "binder_length_max": {
         "type": "int",
-        "default": 10
+        "default": "100"
       },
       "number_of_designs": {
         "type": "int",
-        "default": 10
+        "default": "4"
       }
     },
     "outputs": {
