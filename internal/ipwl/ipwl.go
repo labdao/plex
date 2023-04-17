@@ -68,6 +68,21 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose boo
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
+	if !local {
+		ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error deriving IPFS Url: %w", err)
+		}
+
+		cid, err := AddDirHttp(ipfsNodeUrl, inputsDirPath)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error adding inputs to IPFS: %w", err)
+		}
+		fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
+	}
+
 	toolConfig, err := ReadToolConfig(ioEntry.Tool)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
