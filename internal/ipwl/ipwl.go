@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/ipfs"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool, maxConcurrency int) {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose, local bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 	var wg sync.WaitGroup
@@ -29,7 +29,7 @@ func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose bool, maxConc
 			semaphore <- struct{}{}
 
 			fmt.Printf("Starting to process IO entry %d \n", index)
-			err := processIOTask(entry, index, jobDir, ioJsonPath, verbose, &fileMutex)
+			err := processIOTask(entry, index, jobDir, ioJsonPath, verbose, local, &fileMutex)
 			if err != nil {
 				fmt.Printf("Error processing IO entry %d \n", index)
 			} else {

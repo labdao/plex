@@ -56,7 +56,7 @@ func ReadToolConfig(filePath string) (Tool, error) {
 	return tool, nil
 }
 
-func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
+func toolToCmd(toolConfig Tool, ioEntry IO) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
 	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
@@ -99,13 +99,24 @@ func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath 
 		}
 	}
 
+	cmd := fmt.Sprintf("%s \"%s\"", strings.Join(toolConfig.BaseCommand, " "), arguments)
+
+	return cmd, nil
+}
+
+func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
+	cmd, err := toolToCmd(toolConfig, ioEntry)
+	if err != nil {
+		return "", err
+	}
+
 	// Add the GPU flag if GpuBool is true
 	gpuFlag := ""
 	if toolConfig.GpuBool {
 		gpuFlag = "--gpus all"
 	}
 
-	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s "%s"`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, strings.Join(toolConfig.BaseCommand, " "), arguments)
+	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, cmd)
 
 	return dockerCmd, nil
 }
