@@ -1,0 +1,4 @@
+ls
+./plex -tool equibind -input-dir testdata/binding/abl
+./plex -tool diffdock -input-dir testdata/binding/abl
+./plex -tool oddt -input-dir testdata/scoring/abl
