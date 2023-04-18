@@ -215,3 +215,6 @@ job.yaml
 
 # Tool manifest
 .manifest.json
+
+# Recordings
+*.cast
