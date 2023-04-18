@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 )
 
-func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency int) {
+func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency, layers int) {
 	// Create plex working directory
 	id := uuid.New()
 	cwd, err := os.Getwd()
@@ -39,7 +39,7 @@ func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency
 	var ioEntries []ipwl.IO
 	if inputDir != "" {
 		fmt.Println("Creating IO Entries from input directory: ", inputDir)
-		ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolPath)
+		ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolPath, layers)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)

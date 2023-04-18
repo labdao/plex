@@ -31,7 +31,8 @@ func TestFindMatchingFiles(t *testing.T) {
 		"small_molecule": {filepath.Join(inputDir, "ZINC000003986735.sdf"), filepath.Join(inputDir, "ZINC000019632618.sdf")},
 	}
 
-	inputFilepaths, err := findMatchingFiles(inputDir, tool)
+	layers := 1
+	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
 	if err != nil {
 		t.Fatalf("findMatchingFiles returned an error: %v", err)
 	}
@@ -152,7 +153,7 @@ func TestCreateIOJson(t *testing.T) {
 		ios[i].Tool = ""
 	}
 
-	generatedIOData, err := CreateIOJson(inputDir, tool, toolPath)
+	generatedIOData, err := CreateIOJson(inputDir, tool, toolPath, 2)
 	if err != nil {
 		t.Fatalf("Error in CreateIOJson: %v", err)
 	}
