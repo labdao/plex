@@ -42,21 +42,19 @@ jobs:
       - name: Extract release file
         run: tar -xvzf plex_0.5.1_linux_amd64.tar.gz
 
-      # TODO: Modify tool runs based on the new CLI changes incorporating tool configs
-
-      # - name: Run Equibind
-      #   run: |
-      #     cd "$(./plex -app equibind -input-dir testdata/binding/abl | sed -n 's/^Your job results have been downloaded to //p')"
-      #     cd combined_results/outputs
-      #     if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-      #       echo "No docked files found"
-      #       exit 1
-      #     else
-      #       echo "Docked files found:"
-      #       find . -name '*docked.sdf' | grep 'docked.sdf'
-      #     fi
-      #   env:
-      #     PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+      - name: Run Equibind
+        run: |
+          result_dir=$(./plex -tool equibind -input-dir testdata/binding/abl | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
+          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+            echo "No docked files found"
+            exit 1
+          else
+            echo "Docked files found:"
+            find . -name '*docked.sdf' | grep 'docked.sdf'
+          fi
+        env:
+          PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
 
       # - name: Run Colabfold
       #   run: |
