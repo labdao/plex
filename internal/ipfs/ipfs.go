@@ -21,6 +21,5 @@ func AddDirHttp(ipfsNodeUrl, dirPath string) (cid string, err error) {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return cid, err
 	}
-	fmt.Printf("added %s", cid)
 	return cid, err
 }
