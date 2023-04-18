@@ -219,3 +219,6 @@ job.yaml
 # Params
 params
 .env
+=======
+# Recordings
+*.cast
