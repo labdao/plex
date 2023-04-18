@@ -2,7 +2,7 @@
 # run inside container image with asciinema installed
 
 # File containing the list of CLI commands to record
-commands_file="scripts/create-ascicast-commands.txt"
+commands_file="scripts/ascicast-commands.txt"
 
 # Display the commands in the file
 while IFS= read -r cmd; do
@@ -33,7 +33,7 @@ for cmd in "${commands[@]}"; do
   chmod +x "$typed_cmd_script"
 
   # Start the recording, execute the command, and then exit the shell
-  asciinema rec -c "bash $typed_cmd_script" -t "$filename" -y -i 2 --overwrite
+  asciinema rec -c "bash $typed_cmd_script" scripts/$filename -y -i 2 --overwrite
 
   # Cleanup the temporary script
   rm -f "$typed_cmd_script"
