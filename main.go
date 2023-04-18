@@ -63,7 +63,7 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *concurrency)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency)
 	} else {
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")

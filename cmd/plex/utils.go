@@ -12,14 +12,12 @@ import (
 
 	fileutils "github.com/docker/docker/pkg/fileutils"
 	"github.com/google/uuid"
-	"github.com/labdao/plex/internal/ipfs"
-	"github.com/web3-storage/go-w3s-client"
 )
 
 type AppConfig struct {
-	App    string `json:"app"`
+	App         string `json:"app"`
 	InputMethod string `json:"inputMethod"`
-	Inputs []struct {
+	Inputs      []struct {
 		Field     string   `json:"field"`
 		Filetypes []string `json:"filetypes"`
 	} `json:"inputs"`
@@ -167,46 +165,26 @@ func createCombinations(indexMap map[string][]string, fieldA, fieldB string) []m
 }
 
 func createIndex(filePaths []string, appConfig AppConfig, jobDirPath string) (string, []map[string]string) {
-    if appConfig.InputMethod == "directory" {
-        fmt.Println("Skipping index creation because input method is directory")
-        return "", []map[string]string{}
-    } else {
-        indexMap := map[string][]string{}
-        for _, filePath := range filePaths {
-            for _, input := range appConfig.Inputs {
-                for _, filetype := range input.Filetypes {
-                    if strings.HasSuffix(filePath, filetype) {
-                        indexMap[input.Field] = append(indexMap[input.Field], filePath)
-                    }
-                }
-            }
-        }
+	if appConfig.InputMethod == "directory" {
+		fmt.Println("Skipping index creation because input method is directory")
+		return "", []map[string]string{}
+	} else {
+		indexMap := map[string][]string{}
+		for _, filePath := range filePaths {
+			for _, input := range appConfig.Inputs {
+				for _, filetype := range input.Filetypes {
+					if strings.HasSuffix(filePath, filetype) {
+						indexMap[input.Field] = append(indexMap[input.Field], filePath)
+					}
+				}
+			}
+		}
 
-        fieldA, fieldB := appConfig.Inputs[0].Field, appConfig.Inputs[1].Field
-        combinations := createCombinations(indexMap, fieldA, fieldB)
-        writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
-        writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
+		fieldA, fieldB := appConfig.Inputs[0].Field, appConfig.Inputs[1].Field
+		combinations := createCombinations(indexMap, fieldA, fieldB)
+		writeJSONL(combinations, path.Join(jobDirPath, "index.jsonl"))
+		writeCSV(combinations, path.Join(jobDirPath, "index.csv"))
 
-        return path.Join(jobDirPath, "index.csv"), combinations
-    }
-}
-
-
-func CreateInputCID(inputDirPath string, cmd string) (string, error) {
-	client, err := w3s.NewClient(
-		w3s.WithEndpoint("https://api.web3.storage"),
-		w3s.WithToken(os.Getenv("WEB3STORAGE_TOKEN")),
-	)
-	if err != nil {
-		return "", err
+		return path.Join(jobDirPath, "index.csv"), combinations
 	}
-	inputDir, err := os.Open(inputDirPath)
-	if err != nil {
-		return "", err
-	}
-	cid, err := ipfs.PutFile(client, inputDir)
-	if err != nil {
-		return cid.String(), err
-	}
-	return cid.String(), nil
 }
