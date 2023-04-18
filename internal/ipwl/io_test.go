@@ -24,14 +24,14 @@ func TestFindMatchingFiles(t *testing.T) {
 		},
 	}
 
-	inputDir := "testdata/binding/abl/"
+	inputDir := "testdata/binding/"
 
 	expected := map[string][]string{
-		"protein":        {filepath.Join(inputDir, "7n9g.pdb")},
-		"small_molecule": {filepath.Join(inputDir, "ZINC000003986735.sdf"), filepath.Join(inputDir, "ZINC000019632618.sdf")},
+		"protein":        {filepath.Join(inputDir, "abl/7n9g.pdb")},
+		"small_molecule": {filepath.Join(inputDir, "abl/ZINC000003986735.sdf"), filepath.Join(inputDir, "abl/ZINC000019632618.sdf")},
 	}
 
-	layers := 1
+	layers := 2
 	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
 	if err != nil {
 		t.Fatalf("findMatchingFiles returned an error: %v", err)
