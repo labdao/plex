@@ -2,7 +2,7 @@
 # run inside container image with asciinema installed
 
 # File containing the list of CLI commands to record
-commands_file="docs/commands.txt"
+commands_file="scripts/create-ascicast-commands.txt"
 
 # Display the commands in the file
 while IFS= read -r cmd; do
