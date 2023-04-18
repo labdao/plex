@@ -1,4 +1,3 @@
-ls
 ./plex -tool equibind -input-dir testdata/binding/abl
 ./plex -tool equibind -input-dir testdata/binding/pdbind_processed_size1
 ./plex -tool equibind -input-dir testdata/binding/pdbind_processed_size2
