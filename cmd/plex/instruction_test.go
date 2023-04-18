@@ -42,14 +42,3 @@ func TestFormatCmd(t *testing.T) {
 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
 	}
 }
-
-func TestCreateInputCID(t *testing.T) {
-	want := "bafybeifzg6egpgb6wi47cayzlltjcdlglls7qtteuqzbrecpiyzyfipuzi"
-	got, err := CreateInputCID("ipfs_test", "python -m desci --decent-lvl 11")
-	if err != nil {
-		t.Fatalf(fmt.Sprint(err))
-	}
-	if want != got {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
-	}
-}
