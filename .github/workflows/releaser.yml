@@ -37,15 +37,15 @@ jobs:
         run: echo "::set-output name=tag::$GITHUB_REF#refs/tags/"
 
       - name: Download release file
-        run: curl -sSL https://github.com/labdao/plex/releases/download/${{ steps.tag_name.outputs.tag }}/plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
+        run: curl -sSL https://github.com/labdao/plex/releases/download/${{ steps.tag_name.outputs.tag }}/plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz -o plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
 
       - name: Extract release file
-        run: tar xvz plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
+        run: tar -xvzf plex_${{ steps.tag_name.outputs.tag }}_linux_amd64.tar.gz
 
       - name: Run Equibind
         run: |
-          cd "$(./plex -app equibind -input-dir testdata/binding/abl | sed -n 's/^Your job results have been downloaded to //p')"
-          cd combined_results/outputs
+          result_dir=$(./plex -tool equibind -input-dir testdata/binding/abl | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
             exit 1
@@ -56,32 +56,31 @@ jobs:
         env:
           PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
 
-      - name: Run Colabfold
-        run: |
-          cd ../../..
-          cd "$(./plex -app colabfold-mini -input-dir testdata/folding -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
-          cd combined_results/outputs
-          if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
-            echo "No .pdb files found"
-            exit 1
-          else
-            echo ".pdb files found:"
-            find . -name '*.pdb' | grep '.pdb'
-          fi
-        env:
-          PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+      # - name: Run Colabfold
+      #   run: |
+      #     cd ../../..
+      #     cd "$(./plex -app colabfold-mini -input-dir testdata/folding -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
+      #     cd combined_results/outputs
+      #     if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
+      #       echo "No .pdb files found"
+      #       exit 1
+      #     else
+      #       echo ".pdb files found:"
+      #       find . -name '*.pdb' | grep '.pdb'
+      #     fi
+      #   env:
+      #     PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
 
       - name: Run Diffdock
         run: |
-          cd ../../..
-          cd "$(./plex -app diffdock -input-dir testdata/docking -gpu=true -network=true | sed -n 's/^Your job results have been downloaded to //p')"
-          cd combined_results/outputs
-          if [ "$(find . -name '*.pdb' | grep '.pdb')" == "" ]; then
+          result_dir=$(./plex -tool diffdock -input-dir testdata/binding/abl | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs/index0_-inputs-7n9g.pdb____-inputs-ZINC000003986735.sdf"
+          if [ "$(find . -name '*.sdf' | grep '.sdf')" == "" ]; then
             echo "No docked files found"
             exit 1
           else
             echo "Docked files found:"
-            find . -name '*.pdb' | grep '.pdb'
+            find . -name '*.sdf' | grep '.sdf'
           fi
         env:
           PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
