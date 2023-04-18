@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 )
 
-func Run(toolPath, inputDir, ioJsonPath string, verbose bool, concurrency int) {
+func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency int) {
 	// Create plex working directory
 	id := uuid.New()
 	cwd, err := os.Getwd()
@@ -65,7 +65,7 @@ func Run(toolPath, inputDir, ioJsonPath string, verbose bool, concurrency int) {
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
 	fmt.Println("Processing IO Entries")
-	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath, verbose, concurrency)
+	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath, verbose, local, concurrency)
 	fmt.Printf("Finished processing, results written to %s", ioJsonPath)
 }
 
