@@ -2,9 +2,9 @@
 
 aws_configure_from_env() {
     # Check if .env file exists
-    if [ -f ../../.env ]; then
+    if [ -f ../.env ]; then
         # Export the secrets from .env file as environment variables
-        export $(grep -v '^#' ../../.env | xargs)
+        export $(grep -v '^#' ../.env | xargs)
 
         # Check if required variables are set
         if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ -z "${AWS_SECRET_ACCESS_KEY}" ] || [ -z "${AWS_DEFAULT_REGION}" ]; then
