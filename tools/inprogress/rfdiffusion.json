@@ -33,7 +33,7 @@
       "number_of_designs": {
         "type": "int",
         "item": "",
-        "default": "1"
+        "default": "3"
       }
     },
     "outputs": {
@@ -46,11 +46,6 @@
         "type": "File",
         "item": "",
         "glob": ["*_backbone_0.pdb"]
-      },
-      "protein": {
-        "type": "File", 
-        "item": "",
-        "glob": ["*.pdb"]
       }
     }
 }
