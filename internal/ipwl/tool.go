@@ -29,6 +29,7 @@ type Tool struct {
 	Arguments   []string              `json:"arguments"`
 	DockerPull  string                `json:"dockerPull"`
 	GpuBool     bool                  `json:"gpuBool"`
+	MemoryGB    *int                  `json:"memoryGB"`
 	NetworkBool bool                  `json:"networkBool"`
 	Inputs      map[string]ToolInput  `json:"inputs"`
 	Outputs     map[string]ToolOutput `json:"outputs"`
