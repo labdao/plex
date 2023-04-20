@@ -21,7 +21,7 @@ Build highly reproducible container workflows on top of a global compute network
         <img src="https://img.shields.io/twitter/follow/lab_dao?style=social&logo=twitter" alt="follow on Twitter">
     </a>
     <a href="https://discord.gg/labdao" alt="Discord">
-        <img src="https://img.shields.io/discord/907475456293470209?label=Discord&logo=discord&style=flat-square" />
+        <img src="https://dcbadge.vercel.app/api/server/labdao?compact=true&style=flat-square" />
     </a>
 </p>
 
