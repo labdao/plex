@@ -1,5 +1,5 @@
 # PLEX 🧫
-**Build highly reproducible container workflows on top of a decentralised compute network.**
+⚡**Build highly reproducible container workflows on top of a decentralised compute network.**⚡
 
 <p align="center">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
@@ -27,13 +27,13 @@
 
 
 PLEX is a simple client for distributed computation.
-* **Build once, run anywhere at any scale:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
-* **Strictly modular:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
-* **Content-addressed by default:** Every file processed by PLEX has a deterministic content-address. Keep track of your files and always share the right results with other scientists. 
+* 🌎**Build once, run anywhere at any scale:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
+* 🔗**Strictly modular:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
+* 🔍**Content-addressed by default:** Every file processed by PLEX has a deterministic content-address. Keep track of your files and always share the right results with other scientists. 
 
 PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by [Pydantic](https://docs.pydantic.dev/) and the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
 
-## PLEX in one minute
+## 🚀PLEX in one minute
 
 Install the client and adjust permissions.
 
@@ -47,12 +47,12 @@ Claim an access token and submit an example.
 ./plex -tool tools/equibind.json -input-dir ./testdata/binding/abl
 ```
 
-## Use-Cases
-* run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
-* run PLEX to run [small molecule docking](https://docs.labdao.xyz/small-molecule-binding/run-an-example) with equibind and diffdock
-* configure your containerised tool to run on PLEX
+## 💡Use-Cases
+* 🧬run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
+* 💊run PLEX to run [small molecule docking](https://docs.labdao.xyz/small-molecule-binding/run-an-example) with equibind and diffdock
+* 🐋configure your containerised tool to run on PLEX
 
-## Developer Guide
+## 🧑‍💻Developer Guide
 
 ### Building PLEX from source 
 
@@ -94,7 +94,7 @@ To download large bacalhau results the below command may need ran
 sudo sysctl -w net.core.rmem_max=2500000
 ```
 
-## Contributing 
+## 💁Contributing 
 PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining. 
 
 From time to time, we also post ```help-wanted``` bounty issues - please consider our [Bounty Policy](https://docs.labdao.xyz/about-us/bounty_policy) when engaging with LabDAO.
