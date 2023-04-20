@@ -11,11 +11,11 @@ Build highly reproducible container workflows on top of a global compute network
     <a href="https://github.com/labdao/plex/pulse" alt="Activity">
         <img src="https://img.shields.io/github/commit-activity/m/labdao/plex" />
     </a>
-    <a href="https://github.com/labdao/plex/actions/workflows/go.yml" alt="Tests">
-        <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
-    </a>
     <a href="https://img.shields.io/github/downloads/labdao/plex/total">
         <img src="https://img.shields.io/github/downloads/labdao/plex/total" alt="total download">
+    </a>
+    <a href="https://github.com/labdao/plex/actions/workflows/go.yml" alt="Tests">
+        <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
     </a>
     <a href="https://twitter.com/intent/follow?screen_name=lab_dao">
         <img src="https://img.shields.io/twitter/follow/lab_dao?style=social&logo=twitter" alt="follow on Twitter">
