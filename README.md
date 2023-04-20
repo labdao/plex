@@ -1,5 +1,5 @@
 # PLEX 🧫
-Build highly reproducible container workflows on top of a global compute network.
+**Build highly reproducible container workflows on top of a decentralised compute network.**
 
 <p align="center">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
