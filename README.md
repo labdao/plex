@@ -27,8 +27,8 @@
 
 
 PLEX is a simple client for distributed computation.
-* 🌎**Build once, run anywhere at any scale:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
-* 🔗**Strictly modular:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
+* 🌎**Build once, run anywhere at any scale:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered. Want to contribute your own compute? Keep reading. 
+* 🔗**Strictly composable:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
 * 🔍**Content-addressed by default:** Every file processed by PLEX has a deterministic content-address. Keep track of your files and always share the right results with other scientists. 
 
 PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by [Pydantic](https://docs.pydantic.dev/) and the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
