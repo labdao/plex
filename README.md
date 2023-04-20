@@ -1,7 +1,7 @@
 # PLEX 🧫
 ⚡ **Build highly reproducible container workflows on top of a decentralised compute network.** ⚡
 
-<p align="center">
+<p align="left">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
         <img src="https://img.shields.io/badge/license-MIT-green" />
     </a>
