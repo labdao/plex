@@ -13,12 +13,12 @@
        "protein": {
             "type": "File",
             "item": "",
-            "glob": "*.pdb"
+            "glob": ["*.pdb"]
       },
        "best_docked_small_molecule": {
             "type": "File",
             "item": "",
-            "glob": "rank1_confidence-*.sdf"
+            "glob": ["rank1_confidence-*.sdf"]
       },  
       "exhaustiveness": {
         "type": "int",
@@ -33,7 +33,7 @@
       "docked_scored_sdf": {
         "type": "File",
         "item": "",
-        "glob": "*_docked_scored.sdf"
+        "glob": ["*_docked_scored.sdf"]
       }
     }
   }
