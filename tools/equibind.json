@@ -21,7 +21,7 @@
       "small_molecule": {
         "type": "File",
         "item": "",
-        "glob": ["*.sdf", "*.mol2"]
+        "glob": ["*.sdf"]
       }
     },
     "outputs": {
