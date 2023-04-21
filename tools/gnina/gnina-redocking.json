@@ -4,7 +4,7 @@
     "description": "Protein-ligand docking using Gnina",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "gnina -r $(inputs.protein.filepath) -l $(inputs.small_molecule.filepath) --exhaustiveness $(inputs.exhaustiveness.default) --autobox_ligand $(inputs.best_docked_small_molecule.filepath) --cnn_scoring $(inputs.cnn_scoring.default) -o /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked_scored.sdf"
+      "gnina -r $(inputs.protein.filepath) -l $(inputs.best_docked_small_molecule.filepath) --exhaustiveness $(inputs.exhaustiveness.default) --autobox_ligand $(inputs.best_docked_small_molecule.filepath) --cnn_scoring $(inputs.cnn_scoring.default) -o /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked_scored.sdf"
     ],
     "dockerPull": "gnina/gnina:v1.0.1",
     "gpuBool": false,
