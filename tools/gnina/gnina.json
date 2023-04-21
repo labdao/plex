@@ -12,7 +12,7 @@
     "inputs": {
        "protein": {
             "type": "File",
-            "glob": "*.pdb"
+            "glob": ["*.pdb"]
       },
        "small_molecule": {
             "type": "File",
@@ -30,7 +30,7 @@
     "outputs": {
       "docked_scored_sdf": {
         "type": "File",
-        "glob": "*_docked_scored.sdf"
+        "glob": ["*_docked_scored.sdf"]
       }
     }
   }
