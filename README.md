@@ -47,6 +47,8 @@ Claim an access token and submit an example.
 ./plex -tool tools/equibind.json -input-dir ./testdata/binding/abl
 ```
 
+![Getting Started](./readme-getting-started-2x.gif)
+
 ## 💡 Use-Cases
 * 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
 * 💊 run PLEX to run [small molecule docking](https://docs.labdao.xyz/small-molecule-binding/run-an-example) with equibind and diffdock
@@ -54,7 +56,7 @@ Claim an access token and submit an example.
 
 ## 🧑‍💻 Developer Guide
 
-### Building PLEX from source 
+### Building PLEX from source
 
 ```
 git clone https://github.com/labdao/plex
