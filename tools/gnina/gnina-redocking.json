@@ -6,25 +6,19 @@
     "arguments": [
       "gnina -r $(inputs.protein.path) -l $(inputs.small_molecule.path) --exhaustiveness $(inputs.exhaustiveness.default) --autobox_ligand $(inputs.best_docked_small_molecule.path) --cnn_scoring $(inputs.cnn_scoring) -o /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_docked_scored.sdf"
     ],
-    "requirements": [
-      {
-        "class": "DockerRequirement",
-        "dockerPull": "gnina/gnina:v1.0.1"
-      },
-      {
-        "class": "ResourceRequirement",
-        "gpuBool": false,
-        "networkBool": false
-      }
-    ],
+    "dockerPull": "gnina/gnina:v1.0.1",
+    "gpuBool": false,
+    "networkBool": false,
     "inputs": {
        "protein": {
             "type": "File",
+            "item": "",
             "glob": "*.pdb"
       },
        "best_docked_small_molecule": {
             "type": "File",
-            "glob": ["rank1_confidence-*.sdf"]
+            "item": "",
+            "glob": "rank1_confidence-*.sdf"
       },  
       "exhaustiveness": {
         "type": "int",
@@ -38,6 +32,7 @@
     "outputs": {
       "docked_scored_sdf": {
         "type": "File",
+        "item": "",
         "glob": "*_docked_scored.sdf"
       }
     }

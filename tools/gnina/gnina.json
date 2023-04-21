@@ -6,17 +6,9 @@
     "arguments": [
       "gnina -r $(inputs.protein.path) -l $(inputs.small_molecule.path) --exhaustiveness $(inputs.exhaustiveness) --autobox_ligand $(inputs.protein.path) --cnn_scoring $(inputs.cnn_scoring) -o /outputs/$(inputs.protein.nameroot)_$(inputs.small_molecule.nameroot)_docked_scored.sdf",
     ],
-    "requirements": [
-      {
-        "class": "DockerRequirement",
-        "dockerPull": "gnina/gnina:v1.0.1"
-      },
-      {
-        "class": "ResourceRequirement",
-        "gpuBool": false,
-        "networkBool": false
-      }
-    ],
+    "dockerPull": "gnina/gnina:v1.0.1",
+    "gpuBool": false,
+    "networkBool": false,
     "inputs": {
        "protein": {
             "type": "File",
