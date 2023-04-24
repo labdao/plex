@@ -29,15 +29,14 @@ func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency
 	fmt.Println("Created job directory: ", workDirPath)
 
 	// first thing to generate io json and save to plex work dir
-	fmt.Println("Reading tool config: ", toolPath)
-	toolConfig, err := ipwl.ReadToolConfig(toolPath)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-
 	var ioEntries []ipwl.IO
-	if inputDir != "" {
+	if toolPath != "" {
+		fmt.Println("Reading tool config: ", toolPath)
+		toolConfig, err := ipwl.ReadToolConfig(toolPath)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
 		fmt.Println("Creating IO Entries from input directory: ", inputDir)
 		ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolPath, layers)
 		if err != nil {
