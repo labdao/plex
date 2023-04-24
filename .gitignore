@@ -218,3 +218,6 @@ job.yaml
 
 # Recordings
 *.cast
+
+# Do not ignore the following files
+!*.gif

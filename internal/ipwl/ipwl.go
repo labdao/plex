@@ -128,7 +128,15 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, lo
 			fmt.Printf("Generated cmd: %s\n", cmd)
 		}
 
-		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, 12, toolConfig.GpuBool, toolConfig.NetworkBool)
+		// this memory type conversion is for backwards compatibility with the -app flag
+		var memory int
+		if toolConfig.MemoryGB == nil {
+			memory = 0
+		} else {
+			memory = *toolConfig.MemoryGB
+		}
+
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, memory, toolConfig.GpuBool, toolConfig.NetworkBool)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error creating Bacalhau job: %w", err)

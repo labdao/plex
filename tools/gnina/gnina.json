@@ -1,0 +1,37 @@
+{
+    "class": "CommandLineTool",
+    "name": "gnina",
+    "description": "Protein-ligand docking using Gnina",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "gnina -r $(inputs.protein.filepath) -l $(inputs.small_molecule.filepath) --exhaustiveness $(inputs.exhaustiveness.default) --autobox_ligand $(inputs.protein.filepath) --cnn_scoring $(inputs.cnn_scoring.default) -o /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked_scored.sdf"
+    ],
+    "dockerPull": "gnina/gnina:v1.0.1",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+       "protein": {
+            "type": "File",
+            "glob": ["*.pdb"]
+      },
+       "small_molecule": {
+            "type": "File",
+            "glob": ["*.sdf", "*.mol2"]
+      },  
+      "exhaustiveness": {
+        "type": "int",
+        "default": "32"
+      },
+      "cnn_scoring": {
+        "type": "string",
+        "default": "rescore"
+      }
+    },
+    "outputs": {
+      "docked_scored_sdf": {
+        "type": "File",
+        "glob": ["*_docked_scored.sdf"]
+      }
+    }
+  }
+  
