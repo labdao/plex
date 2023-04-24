@@ -198,7 +198,7 @@ testJuypterInstall() {
 
 runJuypter() {
     jupyter notebook password
-    screen -dmS jupyter jupyter lab --ip=0.0.0.0
+    screen -dmS jupyter jupyter lab --ip=0.0.0.0 --notebook-dir=/home/ubuntu
 }
 
 printLogo() {
