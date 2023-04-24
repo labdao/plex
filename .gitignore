@@ -221,3 +221,11 @@ job.yaml
 
 # Do not ignore the following files
 !*.gif
+
+# Docusaurus files
+docs/*.code-workspace
+docs/atoms/.DS_Store
+docs/.DS_Store
+docs/build/
+docs/node_modules/
+docs/.docusaurus/
