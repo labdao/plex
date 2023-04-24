@@ -1,0 +1,6 @@
+[submodule "docs/_projects/assets"]
+	path = docs/_projects/assets
+	url = https://github.com/labdao/assets.git
+[submodule "docs/_tools/salmon"]
+	path = docs/_tools/salmon
+	url = https://github.com/labdao-apps/salmon
