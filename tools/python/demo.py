@@ -65,11 +65,11 @@ def get(json_file: str) -> IOModel:
     return io_instance
 
 # Example usage
-io_example = get(json_file='io_example.json')
-print(io_example)
+equibind = get(json_file='equibind_io.json')
+print(equibind)
 
-io_example.run(
+equibind.run(
     protein='/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb',
     small_molecule='/Users/rindtorff/plex/testdata/binding/abl/ZINC000003986735.sdf'
 )
-print(io_example)
+print(equibind)
