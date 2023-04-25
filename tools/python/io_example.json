@@ -1,0 +1,28 @@
+[
+    {
+      "outputs": {
+        "best_docked_small_molecule": {
+          "class": "File",
+          "filepath": ""
+        },
+        "protein": {
+          "class": "File",
+          "filepath": ""
+        }
+      },
+      "tool": "tools/equibind.json",
+      "inputs": {
+        "protein": {
+          "class": "File",
+          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb"
+        },
+        "small_molecule": {
+          "class": "File",
+          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf"
+        }
+      },
+      "state": "processing",
+      "errMsg": ""
+    }
+]
+  
