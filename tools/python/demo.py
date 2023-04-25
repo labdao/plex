@@ -37,8 +37,13 @@ class IOModel(BaseModel):
                 setattr(self.inputs, key, self.inputs.__getattribute__(key).copy(update={'filepath': value}))
             else:
                 raise ValueError(f"Invalid key: {key}. Cannot update filepath.")
+        
+        # Re-validate the entire IOModel instance
+        updated_data = self.dict(by_alias=True)
+        return IOModel.parse_obj(updated_data)   
     
     def run(self, **kwargs) -> None:
+        print("Running")
         # Update the filepaths
         self.update_filepaths(**kwargs)
         
