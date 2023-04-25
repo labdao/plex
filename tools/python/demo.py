@@ -1,41 +1,9 @@
+from typing import List
+from pydantic import BaseModel, FilePath, Field
 import json
 from typing import Dict, List, Any
-from pydantic import BaseModel, FilePath, Field
 from pydantic import validator
 from validators import validate_protein, validate_small_molecule
-
-# Load the JSON data
-json_data = """
-[
-    {
-      "outputs": {
-        "best_docked_small_molecule": {
-          "class": "File",
-          "filepath": ""
-        },
-        "protein": {
-          "class": "File",
-          "filepath": ""
-        }
-      },
-      "tool": "tools/equibind.json",
-      "inputs": {
-        "protein": {
-          "class": "File",
-          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb"
-        },
-        "small_molecule": {
-          "class": "File",
-          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf"
-        }
-      },
-      "state": "processing",
-      "errMsg": ""
-    }
-]
-"""
-
-data = json.loads(json_data)
 
 # Validation classes and functions
 class File(BaseModel):
@@ -63,7 +31,40 @@ class IOModel(BaseModel):
     state: str
     errMsg: str
 
-# Validate the entire IOModel
-for item in data:
-    io_instance = IOModel.parse_obj(item)
-    print(io_instance)
+    def update_filepaths(self, **kwargs) -> None:
+        for key, value in kwargs.items():
+            if hasattr(self.inputs, key):
+                setattr(self.inputs, key, self.inputs.__getattribute__(key).copy(update={'filepath': value}))
+            else:
+                raise ValueError(f"Invalid key: {key}. Cannot update filepath.")
+    
+    def run(self, **kwargs) -> None:
+        # Update the filepaths
+        self.update_filepaths(**kwargs)
+        
+        # Run the tool
+        # TODO call plex.run()
+        print("I would be running the tool now. Below is the updated IOModel:")
+        
+
+def get(json_file: str) -> IOModel:
+    # Read the JSON data from the file
+    with open(json_file, 'r') as f:
+        data = json.load(f)
+    
+    # Select the first dictionary in the list
+    first_item = data[0]
+    
+    # Validate the dictionary and return an IOModel instance
+    io_instance = IOModel.parse_obj(first_item)
+    return io_instance
+
+# Example usage
+io_example = get(json_file='io_example.json')
+print(io_example)
+
+io_example.run(
+    protein='/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb',
+    small_molecule='/Users/rindtorff/plex/testdata/binding/abl/ZINC000003986735.sdf'
+)
+print(io_example)

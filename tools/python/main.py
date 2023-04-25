@@ -1,19 +1,73 @@
 import json
-from io_model import IOModel
+from typing import Dict, List, Any
+from pydantic import BaseModel, FilePath, Field
+from pydantic import validator
+from validators import validate_protein, validate_small_molecule
 
-# Load the JSON data from the example file
-with open("io_example.json", "r") as f:
-    example_data = json.load(f)
+# Load the JSON data
+json_data = """
+[
+    {
+      "outputs": {
+        "best_docked_small_molecule": {
+          "class": "File",
+          "filepath": ""
+        },
+        "protein": {
+          "class": "File",
+          "filepath": ""
+        }
+      },
+      "tool": "tools/equibind.json",
+      "inputs": {
+        "protein": {
+          "class": "File",
+          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb"
+        },
+        "small_molecule": {
+          "class": "File",
+          "filepath": "/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_ligand.sdf"
+        }
+      },
+      "state": "processing",
+      "errMsg": ""
+    }
+]
+"""
 
-# Create an IOModel instance from the loaded data
-io_instance = IOModel.parse_obj(example_data[0])
+data = json.loads(json_data)
 
-# Change the filepath of the small molecule input
-io_instance.inputs["small_molecule"]["filepath"] = "/new/path/to/small_molecule.sdf"
+# Validation classes and functions
+class File(BaseModel):
+    class_: str = Field(..., alias='class')
+    filepath: FilePath
 
-# Update the example data with the modified IOModel instance
-example_data[0] = io_instance.dict()
+class Inputs(BaseModel):
+    protein: File
+    small_molecule: File
 
-# Save the updated data back to the JSON file
-with open("io_example_updated.json", "w") as f:
-    json.dump(example_data, f, indent=2)
+    @validator('protein', pre=True)
+    def validate_protein(cls, file):
+        print("Validating protein")
+        return validate_protein(file)
+
+    @validator('small_molecule', pre=True)
+    def validate_small_molecule(cls, file):
+        print("Validating small_molecule")
+        return validate_small_molecule(file)
+
+class IOModel(BaseModel):
+    inputs: Inputs  # Use the Inputs model
+    outputs: Dict[str, Any]
+    tool: str
+    state: str
+    errMsg: str
+
+# Validate the entire IOModel
+for item in data:
+    try:
+        io_instance = IOModel.parse_obj(item)
+        print("IOModel validated")
+        print(io_instance)
+    except Exception as e:
+        print(e)
