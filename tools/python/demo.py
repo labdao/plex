@@ -42,20 +42,13 @@ class File(BaseModel):
     class_: str = Field(..., alias='class')
     filepath: FilePath
 
-class Inputs(BaseModel):
-    items: Dict[str, File]
-
-    @validator('items', pre=True)
-    def validate_files(cls, items):
-        validator_dict = {
-            name: globals().get(f"validate_{name}", None)
-            for name in items.keys()
-        }
-        for name, file in items.items():
-            validator_func = validator_dict.get(name)
-            if validator_func:
-                file = validator_func(file)
-        return items
+class Inputs(Dict[str, File]):
+    @validator('*', pre=True, whole=True)  # Use '*' to apply the validator to every key-value pair
+    def validate_files(cls, file, field_name):
+        validator_func = globals().get(f"validate_{field_name}", None)
+        if validator_func:
+            file = validator_func(file)
+        return file
 
 class IOModel(BaseModel):
     inputs: Inputs  # Use the Inputs model
@@ -63,13 +56,6 @@ class IOModel(BaseModel):
     tool: str
     state: str
     errMsg: str
-
-# Validate the inputs section
-for item in data:
-    inputs = item.get("inputs", None)
-    if inputs:
-        inputs_instance = Inputs(items=inputs)
-        print(inputs_instance)
 
 # Validate the entire IOModel
 for item in data:
