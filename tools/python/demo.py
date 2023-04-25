@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List
+from typing import Dict, List, Any
 from pydantic import BaseModel, FilePath, Field
 from pydantic import validator
 from validators import *
@@ -57,9 +57,21 @@ class Inputs(BaseModel):
                 file = validator_func(file)
         return items
 
+class IOModel(BaseModel):
+    inputs: Inputs  # Use the Inputs model
+    outputs: Dict[str, Any]
+    tool: str
+    state: str
+    errMsg: str
+
 # Validate the inputs section
 for item in data:
     inputs = item.get("inputs", None)
     if inputs:
         inputs_instance = Inputs(items=inputs)
         print(inputs_instance)
+
+# Validate the entire IOModel
+for item in data:
+    io_instance = IOModel.parse_obj(item)
+    print(io_instance)
