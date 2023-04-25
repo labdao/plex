@@ -43,7 +43,7 @@ class File(BaseModel):
     filepath: FilePath
 
 class Inputs(Dict[str, File]):
-    @validator('*', pre=True, whole=True)  # Use '*' to apply the validator to every key-value pair
+    @validator('*', pre=True)  # Use '*' to apply the validator to every key-value pair
     def validate_files(cls, file, field_name):
         validator_func = globals().get(f"validate_{field_name}", None)
         if validator_func:
