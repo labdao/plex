@@ -1,4 +1,4 @@
-# PLEX 🧫
+# PLEX 🧫×🧬->💊
 ⚡ **Build highly reproducible container workflows on top of a decentralised compute network.** ⚡
 
 <p align="left">
