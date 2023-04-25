@@ -2,7 +2,7 @@ import json
 from typing import Dict, List, Any
 from pydantic import BaseModel, FilePath, Field
 from pydantic import validator
-from validators import *
+from validators import validate_protein, validate_small_molecule
 
 # Load the JSON data
 json_data = """
@@ -42,13 +42,19 @@ class File(BaseModel):
     class_: str = Field(..., alias='class')
     filepath: FilePath
 
-class Inputs(Dict[str, File]):
-    @validator('*', pre=True)  # Use '*' to apply the validator to every key-value pair
-    def validate_files(cls, file, field_name):
-        validator_func = globals().get(f"validate_{field_name}", None)
-        if validator_func:
-            file = validator_func(file)
-        return file
+class Inputs(BaseModel):
+    protein: File
+    small_molecule: File
+
+    @validator('protein', pre=True)
+    def validate_protein(cls, file):
+        print("Validating protein")
+        return validate_protein(file)
+
+    @validator('small_molecule', pre=True)
+    def validate_small_molecule(cls, file):
+        print("Validating small_molecule")
+        return validate_small_molecule(file)
 
 class IOModel(BaseModel):
     inputs: Inputs  # Use the Inputs model
