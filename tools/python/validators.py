@@ -26,19 +26,3 @@ def validate_small_molecule(file):
     except Exception as e:
         raise ValueError(f"Invalid SDF file: {e}")
     return file
-
-# Add more validator functions for other file types as needed
-
-@validator('items', pre=True)
-def validate_files(cls, items):
-    # Create a dictionary of validator functions
-    validator_dict = {
-        name: globals().get(f"validate_{name}", None)
-        for name in items.keys()
-    }
-    # Apply specific validation rules based on the name of the file
-    for name, file in items.items():
-        validator_func = validator_dict.get(name)
-        if validator_func:
-            file = validator_func(file)
-    return items
