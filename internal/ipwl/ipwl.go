@@ -128,7 +128,15 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, lo
 			fmt.Printf("Generated cmd: %s\n", cmd)
 		}
 
-		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, 12, toolConfig.GpuBool, toolConfig.NetworkBool)
+		// this memory type conversion is for backwards compatibility with the -app flag
+		var memory int
+		if toolConfig.MemoryGB == nil {
+			memory = 0
+		} else {
+			memory = *toolConfig.MemoryGB
+		}
+
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, memory, toolConfig.GpuBool, toolConfig.NetworkBool)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error creating Bacalhau job: %w", err)
@@ -210,46 +218,23 @@ func copyFile(srcPath, destPath string) error {
 }
 
 func cleanBacalhauOutputDir(outputsDirPath string) error {
-	combinedResultsPath := filepath.Join(outputsDirPath, "combined_results")
-	outputsInsideCombinedResults := filepath.Join(combinedResultsPath, "outputs")
-	stderrPath := filepath.Join(combinedResultsPath, "stderr")
-	stdoutPath := filepath.Join(combinedResultsPath, "stdout")
+	bacalOutputsDirPath := filepath.Join(outputsDirPath, "outputs")
 
-	// Move files from combined_results/outputs to outputsDirPath
-	files, err := ioutil.ReadDir(outputsInsideCombinedResults)
+	// Move files from /outputs to outputsDirPath
+	files, err := ioutil.ReadDir(bacalOutputsDirPath)
 	if err != nil {
 		return err
 	}
 
 	for _, file := range files {
-		src := filepath.Join(outputsInsideCombinedResults, file.Name())
+		src := filepath.Join(bacalOutputsDirPath, file.Name())
 		dst := filepath.Join(outputsDirPath, file.Name())
 		if err := os.Rename(src, dst); err != nil {
 			return err
 		}
 	}
 
-	// Move stderr and stdout files to outputsDirPath
-	if err := os.Rename(stderrPath, filepath.Join(outputsDirPath, "stderr")); err != nil {
-		return err
-	}
-
-	if err := os.Rename(stdoutPath, filepath.Join(outputsDirPath, "stdout")); err != nil {
-		return err
-	}
-
-	// Delete per_shard and raw directories if they exist
-	for _, dir := range []string{"per_shard", "raw"} {
-		dirPath := filepath.Join(outputsDirPath, dir)
-		if _, err := os.Stat(dirPath); err == nil {
-			if err := os.RemoveAll(dirPath); err != nil {
-				return err
-			}
-		}
-	}
-
-	// Remove combined_results directory
-	if err := os.RemoveAll(combinedResultsPath); err != nil {
+	if err := os.RemoveAll(bacalOutputsDirPath); err != nil {
 		return err
 	}
 

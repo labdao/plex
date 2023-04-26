@@ -90,9 +90,9 @@ EONG
 
 installGolang() {
     echo "Installing GoLang"
-    wget https://go.dev/dl/go1.19.6.linux-amd64.tar.gz
-    sudo tar -C /usr/local -xvzf go1.19.6.linux-amd64.tar.gz
-    rm go1.19.6.linux-amd64.tar.gz
+    wget https://go.dev/dl/go1.20.3.linux-amd64.tar.gz
+    sudo tar -C /usr/local -xvzf go1.20.3.linux-amd64.tar.gz
+    rm go1.20.3.linux-amd64.tar.gz
     export PATH=$PATH:/usr/local/go/bin # for current shell
     echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashr # for future shells
 }
@@ -159,11 +159,13 @@ runBacalhau() {
     if [ $PLEX_ENV = "prod" ]; then
         owner="labdao"
     fi
+    export owner=$owner // so that we have the variable on restarts
+    echo "export owner=$owner" >> ~/.bashrc # for future shells
     screen -dmS bacalhau bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner
 }
 
 installConda() {
-    # maybe switch to miniconda
+    # maybe switch to miniconda, this can take while to install for some reason
     echo "Installing Conda"
     wget https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
     bash Anaconda3-2022.10-Linux-x86_64.sh -b
@@ -196,7 +198,7 @@ testJuypterInstall() {
 
 runJuypter() {
     jupyter notebook password
-    screen -dmS jupyter jupyter lab --ip=0.0.0.0
+    screen -dmS jupyter jupyter lab --ip=0.0.0.0 --notebook-dir=/home/ubuntu
 }
 
 printLogo() {
