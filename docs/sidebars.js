@@ -48,7 +48,7 @@ const sidebars = {
       type: 'category',
       label: 'Get Involved',
       items: [
-        'get-involved/ways-to-get-involved',
+        // 'get-involved/ways-to-get-involved',
         'get-involved/how-to-contribute-a-tool',
       ]
     },
