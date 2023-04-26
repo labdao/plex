@@ -22,6 +22,18 @@ jobs:
         with:
           go-version: '>=1.20.3'
           cache: true
+
+      - name: Validate Plex version and tag
+        run: |
+          current_version=$(grep -oP 'CurrentPlexVersion\s*=\s*"\K[^"]+' upgrade.go)
+          tag_name=${GITHUB_REF#refs/tags/}
+
+          if [ "$current_version" != "$tag_name" ]; then
+            echo "CurrentPlexVersion in upgrade.go ($current_version) does not match tag ($tag_name)"
+            exit 1
+          else
+            echo "CurrentPlexVersion in upgrade.go ($current_version) matches tag ($tag_name)"
+          fi
           
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
