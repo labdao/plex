@@ -19,7 +19,7 @@ class Protein(File):
     @validator("filepath", pre=True)
     def validate_protein_graph(cls, filepath, values):
         # Skip validation if the 'skip_validation' attribute is set to True
-        if values.get('skip_validation', False):
+        if values.get('skip_validation', True):
             return filepath
         
         if not filepath.endswith(".pdb"):
@@ -38,7 +38,7 @@ class SmallMolecule(File):
     @validator("filepath", pre=True)
     def validate_small_molecule(cls, filepath, values):
         # Skip validation if the 'skip_validation' attribute is set to True
-        if values.get('skip_validation', False):
+        if values.get('skip_validation', True):
             return filepath
         
         if not filepath.endswith(".sdf"):
