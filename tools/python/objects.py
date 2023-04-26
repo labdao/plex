@@ -14,11 +14,16 @@ class File(BaseModel):
     filepath: FilePath
 
 class Protein(File):
+    skip_validation: bool = False  # New attribute to control validation
+
     @validator("filepath", pre=True)
-    def validate_protein_graph(cls, filepath):
+    def validate_protein_graph(cls, filepath, values):
+        # Skip validation if the 'skip_validation' attribute is set to True
+        if values.get('skip_validation', False):
+            return filepath
+        
         if not filepath.endswith(".pdb"):
             raise ValueError(f"'protein' field: {filepath} is not a PDB file. Please ensure the file has a .pdb extension.")
-
         try:
             # Use BioPandas to read the PDB file
             ppdb = PandasPdb()
@@ -28,11 +33,16 @@ class Protein(File):
         return filepath
 
 class SmallMolecule(File):
+    skip_validation: bool = False  # New attribute to control validation
+
     @validator("filepath", pre=True)
-    def validate_small_molecule(cls, filepath):
+    def validate_small_molecule(cls, filepath, values):
+        # Skip validation if the 'skip_validation' attribute is set to True
+        if values.get('skip_validation', False):
+            return filepath
+        
         if not filepath.endswith(".sdf"):
             raise ValueError(f"'small_molecule' field: {filepath} is not an SDF file. Please ensure the file has a .sdf extension.")
-
         try:
             # Use RDKit to read the SDF file
             suppl = Chem.SDMolSupplier(filepath)
@@ -44,6 +54,7 @@ class SmallMolecule(File):
         except Exception as e:
             raise ValueError(f"Invalid SDF file for 'small_molecule' field: {filepath}. Error: {e}. Please ensure the file is a valid SDF file.")
         return filepath
+
 
 # TODO need generalisable composability of inputs, specific to the tool that is being used
 class Inputs(BaseModel):

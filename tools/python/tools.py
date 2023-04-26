@@ -13,8 +13,8 @@ def equibind(path_to_json: str, protein_filepaths: List[str], small_molecule_fil
     # Iterate over the protein and small molecule filepaths
     for protein_filepath, small_molecule_filepath in zip(protein_filepaths, small_molecule_filepaths):
         # Create instances of the Protein and SmallMolecule classes
-        protein = Protein(filepath=protein_filepath)
-        small_molecule = SmallMolecule(filepath=small_molecule_filepath)
+        protein = Protein(filepath=protein_filepath, skip_validation=True)
+        small_molecule = SmallMolecule(filepath=small_molecule_filepath, skip_validation=True)
         
         # Create an instance of the Inputs class
         inputs = Inputs(
