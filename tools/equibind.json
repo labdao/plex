@@ -4,12 +4,16 @@
     "description": "Docking of small molecules to a protein",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
-      "mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked.$(inputs.small_molecule.ext);",
-      "cp $(inputs.protein.filepath) /outputs/;",
-      "rmdir /outputs/dummy;"
-    ],
-    "dockerPull": "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07",
+      "mkdir -p /tmp-inputs/tmp;",
+      "mkdir -p /tmp-outputs/tmp;",
+      "mv /inputs/* /tmp-inputs/tmp/;",
+      "cd /tmp-inputs/tmp && for f in *.pdb; do mv \\\"$f\\\" \\\"protein_${f}\\\"; done && cd /src;",
+      "cd /tmp-inputs/tmp && for f in *.sdf *.mol2; do [ -f \\\"$f\\\" ] && mv \\\"$f\\\" \\\"ligand_${f}\\\"; done && cd /src;",
+      "python inference.py --config=configs_clean/bacalhau.yml;",
+      "mv /tmp-outputs/tmp/* /outputs/;",
+      "mv /outputs/lig_equibind_corrected.sdf /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked.$(inputs.small_molecule.ext);",
+      "mv /tmp-inputs/tmp/*.pdb /outputs/;"],
+    "dockerPull": "ghcr.io/labdao/equibind@sha256:f488d755218543fa1f2962424c90b3b62d866f316ae34f8a8ee1e6688c75d55a",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
