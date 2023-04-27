@@ -7,18 +7,7 @@ from fastapi.encoders import jsonable_encoder
 # Import the Protein and SmallMolecule classes from the objects module
 from objects import Protein, SmallMolecule, File
 
-# Define the Tool class
-class Tool(BaseModel):
-    class_: str = Field(alias="class")
-    name: str
-    description: str
-    baseCommand: List[str]
-    arguments: List[str]
-    dockerPull: str
-    gpuBool: bool
-    networkBool: bool
-    inputs: Dict[str, Dict[str, Union[str, List[str]]]]
-    outputs: Dict[str, Dict[str, Union[str, List[str]]]]
+
 
 class IOModel(BaseModel):
     inputs: Dict[str, Any]  # Use a dictionary to store dynamic inputs
