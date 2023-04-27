@@ -31,7 +31,7 @@
     "best_docked_small_molecule": {
       "type": "File",
       "item": "",
-      "glob": ["*_docked.sdf"]
+      "glob": ["*_docked.sdf", "*_docked.mol2"]
     },
     "protein": {
       "type": "File", 
