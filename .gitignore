@@ -210,7 +210,7 @@ dist/
 
 # Job files
 job-*
-*-*-*-*
+/*-*-*-*
 job.yaml
 
 # Tool manifest
@@ -218,6 +218,14 @@ job.yaml
 
 # Recordings
 *.cast
+
+# Docusaurus files
+docs/*.code-workspace
+docs/atoms/.DS_Store
+docs/.DS_Store
+docs/build/
+docs/node_modules/
+docs/.docusaurus/
 
 # Do not ignore the following files
 !*.gif
