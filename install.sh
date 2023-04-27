@@ -65,7 +65,16 @@ getInstructionsTemplateJsonl() {
     cd ..
 }
 
+getTools() {
+    echo "Downloading tools..."
+    mkdir -p tools
+    curl -sL -O https://github.com/labdao/plex/archive/refs/heads/main.zip
+    unzip -qq main.zip && mv plex-main/tools/*.json tools/ && rm -rf plex-main
+    rm -f main.zip
+}
+
 getTestData() {
+    echo "Downloading test data..."
     mkdir -p testdata
     curl -sL -O https://github.com/labdao/plex/archive/refs/heads/main.zip
     unzip -qq main.zip && mv plex-main/testdata/* testdata/ && rm -rf plex-main
@@ -130,6 +139,7 @@ downloadPlex
 getAppJsonl
 getInstructionsTemplateJsonl
 getTestData
+getTools
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
@@ -142,4 +152,4 @@ echo "3. [Linux only] If you recieve a warning about download speeds on Linux yo
 echo "sudo sysctl -w net.core.rmem_max=2500000"
 
 echo "After these steps, you're ready to generate computational biology data! Run the following command to run Equibind on test data:"
-echo "./plex -app equibind -input-dir ./testdata/binding/pdbbind_processed_size1/"
+echo "./plex -tool equibind -input-dir testdata/binding/abl"

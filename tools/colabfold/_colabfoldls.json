@@ -24,7 +24,7 @@
       },
       "recycle": {
         "type": "int",
-        "default": 3
+        "default": "3"
       }
     },
     "outputs": {

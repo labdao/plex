@@ -1,19 +1,33 @@
 package ipwl
 
 import (
+	"io/ioutil"
 	"log"
 	"path/filepath"
 )
 
-func findMatchingFiles(inputDir string, tool Tool) (map[string][]string, error) {
+func findMatchingFiles(inputDir string, tool Tool, layers int) (map[string][]string, error) {
 	inputFilepaths := make(map[string][]string)
+
+	err := searchMatchingFiles(inputDir, tool, layers, 0, inputFilepaths)
+	if err != nil {
+		return nil, err
+	}
+
+	return inputFilepaths, nil
+}
+
+func searchMatchingFiles(inputDir string, tool Tool, layers int, currentLayer int, inputFilepaths map[string][]string) error {
+	if currentLayer > layers {
+		return nil
+	}
 
 	for inputName, input := range tool.Inputs {
 		if input.Type == "File" {
 			for _, globPattern := range input.Glob {
 				matches, err := filepath.Glob(filepath.Join(inputDir, globPattern))
 				if err != nil {
-					return nil, err
+					return err
 				}
 
 				inputFilepaths[inputName] = append(inputFilepaths[inputName], matches...)
@@ -21,7 +35,22 @@ func findMatchingFiles(inputDir string, tool Tool) (map[string][]string, error) 
 		}
 	}
 
-	return inputFilepaths, nil
+	// Search subdirectories
+	subDirs, err := ioutil.ReadDir(inputDir)
+	if err != nil {
+		return err
+	}
+
+	for _, subDir := range subDirs {
+		if subDir.IsDir() {
+			err := searchMatchingFiles(filepath.Join(inputDir, subDir.Name()), tool, layers, currentLayer+1, inputFilepaths)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func generateCombinationsRecursive(keys []string, values map[string][]string, index int, combination map[string]string, combinations *[]map[string]string) {
@@ -96,8 +125,8 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 	return ioData
 }
 
-func CreateIOJson(inputDir string, tool Tool, toolPath string) ([]IO, error) {
-	inputFilepaths, err := findMatchingFiles(inputDir, tool)
+func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {
+	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
 	if err != nil {
 		return nil, err
 	}

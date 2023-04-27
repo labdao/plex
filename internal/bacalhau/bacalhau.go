@@ -12,16 +12,18 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 func GetBacalhauApiHost() string {
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	plexEnv, _ := os.LookupEnv("PLEX_ENV")
 	if exists {
 		return bacalApiHost
+	} else if plexEnv == "stage" {
+		return "44.198.42.30"
+	} else {
+		return "54.210.19.52"
 	}
-	defaultApiHost := "54.210.19.52"
-	return defaultApiHost
 }
 
 func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
@@ -33,8 +35,17 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Docker.Image = container
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
-	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{"labdao"}}
-	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+
+	// had problems getting selector to work in bacalhau v0.28
+	// var selectorLabel string
+	// plexEnv, _ := os.LookupEnv("PLEX_ENV")
+	// if plexEnv == "stage" {
+	// 	selectorLabel = "labdaostage"
+	// } else {
+	// 	selectorLabel = "labdao"
+	// }
+	// job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
 	}
@@ -51,9 +62,9 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 
 func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
-	apiPort := 1234
+	apiPort := uint16(1234)
 	apiHost := GetBacalhauApiHost()
-	client := publicapi.NewRequesterAPIClient(fmt.Sprintf("http://%s:%d", apiHost, apiPort))
+	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
 	return client
 }
 
@@ -93,7 +104,7 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	downloadSettings.OutputDir = dir
 	cm := system.NewCleanupManager()
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
-	err := downloader.DownloadJob(context.Background(), submittedJob.Spec.Outputs, results, downloaderProvider, downloadSettings)
+	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err
 }
 

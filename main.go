@@ -63,7 +63,15 @@ func main() {
 
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency)
+		fmt.Println("Warning: tool path support will be removed and moved to the Python SDK in the future")
+		if *inputDir == "" {
+			fmt.Println("Input dir is required when using the -tool option")
+			os.Exit(1)
+		}
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
+	} else if *ioJsonPath != "" {
+		fmt.Println("Running IPWL io path")
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
 	} else {
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
@@ -71,6 +79,10 @@ func main() {
 			fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
 		} else {
 			fmt.Println("BACALHAU_API_HOST not set, using default host")
+		}
+
+		if *app != "" {
+			fmt.Println("WARNING: The -app flag is being deprecated and will be removed by v0.7.0. Please use -tool instead.")
 		}
 
 		// print the values of the flags

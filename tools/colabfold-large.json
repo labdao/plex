@@ -1,37 +1,37 @@
 {
     "class": "CommandLineTool",
-    "name": "colabfold-standard",
-    "description": "Protein folding prediction using Colabfold (standard settings)",
+    "name": "colabfold-large",
+    "description": "Protein folding prediction using Colabfold (large settings)",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "colabfold_batch --templates --num-recycle $(inputs.recycle) --use-gpu-relax --amber /inputs /outputs;"
+      "colabfold_batch --templates --num-recycle $(inputs.recycle.default) --use-gpu-relax --amber /inputs /outputs;"
     ],
-    "requirements": [
-      {
-        "class": "DockerRequirement",
-        "dockerPull": "public.ecr.aws/p7l9w5o7/colabfold:latest"
-      },
-      {
-        "class": "ResourceRequirement",
-        "gpuBool": true,
-        "networkBool": true
-      }
-    ],
+    "dockerPull": "public.ecr.aws/p7l9w5o7/colabfold:latest",
+    "gpuBool": true,
+    "networkBool": true,
+    "memoryGB": 12,
     "inputs": {
       "sequence": {
         "type": "File",
+        "item": "",
         "glob": "*.fasta"
       },
       "recycle": {
         "type": "int",
-        "default": 3
+        "item": "",
+        "default": "3"
       }
     },
     "outputs": {
-      "folded_protein": {
+      "best_folded_protein": {
         "type": "File",
-        "glob": "*rank_001*.pdb"
+        "item": "",
+        "glob": ["*rank_1*.pdb"]
+      },
+      "all_folded_proteins": {
+        "type": "Array",
+        "item": "File",
+        "glob": ["*rank*.pdb"]
       }
     }
-  }
-  
+}
