@@ -3,95 +3,81 @@ from typing import Dict, Optional, List, Union, Any
 import os
 import json
 from fastapi.encoders import jsonable_encoder
+from tools import Tool
 
-# Import the Protein and SmallMolecule classes from the objects module
-from objects import Protein, SmallMolecule, File
+class File(BaseModel):
+    class_: str = Field("File", alias='class')
+    filepath: FilePath
+
+# TODO #300 add class Array
+# class Array(BaseModel):
 
 
+class Int(BaseModel):
+    class_: str = Field("Int", alias='class')
+    value: int
 
-class IOModel(BaseModel):
-    inputs: Dict[str, Any]  # Use a dictionary to store dynamic inputs
+class String(BaseModel):
+    class_: str = Field("String", alias='class')
+    value: str
+
+class IO(BaseModel):
+    inputs: Dict[str, Any]
     outputs: Dict[str, Any]
     tool: str
     state: str
     errMsg: str
 
-# Define a dictionary containing the predefined classes
 predefined_classes = {
-    "protein": Protein,
-    "small_molecule": SmallMolecule,
-    "File": File,  # Add a mapping for the "File" type
+    "File": File,
+    "Int": Int,
+    "String": String
 }
 
+def generate_dynamic_models(tool_config: Tool):
+    class CustomInputs(BaseModel):
+        pass
 
-def generate_fields(field_definitions: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    fields = {}
-    for key, value in field_definitions.items():
-        if value["type"] in predefined_classes:
-            fields[key] = (Field(..., type_=predefined_classes[value["type"]]))
-        else:
-            fields[key] = (Field(..., type_=eval(value["type"])))
-    return fields
+    class CustomOutputs(BaseModel):
+        pass
 
-def generate_dynamic_io_models(tool_config: Tool):
-    # Generate input fields
-    input_fields = generate_fields(tool_config.inputs)
-    # Generate the CustomInputs class dynamically
-    CustomInputs = type("CustomInputs", (BaseModel,), input_fields)
+    for key, config in tool_config.inputs.items():
+        cls = predefined_classes.get(config["type"], Any)
+        default = config.get("default", None)
+        setattr(CustomInputs, key, Field(default, __orig_bases__=(cls,)))
 
-    # Generate output fields
-    output_fields = generate_fields(tool_config.outputs)
-    # Generate the CustomOutputs class dynamically
-    CustomOutputs = type("CustomOutputs", (BaseModel,), output_fields)
+    for key, config in tool_config.outputs.items():
+        cls = predefined_classes.get(config["type"], Any)
+        default = config.get("default", None)
+        setattr(CustomOutputs, key, Field(default, __orig_bases__=(cls,)))
 
     return CustomInputs, CustomOutputs
 
-
-
-
-# NOT RUN
 if __name__ == "__main__":
-    # Load the tool configuration from a JSON file
-    with open("../equibind.json", "r") as f:
+    with open("tools/equibind.json", "r") as f:
         tool_config_data = json.load(f)
 
-    # Create an instance of the Tool class
     tool_config = Tool(**tool_config_data)
+    print("################# Tool:")
     print(tool_config)
 
-    # Generate the custom input and output models
-    CustomInputs, CustomOutputs = generate_dynamic_io_models(tool_config)
-
-    # Define inputs 
-    protein_file = Protein(filepath="/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb")
-    ligand_file = SmallMolecule(filepath="/Users/rindtorff/plex/testdata/binding/abl/ZINC000003986735.sdf")
-
-    print("protein:")
-    print(protein_file)
+    print("################# Custum Input:")
+    CustomInputs, CustomOutputs = generate_dynamic_models(tool_config)
+    print(CustomInputs)
 
     print("Attributes and methods of CustomInputs:")
-    #print(CustomInputs.schema())
+    custom_inputs = CustomInputs(protein=File(filepath='/Users/rindtorff/plex/testdata/binding/pdbbind_processed_size1/6d08/6d08_protein_processed.pdb'), 
+                                 small_molecule=File(filepath='/Users/rindtorff/plex/testdata/binding/abl/ZINC000003986735.sdf'))
 
-    # Create instances of the custom input and output models
-    custom_inputs = CustomInputs(
-        protein=protein_file,
-        small_molecule=ligand_file,
-    )
     
     print("Dynamic Inputs instance:")
     print(custom_inputs)
     print("Dynamic Inputs instance, serialized for protein:")
     print(custom_inputs.protein)
 
-    custom_outputs = CustomOutputs(
-        best_docked_small_molecule={"class": "File", "filepath": ""},
-        protein={"class": "File", "filepath": ""},
-    )
-
-    # Create an instance of the IOModel class
-    iomodel = IOModel(
+    iomodel = IO(
         inputs=jsonable_encoder(custom_inputs),
-        outputs=jsonable_encoder(custom_outputs),
+        outputs={},
         tool="tools/equibind.json",
         state="processing",
         errMsg="",
