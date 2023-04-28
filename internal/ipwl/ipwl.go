@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/ipfs"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose, local bool, maxConcurrency int) {
+func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 	var wg sync.WaitGroup
@@ -29,7 +29,9 @@ func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose, local bool, 
 			semaphore <- struct{}{}
 
 			fmt.Printf("Starting to process IO entry %d \n", index)
-			err := processIOTask(entry, index, jobDir, ioJsonPath, verbose, local, &fileMutex)
+
+			// add retry and resume check
+			err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
 			if err != nil {
 				fmt.Printf("Error processing IO entry %d \n", index)
 			} else {
@@ -45,7 +47,15 @@ func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, verbose, local bool, 
 	wg.Wait()
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, local bool, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, local bool, fileMutex *sync.Mutex) error {
+	if ioEntry.State == "completed" {
+		fmt.Printf("IO Subgraph at %d already completed", index)
+		return nil
+	} else if ioEntry.State == "failed" && !retry {
+		fmt.Printf("IO Subgraph at %d already failed", index)
+		return nil
+	}
+
 	err := updateIOState(ioJsonPath, index, "processing", fileMutex)
 	if err != nil {
 		return fmt.Errorf("error updating IO state: %w", err)
