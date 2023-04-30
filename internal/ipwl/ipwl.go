@@ -1,11 +1,14 @@
 package ipwl
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"sync"
 
 	"github.com/labdao/plex/internal/bacalhau"
@@ -56,8 +59,32 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return nil
 	}
 
-	err := updateIOState(ioJsonPath, index, "processing", fileMutex)
+	fileMutex.Lock()
+	ioGraph, err := ReadIOList(ioJsonPath)
+	fileMutex.Unlock()
+
 	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error reading IO graph: %w", err)
+	}
+
+	dependsReady, err := checkSubgraphDepends(ioEntry, ioGraph)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error updating IO state: %w", err)
+	} else if !dependsReady {
+		err := updateIOState(ioJsonPath, index, "waiting", fileMutex)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error updating IO state: %w", err)
+		}
+		fmt.Printf("IO Subgraph at %d is still waiting on inputs to complete", index)
+		return nil
+	}
+
+	err = updateIOState(ioJsonPath, index, "processing", fileMutex)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error updating IO state: %w", err)
 	}
 
@@ -88,7 +115,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error reading tool config: %w", err)
 	}
 
-	err = copyInputFilesToDir(ioEntry, inputsDirPath)
+	err = copyInputFilesToDir(ioEntry, ioGraph, inputsDirPath)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error copying files to results input directory: %w", err)
@@ -186,7 +213,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	return nil
 }
 
-func copyInputFilesToDir(ioEntry IO, dirPath string) error {
+func copyInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	// Ensure the destination directory exists
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
@@ -194,10 +221,13 @@ func copyInputFilesToDir(ioEntry IO, dirPath string) error {
 	}
 
 	for _, input := range ioEntry.Inputs {
-		srcPath := input.FilePath
+		srcPath, err := determineSrcPath(input, ioGraph)
+		if err != nil {
+			return err
+		}
 		destPath := filepath.Join(dirPath, filepath.Base(srcPath))
 
-		err := copyFile(srcPath, destPath)
+		err = copyFile(srcPath, destPath)
 		if err != nil {
 			return err
 		}
@@ -249,4 +279,67 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 	}
 
 	return nil
+}
+
+var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
+
+func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (dependsReady bool, err error) {
+	dependsReady = true
+
+	for _, input := range ioEntry.Inputs {
+		_, err := determineSrcPath(input, ioGraph)
+		if err != nil {
+			if errors.Is(err, errOutputPathEmpty) {
+				dependsReady = false
+				break
+			}
+			return false, fmt.Errorf("failed to determine source path: %w", err)
+		}
+	}
+
+	return dependsReady, nil
+}
+
+func determineSrcPath(input FileInput, ioGraph []IO) (string, error) {
+	// Check if the input.FilePath has the format ${i[key]}
+	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
+	match := re.FindStringSubmatch(input.FilePath)
+
+	if match == nil {
+		// The input.FilePath is a normal file path
+		return input.FilePath, nil
+	}
+
+	// Extract the index and key from the matched pattern
+	indexStr, key := match[1], match[2]
+	index, err := strconv.Atoi(indexStr)
+	if err != nil {
+		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FilePath)
+	}
+
+	if index < 0 || index >= len(ioGraph) {
+		return "", fmt.Errorf("index out of range: %d", index)
+	}
+
+	// Get the output Filepath of the corresponding key
+	output, ok := ioGraph[index].Outputs[key]
+	if !ok {
+		return "", fmt.Errorf("key not found in outputs: %s", key)
+	}
+
+	outputFilepath := ""
+	switch output := output.(type) {
+	case FileOutput:
+		outputFilepath = output.FilePath
+	case ArrayFileOutput:
+		return "", fmt.Errorf("PLEx does not currently support ArrayFileOutput as an input")
+	default:
+		return "", fmt.Errorf("unknown output type")
+	}
+
+	if outputFilepath == "" {
+		return "", errors.New("output file path is empty, still waiting")
+	}
+
+	return outputFilepath, nil
 }
