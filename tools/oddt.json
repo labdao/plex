@@ -4,8 +4,7 @@
     "description": "Scoring of protein-ligand complexes using ODDT",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "mkdir -p /outputs && oddt_cli $(inputs.small_molecule.filepath) --receptor $(inputs.protein.filepath) --score rfscore_v1 --score rfscore_v2 --score rfscore_v3 --score nnscore -O /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_scored.$(inputs.small_molecule.ext);",
-      "cd /outputs && /app/aggregate_score.sh"
+      "mkdir -p /outputs && oddt_cli $(inputs.small_molecule.filepath) --receptor $(inputs.protein.filepath) --score rfscore_v1 --score rfscore_v2 --score rfscore_v3 --score nnscore -O /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_scored.$(inputs.small_molecule.ext) && cd /outputs && /app/aggregate_score.sh"
     ],
     "dockerPull": "ghcr.io/labdao/oddt@main",
     "gpuBool": false,
