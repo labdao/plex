@@ -26,7 +26,7 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local b
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
-		workDirPath := path.Join(cwd, id.String())
+		workDirPath = path.Join(cwd, id.String())
 		err = os.Mkdir(workDirPath, 0755)
 		if err != nil {
 			fmt.Println("Error:", err)
