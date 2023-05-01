@@ -220,8 +220,6 @@ job.yaml
 params
 .env
 =======
-# Recordings
-*.cast
 
 # Docusaurus files
 docs/*.code-workspace
