@@ -283,8 +283,8 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (dependsReady bool, err error) {
-	dependsReady = true
+func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
+	dependsReady := true
 
 	for _, input := range ioEntry.Inputs {
 		_, err := determineSrcPath(input, ioGraph)
@@ -338,7 +338,7 @@ func determineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	}
 
 	if outputFilepath == "" {
-		return "", errors.New("output file path is empty, still waiting")
+		return "", errOutputPathEmpty
 	}
 
 	return outputFilepath, nil
