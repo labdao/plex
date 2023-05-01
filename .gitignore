@@ -216,8 +216,18 @@ job.yaml
 # Tool manifest
 .manifest.json
 
-# Recordings
-*.cast
+# Params
+params
+.env
+=======
+
+# Docusaurus files
+docs/*.code-workspace
+docs/atoms/.DS_Store
+docs/.DS_Store
+docs/build/
+docs/node_modules/
+docs/.docusaurus/
 
 # Docusaurus files
 docs/*.code-workspace

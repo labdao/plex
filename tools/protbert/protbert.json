@@ -1,0 +1,37 @@
+{
+    "class": "CommandLineTool",
+    "name": "protbert",
+    "description": "Predicting unknown residues with protein language models",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "python3 app.py $(inputs.protein_sequence.filepath) /outputs --mode fill-mask",
+      "python3 app.py $(inputs.protein_sequence.filepath) /outputs --mode embedding",
+      "python3 app.py $(inputs.protein_sequence.filepath) /outputs --mode conditional-probability"
+    ],
+    "dockerPull": "public.ecr.aws/p7l9w5o7/protbert:latest",
+    "gpuBool": true,
+    "networkBool": true,
+    "inputs": {
+      "protein_sequence": {
+        "type": "File",
+        "glob": ["*.fasta", "*.fa", "*.faa", "*.fna", "*.ffn", "*.frn", "*.fsa", "*.fas", "*.txt"]
+      }
+    },
+    "outputs": {
+      "completed_protein_sequence": {
+        "type": "File",
+        "item": "",
+        "glob": ["_filled_mask.json"]
+      },
+      "embedded_protein_sequence": {
+        "type": "Array",
+        "item": "File",
+        "glob": ["_embedding.csv"]
+      },
+      "protein_sequence_conditional_probability": {
+        "type": "File",
+        "item": "",
+        "glob": ["_conditional_probability_matrix.csv"]
+      }
+    }
+}
