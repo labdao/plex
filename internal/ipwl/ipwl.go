@@ -15,7 +15,7 @@ import (
 	"github.com/labdao/plex/internal/ipfs"
 )
 
-func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
+func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 
