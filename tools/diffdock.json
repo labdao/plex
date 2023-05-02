@@ -47,12 +47,12 @@
       "best_docked_small_molecule": {
         "type": "File",
         "item": "",
-        "glob": ["index*/rank1_confidence*-*.sdf"]
+        "glob": ["index*/rank1.sdf"]
       },
       "all_docked_small_molecules": {
         "type": "Array",
         "item": "File",
-        "glob": ["index*/rank*_confidence-*.sdf"]
+        "glob": ["index*/rank*.sdf"]
       },
       "protein": {
         "type": "File",
