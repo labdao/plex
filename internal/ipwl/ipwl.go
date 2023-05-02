@@ -18,47 +18,63 @@ import (
 func ProcessIOList(ioList []IO, jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
-	var wg sync.WaitGroup
 
 	// Mutex to synchronize file access
 	var fileMutex sync.Mutex
 
-	for i, ioEntry := range ioList {
-		wg.Add(1)
-		go func(index int, entry IO) {
-			defer wg.Done()
-
-			// Acquire the semaphore
-			semaphore <- struct{}{}
-
-			fmt.Printf("Starting to process IO entry %d \n", index)
-
-			// add retry and resume check
-			err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
-			if err != nil {
-				fmt.Printf("Error processing IO entry %d \n", index)
-			} else {
-				fmt.Printf("Success processing IO entry %d \n", index)
-			}
-
-			// Release the semaphore
-			<-semaphore
-		}(i, ioEntry)
+	if retry {
+		setRetryState(ioJsonPath)
 	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+	for {
+		var pendingIOs []int
+		ioList, err := ReadIOList(ioJsonPath)
+		if err != nil {
+			fmt.Printf("Error reading IO list: %v\n", err)
+			return
+		}
+
+		for i, ioEntry := range ioList {
+			if ioEntry.State == "retry" || ioEntry.State == "created" || ioEntry.State == "processing" || ioEntry.State == "waiting" {
+				pendingIOs = append(pendingIOs, i)
+			}
+		}
+
+		if len(pendingIOs) == 0 {
+			break
+		}
+
+		var wg sync.WaitGroup
+		for _, i := range pendingIOs {
+			ioEntry := ioList[i]
+			wg.Add(1)
+			go func(index int, entry IO) {
+				defer wg.Done()
+
+				// Acquire the semaphore
+				semaphore <- struct{}{}
+
+				fmt.Printf("Starting to process IO entry %d \n", index)
+
+				// add retry and resume check
+				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
+				if err != nil {
+					fmt.Printf("Error processing IO entry %d \n", index)
+				} else {
+					fmt.Printf("Success processing IO entry %d \n", index)
+				}
+
+				// Release the semaphore
+				<-semaphore
+			}(i, ioEntry)
+		}
+
+		// Wait for all goroutines to finish
+		wg.Wait()
+	}
 }
 
 func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, local bool, fileMutex *sync.Mutex) error {
-	if ioEntry.State == "completed" {
-		fmt.Printf("IO Subgraph at %d already completed", index)
-		return nil
-	} else if ioEntry.State == "failed" && !retry {
-		fmt.Printf("IO Subgraph at %d already failed", index)
-		return nil
-	}
-
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -342,4 +358,27 @@ func determineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	}
 
 	return outputFilepath, nil
+}
+
+func setRetryState(ioJsonPath string) error {
+	// Read the IO list from the file
+	ioList, err := ReadIOList(ioJsonPath)
+	if err != nil {
+		return fmt.Errorf("failed to read IO list: %w", err)
+	}
+
+	// Iterate through the IO list and update the state of failed entries to "retry"
+	for i, ioEntry := range ioList {
+		if ioEntry.State == "failed" {
+			ioList[i].State = "retry"
+		}
+	}
+
+	// Write the updated IO list back to the file
+	err = WriteIOList(ioJsonPath, ioList)
+	if err != nil {
+		return fmt.Errorf("failed to write updated IO list: %w", err)
+	}
+
+	return nil
 }
