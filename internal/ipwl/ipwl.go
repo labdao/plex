@@ -195,24 +195,36 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 			return fmt.Errorf("error creating Bacalhau job: %w", err)
 		}
 
+		if verbose {
+			fmt.Printf("Submitting Bacalhau job")
+		}
 		submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error submitting Bacalhau job: %w", err)
 		}
 
+		if verbose {
+			fmt.Printf("Getting Bacalhau job")
+		}
 		results, err := bacalhau.GetBacalhauJobResults(submittedJob)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error getting Bacalhau job results: %w", err)
 		}
 
+		if verbose {
+			fmt.Printf("Downloading Bacalhau job")
+		}
 		err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error downloading Bacalhau results: %w", err)
 		}
 
+		if verbose {
+			fmt.Printf("Cleaning Bacalhau job")
+		}
 		err = cleanBacalhauOutputDir(outputsDirPath)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
