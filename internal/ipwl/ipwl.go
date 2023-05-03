@@ -95,7 +95,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error updating IO state: %w", err)
 		}
-		fmt.Printf("IO Subgraph at %d is still waiting on inputs to complete", index)
+		fmt.Printf("IO Subgraph at %d is still waiting on inputs to complete \n", index)
 		return nil
 	}
 
@@ -150,7 +150,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 
 		output, err := runDockerCmd(dockerCmd)
 		if verbose {
-			fmt.Printf("Docker ran with output: %s \n", output)
+			fmt.Println("Docker ran with output: %s \n", output)
 		}
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
@@ -197,7 +197,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		}
 
 		if verbose {
-			fmt.Printf("Submitting Bacalhau job")
+			fmt.Println("Submitting Bacalhau job")
 		}
 		submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
 		if err != nil {
@@ -206,7 +206,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		}
 
 		if verbose {
-			fmt.Printf("Getting Bacalhau job")
+			fmt.Println("Getting Bacalhau job")
 		}
 		results, err := bacalhau.GetBacalhauJobResults(submittedJob)
 		if err != nil {
@@ -215,7 +215,8 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		}
 
 		if verbose {
-			fmt.Printf("Downloading Bacalhau job")
+			fmt.Println("Downloading Bacalhau job")
+			fmt.Printf("Output dir of %s \n", outputsDirPath)
 		}
 		err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
 		if err != nil {
@@ -224,7 +225,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		}
 
 		if verbose {
-			fmt.Printf("Cleaning Bacalhau job")
+			fmt.Println("Cleaning Bacalhau job")
 		}
 		err = cleanBacalhauOutputDir(outputsDirPath)
 		if err != nil {
@@ -298,14 +299,15 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 	for _, file := range files {
 		src := filepath.Join(bacalOutputsDirPath, file.Name())
 		dst := filepath.Join(outputsDirPath, file.Name())
+		fmt.Printf("Moving %s to %s", src, dst)
 		if err := os.Rename(src, dst); err != nil {
 			return err
 		}
 	}
 
-	if err := os.RemoveAll(bacalOutputsDirPath); err != nil {
-		return err
-	}
+	// if err := os.RemoveAll(bacalOutputsDirPath); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
