@@ -82,6 +82,7 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
 
+	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
 
