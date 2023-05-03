@@ -60,6 +60,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
 				if err != nil {
 					fmt.Printf("Error processing IO entry %d \n", index)
+					fmt.Println(err)
 				} else {
 					fmt.Printf("Success processing IO entry %d \n", index)
 				}
