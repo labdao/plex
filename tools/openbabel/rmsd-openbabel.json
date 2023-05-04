@@ -6,7 +6,7 @@
     "arguments": [
         "echo -n '{reference: $(inputs.reference_structure.basename), comparison: $(inputs.comparison_structure.basename), RMSD: ' && obrms -firstonly $(inputs.reference_structure.filepath) $(inputs.comparison_structure.filepath) | awk '{print $2}' | tr -d '\\n' && echo -n '}' > /outputs/rmsd.jsonl"
     ],
-    "dockerPull": "ghcr.io/labdao/oddt@sha256:e6c9551a717e6526c865d930d5f05879074d439a524b7f389648b620c345be7a",
+    "dockerPull": "quay.io/labdao/openbabel:latest",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
