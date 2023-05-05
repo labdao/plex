@@ -6,7 +6,7 @@
     "arguments": [
       "mkdir -p /tmp-out && oddt_cli $(inputs.small_molecule.filepath) --receptor $(inputs.protein.filepath) --score rfscore_v1 --score rfscore_v2 --score rfscore_v3 --score nnscore -O /tmp-out/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_scored.$(inputs.small_molecule.ext) && cd /tmp-out && /app/aggregate_score.sh && cp /tmp-out/* /outputs"
     ],
-    "dockerPull": "ghcr.io/labdao/oddt@main",
+    "dockerPull": "ghcr.io/labdao/oddt:nightly@sha256:7f0b0f33e33045346cee70541e6d00cfe537ed4fa9b2dd98a965ccf176011e52",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
