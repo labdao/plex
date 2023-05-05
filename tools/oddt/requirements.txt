@@ -1,0 +1,11 @@
+rdkit
+matplotlib
+numpy
+scikit-learn
+pandas
+tqdm
+typing-extensions
+umap-learn
+hdbscan
+psycopg2-binary
+pybel
