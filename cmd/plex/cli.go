@@ -79,8 +79,6 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local b
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
 	fmt.Println("Processing IO Entries")
-	fmt.Println(workDirPath)
-	fmt.Println(ioJsonPath)
 	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, local, concurrency)
 	fmt.Printf("Finished processing, results written to %s", ioJsonPath)
 }

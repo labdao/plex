@@ -299,7 +299,6 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 	for _, file := range files {
 		src := filepath.Join(bacalOutputsDirPath, file.Name())
 		dst := filepath.Join(outputsDirPath, file.Name())
-		fmt.Printf("Moving %s to %s", src, dst)
 		if err := os.Rename(src, dst); err != nil {
 			return err
 		}
