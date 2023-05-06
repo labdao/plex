@@ -16,6 +16,8 @@ import (
 	"github.com/labdao/plex/internal/ipfs"
 )
 
+var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
+
 func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
@@ -62,8 +64,10 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 				if err != nil {
 					fmt.Printf("Error processing IO entry %d \n", index)
 					fmt.Println(err)
-				} else {
+				} else if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Success processing IO entry %d \n", index)
+				} else {
+					fmt.Printf("Waiting to process IO entry %d \n", index)
 				}
 
 				// Release the semaphore
@@ -100,7 +104,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 			return fmt.Errorf("error updating IO state: %w", err)
 		}
 		fmt.Printf("IO Subgraph at %d is still waiting on inputs to complete \n", index)
-		return nil
+		return errOutputPathEmpty
 	}
 
 	err = updateIOState(ioJsonPath, index, "processing", fileMutex)
@@ -315,8 +319,6 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 
 	return nil
 }
-
-var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
 func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
 	dependsReady := true
