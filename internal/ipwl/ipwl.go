@@ -35,7 +35,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 		}
 
 		for i, ioEntry := range ioList {
-			if ioEntry.State == "retry" || ioEntry.State == "created" || ioEntry.State == "processing" || ioEntry.State == "waiting" {
+			if ioEntry.State == "" || ioEntry.State == "retry" || ioEntry.State == "created" || ioEntry.State == "processing" || ioEntry.State == "waiting" {
 				pendingIOs = append(pendingIOs, i)
 			}
 		}
