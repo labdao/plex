@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
@@ -72,6 +73,9 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 
 		// Wait for all goroutines to finish
 		wg.Wait()
+
+		// Wait before re-checking chain dependecies
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -139,7 +143,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	}
 
 	if local {
-		dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
+		dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, ioGraph, inputsDirPath, outputsDirPath)
 		if verbose {
 			fmt.Println("Generated docker cmd:", dockerCmd)
 		}
@@ -150,7 +154,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 
 		output, err := runDockerCmd(dockerCmd)
 		if verbose {
-			fmt.Println("Docker ran with output: %s \n", output)
+			fmt.Printf("Docker ran with output: %s \n", output)
 		}
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
@@ -173,7 +177,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 			fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
 		}
 
-		cmd, err := toolToCmd(toolConfig, ioEntry)
+		cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error converting tool to cmd: %w", err)
@@ -251,7 +255,7 @@ func copyInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	}
 
 	for _, input := range ioEntry.Inputs {
-		srcPath, err := determineSrcPath(input, ioGraph)
+		srcPath, err := DetermineSrcPath(input, ioGraph)
 		if err != nil {
 			return err
 		}
@@ -318,7 +322,7 @@ func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
 	dependsReady := true
 
 	for _, input := range ioEntry.Inputs {
-		_, err := determineSrcPath(input, ioGraph)
+		_, err := DetermineSrcPath(input, ioGraph)
 		if err != nil {
 			if errors.Is(err, errOutputPathEmpty) {
 				dependsReady = false
@@ -331,7 +335,7 @@ func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
 	return dependsReady, nil
 }
 
-func determineSrcPath(input FileInput, ioGraph []IO) (string, error) {
+func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	// Check if the input.FilePath has the format ${i[key]}
 	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
 	match := re.FindStringSubmatch(input.FilePath)
@@ -350,6 +354,11 @@ func determineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 
 	if index < 0 || index >= len(ioGraph) {
 		return "", fmt.Errorf("index out of range: %d", index)
+	}
+
+	// Check that dependent subgraph has not failed
+	if ioGraph[index].State == "failed" {
+		return "", fmt.Errorf("dependent subgraph %d failed", index)
 	}
 
 	// Get the output Filepath of the corresponding key
