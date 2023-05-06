@@ -61,13 +61,13 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 
 				// add retry and resume check
 				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
-				if err != nil {
+				if errors.Is(err, errOutputPathEmpty) {
+					fmt.Printf("Waiting to process IO entry %d \n", index)
+				} else if err != nil {
 					fmt.Printf("Error processing IO entry %d \n", index)
 					fmt.Println(err)
-				} else if errors.Is(err, errOutputPathEmpty) {
-					fmt.Printf("Success processing IO entry %d \n", index)
 				} else {
-					fmt.Printf("Waiting to process IO entry %d \n", index)
+					fmt.Printf("Success processing IO entry %d \n", index)
 				}
 
 				// Release the semaphore
