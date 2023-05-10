@@ -38,6 +38,7 @@ func main() {
 	toolPath := flag.String("tool", "", "tool path")
 	inputDir := flag.String("input-dir", "", "input directory path")
 	ioJsonPath := flag.String("input-io", "", "IO JSON path")
+	workDir := flag.String("work-dir", "", "PLEx working directory path")
 	verbose := flag.Bool("verbose", false, "show verbose debugging logs")
 
 	// required flags
@@ -52,6 +53,7 @@ func main() {
 	dry := flag.Bool("dry", false, "Do not send request and just print Bacalhau cmd")
 	gpu := flag.Bool("gpu", false, "Use GPU")
 	network := flag.Bool("network", false, "All http requests during job runtime")
+	retry := flag.Bool("retry", false, "Retry any io subgraphs that failed")
 
 	flag.Parse()
 
@@ -68,10 +70,14 @@ func main() {
 			fmt.Println("Input dir is required when using the -tool option")
 			os.Exit(1)
 		}
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
+		*retry = false // can only retry from an PLEx work dir not input directory input
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
+		*retry = false // can only retry from an PLEx work dir not io json path input
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+	} else if *workDir != "" {
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
 	} else {
 		// Env settings
 		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")

@@ -12,21 +12,28 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 )
 
-func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency, layers int) {
-	// Create plex working directory
-	id := uuid.New()
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local bool, concurrency, layers int) {
+	var workDirPath string
+	var err error
+	if workDir != "" {
+		workDirPath = workDir
+		fmt.Println("Resumed working directory: ", workDirPath)
+	} else {
+		// Create plex working directory
+		id := uuid.New()
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		workDirPath = path.Join(cwd, id.String())
+		err = os.Mkdir(workDirPath, 0755)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Created working directory: ", workDirPath)
 	}
-	workDirPath := path.Join(cwd, id.String())
-	err = os.Mkdir(workDirPath, 0755)
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-	fmt.Println("Created job directory: ", workDirPath)
 
 	// first thing to generate io json and save to plex work dir
 	var ioEntries []ipwl.IO
@@ -50,6 +57,14 @@ func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
+	} else if workDir != "" {
+		fmt.Println("Reading IO Entries from: ", path.Join(workDirPath, "io.json"))
+		ioEntries, err = ipwl.ReadIOList(path.Join(workDirPath, "io.json"))
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		ipwl.PrintIOGraphStatus(ioEntries)
 	} else {
 		fmt.Println("Error: either -input-dir or -input-io is required")
 		os.Exit(1)
@@ -64,7 +79,9 @@ func Run(toolPath, inputDir, ioJsonPath string, verbose, local bool, concurrency
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
 	fmt.Println("Processing IO Entries")
-	ipwl.ProcessIOList(ioEntries, workDirPath, ioJsonPath, verbose, local, concurrency)
+	fmt.Println(workDirPath)
+	fmt.Println(ioJsonPath)
+	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, local, concurrency)
 	fmt.Printf("Finished processing, results written to %s", ioJsonPath)
 }
 

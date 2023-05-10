@@ -6,7 +6,7 @@
   "arguments": [
     "mkdir -p /tmp-inputs/tmp;",
     "mkdir -p /tmp-outputs/tmp;",
-    "mv /inputs/* /tmp-inputs/tmp/;",
+    "cp /inputs/* /tmp-inputs/tmp/;",
     "ls /tmp-inputs/tmp;",
     "cd /src && python /src/inference.py --config=/src/configs_clean/bacalhau.yml;",
     "mv /tmp-outputs/tmp/* /outputs/;",

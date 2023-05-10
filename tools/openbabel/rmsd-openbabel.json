@@ -6,7 +6,7 @@
     "arguments": [
       "echo 'reference,comparison,RMSD' > /outputs/rmsd.csv && echo -n '$(inputs.reference_structure.basename),$(inputs.comparison_structure.basename),' > /outputs/temp.csv && obrms -firstonly $(inputs.reference_structure.filepath) $(inputs.comparison_structure.filepath) | awk '{print $2}' | tr -d '\\n' >> /outputs/temp.csv && cat /outputs/temp.csv >> /outputs/rmsd.csv && rm /outputs/temp.csv;"
     ],
-    "dockerPull": "quay.io/labdao/openbabel@sha256:acd843a64824c2a002d323a651b0152289413ca90ab294e42f322b0c8d6399b3",
+    "dockerPull": "quay.io/labdao/openbabel@sha256:1087315d7eda6d0632c9f9df72500ab9f6fef612c79bae7410473a2336f7be34",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
