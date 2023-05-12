@@ -14,7 +14,7 @@ export AWS_SECRET_ACCESS_KEY="asecretkey"
 From a command line change directory into the terraform directory and run
 
 ```
-terraform init
+terraform init -backend-config=backend.conf
 ```
 
 This initializes your local version of the project and installs any referenced plugins. You only need to run this once, but it is safe to run again.
