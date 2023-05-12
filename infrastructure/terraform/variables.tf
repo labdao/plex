@@ -1,3 +1,8 @@
+variable "region_main" {
+  type    = string
+  default = "us-east-1"
+}
+
 variable "ami_main" {
   type    = string
   default = "ami-09cd747c78a9add63"
