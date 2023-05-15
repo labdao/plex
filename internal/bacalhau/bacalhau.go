@@ -15,6 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
+var DEFAULT_PLEX_IP_ADDRESS = "54.210.19.52"
+
 func GetBacalhauApiHost() string {
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
@@ -23,7 +25,7 @@ func GetBacalhauApiHost() string {
 	} else if plexEnv == "stage" {
 		return "44.198.42.30"
 	} else {
-		return "54.210.19.52"
+		return DEFAULT_PLEX_IP_ADDRESS
 	}
 }
 

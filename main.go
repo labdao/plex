@@ -41,8 +41,8 @@ func main() {
 	workDir := flag.String("work-dir", "", "PLEx working directory path")
 	verbose := flag.Bool("verbose", false, "show verbose debugging logs")
 
-	// required flags
-	app := flag.String("app", "", "Application name")
+	// // required flags
+	// app := flag.String("app", "", "Application name")
 
 	// optional flags
 	appConfigsFilePath := flag.String("app-configs", "config/app.jsonl", "App Configurations file")
@@ -79,29 +79,30 @@ func main() {
 	} else if *workDir != "" {
 		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
 	} else {
-		// Env settings
-		bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
-		if exists {
-			fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
-		} else {
-			fmt.Println("BACALHAU_API_HOST not set, using default host")
-		}
+		fmt.Println("Requirements invalid")
+	// 	// Env settings
+	// 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	// 	if exists {
+	// 		fmt.Println("Using BACALHAU_API_HOST:", bacalApiHost)
+	// 	} else {
+	// 		fmt.Println("BACALHAU_API_HOST not set, using default host")
+	// 	}
 
-		if *app != "" {
-			fmt.Println("WARNING: The -app flag is being deprecated and will be removed by v0.7.0. Please use -tool instead.")
-		}
+	// 	// if *app != "" {
+	// 	// 	fmt.Println("WARNING: The -app flag is being deprecated and will be removed by v0.7.0. Please use -tool instead.")
+	// 	// }
 
-		// print the values of the flags
-		fmt.Println("## User input ##")
-		fmt.Println("Provided application name:", *app)
-		fmt.Println("Provided directory path:", *inputDir)
-		fmt.Println("Using GPU:", *gpu)
-		fmt.Println("Using Network:", *network)
+	// 	// print the values of the flags
+	// 	fmt.Println("## User input ##")
+	// 	// fmt.Println("Provided application name:", *app)
+	// 	fmt.Println("Provided directory path:", *inputDir)
+	// 	fmt.Println("Using GPU:", *gpu)
+	// 	fmt.Println("Using Network:", *network)
 
-		fmt.Println("## Default parameters ##")
-		fmt.Println("Using app configs:", *appConfigsFilePath)
-		fmt.Println("Setting layers to:", *layers)
+	// 	fmt.Println("## Default parameters ##")
+	// 	fmt.Println("Using app configs:", *appConfigsFilePath)
+	// 	fmt.Println("Setting layers to:", *layers)
 
-		plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
-	}
+	// 	plex.Execute(*app, *inputDir, *appConfigsFilePath, *layers, *memory, *local, *gpu, *network, *dry)
+	// }
 }
