@@ -15,8 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 )
 
-var DEFAULT_PLEX_IP_ADDRESS = "54.210.19.52"
-
 func GetBacalhauApiHost() string {
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
@@ -25,7 +23,7 @@ func GetBacalhauApiHost() string {
 	} else if plexEnv == "stage" {
 		return "44.198.42.30"
 	} else {
-		return DEFAULT_PLEX_IP_ADDRESS
+		return "54.210.19.52"
 	}
 }
 
@@ -113,18 +111,18 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	return err
 }
 
-func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
-	gpuFlag := ""
-	if gpu {
-		gpuFlag = "--gpu 1 "
-	}
-	memoryFlag := ""
-	if memory != 0 {
-		memoryFlag = fmt.Sprintf("--memory %dgb ", memory)
-	}
-	networkFlag := ""
-	if network {
-		networkFlag = "--network full"
-	}
-	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
-}
+// func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
+// 	gpuFlag := ""
+// 	if gpu {
+// 		gpuFlag = "--gpu 1 "
+// 	}
+// 	memoryFlag := ""
+// 	if memory != 0 {
+// 		memoryFlag = fmt.Sprintf("--memory %dgb ", memory)
+// 	}
+// 	networkFlag := ""
+// 	if network {
+// 		networkFlag = "--network full"
+// 	}
+// 	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
+// }
