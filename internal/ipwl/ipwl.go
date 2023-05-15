@@ -109,26 +109,6 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, verbose, lo
 			return fmt.Errorf("error deriving IPFS Url: %w", err)
 		}
 
-		// Aakaash pin folder to IPFS
-		// cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputsDirPath)
-		// if err != nil {
-		// 	updateIOWithError(ioJsonPath, index, err, fileMutex)
-		// 	return fmt.Errorf("error adding inputs to IPFS: %w", err)
-		// }
-
-		// for _, input := range ioEntry.Inputs {
-		// 	cid, err := ipfs.AddFileHttp(ipfsNodeUrl, input.Address.FilePath)
-		// 	if err != nil {
-		// 		updateIOWithError(ioJsonPath, index, err, fileMutex)
-		// 		return fmt.Errorf("error adding inputs to IPFS: %w", err)
-		// 	}
-		// 	if verbose {
-		// 		fmt.Printf("Added inputs file to IPFS with CID: %s\n", cid)
-		// 	}
-		// 	cids = append(cids, cid)
-		// 	input.Address.IPFS = cid
-		// }
-
 		var cids []string
 
 		inputIndex := 0
