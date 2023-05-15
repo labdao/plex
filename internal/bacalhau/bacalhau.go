@@ -110,19 +110,3 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err
 }
-
-// func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
-// 	gpuFlag := ""
-// 	if gpu {
-// 		gpuFlag = "--gpu 1 "
-// 	}
-// 	memoryFlag := ""
-// 	if memory != 0 {
-// 		memoryFlag = fmt.Sprintf("--memory %dgb ", memory)
-// 	}
-// 	networkFlag := ""
-// 	if network {
-// 		networkFlag = "--network full"
-// 	}
-// 	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
-// }

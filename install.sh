@@ -53,18 +53,6 @@ downloadPlex() {
     fi
 }
 
-getAppJsonl() {
-    cd config
-    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/app.jsonl
-    cd ..
-}
-
-getInstructionsTemplateJsonl() {
-    cd config
-    curl -sSL -O https://raw.githubusercontent.com/labdao/plex/main/config/instruction_template.jsonl
-    cd ..
-}
-
 getTools() {
     echo "Downloading tools..."
     mkdir -p tools
@@ -136,8 +124,6 @@ displayLogo() {
 makeParentFolder
 makeConfigFolder
 downloadPlex
-getAppJsonl
-getInstructionsTemplateJsonl
 getTestData
 getTools
 displayLogo
