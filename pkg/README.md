@@ -1,1 +1,1 @@
-Eventually instruction structure should live here for 3rd parties
+Placeholder for future packages that can be imported by 3rd parties
