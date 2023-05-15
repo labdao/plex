@@ -61,10 +61,14 @@ func TestToolToDockerCmd(t *testing.T) {
 	ioEntry := IO{
 		Inputs: map[string]FileInput{
 			"protein": {
-				FilePath: "testdata/binding/abl/7n9g.pdb",
+				Address: FileAddress{
+					FilePath: "testdata/binding/abl/7n9g.pdb",
+				},
 			},
 			"small_molecule": {
-				FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+				Address: FileAddress{
+					FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+				},
 			},
 		},
 	}
@@ -72,7 +76,7 @@ func TestToolToDockerCmd(t *testing.T) {
 	inputsDirPath := "testdata/binding/abl"
 	outputsDirPath := "some_output_dir"
 
-	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, []IO{ioEntry}, inputsDirPath, outputsDirPath)
+	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
 	if err != nil {
 		t.Errorf("Error generating Docker command: %v", err)
 	}

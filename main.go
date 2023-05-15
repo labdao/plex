@@ -52,14 +52,14 @@ func main() {
 			fmt.Println("Input dir is required when using the -tool option")
 			os.Exit(1)
 		}
-		*retry = false // can only retry from an PLEx work dir not input directory input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		*retry = false // can only retry from a PLEx work dir not input directory input
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
 	} else if *workDir != "" {
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *verbose, *local, *concurrency, *layers)
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")
 	}

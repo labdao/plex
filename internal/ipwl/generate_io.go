@@ -91,7 +91,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			Tool:    toolPath,
 			State:   "created",
 			Inputs:  map[string]FileInput{},
-			Outputs: map[string]Output{},
+			Outputs: map[string]CustomOutput{},
 		}
 
 		for inputName, path := range combination {
@@ -100,21 +100,33 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 				log.Printf("Error converting to absolute path: %v", err)
 				continue
 			}
+
 			ioEntry.Inputs[inputName] = FileInput{
-				Class:    "File",
-				FilePath: absPath,
+				Class: "File",
+				Address: FileAddress{
+					FilePath: absPath,
+					IPFS:     "",
+				},
 			}
 		}
 
 		for outputName, output := range tool.Outputs {
 			if output.Type == "File" {
-				ioEntry.Outputs[outputName] = FileOutput{
-					Class: "File",
+				ioEntry.Outputs[outputName] = CustomOutput{
+					FileOutput: &FileOutput{
+						Class: "File",
+						Address: FileAddress{
+							FilePath: "",
+							IPFS:     "",
+						},
+					},
 				}
 			} else if output.Type == "Array" && output.Item == "File" {
-				ioEntry.Outputs[outputName] = ArrayFileOutput{
-					Class: "Array",
-					Files: []FileOutput{},
+				ioEntry.Outputs[outputName] = CustomOutput{
+					ArrayFile: &ArrayFileOutput{
+						Class: "Array",
+						Files: []FileOutput{},
+					},
 				}
 			}
 		}

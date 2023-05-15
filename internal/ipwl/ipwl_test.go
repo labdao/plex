@@ -1,52 +1,215 @@
 package ipwl
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
-	"sync"
+	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 )
 
-func TestUpdateIOState(t *testing.T) {
-	// Create a temporary copy of the original JSON file
-	origFilePath := "testdata/example_io.json"
-	tempFilePath := "testdata/temp_io_list.json"
-
-	input, err := ioutil.ReadFile(origFilePath)
-	if err != nil {
-		t.Fatalf("Failed to read original file: %v", err)
+func TestFindMatchingFiles(t *testing.T) {
+	tool := Tool{
+		Inputs: map[string]ToolInput{
+			"protein": {
+				Type: "File",
+				Glob: []string{"*.pdb"},
+			},
+			"small_molecule": {
+				Type: "File",
+				Glob: []string{"*.sdf", "*.mol2"},
+			},
+		},
 	}
 
-	err = ioutil.WriteFile(tempFilePath, input, 0644)
-	if err != nil {
-		t.Fatalf("Failed to create temporary file: %v", err)
+	inputDir := "testdata/binding/"
+
+	expected := map[string][]string{
+		"protein":        {filepath.Join(inputDir, "abl/7n9g.pdb")},
+		"small_molecule": {filepath.Join(inputDir, "abl/ZINC000003986735.sdf"), filepath.Join(inputDir, "abl/ZINC000019632618.sdf")},
 	}
 
-	defer func() {
-		// Restore the original file after the test is completed
-		err = ioutil.WriteFile(origFilePath, input, 0644)
-		if err != nil {
-			t.Fatalf("Failed to restore original file: %v", err)
+	layers := 2
+	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
+	if err != nil {
+		t.Fatalf("findMatchingFiles returned an error: %v", err)
+	}
+
+	if !reflect.DeepEqual(inputFilepaths, expected) {
+		t.Errorf("findMatchingFiles returned unexpected results\nGot: %v\nExpected: %v", inputFilepaths, expected)
+	}
+}
+
+func TestGenerateInputCombinations(t *testing.T) {
+	inputFilepaths := map[string][]string{
+		"protein": {
+			"testdata/binding/abl/7n9g.pdb",
+		},
+		"small_molecule": {
+			"testdata/binding/abl/ZINC000003986735.sdf",
+			"testdata/binding/abl/ZINC000019632618.sdf",
+		},
+	}
+
+	expected := []map[string]string{
+		{
+			"protein":        "testdata/binding/abl/7n9g.pdb",
+			"small_molecule": "testdata/binding/abl/ZINC000003986735.sdf",
+		},
+		{
+			"protein":        "testdata/binding/abl/7n9g.pdb",
+			"small_molecule": "testdata/binding/abl/ZINC000019632618.sdf",
+		},
+	}
+
+	combinations := generateInputCombinations(inputFilepaths)
+
+	if !reflect.DeepEqual(combinations, expected) {
+		t.Errorf("Expected:\n%v\nGot:\n%v", expected, combinations)
+	}
+}
+
+func loadJSONFile(filePath string, target interface{}) error {
+	fileBytes, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(fileBytes, target)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func TestCreateIOEntries(t *testing.T) {
+	var ios []IO
+	err := loadJSONFile("testdata/example_initial_io.json", &ios)
+	if err != nil {
+		t.Fatalf("Error loading example_initiail_io.json: %v", err)
+	}
+
+	var tool Tool
+	err = loadJSONFile("testdata/example_tool.json", &tool)
+	if err != nil {
+		t.Fatalf("Error loading example_tool.json: %v", err)
+	}
+
+	toolPath := ios[0].Tool
+
+	inputCombinations := make([]map[string]string, len(ios))
+	for i, io := range ios {
+		inputCombination := make(map[string]string)
+		for key, fileInput := range io.Inputs {
+			inputCombination[key] = fileInput.Address.FilePath
 		}
-		os.Remove(tempFilePath)
-	}()
-
-	// Test the updateIOState function
-	index := 0
-	newState := "testing"
-
-	fileMutex := &sync.Mutex{}
-	err = updateIOState(tempFilePath, index, newState, fileMutex)
-	if err != nil {
-		t.Fatalf("Error updating IO state: %v", err)
+		inputCombinations[i] = inputCombination
 	}
 
-	ioList, err := ReadIOList(tempFilePath)
-	if err != nil {
-		t.Fatalf("Error reading IO list: %v", err)
+	expected := make([]IO, len(ios))
+	for i := range ios {
+		expected[i] = IO{
+			Tool:    ios[i].Tool,
+			Inputs:  ios[i].Inputs,
+			Outputs: ios[i].Outputs,
+			State:   ios[i].State,
+			ErrMsg:  ios[i].ErrMsg,
+		}
 	}
 
-	if ioList[index].State != newState {
-		t.Errorf("Expected state to be '%v', got '%v'", newState, ioList[index].State)
+	ioEntries := createIOEntries(toolPath, tool, inputCombinations)
+
+	if !reflect.DeepEqual(ioEntries, expected) {
+		t.Errorf("Expected:\n%v\nGot:\n%v", expected, ioEntries)
+	}
+}
+
+func TestCreateIOJson(t *testing.T) {
+	inputDir := "testdata/binding/abl"
+
+	var ios []IO
+	err := loadJSONFile("testdata/example_equibind_io.json", &ios)
+	if err != nil {
+		t.Fatalf("Error loading example_equibind_io.json: %v", err)
+	}
+
+	var tool Tool
+	err = loadJSONFile("testdata/example_tool.json", &tool)
+	if err != nil {
+		t.Fatalf("Error loading example_tool.json: %v", err)
+	}
+
+	// Extract the toolPath from the first item in the ios
+	toolPath := ios[0].Tool
+
+	// Get the expected inputs and outputs
+	expected := ios
+
+	// Remove the "tool" key from each map in ios
+	for i := range ios {
+		ios[i].Tool = ""
+	}
+
+	generatedIOData, err := CreateIOJson(inputDir, tool, toolPath, 2)
+	if err != nil {
+		t.Fatalf("Error in CreateIOJson: %v", err)
+	}
+
+	// Compare the paths after the asterisk
+	for i := range generatedIOData {
+		for k, v := range generatedIOData[i].Inputs {
+			expectedPath := strings.Split(expected[i].Inputs[k].Address.FilePath, "*")[1]
+			if !strings.HasSuffix(v.Address.FilePath, expectedPath) {
+				t.Errorf("Expected path suffix:\n%v\nGot:\n%v", expectedPath, v.Address.FilePath)
+			}
+		}
+	}
+}
+
+func TestReadIOList(t *testing.T) {
+	filePath := "testdata/example_io.json"
+
+	var expected []IO
+	err := loadJSONFile(filePath, &expected)
+	if err != nil {
+		t.Fatalf("Error loading example_io.json: %v", err)
+	}
+
+	ioList, err := ReadIOList(filePath)
+	if err != nil {
+		t.Fatalf("Error in ReadIOList: %v", err)
+	}
+
+	if !reflect.DeepEqual(ioList, expected) {
+		t.Errorf("Expected:\n%v\nGot:\n%v", expected, ioList)
+	}
+}
+
+func TestWriteIOList(t *testing.T) {
+	ioJsonPath := "testdata/temp_io.json"
+	defer os.Remove(ioJsonPath)
+
+	var ioList []IO
+	err := loadJSONFile("testdata/example_io.json", &ioList)
+	if err != nil {
+		t.Fatalf("Error loading example_io.json: %v", err)
+	}
+
+	err = WriteIOList(ioJsonPath, ioList)
+	if err != nil {
+		t.Fatalf("Error in WriteIOList: %v", err)
+	}
+
+	var writtenIOList []IO
+	err = loadJSONFile(ioJsonPath, &writtenIOList)
+	if err != nil {
+		t.Fatalf("Error loading temp_io.json: %v", err)
+	}
+
+	if !reflect.DeepEqual(writtenIOList, ioList) {
+		t.Errorf("Expected:\n%v\nGot:\n%v", ioList, writtenIOList)
 	}
 }

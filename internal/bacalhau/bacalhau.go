@@ -12,7 +12,6 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 func GetBacalhauApiHost() string {
@@ -27,7 +26,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
+func CreateBacalhauJob(cids []string, container, cmd string, memory int, gpu, network bool) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -38,15 +37,14 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 
 	// had problems getting selector to work in bacalhau v0.28
-	var selectorLabel string
-	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if plexEnv == "stage" {
-		selectorLabel = "labdaostage"
-	} else {
-		selectorLabel = "labdao"
-	}
-	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{selectorLabel}}
-	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+	// var selectorLabel string
+	// plexEnv, _ := os.LookupEnv("PLEX_ENV")
+	// if plexEnv == "stage" {
+	// 	selectorLabel = "labdaostage"
+	// } else {
+	// 	selectorLabel = "labdao"
+	// }
+	// job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
 
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
@@ -57,7 +55,14 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	if network {
 		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	}
-	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
+
+	// make a for loop that iterates through the cids and adds each to the job
+	for index, cid := range cids {
+		inputPath := fmt.Sprintf("/inputs/%d", index)
+		job.Spec.Inputs = append(job.Spec.Inputs, model.StorageSpec{StorageSource: model.StorageSourceIPFS, CID: cid, Path: inputPath})
+	}
+
+	// job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	return job, err
 }
@@ -82,7 +87,6 @@ func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedRe
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
 
-	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
 	for i := 0; i < maxTrys; i++ {
 		saplingIndex := i % 5
 
@@ -109,4 +113,20 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err
+}
+
+func InstructionToBacalhauCmd(cid, container, cmd string, memory int, gpu, network bool) string {
+	gpuFlag := ""
+	if gpu {
+		gpuFlag = "--gpu 1 "
+	}
+	memoryFlag := ""
+	if memory != 0 {
+		memoryFlag = fmt.Sprintf("--memory %dgb ", memory)
+	}
+	networkFlag := ""
+	if network {
+		networkFlag = "--network full"
+	}
+	return fmt.Sprintf("bacalhau docker run --selector owner=labdao %s%s%s -i %s %s -- /bin/bash -c '%s'", gpuFlag, memoryFlag, networkFlag, cid, container, cmd)
 }

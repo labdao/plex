@@ -57,7 +57,7 @@ func ReadToolConfig(filePath string) (Tool, error) {
 	return tool, nil
 }
 
-func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
+func toolToCmd(toolConfig Tool, ioEntry IO) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
 	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
@@ -71,18 +71,15 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 		key = strings.TrimSuffix(key, ".default")
 
 		var replacement string
-		input := ioEntry.Inputs[key]
-		srcFilepath, err := DetermineSrcPath(input, ioGraph)
-		if err != nil {
-			return "", err
-		}
+		input := ioEntry.Inputs[key].Address
+
 		switch match[2] {
 		case ".filepath":
-			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(srcFilepath))
+			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(input.FilePath))
 		case ".basename":
-			replacement = strings.TrimSuffix(filepath.Base(srcFilepath), filepath.Ext(srcFilepath))
+			replacement = strings.TrimSuffix(filepath.Base(input.FilePath), filepath.Ext(input.FilePath))
 		case ".ext":
-			ext := filepath.Ext(srcFilepath)
+			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")
 		case ".default":
 			replacement = toolConfig.Inputs[key].Default
@@ -108,8 +105,8 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 	return cmd, nil
 }
 
-func toolToDockerCmd(toolConfig Tool, ioEntry IO, ioGraph []IO, inputsDirPath, outputsDirPath string) (string, error) {
-	cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
+func toolToDockerCmd(toolConfig Tool, ioEntry IO, inputsDirPath, outputsDirPath string) (string, error) {
+	cmd, err := toolToCmd(toolConfig, ioEntry)
 	if err != nil {
 		return "", err
 	}

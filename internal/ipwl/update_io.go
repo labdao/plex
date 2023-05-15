@@ -31,6 +31,38 @@ func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.
 	return nil
 }
 
+func updateIOWithCid(ioJsonPath string, index int, inputKey string, cid string, fileMutex *sync.Mutex) error {
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
+
+	ioList, err := ReadIOList(ioJsonPath)
+	if err != nil {
+		return fmt.Errorf("failed to read IO list: %w", err)
+	}
+
+	if index < 0 || index >= len(ioList) {
+		return fmt.Errorf("index out of range: %d", index)
+	}
+
+	fileInput := ioList[index].Inputs[inputKey]
+	newFileInput := FileInput{
+		Class: fileInput.Class,
+		Address: FileAddress{
+			FilePath: fileInput.Address.FilePath,
+			IPFS:     cid,
+		},
+	}
+
+	ioList[index].Inputs[inputKey] = newFileInput
+
+	err = WriteIOList(ioJsonPath, ioList)
+	if err != nil {
+		return fmt.Errorf("failed to write updated IO list: %w", err)
+	}
+
+	return nil
+}
+
 func updateIOState(ioJsonPath string, index int, state string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
@@ -103,23 +135,35 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			filePath := matchingFiles[0]
 
 			// Update IO entry
-			ioList[index].Outputs[outputKey] = FileOutput{
-				Class:    "File",
-				FilePath: filePath,
+			ioList[index].Outputs[outputKey] = CustomOutput{
+				FileOutput: &FileOutput{
+					Class: "File",
+					Address: FileAddress{
+						FilePath: filePath,
+						// add ipfs cid here for each output file
+						// IPFS: "",
+					},
+				},
 			}
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
 				files = append(files, FileOutput{
-					Class:    "File",
-					FilePath: filePath,
+					Class: "File",
+					Address: FileAddress{
+						FilePath: filePath,
+						// add ipfs cid here for each output file
+						// IPFS: "",
+					},
 				})
 			}
 
 			// Update IO entry
-			ioList[index].Outputs[outputKey] = ArrayFileOutput{
-				Class: "Array",
-				Files: files,
+			ioList[index].Outputs[outputKey] = CustomOutput{
+				ArrayFile: &ArrayFileOutput{
+					Class: "Array",
+					Files: files,
+				},
 			}
 		} else {
 			return fmt.Errorf("unsupported output Type and Item combination: Type=%s, Item=%s", output.Type, output.Item)
