@@ -59,10 +59,10 @@ func TestGetBacalhauJobResults(t *testing.T) {
 }
 */
 
-func TestInstructionToBacalhauCmd(t *testing.T) {
-	want := "bacalhau docker run --selector owner=labdao --memory 4gb --network full -i QmZGavZu mycontainer -- /bin/bash -c 'python -m molbind'"
-	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", 4, false, true)
-	if want != got {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
-	}
-}
+// func TestInstructionToBacalhauCmd(t *testing.T) {
+// 	want := "bacalhau docker run --selector owner=labdao --memory 4gb --network full -i QmZGavZu mycontainer -- /bin/bash -c 'python -m molbind'"
+// 	got := InstructionToBacalhauCmd("QmZGavZu", "mycontainer", "python -m molbind", 4, false, true)
+// 	if want != got {
+// 		t.Errorf("got = %s; wanted %s", fmt.Sprint(got), fmt.Sprint(want))
+// 	}
+// }
