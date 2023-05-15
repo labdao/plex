@@ -4,7 +4,8 @@
     "description": "Docking of small molecules to a protein",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "ls -lah /inputs > /outputs/inputs.txt"
+      "ls -lah /inputs > /outputs/inputs.txt",
+      "ls -lah /outputs"
       ],
     "requirements": [
     {
