@@ -93,7 +93,7 @@ func compareAndPrintDifferences(a interface{}, b interface{}, dataType string) {
 		}
 
 		if fieldA.Interface() != fieldB.Interface() {
-			fmt.Printf("[Difference in %s] Field: %s, original: %v, submitted: %v\n", dataType, typeOfA.Field(i).Name, fieldA.Interface(), fieldB.Interface())
+			fmt.Printf("[Difference in %s Field:] %s, original: %v, submitted: %v\n", dataType, typeOfA.Field(i).Name, fieldA.Interface(), fieldB.Interface())
 		}
 	}
 }
