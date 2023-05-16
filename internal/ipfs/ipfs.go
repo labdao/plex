@@ -31,8 +31,6 @@ func AddFileHttp(ipfsNodeUrl, filePath string) (cid string, err error) {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
 		return cid, err
 	}
-	// log the cid
-	fmt.Printf("added %s\n", cid)
 
 	return cid, err
 }

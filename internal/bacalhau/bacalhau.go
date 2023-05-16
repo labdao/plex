@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -64,6 +65,7 @@ func CreateBacalhauJob(cids []string, container, cmd string, memory int, gpu, ne
 
 	// job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
+
 	return job, err
 }
 
@@ -75,9 +77,38 @@ func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	return client
 }
 
+func compareAndPrintDifferences(a interface{}, b interface{}, dataType string) {
+	va := reflect.ValueOf(a)
+	vb := reflect.ValueOf(b)
+
+	typeOfA := va.Type()
+
+	for i := 0; i < va.NumField(); i++ {
+		fieldA := va.Field(i)
+		fieldB := vb.Field(i)
+		kind := fieldA.Kind()
+
+		if kind == reflect.Struct || kind == reflect.Slice || kind == reflect.Map || kind == reflect.Func {
+			continue
+		}
+
+		if fieldA.Interface() != fieldB.Interface() {
+			fmt.Printf("[Difference in %s] Field: %s, original: %v, submitted: %v\n", dataType, typeOfA.Field(i).Name, fieldA.Interface(), fieldB.Interface())
+		}
+	}
+}
+
 func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	client := CreateBacalhauClient()
 	submittedJob, err = client.Submit(context.Background(), job)
+
+	fmt.Print("DIFFERENCES BETWEEN ORIGINAL AND SUBMITTED JOB\n")
+	fmt.Print("---------------\n")
+	// Compare the original and submitted job's metadata and spec
+	compareAndPrintDifferences(job.Metadata, submittedJob.Metadata, "Metadata")
+	compareAndPrintDifferences(job.Spec, submittedJob.Spec, "Spec")
+	fmt.Print("---------------\n")
+
 	return submittedJob, err
 }
 
