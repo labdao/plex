@@ -78,6 +78,18 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 	return matchingFiles, nil
 }
 
+func getFileCid(filePath string) (string, error) {
+	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
+	}
+	cid, err := ipfs.AddFileHttp(ipfsNodeUrl, filePath)
+	if err != nil {
+		return "", fmt.Errorf("error adding file to IPFS: %w", err)
+	}
+	return cid, nil
+}
+
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
@@ -105,11 +117,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			if len(matchingFiles) > 0 {
 				filePath := matchingFiles[0]
 				// Update IO entry
-				ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-				if err != nil {
-					return fmt.Errorf("error deriving IPFS node URL: %w", err)
-				}
-				cid, err := ipfs.AddFileHttp(ipfsNodeUrl, filePath)
+				cid, err := getFileCid(filePath)
 				if err != nil {
 					return fmt.Errorf("error generating file IPFS cid: %w", err)
 				}
@@ -124,11 +132,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
-				ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-				if err != nil {
-					return fmt.Errorf("error deriving IPFS node URL: %w", err)
-				}
-				cid, err := ipfs.AddFileHttp(ipfsNodeUrl, filePath)
+				cid, err := getFileCid(filePath)
 				if err != nil {
 					return fmt.Errorf("error generating file IPFS cid: %w", err)
 				}
