@@ -242,6 +242,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		}
 	}
 
+	fmt.Println("Updating IO with result...")
 	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath, fileMutex)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
@@ -307,7 +308,7 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 	for _, file := range files {
 		src := filepath.Join(bacalOutputsDirPath, file.Name())
 		dst := filepath.Join(outputsDirPath, file.Name())
-		fmt.Printf("Moving %s to %s", src, dst)
+		// fmt.Printf("Moving %s to %s", src, dst)
 		if err := os.Rename(src, dst); err != nil {
 			return err
 		}
