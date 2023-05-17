@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.Mutex) error {
@@ -103,20 +105,38 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			if len(matchingFiles) > 0 {
 				filePath := matchingFiles[0]
 				// Update IO entry
+				ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+				if err != nil {
+					return fmt.Errorf("error deriving IPFS node URL: %w", err)
+				}
+				cid, err := ipfs.AddFileHttp(ipfsNodeUrl, filePath)
+				if err != nil {
+					return fmt.Errorf("error generating file IPFS cid: %w", err)
+				}
 				ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
 					Class: "File",
 					Address: FileAddress{
 						FilePath: filePath,
+						IPFS:     cid,
 					},
 				}}
 			}
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
+				ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+				if err != nil {
+					return fmt.Errorf("error deriving IPFS node URL: %w", err)
+				}
+				cid, err := ipfs.AddFileHttp(ipfsNodeUrl, filePath)
+				if err != nil {
+					return fmt.Errorf("error generating file IPFS cid: %w", err)
+				}
 				files = append(files, FileOutput{
 					Class: "File",
 					Address: FileAddress{
 						FilePath: filePath,
+						IPFS:     cid,
 					},
 				})
 			}

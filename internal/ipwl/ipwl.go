@@ -384,6 +384,7 @@ func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 
 	return outputFilepath, nil
 }
+
 func setRetryState(ioJsonPath string) error {
 	// Read the IO list from the file
 	ioList, err := ReadIOList(ioJsonPath)

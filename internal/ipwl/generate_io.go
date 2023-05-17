@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func findMatchingFiles(inputDir string, tool Tool, layers int) (map[string][]string, error) {
@@ -101,11 +103,21 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 				continue
 			}
 
+			ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+			if err != nil {
+				log.Printf("Error deriving IPFS node url: %v", err)
+				continue
+			}
+			cid, err := ipfs.AddFileHttp(ipfsNodeUrl, absPath)
+			if err != nil {
+				log.Printf("Error adding file to IPFS: %v", err)
+				continue
+			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class: "File",
 				Address: FileAddress{
 					FilePath: absPath,
-					IPFS:     "",
+					IPFS:     cid,
 				},
 			}
 		}
