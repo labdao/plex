@@ -11,9 +11,19 @@ type Output interface {
 	OutputType() string
 }
 
-type FileOutput struct {
-	Class    string `json:"class"`
+type FileAddress struct {
 	FilePath string `json:"filepath"`
+	IPFS     string `json:"ipfs"`
+}
+
+type FileInput struct {
+	Class   string      `json:"class"`
+	Address FileAddress `json:"address"`
+}
+
+type FileOutput struct {
+	Class   string      `json:"class"`
+	Address FileAddress `json:"address"`
 }
 
 func (fo FileOutput) OutputType() string {
@@ -29,17 +39,24 @@ func (afo ArrayFileOutput) OutputType() string {
 	return afo.Class
 }
 
-type FileInput struct {
-	Class    string `json:"class"`
-	FilePath string `json:"filepath"`
+type CustomOutput struct {
+	FileOutput *FileOutput
+	ArrayFile  *ArrayFileOutput
+}
+
+func (co CustomOutput) OutputType() string {
+	if co.FileOutput != nil {
+		return co.FileOutput.Class
+	}
+	return co.ArrayFile.Class
 }
 
 type IO struct {
-	Tool    string               `json:"tool"`
-	Inputs  map[string]FileInput `json:"inputs"`
-	Outputs map[string]Output    `json:"outputs"`
-	State   string               `json:"state"`
-	ErrMsg  string               `json:"errMsg"`
+	Tool    string                  `json:"tool"`
+	Inputs  map[string]FileInput    `json:"inputs"`
+	Outputs map[string]CustomOutput `json:"outputs"`
+	State   string                  `json:"state"`
+	ErrMsg  string                  `json:"errMsg"`
 }
 
 func (io *IO) UnmarshalJSON(data []byte) error {
@@ -55,21 +72,18 @@ func (io *IO) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	io.Outputs = make(map[string]Output)
+	io.Outputs = make(map[string]CustomOutput)
 	for k, v := range aux.Outputs {
 		var fileOutput FileOutput
-		if err := json.Unmarshal(v, &fileOutput); err != nil {
-			return err
-		}
-
-		if fileOutput.Class == "Array" {
+		if err := json.Unmarshal(v, &fileOutput); err == nil && fileOutput.Class != "Array" {
+			io.Outputs[k] = CustomOutput{FileOutput: &fileOutput}
+		} else {
 			var arrayFileOutput ArrayFileOutput
-			if err := json.Unmarshal(v, &arrayFileOutput); err != nil {
+			if err := json.Unmarshal(v, &arrayFileOutput); err == nil && arrayFileOutput.Class == "Array" {
+				io.Outputs[k] = CustomOutput{ArrayFile: &arrayFileOutput}
+			} else {
 				return err
 			}
-			io.Outputs[k] = arrayFileOutput
-		} else {
-			io.Outputs[k] = fileOutput
 		}
 	}
 
@@ -128,21 +142,4 @@ func WriteIOList(ioJsonPath string, ioList []IO) error {
 	}
 
 	return nil
-}
-
-func PrintIOGraphStatus(ioList []IO) {
-	stateCount := make(map[string]int)
-
-	// Iterate through the ioList and count the occurrences of each state
-	for _, io := range ioList {
-		stateCount[io.State]++
-	}
-
-	// Print the total number of IOs
-	fmt.Printf("Total IOs: %d\n", len(ioList))
-
-	// Print the number of IOs in each state
-	for state, count := range stateCount {
-		fmt.Printf("IOs in %s state: %d\n", state, count)
-	}
 }
