@@ -113,22 +113,19 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		}
 
 		if output.Type == "File" {
-			// Assume there is only one matching file per output key
-			if len(matchingFiles) > 0 {
-				filePath := matchingFiles[0]
-				// Update IO entry
-				cid, err := getFileCid(filePath)
-				if err != nil {
-					return fmt.Errorf("error generating file IPFS cid: %w", err)
-				}
-				ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
-					Class: "File",
-					Address: FileAddress{
-						FilePath: filePath,
-						IPFS:     cid,
-					},
-				}}
+			filePath := matchingFiles[0]
+			// Update IO entry
+			cid, err := getFileCid(filePath)
+			if err != nil {
+				return fmt.Errorf("error generating file IPFS cid: %w", err)
 			}
+			ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
+				Class: "File",
+				Address: FileAddress{
+					FilePath: filePath,
+					IPFS:     cid,
+				},
+			}}
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
@@ -153,11 +150,6 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		} else {
 			return fmt.Errorf("unsupported output Type and Item combination: Type=%s, Item=%s", output.Type, output.Item)
 		}
-
-		err = WriteIOList(ioJsonPath, ioList)
-		if err != nil {
-			return fmt.Errorf("error writing updated IO list: %w", err)
-		}
 	}
 
 	if len(outputsWithNoData) > 0 {
@@ -166,10 +158,10 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		ioList[index].State = "completed"
 	}
 
-	// err = WriteIOList(ioJsonPath, ioList)
-	// if err != nil {
-	// 	return fmt.Errorf("error writing updated IO list: %w", err)
-	// }
+	err = WriteIOList(ioJsonPath, ioList)
+	if err != nil {
+		return fmt.Errorf("error writing updated IO list: %w", err)
+	}
 
 	if len(outputsWithNoData) > 0 {
 		return fmt.Errorf("no output data found for: %v", outputsWithNoData)
