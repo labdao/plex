@@ -100,27 +100,32 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 
 		if output.Type == "File" {
 			// Assume there is only one matching file per output key
-			filePath := matchingFiles[0]
-
-			// Update IO entry
-			ioList[index].Outputs[outputKey] = FileOutput{
-				Class:    "File",
-				FilePath: filePath,
+			if len(matchingFiles) > 0 {
+				filePath := matchingFiles[0]
+				// Update IO entry
+				ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
+					Class: "File",
+					Address: FileAddress{
+						FilePath: filePath,
+					},
+				}}
 			}
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
 				files = append(files, FileOutput{
-					Class:    "File",
-					FilePath: filePath,
+					Class: "File",
+					Address: FileAddress{
+						FilePath: filePath,
+					},
 				})
 			}
 
 			// Update IO entry
-			ioList[index].Outputs[outputKey] = ArrayFileOutput{
+			ioList[index].Outputs[outputKey] = CustomOutput{ArrayFile: &ArrayFileOutput{
 				Class: "Array",
 				Files: files,
-			}
+			}}
 		} else {
 			return fmt.Errorf("unsupported output Type and Item combination: Type=%s, Item=%s", output.Type, output.Item)
 		}

@@ -337,21 +337,70 @@ func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
 	return dependsReady, nil
 }
 
+// func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
+// 	// Check if the input.FilePath has the format ${i[key]}
+// 	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
+// 	match := re.FindStringSubmatch(input.FilePath)
+
+// 	if match == nil {
+// 		// The input.FilePath is a normal file path
+// 		return input.FilePath, nil
+// 	}
+
+// 	// Extract the index and key from the matched pattern
+// 	indexStr, key := match[1], match[2]
+// 	index, err := strconv.Atoi(indexStr)
+// 	if err != nil {
+// 		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FilePath)
+// 	}
+
+// 	if index < 0 || index >= len(ioGraph) {
+// 		return "", fmt.Errorf("index out of range: %d", index)
+// 	}
+
+// 	// Check that dependent subgraph has not failed
+// 	if ioGraph[index].State == "failed" {
+// 		return "", fmt.Errorf("dependent subgraph %d failed", index)
+// 	}
+
+// 	// Get the output Filepath of the corresponding key
+// 	output, ok := ioGraph[index].Outputs[key]
+// 	if !ok {
+// 		return "", fmt.Errorf("key not found in outputs: %s", key)
+// 	}
+
+// 	outputFilepath := ""
+// 	switch output := output.(type) {
+// 	case FileOutput:
+// 		outputFilepath = output.FilePath
+// 	case ArrayFileOutput:
+// 		return "", fmt.Errorf("PLEx does not currently support ArrayFileOutput as an input")
+// 	default:
+// 		return "", fmt.Errorf("unknown output type")
+// 	}
+
+// 	if outputFilepath == "" {
+// 		return "", errOutputPathEmpty
+// 	}
+
+// 	return outputFilepath, nil
+// }
+
 func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
-	// Check if the input.FilePath has the format ${i[key]}
+	// Check if the input.Address.FilePath has the format ${i[key]}
 	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
-	match := re.FindStringSubmatch(input.FilePath)
+	match := re.FindStringSubmatch(input.Address.FilePath)
 
 	if match == nil {
-		// The input.FilePath is a normal file path
-		return input.FilePath, nil
+		// The input.Address.FilePath is a normal file path
+		return input.Address.FilePath, nil
 	}
 
 	// Extract the index and key from the matched pattern
 	indexStr, key := match[1], match[2]
 	index, err := strconv.Atoi(indexStr)
 	if err != nil {
-		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FilePath)
+		return "", fmt.Errorf("invalid index in input.Address.FilePath: %s", input.Address.FilePath)
 	}
 
 	if index < 0 || index >= len(ioGraph) {
@@ -364,18 +413,17 @@ func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	}
 
 	// Get the output Filepath of the corresponding key
-	output, ok := ioGraph[index].Outputs[key]
+	customOutput, ok := ioGraph[index].Outputs[key]
 	if !ok {
 		return "", fmt.Errorf("key not found in outputs: %s", key)
 	}
 
 	outputFilepath := ""
-	switch output := output.(type) {
-	case FileOutput:
-		outputFilepath = output.FilePath
-	case ArrayFileOutput:
+	if customOutput.FileOutput != nil {
+		outputFilepath = customOutput.FileOutput.Address.FilePath
+	} else if customOutput.ArrayFile != nil {
 		return "", fmt.Errorf("PLEx does not currently support ArrayFileOutput as an input")
-	default:
+	} else {
 		return "", fmt.Errorf("unknown output type")
 	}
 
@@ -385,7 +433,6 @@ func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 
 	return outputFilepath, nil
 }
-
 func setRetryState(ioJsonPath string) error {
 	// Read the IO list from the file
 	ioList, err := ReadIOList(ioJsonPath)
