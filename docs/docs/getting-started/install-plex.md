@@ -74,6 +74,7 @@ chmod +x ./plex
 It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
 
 ### 4. Add an access token
+
 PLEX will prompt you for an access token - [you can get an access token here](https://airtable.com/shrfEDQj2fPffUge8). We'll email you one automatically, so you can run a tool straight away.
 
 Type the following command into your command line, replacing "< your token here >" with the provided access token:
