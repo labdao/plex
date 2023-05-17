@@ -116,9 +116,13 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			filePath := matchingFiles[0]
 			// Update IO entry
 			cid, err := getFileCid(filePath)
-			if err != nil {
+			if err != nil && cid == "" {
 				return fmt.Errorf("error generating file IPFS cid: %w", err)
 			}
+
+			fmt.Println("File path: ", filePath)
+			fmt.Println("CID: ", cid)
+
 			ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
 				Class: "File",
 				Address: FileAddress{

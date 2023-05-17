@@ -55,16 +55,23 @@ func TestToolToDockerCmd(t *testing.T) {
 	toolConfig := Tool{
 		DockerPull:  "some_docker_pull",
 		BaseCommand: []string{"some_base_command"},
-		Arguments:   []string{"--protein", "$(inputs.protein.filepath)", "--small_molecule", "$(inputs.small_molecule.filepath)"},
+		Arguments:   []string{"--protein", "$(inputs.protein.address.filepath)", "--small_molecule", "$(inputs.small_molecule.address.filepath)"},
+		GpuBool:     true, // Adding the GpuBool flag
 	}
 
 	ioEntry := IO{
 		Inputs: map[string]FileInput{
 			"protein": {
-				FilePath: "testdata/binding/abl/7n9g.pdb",
+				Class: "File",
+				Address: FileAddress{
+					FilePath: "testdata/binding/abl/7n9g.pdb",
+				},
 			},
 			"small_molecule": {
-				FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+				Class: "File",
+				Address: FileAddress{
+					FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+				},
 			},
 		},
 	}
@@ -77,7 +84,8 @@ func TestToolToDockerCmd(t *testing.T) {
 		t.Errorf("Error generating Docker command: %v", err)
 	}
 
-	expectedDockerCmd := "docker run  -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
+	// Adding the --gpus all flag to the expected command
+	expectedDockerCmd := "docker run --gpus all -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
 
 	if dockerCmd != expectedDockerCmd {
 		t.Errorf("Expected Docker command: %s, got: %s", expectedDockerCmd, dockerCmd)
