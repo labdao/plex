@@ -219,7 +219,14 @@ job.yaml
 # Params
 params
 .env
-=======
+
+# Docusaurus files
+docs/*.code-workspace
+docs/atoms/.DS_Store
+docs/.DS_Store
+docs/build/
+docs/node_modules/
+docs/.docusaurus/
 
 # Docusaurus files
 docs/*.code-workspace
@@ -264,7 +271,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-=======
 
 # Docusaurus files
 docs/*.code-workspace
@@ -276,4 +282,3 @@ docs/.docusaurus/
 
 # Do not ignore the following files
 !*.gif
-
