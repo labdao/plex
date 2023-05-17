@@ -132,7 +132,7 @@ echo "Installation complete. Welcome to LabDAO! Documentation at https://github.
 echo "To get started, please run the following steps:"
 echo "1. Please change the permissions of plex on your system:"
 echo "chmod +x ./plex"
-echo "2. Please add your access token to use plex. To request an access token, visit https://whe68a12b61.typeform.com/to/PpbO2HYf"
+echo "2. Please add your access token to use plex. To request an access token, visit https://airtable.com/shrfEDQj2fPffUge8"
 echo "export PLEX_ACCESS_TOKEN=<your access token>"
 echo "3. [Linux only] If you recieve a warning about download speeds on Linux you can optionally run:"
 echo "sudo sysctl -w net.core.rmem_max=2500000"
