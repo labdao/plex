@@ -78,18 +78,6 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 	return matchingFiles, nil
 }
 
-// func getFileCid(filePath string) (string, error) {
-// 	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-// 	if err != nil {
-// 		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
-// 	}
-// 	cid, err := ipfs.GetFileCid(filePath)
-// 	if err != nil {
-// 		return "", fmt.Errorf("error adding file to IPFS: %w", err)
-// 	}
-// 	return cid, nil
-// }
-
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
@@ -129,15 +117,6 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 				FilePath: filePath,
 				IPFS:     cid,
 			}
-
-			// ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
-			// 	Class: "File",
-			// 	Address: FileAddress{
-			// 		FilePath: filePath,
-			// 		IPFS:     cid,
-			// 	},
-			// }}
-
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
@@ -151,20 +130,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 					FilePath: filePath,
 					IPFS:     cid,
 				})
-				// files = append(files, FileOutput{
-				// 	Class: "File",
-				// 	Address: FileAddress{
-				// 		FilePath: filePath,
-				// 		IPFS:     cid,
-				// 	},
-				// })
 			}
-
-			// Update IO entry
-			// ioList[index].Outputs[outputKey] = CustomOutput{ArrayFile: &ArrayFileOutput{
-			// 	Class: "Array",
-			// 	Files: files,
-			// }}
 
 			ioList[index].Outputs[outputKey] = ArrayFileOutput{
 				Class: "Array",
