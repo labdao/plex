@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.Mutex) error {
@@ -76,6 +78,18 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 	return matchingFiles, nil
 }
 
+// func getFileCid(filePath string) (string, error) {
+// 	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+// 	if err != nil {
+// 		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
+// 	}
+// 	cid, err := ipfs.GetFileCid(filePath)
+// 	if err != nil {
+// 		return "", fmt.Errorf("error adding file to IPFS: %w", err)
+// 	}
+// 	return cid, nil
+// }
+
 func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
@@ -99,24 +113,59 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		}
 
 		if output.Type == "File" {
-			// Assume there is only one matching file per output key
 			filePath := matchingFiles[0]
 
 			// Update IO entry
+			cid, err := ipfs.GetFileCid(filePath)
+			if err != nil {
+				return fmt.Errorf("error generating file IPFS cid: %w", err)
+			}
+
+			fmt.Println("File path: ", filePath)
+			fmt.Println("CID: ", cid)
+
 			ioList[index].Outputs[outputKey] = FileOutput{
 				Class:    "File",
 				FilePath: filePath,
+				IPFS:     cid,
 			}
+
+			// ioList[index].Outputs[outputKey] = CustomOutput{FileOutput: &FileOutput{
+			// 	Class: "File",
+			// 	Address: FileAddress{
+			// 		FilePath: filePath,
+			// 		IPFS:     cid,
+			// 	},
+			// }}
+
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
+				cid, err := ipfs.GetFileCid(filePath)
+				if err != nil {
+					return fmt.Errorf("error generating file IPFS cid: %w", err)
+				}
+
 				files = append(files, FileOutput{
 					Class:    "File",
 					FilePath: filePath,
+					IPFS:     cid,
 				})
+				// files = append(files, FileOutput{
+				// 	Class: "File",
+				// 	Address: FileAddress{
+				// 		FilePath: filePath,
+				// 		IPFS:     cid,
+				// 	},
+				// })
 			}
 
 			// Update IO entry
+			// ioList[index].Outputs[outputKey] = CustomOutput{ArrayFile: &ArrayFileOutput{
+			// 	Class: "Array",
+			// 	Files: files,
+			// }}
+
 			ioList[index].Outputs[outputKey] = ArrayFileOutput{
 				Class: "Array",
 				Files: files,
