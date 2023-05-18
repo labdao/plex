@@ -7,17 +7,24 @@ import (
 	"os"
 )
 
-type Output interface {
-	OutputType() string
+type FileInput struct {
+	Class    string `json:"class"`
+	FilePath string `json:"filepath"`
+	IPFS     string `json:"ipfs"`
 }
 
 type FileOutput struct {
 	Class    string `json:"class"`
 	FilePath string `json:"filepath"`
+	IPFS     string `json:"ipfs"`
 }
 
 func (fo FileOutput) OutputType() string {
 	return fo.Class
+}
+
+type Output interface {
+	OutputType() string
 }
 
 type ArrayFileOutput struct {
@@ -27,11 +34,6 @@ type ArrayFileOutput struct {
 
 func (afo ArrayFileOutput) OutputType() string {
 	return afo.Class
-}
-
-type FileInput struct {
-	Class    string `json:"class"`
-	FilePath string `json:"filepath"`
 }
 
 type IO struct {
@@ -128,4 +130,21 @@ func WriteIOList(ioJsonPath string, ioList []IO) error {
 	}
 
 	return nil
+}
+
+func PrintIOGraphStatus(ioList []IO) {
+	stateCount := make(map[string]int)
+
+	// Iterate through the ioList and count the occurrences of each state
+	for _, io := range ioList {
+		stateCount[io.State]++
+	}
+
+	// Print the total number of IOs
+	fmt.Printf("Total IOs: %d\n", len(ioList))
+
+	// Print the number of IOs in each state
+	for state, count := range stateCount {
+		fmt.Printf("IOs in %s state: %d\n", state, count)
+	}
 }

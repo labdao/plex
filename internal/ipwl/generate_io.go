@@ -4,6 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func findMatchingFiles(inputDir string, tool Tool, layers int) (map[string][]string, error) {
@@ -100,9 +102,15 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 				log.Printf("Error converting to absolute path: %v", err)
 				continue
 			}
+			cid, err := ipfs.GetFileCid(absPath)
+			if err != nil {
+				log.Printf("Error getting CID for file %s: %v", absPath, err)
+				continue
+			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class:    "File",
 				FilePath: absPath,
+				IPFS:     cid,
 			}
 		}
 

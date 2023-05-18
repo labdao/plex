@@ -72,7 +72,7 @@ func TestToolToDockerCmd(t *testing.T) {
 	inputsDirPath := "testdata/binding/abl"
 	outputsDirPath := "some_output_dir"
 
-	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, inputsDirPath, outputsDirPath)
+	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, []IO{ioEntry}, inputsDirPath, outputsDirPath)
 	if err != nil {
 		t.Errorf("Error generating Docker command: %v", err)
 	}

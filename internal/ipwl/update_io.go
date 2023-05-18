@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.Mutex) error {
@@ -99,24 +101,34 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		}
 
 		if output.Type == "File" {
-			// Assume there is only one matching file per output key
 			filePath := matchingFiles[0]
 
 			// Update IO entry
+			cid, err := ipfs.GetFileCid(filePath)
+			if err != nil {
+				return fmt.Errorf("error generating file IPFS cid: %w", err)
+			}
+
 			ioList[index].Outputs[outputKey] = FileOutput{
 				Class:    "File",
 				FilePath: filePath,
+				IPFS:     cid,
 			}
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
+				cid, err := ipfs.GetFileCid(filePath)
+				if err != nil {
+					return fmt.Errorf("error generating file IPFS cid: %w", err)
+				}
+
 				files = append(files, FileOutput{
 					Class:    "File",
 					FilePath: filePath,
+					IPFS:     cid,
 				})
 			}
 
-			// Update IO entry
 			ioList[index].Outputs[outputKey] = ArrayFileOutput{
 				Class: "Array",
 				Files: files,
