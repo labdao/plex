@@ -231,5 +231,9 @@ docs/build/
 docs/node_modules/
 docs/.docusaurus/
 
+# Rstudio
+.Rproj.user
+
 # Do not ignore the following files
 !*.gif
+
