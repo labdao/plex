@@ -1,0 +1,144 @@
+---
+title: "Decentralised storage and compute enable highly reproducible Benchmarks for Machine Learning in Biology"
+author:
+  - name: Josh McMenemy
+    affiliation: LabDAO 
+  - name: Aakaash Meduri
+    affiliation: LabDAO
+  - name: Lily Hansen-Gilis
+    affiliation: LabDAO
+  - name: Isabel Thompson
+    affiliation: LabDAO
+  - name: Niklas Rindtorff
+    affiliation: LabDAO
+citation:
+  type: article-journal
+  container-title: "LabDAO Communications"
+  url: https://example.com/summarizing-output
+format:
+  html:
+    code-fold: true
+---
+
+## Significance
+Reliable comparison of model performance is an important component of machine learning research. Creating shared truths about model performance relies on 1) versioned and public benchmark data, 2) open, and highly reproducible evaluation metrics, as well as ideally 3) open, and accessible models. 
+
+Here, we provide an example of how PLEX - an open source decentralised compute and storage platform - can enable highly reproducible model performance benchmarks. We compare two recently published machine learning based docking algorithms on the time-split PDBind data initially proposed by Stärk et al. We demonstrate reproducibility of previously published pose accuracy results and open up new ways for the wider community to run these models with custom inputs. 
+
+::: {.callout-tip}
+## Reproducibility
+
+This micropublication is fully reproducible Quarto document that can be run as a Jupyter Notebook or Rmarkdown notebook. Intense computational workloads, such as the benchmarking of models, is run through PLEX.
+
+In order to run this notebook, you will need: 
+
+* PLEX installed on your device
+* PDBBind benchmark data downloaded from [Stärk et al.](https://zenodo.org/record/6408497)
+* PDBBind affinity data downloaded from the official [website](https://pdbbind.oss-cn-hangzhou.aliyuncs.com/download/PDBbind_v2020_plain_text_index.tar.gz)
+
+Head to the LabDAO [docs](docs.labdao.xyz) to learn more about how to install, use, and contribute to PLEX.
+:::
+
+## Introduction
+## Methods
+### PLEX setup
+PLEX binaries are installed and a simple python SDK was use to pass instructions from python to the go binaries.
+
+import os
+import sys
+import importlib
+
+```{python}
+# loading packages
+import csv
+import os
+import json
+import sys
+import importlib
+import pandas as pd
+import copy
+
+# this can disapear once plex is a pip package
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+import plex.sdk
+importlib.reload(plex.sdk)
+
+os.environ["PLEX_ACCESS_TOKEN"] = "mellon"
+os.environ["PLEX_ENV"] = "stage"
+```
+
+### PDBBind benchmark
+The complete PDBBind dataset was retrieved from and processed locally. Entried which were part of the time-split PDBBind test data were identified based on a table published in Corso et al.
+
+### Pose generation
+PLEX is a platform to execute pre-configured computational graphs. The definition of computational graphs and tools in PLEX takes inspiration from the common workflow language. Computational graphs are simple JSON dictionaries, which specify the input, tool, and output of a task. Multiple of such triplets can be combined into larger graphs to create simple workflows. 
+
+Two computational graphs for Equibind and Diffdock were created based on the testdata definitions within PDBBind.
+
+```{python}
+def create_pdbind_io_dict(csv_path, tool_path):
+    io_data = []
+    
+    with open(csv_path, 'r') as csvfile:
+        csvreader = csv.DictReader(csvfile)
+        
+        for row in csvreader:
+            protein_path = os.path.join("/home/ubuntu/", row['protein_path'])
+            ligand_path = os.path.join("/home/ubuntu/", row['ligand_description'])
+            
+            if not os.path.exists(protein_path) or not os.path.exists(ligand_path):
+                print(f"Skipping row {row['complex_name']} due to missing file(s).")
+                continue
+            
+            entry = {
+                "tool": tool_path,
+                "inputs": {
+                    "protein": {
+                        "class": "File",
+                        "filepath": protein_path
+                    },
+                    "small_molecule": {
+                        "class": "File",
+                        "filepath": ligand_path
+                    }
+                },
+                "outputs": {
+                    "best_docked_small_molecule": {
+                        "class": "File",
+                        "filepath": ""
+                    },
+                    "protein": {
+                        "class": "File",
+                        "filepath": ""
+                    }
+                },
+                "state": "created",
+                "errMsg": ""
+            }
+            
+            io_data.append(entry)
+    
+    return io_data
+
+# Example usage
+io_sig_equibind = create_pdbind_io_dict(csv_path = '/home/ubuntu/datasets/diffdock_testdata.csv', tool_path= "tools/equibind.json")
+```
+
+Below is an example computational graph for the Equibind model.
+
+```{python}
+# display a set of examples
+print(io_sig_equibind[:1])
+```
+
+```{python}
+#| warning: false
+#| echo: false
+from plex.sdk import run_plex
+run_plex(io_sig_equibind, concurrency=5)
+#run_plex(io_sig_diffdock, concurrency=5)
+```
+
+
