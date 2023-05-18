@@ -235,7 +235,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		if verbose {
 			fmt.Println("Cleaning Bacalhau job")
 		}
-		err = cleanBacalhauOutputDir(outputsDirPath)
+		err = cleanBacalhauOutputDir(outputsDirPath, verbose)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
@@ -295,7 +295,7 @@ func copyFile(srcPath, destPath string) error {
 	return nil
 }
 
-func cleanBacalhauOutputDir(outputsDirPath string) error {
+func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 	bacalOutputsDirPath := filepath.Join(outputsDirPath, "outputs")
 
 	// Move files from /outputs to outputsDirPath
@@ -307,15 +307,14 @@ func cleanBacalhauOutputDir(outputsDirPath string) error {
 	for _, file := range files {
 		src := filepath.Join(bacalOutputsDirPath, file.Name())
 		dst := filepath.Join(outputsDirPath, file.Name())
-		fmt.Printf("Moving %s to %s", src, dst)
+
+		if verbose {
+			fmt.Printf("Moving %s to %s", src, dst)
+		}
 		if err := os.Rename(src, dst); err != nil {
 			return err
 		}
 	}
-
-	// if err := os.RemoveAll(bacalOutputsDirPath); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }

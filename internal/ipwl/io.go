@@ -7,17 +7,24 @@ import (
 	"os"
 )
 
-type Output interface {
-	OutputType() string
+type FileInput struct {
+	Class    string `json:"class"`
+	FilePath string `json:"filepath"`
+	IPFS     string `json:"ipfs"`
 }
 
 type FileOutput struct {
 	Class    string `json:"class"`
 	FilePath string `json:"filepath"`
+	IPFS     string `json:"ipfs"`
 }
 
 func (fo FileOutput) OutputType() string {
 	return fo.Class
+}
+
+type Output interface {
+	OutputType() string
 }
 
 type ArrayFileOutput struct {
@@ -27,11 +34,6 @@ type ArrayFileOutput struct {
 
 func (afo ArrayFileOutput) OutputType() string {
 	return afo.Class
-}
-
-type FileInput struct {
-	Class    string `json:"class"`
-	FilePath string `json:"filepath"`
 }
 
 type IO struct {
