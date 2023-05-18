@@ -109,9 +109,6 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 				return fmt.Errorf("error generating file IPFS cid: %w", err)
 			}
 
-			fmt.Println("File path: ", filePath)
-			fmt.Println("CID: ", cid)
-
 			ioList[index].Outputs[outputKey] = FileOutput{
 				Class:    "File",
 				FilePath: filePath,
