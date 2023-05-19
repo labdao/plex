@@ -13,7 +13,8 @@
     group: "{{ item.team }}"
     mode: "2775"
 
-- name: Create the checkkpoint folder in the shared team folder. Required for autosave permissions
+# This is required to set the right permissions in the checkpoints folder for the shared team directory
+- name: Create the checkpoint folder in the shared team folder.
   become: yes
   ansible.builtin.file:
     path: /srv/data/teams/{{ item.team }}/.ipynb_checkpoints
