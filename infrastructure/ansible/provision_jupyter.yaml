@@ -1,0 +1,29 @@
+- name: Provision Jupyter Notebook Instances
+  remote_user: ubuntu
+  hosts: tag_Type_jupyter_notebook
+  tasks:
+    # Aptitude is preferred by ansible
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install required system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-dev
+          - git
+          - curl
+        state: latest
+        update_cache: true
+
+    - name: Install tljh
+      shell: curl -L https://tljh.jupyter.org/bootstrap.py | sudo -E python3 -
+
+    - name: Reload the tljh configuration
+      become: yes
+      ansible.builtin.command: tljh-config reload

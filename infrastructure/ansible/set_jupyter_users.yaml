@@ -1,0 +1,32 @@
+- name: Provisition Plex
+  remote_user: ubuntu
+  hosts: tag_Type_jupyter_notebook
+  tasks:
+    - name: Create admin users
+      become: yes
+      ansible.builtin.command:
+        cmd: tljh-config add-item users.admin {{ item }}
+      loop:
+        - josh
+        - aakaash
+        - humberto
+
+    - name: Create shared folder for teams
+      become: yes
+      ansible.builtin.file:
+        path: /srv/data/teams
+        state: directory
+        
+    - name: Create teams
+      include_tasks: jupyter_team_setup_tasks.yaml
+      loop:
+        - team: "labdao"
+          users:
+            - josh
+            - aakaash
+            - humberto
+            - humberto2
+
+    - name: Reload the tljh configuration
+      become: yes
+      ansible.builtin.command: tljh-config reload

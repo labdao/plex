@@ -1,0 +1,54 @@
+---
+- name: Create unix group
+  become: yes
+  ansible.builtin.group:
+    name: "{{ item.team }}"
+
+- name: Create the shared folder
+  become: yes
+  ansible.builtin.file:
+    path: /srv/data/teams/{{ item.team }}
+    state: directory
+    owner: root
+    group: "{{ item.team }}"
+    mode: "2775"
+
+- name: Create the checkkpoint folder in the shared team folder. Required for autosave permissions
+  become: yes
+  ansible.builtin.file:
+    path: /srv/data/teams/{{ item.team }}/.ipynb_checkpoints
+    state: directory
+    owner: root
+    group: "{{ item.team }}"
+    mode: "2775"
+
+- name: White list the users
+  become: yes
+  ansible.builtin.command:
+    cmd: tljh-config add-item users.allowed {{ user }}
+  loop: "{{ item.users }}"
+  loop_control:
+    loop_var: user
+
+- name: Add the users of the team to the group
+  become: yes
+  ansible.builtin.user:
+    name: jupyter-{{ user }}
+    append: true #add users to groups and leave current groups alone
+    groups: "{{ item.team }}"
+  loop: "{{ item.users }}"
+  loop_control:
+    loop_var: user 
+
+- name: Link shared folder into the users home directory
+  become: yes
+  ansible.builtin.file:
+    dest: /home/jupyter-{{ user }}/{{ item.team }}
+    src: /srv/data/teams/{{ item.team }}
+    owner: jupyter-{{ user }}
+    group: jupyter-{{ user }}
+    follow: false
+    state: link 
+  loop: "{{ item.users }}"
+  loop_control:
+    loop_var: user 
