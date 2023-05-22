@@ -13,6 +13,14 @@ import (
 )
 
 func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local bool, concurrency, layers int, web3 bool) {
+	// mint an NFT if web3 flag is set
+	// ./plex -tool equibind -input-io /some/path/to/io.json -web3=true
+	if web3 {
+		fmt.Println("Minting NFT...")
+		mintNFT(toolPath, ioJsonPath)
+		return
+	}
+
 	var workDirPath string
 	var err error
 	if workDir != "" {
@@ -34,7 +42,6 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local b
 		}
 		fmt.Println("Created working directory: ", workDirPath)
 	}
-
 	// first thing to generate io json and save to plex work dir
 	var ioEntries []ipwl.IO
 	if toolPath != "" {
@@ -83,15 +90,15 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local b
 	fmt.Println(ioJsonPath)
 	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, local, concurrency)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
-	if web3 {
-		mintNFT(toolPath, ioJsonPath)
-	}
+	// if web3 {
+	// 	mintNFT(toolPath, ioJsonPath)
+	// }
 }
 
-func mintNFT(toolPath, ioPath string) {
+func mintNFT(toolPath, ioJsonPath string) {
 	// Build NFT metadata
 	fmt.Println("Preparing NFT metadata...")
-	metadata, err := web3.BuildTokenMetadata(toolPath, ioPath)
+	metadata, err := web3.BuildTokenMetadata(toolPath, ioJsonPath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)

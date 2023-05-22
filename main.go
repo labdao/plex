@@ -50,8 +50,8 @@ func main() {
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
 		fmt.Println("Warning: tool path support will be removed and moved to the Python SDK in the future")
-		if *inputDir == "" {
-			fmt.Println("Input dir is required when using the -tool option")
+		if *inputDir == "" && *web3 == false {
+			fmt.Println("Input dir or web3 flag set to true is required when using the -tool option")
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
