@@ -37,6 +37,8 @@ func main() {
 	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
 	retry := flag.Bool("retry", false, "Retry any io subgraphs that failed")
 
+	web3 := flag.Bool("web3", false, "Option to mint an NFT")
+
 	flag.Parse()
 
 	// process tool input to be relative to tools directory
@@ -48,18 +50,18 @@ func main() {
 	if *toolPath != "" {
 		fmt.Println("Running IPWL tool path")
 		fmt.Println("Warning: tool path support will be removed and moved to the Python SDK in the future")
-		if *inputDir == "" {
-			fmt.Println("Input dir is required when using the -tool option")
+		if *inputDir == "" && *web3 == false {
+			fmt.Println("Input dir or web3 flag set to true is required when using the -tool option")
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
 	} else if *workDir != "" {
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")
 	}
