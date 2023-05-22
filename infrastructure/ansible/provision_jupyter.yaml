@@ -23,7 +23,6 @@
 
     - name: Install tljh
       shell: curl -L https://tljh.jupyter.org/bootstrap.py | sudo -E python3 -
-      when: false
 
     - name: Set environment to jupyterhub
       become: yes
