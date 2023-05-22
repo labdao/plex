@@ -10,6 +10,7 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
     if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
         raise ValueError('io must be a dict or a list of dicts')
 
+    io_json_path = ""
     # Use a context manager for the temporary directory
     with TemporaryDirectory() as temp_dir:
 
@@ -35,7 +36,11 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
 
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_dir) as p:
             for line in p.stdout:
+                if "Initialized IO file at:" in line:
+                    parts = line.split()
+                    io_json_path = parts[-1]
                 print(line, end='')
+    return io_json_path
 
 def print_io_graph_status(io_graph):
     state_count = {}
