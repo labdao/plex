@@ -22,3 +22,16 @@ We are using an aws plug in that provides dynamic ec2 inventory. Through configu
 
 * `provision_jupyter.yaml` Targets `jupyter_notebook` instances and installs [The Littlest Jupyter Hub](https://tljh.jupyter.org/). It does not do any configuration beyond installation.
 * `set_jupyter_users.yaml` Sets the admins, users, and defines access permissions to a team folder 
+
+# The Teams Task
+
+`set_jupyter_users.yaml` has a Create teams task. It loops over a list of hashes of the form to create the juptyter and unix users and set up the home directories. To add a new user simply add a new line to the appropriate team, or add a enw team.
+
+```yaml
+team: TEAM_NAME
+users:
+  - user1
+  - user2
+  - user3
+```
+
