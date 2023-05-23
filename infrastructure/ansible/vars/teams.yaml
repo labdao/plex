@@ -1,0 +1,15 @@
+admins:
+  - josh
+  - aakaash
+  - humberto
+teams:
+  - team: "labdao"
+    users:
+      - josh
+      - aakaash
+      - humberto
+      - humberto2
+  # - team: customer1
+  #   users:
+  #     - user
+  #     - another_user

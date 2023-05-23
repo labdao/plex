@@ -2,7 +2,7 @@ Ansible is used to provision and configure infrastructure on AWS.
 
 # Prerequisites
 
-1. [Install Anible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) Most likely this is just `python3 -m pip install --user ansible`
+1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) Most likely this is just `python3 -m pip install --user ansible`
 1. This setup assumes the ssh key to access all ec2 instances is in ~/.ssh/setward-dev.pem.
 1. Set your aws access token environment variables. These variables are used Ansible's dynamic inventory mechanism.
 ```
@@ -12,7 +12,7 @@ export AWS_SECRET_ACCESS_KEY="asecretkey"
 
 # Usage
 
-Ansilbe configuration consists of playbooks you run using `ansible-playbook [playbook]`. In theory ansible playbooks are supposed to be idempotent and running them multiple times should not be dangerous. In practice this isn't always the case. Know what you are running before you run it.
+Ansible configuration consists of playbooks you run using `ansible-playbook [playbook]`. In theory ansible playbooks are supposed to be idempotent and running them multiple times should not be dangerous. In practice this isn't always the case. Know what you are running before you run it.
 
 # Dynamic Inventory
 
@@ -23,9 +23,9 @@ We are using an aws plug in that provides dynamic ec2 inventory. Through configu
 * `provision_jupyter.yaml` Targets `jupyter_notebook` instances and installs [The Littlest Jupyter Hub](https://tljh.jupyter.org/). It does not do any configuration beyond installation.
 * `set_jupyter_users.yaml` Sets the admins, users, and defines access permissions to a team folder 
 
-# The Teams Task
+# The teams.yaml
 
-`set_jupyter_users.yaml` has a Create teams task. It loops over a list of hashes of the form to create the juptyter and unix users and set up the home directories. To add a new user simply add a new line to the appropriate team, or add a enw team.
+`set_jupyter_users.yaml` has a Create teams task. It loops over a list of hashes of the form to create the juptyter and unix users and set up the home directories. To add a new user simply add a new line to the appropriate team in `vars/teams.yaml`
 
 ```yaml
 team: TEAM_NAME
