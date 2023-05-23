@@ -1,14 +1,13 @@
 admins:
-  - josh
-  - aakaash
-  - humberto
+  # - josh
+  # - aakaash
+  # - humberto
 teams:
-  - team: "labdao"
-    users:
-      - josh
-      - aakaash
-      - humberto
-      - humberto2
+  # - team: "labdao"
+  #   users:
+  #     - josh
+  #     - aakaash
+  #     - humberto
   # - team: customer1
   #   users:
   #     - user
