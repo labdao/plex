@@ -9,6 +9,10 @@ Ansible is used to provision and configure infrastructure on AWS.
 export AWS_ACCESS_KEY_ID="anaccesskey"
 export AWS_SECRET_ACCESS_KEY="asecretkey"
 ```
+1. Install extra ansible packages
+```
+ansible-galaxy collection install -r requirements.yaml
+```
 
 # Usage
 

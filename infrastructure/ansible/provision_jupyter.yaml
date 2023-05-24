@@ -18,8 +18,19 @@
           - python3-dev
           - git
           - curl
+          - pip
+          - libc6
         state: latest
         update_cache: true
+
+    - name: Install required pip packages
+      become: yes
+      ansible.builtin.pip:
+        name:
+          - pyopenssl
+          - github3.py
+          - pip
+        state: latest
 
     - name: Install tljh
       shell: curl -L https://tljh.jupyter.org/bootstrap.py | sudo -E python3 -
@@ -28,12 +39,10 @@
       become: yes
       ansible.builtin.command: tljh-config set user_environment.default_app jupyterlab
 
-    - name: Pull the plex repository
-      become: yes
-      ansible.builtin.git:
-        repo: https://github.com/labdao/plex.git
-        dest: /opt/local/plex/
-
     - name: Reload the tljh configuration
       become: yes
       ansible.builtin.command: tljh-config reload
+
+    - name: Bump system resources
+      become: yes 
+      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000

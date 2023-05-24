@@ -1,24 +1,24 @@
-- name: Provisition Plex
+- name: Set Jupyter Users
   remote_user: ubuntu
   hosts: tag_Type_jupyter_notebook
   vars_files:
     - vars/teams.yaml
   tasks:
-    - name: Create admin users
-      become: yes
-      ansible.builtin.command:
-        cmd: tljh-config add-item users.admin {{ item }}
-      loop: "{{ admins }}"
-
     - name: Create shared folder for teams
       become: yes
       ansible.builtin.file:
         path: /srv/data/teams
         state: directory
-        
+
+    - name: Create admin users
+      become: yes
+      ansible.builtin.command:
+        cmd: tljh-config add-item users.admin {{ item }}
+      loop: "{{ admins | default([])}}"
+       
     - name: Create teams
       include_tasks: jupyter_team_setup_tasks.yaml
-      loop: "{{ teams }}"
+      loop: "{{ teams | default([])}}"
 
     - name: Reload the tljh configuration
       become: yes

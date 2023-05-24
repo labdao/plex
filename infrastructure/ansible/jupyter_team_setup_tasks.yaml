@@ -53,16 +53,3 @@
   loop: "{{ item.users }}"
   loop_control:
     loop_var: user 
-
-- name: Symlink every user to the plex repo
-  become: yes
-  ansible.builtin.file:
-    path: /home/jupyter-{{ user }}/plex
-    src: /opt/local/plex/python
-    follow: false
-    state: link
-    owner: jupyter-{{ user }}
-    group: jupyter-{{ user }}
-  loop: "{{ item.users }}"
-  loop_control:
-    loop_var: user 
