@@ -3,5 +3,9 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "hardhat": "^2.14.0"
+  },
+  "dependencies": {
+    "@a16z/contracts": "^0.0.9",
+    "@openzeppelin/contracts": "^4.9.0"
   }
 }
