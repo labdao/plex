@@ -286,3 +286,14 @@ docs/.docusaurus/
 # Do not ignore the following files
 !*.gif
 
+# Hardhat files
+contracts/cache
+contracts/artifacts
+
+# Hardhat other
+contracts/node_modules
+contracts/.env
+contracts/coverage
+contracts/coverage.json
+contracts/typechain
+contracts/typechain-types
