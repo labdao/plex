@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 // check if wallet address is valid
@@ -12,6 +16,23 @@ import (
 // 		return false
 // 	}
 // 	return common.IsHexAddress(common.HexToAddress(address).Hex())
+// }
+
+type RelayerRequest struct {
+	To   string `json:"to"`
+	Data string `json:"data"`
+}
+
+func SubmitTransaction() {
+	contractAddress := common.HexToAddress("contractAddress")
+	contractAbi, err := abi.JSON(strings.NewReader("contractAbi"))
+}
+
+// // Define contract details
+// contractAddress := common.HexToAddress("contractAddress")
+// contractAbi, err := abi.JSON(strings.NewReader("contractAbi"))
+// if err != nil {
+// 	log.Fatalf("Failed to parse contract ABI: %v", err)
 // }
 
 func BuildTokenMetadata(toolPath, ioPath string) (string, error) {
