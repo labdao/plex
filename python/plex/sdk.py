@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List, Union
 
 
-def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, plexPath="./plex"):
+def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, plex_path="./plex"):
     if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
         raise ValueError('io must be a dict or a list of dicts')
 
@@ -23,7 +23,7 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
 
         cwd = os.getcwd()
         plex_work_dir = os.environ.get("PLEX_WORK_DIR",os.path.dirname(os.path.dirname(cwd)))
-        cmd = [plexPath, "-input-io", json_file_path, "-concurrency", str(concurrency)]
+        cmd = [plex_path, "-input-io", json_file_path, "-concurrency", str(concurrency)]
 
         if local:
             cmd.append("-local=true")
