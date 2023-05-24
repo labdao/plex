@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	CurrentPlexVersion = "v0.7.0"
+	CurrentPlexVersion = "v0.7.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
 	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
 )
