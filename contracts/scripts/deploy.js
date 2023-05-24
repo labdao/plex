@@ -7,6 +7,11 @@
 const hre = require("hardhat");
 
 async function main() {
+  const [deployer] = await hre.ethers.getSigners();
+
+  console.log("Deploying contracts with account:", deployer.address);
+  console.log("Account balance:", (await deployer.getBalance()).toString());
+
   const ProofOfScience = await hre.ethers.getContractFactory("ProofOfScience");
   const proofOfScience = await ProofOfScience.deploy();
 
