@@ -31,7 +31,6 @@ jobs:
     - name: Test
       env:
         PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
-        PLEX_ENV: ${{ secrets.PLEX_ENV }}
       run: go test ./... -v
 
     - name: Run Equibind
