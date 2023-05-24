@@ -53,3 +53,14 @@
   loop: "{{ item.users }}"
   loop_control:
     loop_var: user 
+
+- name: Ensure the symlink exists to the examples directory for every user
+  become: yes
+  ansible.builtin.file:
+    src: /opt/local/plex/python/notebooks
+    dest: /home/jupyter-{{ user }}/examples
+    follow: false
+    state: link
+  loop: "{{ item.users }}"
+  loop_control:
+    loop_var: user
