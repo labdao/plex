@@ -17,3 +17,8 @@ variable "availability_zones" {
   type    = list(string)
   default = ["us-east-1c"]
 }
+
+variable "cloudflare_zone_id" {
+  type = string
+  default = "858fe9f16ace6df3deefd366cb7defd6"
+}

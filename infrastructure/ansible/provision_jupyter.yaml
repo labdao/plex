@@ -1,0 +1,48 @@
+- name: Provision Jupyter Notebook Instances
+  remote_user: ubuntu
+  hosts: tag_Type_jupyter_notebook
+  tasks:
+    # Aptitude is preferred by ansible
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install required system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-dev
+          - git
+          - curl
+          - pip
+          - libc6
+        state: latest
+        update_cache: true
+
+    - name: Install required pip packages
+      become: yes
+      ansible.builtin.pip:
+        name:
+          - pyopenssl
+          - github3.py
+          - pip
+        state: latest
+
+    - name: Install tljh
+      shell: curl -L https://tljh.jupyter.org/bootstrap.py | sudo -E python3 -
+
+    - name: Set environment to jupyterhub
+      become: yes
+      ansible.builtin.command: tljh-config set user_environment.default_app jupyterlab
+
+    - name: Reload the tljh configuration
+      become: yes
+      ansible.builtin.command: tljh-config reload
+
+    - name: Bump system resources
+      become: yes 
+      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
