@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 // check if wallet address is valid
@@ -85,7 +88,7 @@ func removeFilepathKeys(obj map[string]interface{}) {
 	}
 }
 
-func BuildTokenMetadata(toolPath, ioPath string) (string, error) {
+func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 	toolBytes, err := ioutil.ReadFile(toolPath)
 	if err != nil {
 		return "", fmt.Errorf("error reading tool file: %v", err)
@@ -141,4 +144,45 @@ func BuildTokenMetadata(toolPath, ioPath string) (string, error) {
 	}
 
 	return string(tokenMetadata), nil
+}
+
+func MintNFT(toolPath, ioJsonPath string) {
+	// Build NFT metadata
+	fmt.Println("Preparing NFT metadata...")
+	metadata, err := buildTokenMetadata(toolPath, ioJsonPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	// Create a temporary file
+	tempFile, err := ioutil.TempFile("", "metadata-*.json")
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	defer os.Remove(tempFile.Name()) // clean up
+
+	// Write the metadata to the temporary file
+	_, err = tempFile.WriteString(metadata)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	// Close the file
+	err = tempFile.Close()
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+
+	// Upload the metadata to IPFS and return the CID
+	fmt.Println("Uploading NFT metadata to IPFS...")
+	cid, err := ipfs.GetFileCid(tempFile.Name())
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Printf("NFT metadata uploaded to IPFS: ipfs://%s\n", cid)
 }
