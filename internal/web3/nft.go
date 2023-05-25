@@ -67,6 +67,24 @@ import (
 // 	log.Fatalf("Failed to parse contract ABI: %v", err)
 // }
 
+func removeFilepathKeys(obj map[string]interface{}) {
+	delete(obj, "filepath") // Remove the filepath key at the current level
+
+	for _, value := range obj {
+		// Check if the value is another map
+		if asMap, ok := value.(map[string]interface{}); ok {
+			removeFilepathKeys(asMap) // Recursively check this map
+		} else if asSlice, ok := value.([]interface{}); ok { // Check if the value is a slice
+			for _, itemInSlice := range asSlice {
+				// Check if the item in the slice is a map
+				if asMap, ok := itemInSlice.(map[string]interface{}); ok {
+					removeFilepathKeys(asMap) // Recursively check this map
+				}
+			}
+		}
+	}
+}
+
 func BuildTokenMetadata(toolPath, ioPath string) (string, error) {
 	toolBytes, err := ioutil.ReadFile(toolPath)
 	if err != nil {
@@ -85,10 +103,14 @@ func BuildTokenMetadata(toolPath, ioPath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error unmarshaling tool file: %v", err)
 	}
+	removeFilepathKeys(toolMap)
 
 	err = json.Unmarshal(ioBytes, &ioMap)
 	if err != nil {
 		return "", fmt.Errorf("error unmarshaling io file: %v", err)
+	}
+	for _, ioEntry := range ioMap {
+		removeFilepathKeys(ioEntry)
 	}
 
 	tokenName := GenerateTokenName()
