@@ -11,8 +11,6 @@ import (
 	"github.com/labdao/plex/internal/ipfs"
 )
 
-var defenderAPIKey = os.Getenv("DEFENDER_API_KEY")
-var defenderAPISecret = os.Getenv("DEFENDER_API_SECRET")
 var recipientWallet = os.Getenv("RECIPIENT_WALLET")
 var autotaskWebhook = os.Getenv("AUTOTASK_WEBHOOK")
 
@@ -96,16 +94,6 @@ func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 }
 
 func MintNFT(toolPath, ioJsonPath string) {
-	if defenderAPIKey == "" {
-		fmt.Println("DEFENDER_API_KEY must be set")
-		os.Exit(1)
-	}
-
-	if defenderAPISecret == "" {
-		fmt.Println("DEFENDER_API_SECRET must be set")
-		os.Exit(1)
-	}
-
 	if recipientWallet == "" {
 		fmt.Println("RECIPIENT_WALLET must be set")
 		os.Exit(1)
@@ -157,7 +145,6 @@ func MintNFT(toolPath, ioJsonPath string) {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	fmt.Println("Minting process iniated.")
 }
 
 func triggerMinting(recipientAddress, cid string) error {
@@ -187,6 +174,16 @@ func triggerMinting(recipientAddress, cid string) error {
 	defer resp.Body.Close()
 
 	// TODO: Handle response
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Response from Autotask: %s\n", string(body))
 
 	return nil
 }
