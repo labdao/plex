@@ -166,6 +166,7 @@
 
   handlers:
     - name: Restart docker
+      become: yes
       ansible.builtin.service:
         name: docker
         state: restarted
