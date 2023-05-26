@@ -41,8 +41,6 @@
 
     - name: Add additional pip packages to jupyter user notebooks
       become: yes
-      # environment:
-      #   - PATH: /opt/tljh/user/bin:{{ ansible_env.PATH }}
       ansible.builtin.pip:
         name:
           - biopython
