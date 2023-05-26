@@ -1,87 +1,36 @@
 package web3
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/labdao/plex/internal/ipfs"
 )
 
-// check if wallet address is valid
-// func isValidAddress(address string) bool {
-// 	if !common.IsHexAddress(address) {
-// 		return false
-// 	}
-// 	return common.IsHexAddress(common.HexToAddress(address).Hex())
-// }
+var defenderAPIKey = os.Getenv("DEFENDER_API_KEY")
+var defenderAPISecret = os.Getenv("DEFENDER_API_SECRET")
+var recipientWallet = os.Getenv("RECIPIENT_WALLET")
+var autotaskWebhook = os.Getenv("AUTOTASK_WEBHOOK")
 
-// type RelayerRequest struct {
-// 	To   string `json:"to"`
-// 	Data string `json:"data"`
-// }
-
-// func SubmitTransaction() {
-// 	contractAddress := common.HexToAddress("contractAddress")
-// 	contractAbi, err := abi.JSON(strings.NewReader("contractAbi"))
-// 	if err != nil {
-// 		log.Fatalf("Failed to parse contract ABI: %v", err)
-// 	}
-
-// 	// Generate call data
-// 	data, err := contractAbi.Pack("functionName", "param1", "param2")
-// 	if err != nil {
-// 		log.Fatalf("Failed to generate call data: %v", err)
-// 	}
-
-// 	// Create Ethereum transaction
-// 	tx := types.NewTransaction(0, contractAddress, big.NewInt(0), 100000, big.NewInt(0), data)
-
-// 	// Convert the transaction to raw RLP-encoded bytes
-// 	encodedTx, err := tx.MarshalBinary()
-// 	if err != nil {
-// 		log.Fatalf("Failed to encode transaction: %v", err)
-// 	}
-
-// 	// Create the Defender relayer request
-// 	request := RelayerRequest{
-// 		To:   contractAddress.Hex(),
-// 		Data: common.Bytes2Hex(encodedTx),
-// 	}
-
-// 	// Convert the request to JSON
-// 	jsonRequest, err := json.Marshal(request)
-// 	if err != nil {
-// 		log.Fatalf("Failed to encode request to JSON: %v", err)
-// 	}
-
-// 	// Make the HTTP POST request to the Defender relayer
-// 	resp, err := http.Post("https://defender.openzeppelin.com/relayerApi/yourRelayer", "application/json", bytes.NewBuffer(jsonRequest))
-// 	if err != nil {
-// 		log.Fatalf("Failed to send request to relayer: %v", err)
-// 	}
-// }
-
-// // Define contract details
-// contractAddress := common.HexToAddress("contractAddress")
-// contractAbi, err := abi.JSON(strings.NewReader("contractAbi"))
-// if err != nil {
-// 	log.Fatalf("Failed to parse contract ABI: %v", err)
-// }
+type postData struct {
+	RecipientAddress string `json:"recipientAddress"`
+	Cid              string `json:"cid"`
+}
 
 func removeFilepathKeys(obj map[string]interface{}) {
-	delete(obj, "filepath") // Remove the filepath key at the current level
+	delete(obj, "filepath")
 
 	for _, value := range obj {
-		// Check if the value is another map
 		if asMap, ok := value.(map[string]interface{}); ok {
-			removeFilepathKeys(asMap) // Recursively check this map
-		} else if asSlice, ok := value.([]interface{}); ok { // Check if the value is a slice
+			removeFilepathKeys(asMap)
+		} else if asSlice, ok := value.([]interface{}); ok {
 			for _, itemInSlice := range asSlice {
-				// Check if the item in the slice is a map
 				if asMap, ok := itemInSlice.(map[string]interface{}); ok {
-					removeFilepathKeys(asMap) // Recursively check this map
+					removeFilepathKeys(asMap)
 				}
 			}
 		}
@@ -147,6 +96,26 @@ func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 }
 
 func MintNFT(toolPath, ioJsonPath string) {
+	if defenderAPIKey == "" {
+		fmt.Println("DEFENDER_API_KEY must be set")
+		os.Exit(1)
+	}
+
+	if defenderAPISecret == "" {
+		fmt.Println("DEFENDER_API_SECRET must be set")
+		os.Exit(1)
+	}
+
+	if recipientWallet == "" {
+		fmt.Println("RECIPIENT_WALLET must be set")
+		os.Exit(1)
+	}
+
+	if autotaskWebhook == "" {
+		fmt.Println("AUTOTASK_WEBHOOK must be set")
+		os.Exit(1)
+	}
+
 	// Build NFT metadata
 	fmt.Println("Preparing NFT metadata...")
 	metadata, err := buildTokenMetadata(toolPath, ioJsonPath)
@@ -155,29 +124,25 @@ func MintNFT(toolPath, ioJsonPath string) {
 		os.Exit(1)
 	}
 
-	// Create a temporary file
 	tempFile, err := ioutil.TempFile("", "metadata-*.json")
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	defer os.Remove(tempFile.Name()) // clean up
+	defer os.Remove(tempFile.Name())
 
-	// Write the metadata to the temporary file
 	_, err = tempFile.WriteString(metadata)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 
-	// Close the file
 	err = tempFile.Close()
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 
-	// Upload the metadata to IPFS and return the CID
 	fmt.Println("Uploading NFT metadata to IPFS...")
 	cid, err := ipfs.GetFileCid(tempFile.Name())
 	if err != nil {
@@ -185,4 +150,43 @@ func MintNFT(toolPath, ioJsonPath string) {
 		os.Exit(1)
 	}
 	fmt.Printf("NFT metadata uploaded to IPFS: ipfs://%s\n", cid)
+
+	fmt.Println("Triggering minting process via Defender Autotask...")
+	err = triggerMinting(recipientWallet, cid)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Minting process iniated.")
+}
+
+func triggerMinting(recipientAddress, cid string) error {
+	url := autotaskWebhook
+
+	data := postData{
+		RecipientAddress: recipientAddress,
+		Cid:              cid,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// TODO: Handle response
+
+	return nil
 }
