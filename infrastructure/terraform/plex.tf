@@ -19,8 +19,8 @@ resource "aws_instance" "plex_prod" {
 }
 
 resource "aws_instance" "ops_test" {
-  for_each      = toset(["opstest"])
-  ami           = var.ami_main
+  for_each      = toset([])
+  ami           = "ami-053b0d53c279acc90"
   instance_type = "g5.xlarge"
 
   vpc_security_group_ids = [aws_security_group.plex.id]

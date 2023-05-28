@@ -156,11 +156,39 @@
       ansible.builtin.copy:
         src: files/ipfs.service
         dest: /etc/systemd/system
+      notify:
+        - Systemd Daemon Reload
 
     - name: Enable and start the IPFS Daemon
       become: yes
-      ansible.builtin.systemd:
+      ansible.builtin.service:
         name: ipfs
+        state: started
+        enabled: true
+
+    - name: Install Bacalhau
+      ansible.builtin.shell:
+        cmd: curl -sL https://get.bacalhau.org/install.sh | bash
+
+    - name: Bump System Resources
+      become: yes
+      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
+
+    - name: Install the Bacalhau systemd unit
+      become: yes
+      ansible.builtin.template:
+        src: files/bacalhau.service
+        dest: /etc/systemd/system
+      vars:
+        owner: labdao
+        ipfs_connect: /ip4/127.0.0.1/tcp/5001
+      notify:
+        - Systemd Daemon Reload
+
+    - name: Enable and start Bacalhau
+      become: yes
+      ansible.builtin.service:
+        name: bacalhau
         state: started
         enabled: true
 
@@ -170,3 +198,8 @@
       ansible.builtin.service:
         name: docker
         state: restarted
+
+    - name: Systemd Daemon Reload
+      become: yes
+      ansible.builtin.systemd:
+        daemon_reload: true
