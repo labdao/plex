@@ -85,20 +85,19 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
 
 	for i := 0; i < maxTrys; i++ {
-		if showAnimation {
-			saplingIndex := i % 5
-			animation[saplingIndex] = "\U0001F331"
-			fmt.Printf("////%s////\r", strings.Join(animation, ""))
-			animation[saplingIndex] = "_"
-			time.Sleep(2 * time.Second)
-		}
-
 		results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
 		}
 		if len(results) > 0 {
 			return results, err
+		}
+		if showAnimation {
+			saplingIndex := i % 5
+			animation[saplingIndex] = "\U0001F331"
+			fmt.Printf("////%s////\r", strings.Join(animation, ""))
+			animation[saplingIndex] = "_"
+			time.Sleep(2 * time.Second)
 		}
 	}
 	return results, err
