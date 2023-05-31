@@ -2,15 +2,14 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-// todo: add CantBeEvil
-// import {LicenseVersion, CantBeEvil} from "@a16z/contracts/licenses/CantBeEvil.sol";
+import {LicenseVersion, CantBeEvil} from "@a16z/contracts/licenses/CantBeEvil.sol";
 
 /**
  * @title ProofOfScience
- * @dev This contract mints ERC-1155 tokens with IPFS URIs. 
- * Any account is allowed to mint new tokens.
+ * @dev This contract mints ERC-1155 tokens with IPFS URIs. Any account is allowed to mint new tokens.
+ * The contract adheres to the license specified in the CantBeEvil contract, which is CBE EXCLUSIVE in this case.
  */
-contract ProofOfScience is ERC1155 {
+contract ProofOfScience is ERC1155, CantBeEvil {
     uint256 public tokenID = 0;
     mapping (uint256 => string) private _tokenURIs;
 
@@ -20,7 +19,7 @@ contract ProofOfScience is ERC1155 {
     /**
      * @dev Contract constructor that sets the base URI for all tokens in the contract.
      */
-    constructor() ERC1155(_baseURI) {}
+    constructor() ERC1155(_baseURI) CantBeEvil(LicenseVersion.EXCLUSIVE) {}
 
     /**
      * @dev Mints a new token and assigns it to `account`, 
@@ -58,5 +57,12 @@ contract ProofOfScience is ERC1155 {
      */
     function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
         _tokenURIs[tokenId] = _tokenURI;
+    }
+
+    /**
+     * @dev Override supportsInterface to use both ERC1155 and CantBeEvil's implementations.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, CantBeEvil) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

@@ -44,4 +44,14 @@ describe("ProofOfScience", function() {
       expect(await proofOfScience.balanceOf(addr2.address, 0)).to.equal(1);
     });
   });
+
+  describe("CantBeEvil license", function() {
+    it("Should return correct license URI", async function() {
+      expect(await proofOfScience.getLicenseURI()).to.equal("ar://zmc1WTspIhFyVY82bwfAIcIExLFH5lUcHHUN0wXg4W8/1");
+    });
+
+    it("Should return correct license name", async function() {
+      expect(await proofOfScience.getLicenseName()).to.equal("EXCLUSIVE");
+    });
+  });
 });
