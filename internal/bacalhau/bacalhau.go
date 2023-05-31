@@ -76,28 +76,30 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	return submittedJob, err
 }
 
-func GetBacalhauJobResults(submittedJob *model.Job) (results []model.PublishedResult, err error) {
+func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results []model.PublishedResult, err error) {
 	client := CreateBacalhauClient()
 	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
 
 	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
-	for i := 0; i < maxTrys; i++ {
-		saplingIndex := i % 5
+	if showAnimation {
+		for i := 0; i < maxTrys; i++ {
+			saplingIndex := i % 5
 
-		results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
-		if err != nil {
-			return results, err
-		}
-		if len(results) > 0 {
-			return results, err
-		}
+			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+			if err != nil {
+				return results, err
+			}
+			if len(results) > 0 {
+				return results, err
+			}
 
-		animation[saplingIndex] = "\U0001F331"
-		fmt.Printf("////%s////\r", strings.Join(animation, ""))
-		animation[saplingIndex] = "_"
-		time.Sleep(2 * time.Second)
+			animation[saplingIndex] = "\U0001F331"
+			fmt.Printf("////%s////\r", strings.Join(animation, ""))
+			animation[saplingIndex] = "_"
+			time.Sleep(2 * time.Second)
+		}
 	}
 	return results, err
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/labdao/plex/internal/web3"
 )
 
-func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local bool, concurrency, layers int, web3 bool) {
+func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
 	// mint an NFT if web3 flag is set
 	// ./plex -tool equibind -input-io /some/path/to/io.json -web3=true
 	if web3 {
@@ -88,7 +88,7 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local b
 	fmt.Println("Processing IO Entries")
 	fmt.Println(workDirPath)
 	fmt.Println(ioJsonPath)
-	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, local, concurrency)
+	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, local, showAnimation, concurrency)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	// if web3 {
 	// 	mintNFT(toolPath, ioJsonPath)

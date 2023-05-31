@@ -18,7 +18,7 @@ import (
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxConcurrency int) {
+func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local, showAnimation bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 
@@ -60,7 +60,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
-				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, &fileMutex)
+				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, showAnimation, &fileMutex)
 				if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Waiting to process IO entry %d \n", index)
 				} else if err != nil {
@@ -83,7 +83,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local bool, maxCon
 	}
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, local bool, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, local, showAnimation bool, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -216,7 +216,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		if verbose {
 			fmt.Println("Getting Bacalhau job")
 		}
-		results, err := bacalhau.GetBacalhauJobResults(submittedJob)
+		results, err := bacalhau.GetBacalhauJobResults(submittedJob, showAnimation)
 		if err != nil {
 			updateIOWithError(ioJsonPath, index, err, fileMutex)
 			return fmt.Errorf("error getting Bacalhau job results: %w", err)

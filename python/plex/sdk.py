@@ -53,7 +53,7 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
     
     return io_json_graph
 
-def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, plex_path="./plex"):
+def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, showAnimation=False, plex_path="./plex"):
     if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
         raise ValueError('io must be a dict or a list of dicts')
 
@@ -80,6 +80,9 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
 
         if retry:
             cmd.append("-retry=true")
+
+        if not showAnimation: # default is true in the CLI
+            cmd.append("-show-animation=false")
 
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
             for line in p.stdout:
