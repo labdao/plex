@@ -97,8 +97,8 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 			animation[saplingIndex] = "\U0001F331"
 			fmt.Printf("////%s////\r", strings.Join(animation, ""))
 			animation[saplingIndex] = "_"
-			time.Sleep(2 * time.Second)
 		}
+		time.Sleep(2 * time.Second)
 	}
 	return results, err
 }
