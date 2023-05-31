@@ -60,6 +60,15 @@
         dest: /opt/tljh/config/jupyterhub_config.d/environmnet.py
         mode: "755"
 
+    - name: Enable HTTPS via letsencrypt
+      become: yes
+      ansible.builtin.shell:
+        cmd: |
+          tljh-config set https.enabled true
+          tljh-config set https.letsencrypt.email josh@labdao.xyz
+          tljh-config add-item https.letsencrypt.domains jupyter.labdao.xyz
+          tljh-config reload proxy
+
     - name: Reload the tljh hub
       become: yes
       ansible.builtin.command: tljh-config reload hub
