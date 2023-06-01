@@ -1,0 +1,24 @@
+{
+    "class": "CommandLineTool",
+    "name": "pdb to sdf",
+    "description": "Convert pdb to sdf using openbabel.",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "obabel $(inputs.pdb_file.filepath) -O /outputs/$(inputs.pdb_file.basename).sdf;"
+    ],
+    "dockerPull": "quay.io/labdao/openbabel@sha256:1087315d7eda6d0632c9f9df72500ab9f6fef612c79bae7410473a2336f7be34",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+      "pdb_file": {
+        "type": "File",
+        "glob": ["*.pdb"]
+      }
+    },
+    "outputs": {
+      "sdf_file": {
+        "type": "File",
+        "glob": ["*.sdf"]
+      }
+    }
+}
