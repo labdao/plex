@@ -1,7 +1,7 @@
 name: Canary Run Equibind Tool
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   push:
     branches:
       - 'ops/**'
@@ -44,4 +44,5 @@ jobs:
 
 
       - name: Check in with Heii On-Call
-        run: curl -X POST -H 'Authorization: Bearer heii_l5iNt7vLIXmiULchN9O5jI034zMwUKS5m5OnCczXCPwRiVGb_7ede0fe1' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
+        run: |
+          curl -X POST -H 'Authorization: Bearer heii_l5iNt7vLIXmiULchN9O5jI034zMwUKS5m5OnCczXCPwRiVGb_7ede0fe1' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
