@@ -30,7 +30,6 @@ jobs:
 
       - name: Run Equibind
         run: |
-          echo ${{ secrets.PLEX_ACCESS_TOKEN }}
           ./plex -tool equibind -input-dir testdata/binding/abl
           # result_dir=$(./plex -tool equibind -input-dir testdata/binding/abl | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           # echo "Changing directory to $result_dir"
@@ -43,7 +42,8 @@ jobs:
           #   find . -name '*docked.sdf' | grep 'docked.sdf'
           # fi
         env:
-          PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+          # PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+          PLEX_ACCESS_TOKEN: mellon 
 
       - name: Check in with Heii On-Call
         run: |
