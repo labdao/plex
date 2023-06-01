@@ -12,6 +12,8 @@ jobs:
   canary:
     runs-on: ubuntu-20.04
     environment: releaser
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
 
       - name: Download the latest release
