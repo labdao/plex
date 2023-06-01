@@ -2,8 +2,8 @@
   remote_user: ubuntu
   hosts: tag_Type_jupyter_notebook
   vars:
-    lets_encrypt_email: "josh@labdao.xyz"
-    lets_encrypt_domain: "labdao.xyz"
+    letsencrypt_email: "josh@labdao.xyz"
+    letsencrypt_domain: "labdao.xyz"
   tasks:
     # Aptitude is preferred by ansible
     - name: Install aptitude
@@ -56,8 +56,8 @@
       ansible.builtin.shell:
         cmd: |
           tljh-config set https.enabled true
-          tljh-config set https.letsencrypt.email {{ lets_encrypt_email }}
-          tljh-config add-item https.letsencrypt.domains {{ lets_encrypt_domain }}
+          tljh-config set https.letsencrypt.email {{ letsencrypt_email }}
+          tljh-config add-item https.letsencrypt.domains {{ letsencrypt_domain }}
           tljh-config reload proxy
 
     - name: Reload the tljh configuration
