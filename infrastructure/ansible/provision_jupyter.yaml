@@ -3,7 +3,7 @@
   hosts: tag_Type_jupyter_notebook
   vars:
     letsencrypt_email: "josh@labdao.xyz"
-    letsencrypt_domain: "labdao.xyz"
+    letsencrypt_domain: "jupyter.labdao.xyz"
   tasks:
     # Aptitude is preferred by ansible
     - name: Install aptitude
