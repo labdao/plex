@@ -31,6 +31,7 @@ jobs:
       - name: Run Equibind
         run: |
           result_dir=$(./plex -tool equibind -input-dir testdata/binding/abl | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          echo "Changing directory to $result_dir"
           cd "$result_dir/entry-0/outputs"
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
