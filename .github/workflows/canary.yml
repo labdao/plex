@@ -41,7 +41,7 @@ jobs:
           #   echo "Docked files found:"
           #   find . -name '*docked.sdf' | grep 'docked.sdf'
           # fi
-        env:
+        # env:
           # PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
           # PLEX_ACCESS_TOKEN: mellon 
 
