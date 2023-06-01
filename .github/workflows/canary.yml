@@ -18,9 +18,9 @@ jobs:
 
       - name: Download the latest release
         run: |
-          echo $(gh release list | grep Latest | cut -f1)
+          echo $(gh release --repo labdao/plex list | grep Latest | cut -f1)
           # use the GitHub CLI to download the latest release
-          gh release download --pattern "*linux_amd64.tar.gz"
+          gh release download --repo labdao/plex --pattern "*linux_amd64.tar.gz"
 
       # - name: Run Equibind
       #   run: |
