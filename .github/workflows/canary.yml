@@ -2,6 +2,9 @@ name: Canary Run Equibind Tool
 
 on:
   workflow_dispatch: {}
+  push:
+    branches:
+      - 'ops/**'
   # schedule:
   #  - cron: '*/10 * * * *'
 
