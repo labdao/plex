@@ -1,6 +1,9 @@
 - name: Provision Jupyter Notebook Instances
   remote_user: ubuntu
   hosts: tag_Type_jupyter_notebook
+  vars:
+    letsencrypt_email: "josh@labdao.xyz"
+    letsencrypt_domain: "jupyter.labdao.xyz"
   tasks:
     # Aptitude is preferred by ansible
     - name: Install aptitude
@@ -47,6 +50,15 @@
           - matplotlib
         executable: /opt/tljh/user/bin/pip
         state: latest
+
+    - name: Enable HTTPS via letsencrypt
+      become: yes
+      ansible.builtin.shell:
+        cmd: |
+          tljh-config set https.enabled true
+          tljh-config set https.letsencrypt.email {{ letsencrypt_email }}
+          tljh-config add-item https.letsencrypt.domains {{ letsencrypt_domain }}
+          tljh-config reload proxy
 
     - name: Reload the tljh configuration
       become: yes
