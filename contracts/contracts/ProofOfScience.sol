@@ -2,16 +2,14 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-// todo: add CantBeEvil
-// import {LicenseVersion, CantBeEvil} from "@a16z/contracts/licenses/CantBeEvil.sol";
+import {LicenseVersion, CantBeEvil} from "@a16z/contracts/licenses/CantBeEvil.sol";
 
 /**
  * @title ProofOfScience
- * @dev This contract mints ERC-1155 tokens with IPFS URIs. 
- * Only the owner of the contract is allowed to mint new tokens.
+ * @dev This contract mints ERC-1155 tokens with IPFS URIs. Any account is allowed to mint new tokens.
+ * The contract adheres to the license specified in the CantBeEvil contract, which is CBE EXCLUSIVE in this case.
  */
-contract ProofOfScience is ERC1155, Ownable {
+contract ProofOfScience is ERC1155, CantBeEvil {
     uint256 public tokenID = 0;
     mapping (uint256 => string) private _tokenURIs;
 
@@ -21,12 +19,11 @@ contract ProofOfScience is ERC1155, Ownable {
     /**
      * @dev Contract constructor that sets the base URI for all tokens in the contract.
      */
-    constructor() ERC1155(_baseURI) {}
+    constructor() ERC1155(_baseURI) CantBeEvil(LicenseVersion.EXCLUSIVE) {}
 
     /**
      * @dev Mints a new token and assigns it to `account`, 
      * increasing the total supply.
-     * Can only be called by the contract owner.
      *
      * @param account Recipient of the token minting.
      * @param tokenURI The IPFS URI of the associated token data.
@@ -36,7 +33,7 @@ contract ProofOfScience is ERC1155, Ownable {
      * - `account` cannot be the zero address.
      * - The token doesn't exist, `id` must not exist in other token's URI.
      */
-    function mint(address account, string memory tokenURI) public onlyOwner {
+    function mint(address account, string memory tokenURI) public {
         _mint(account, tokenID, 1, "");
         _setTokenURI(tokenID, tokenURI);
         tokenID = tokenID + 1;
@@ -63,14 +60,9 @@ contract ProofOfScience is ERC1155, Ownable {
     }
 
     /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     * 
-     * Emits an {OwnershipTransferred} event.
-     *
-     * @param newOwner Address of the new owner
+     * @dev Override supportsInterface to use both ERC1155 and CantBeEvil's implementations.
      */
-    function transferContractOwnership(address newOwner) public onlyOwner {
-        transferOwnership(newOwner);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, CantBeEvil) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }
