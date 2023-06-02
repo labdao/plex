@@ -35,6 +35,7 @@ func main() {
 	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
 	concurrency := flag.Int("concurrency", 1, "How many IO entries to run at once")
 	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
+	showAnimation := flag.Bool("show-animation", true, "Show animation while Bacalhau job is running")
 	retry := flag.Bool("retry", false, "Retry any io subgraphs that failed")
 
 	web3 := flag.Bool("web3", false, "Option to mint an NFT")
@@ -55,13 +56,13 @@ func main() {
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else if *workDir != "" {
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")
 	}

@@ -1,0 +1,65 @@
+- name: Deploy Plex To Jupyter Instances
+  remote_user: ubuntu
+  hosts: tag_Type_jupyter_notebook
+  vars:
+    plex_dir: /opt/local/plex
+  tasks:
+    - name: Pull the plex repository
+      become: yes
+      ansible.builtin.git:
+        repo: https://github.com/labdao/plex.git
+        dest: "{{ plex_dir }}/"
+
+    - name: Get the latest plex release
+      community.general.github_release:
+        repo: plex
+        user: labdao
+        action: latest_release
+      register: latest_release
+
+    - name: Download the latest plex binary
+      become: yes
+      ansible.builtin.get_url:
+        #https://github.com/labdao/plex/releases/download/v0.7.0/plex_0.7.0_linux_amd64.tar.gz
+        url: https://github.com/labdao/plex/releases/download/{{ latest_release.tag }}/plex_{{ latest_release.tag | regex_replace('^v([0-9]\.[0-9]\.[0-9])$', '\1') }}_linux_amd64.tar.gz
+        dest: /tmp/plex_release.tar.gz
+
+    - name: Unzip the plex release
+      become: yes
+      ansible.builtin.unarchive:
+        src: /tmp/plex_release.tar.gz
+        remote_src: true
+        include: plex
+        dest: "{{ plex_dir }}"
+
+    - name: Link the plex binary to the system path
+      become: yes
+      ansible.builtin.file:
+        src: "{{ plex_dir }}/plex"
+        dest: /usr/local/bin/plex
+        state: link
+
+    - name: Add plex python wrapper to the conda path
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /opt/tljh/user/lib/python3.9/site-packages/plex.pth
+        line: "{{ plex_dir }}/python"
+        create: yes
+
+    - name: Copy examples to skeleton directory
+      become: yes
+      ansible.builtin.file:
+        src: "{{ plex_dir }}/python/notebooks"
+        dest: /etc/skel/examples
+        state: link
+
+    - name: Add the environment file
+      become: yes
+      ansible.builtin.template:
+        src: files/environment.py
+        dest: /opt/tljh/config/jupyterhub_config.d/environmnet.py
+        mode: "755"
+
+    - name: Reload the tljh hub
+      become: yes
+      ansible.builtin.command: tljh-config reload hub

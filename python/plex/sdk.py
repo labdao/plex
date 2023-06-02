@@ -1,12 +1,59 @@
 import json
 import os
 import subprocess
+import logging
+import itertools
 
+from enum import Enum
 from tempfile import TemporaryDirectory
 from typing import Dict, List, Union
 
 
-def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False):
+
+class ScatteringMethod(Enum):
+    DOT_PRODUCT = 'dot_product'
+    FLAT_CROSSPRODUCT = 'flat_crossproduct'
+    NESTED_CROSSPRODUCT = 'nested_crossproduct'
+
+# TODO: Move most of this logic to the go client
+def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
+    # Open the file and load its content
+    with open(tool_filepath, 'r') as f:
+        tool = json.load(f)
+    
+    # Check if all kwargs are in the tool's inputs
+    for arg in kwargs:
+        if arg not in tool['inputs']:
+            logging.error(f'The argument {arg} is not in the tool inputs.')
+            logging.info(f'Available keys: {list(tool["inputs"].keys())}')
+            raise ValueError(f'The argument {arg} is not in the tool inputs.')
+    
+    # Scattering methods
+    if scattering_method == ScatteringMethod.DOT_PRODUCT:
+        if len(set(len(x) for x in kwargs.values())) != 1:
+            logging.error('All input arguments must have the same length for dot_product scattering method.')
+            raise ValueError('All input arguments must have the same length for dot_product scattering method.')
+        inputs_list = list(zip(*kwargs.values()))
+    elif scattering_method in [ScatteringMethod.FLAT_CROSSPRODUCT, ScatteringMethod.NESTED_CROSSPRODUCT]:
+        inputs_list = list(itertools.product(*kwargs.values()))
+    else:
+        logging.error(f'Invalid scattering method: {scattering_method}')
+        raise ValueError(f'Invalid scattering method: {scattering_method}')
+    
+    # Build the io_json_graph
+    io_json_graph = []
+    for inputs in inputs_list:
+        io_json_graph.append({
+            'tool': tool_filepath,
+            'inputs': {arg: {'class': tool['inputs'][arg]['type'], 'filepath': filepath} for arg, filepath in zip(kwargs.keys(), inputs)},
+            'outputs': {arg: {'class': tool['outputs'][arg]['type'], 'filepath': ''} for arg in tool['outputs']},
+            'state': 'created',
+            'errMsg': '',
+        })
+    
+    return io_json_graph
+
+def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, showAnimation=False, plex_path="./plex"):
     if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
         raise ValueError('io must be a dict or a list of dicts')
 
@@ -22,8 +69,8 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
             json.dump(io, json_file, indent=4)
 
         cwd = os.getcwd()
-        plex_dir = os.path.dirname(os.path.dirname(cwd))
-        cmd = ["./plex", "-input-io", json_file_path, "-concurrency", str(concurrency)]
+        plex_work_dir = os.environ.get("PLEX_WORK_DIR",os.path.dirname(os.path.dirname(cwd)))
+        cmd = [plex_path, "-input-io", json_file_path, "-concurrency", str(concurrency)]
 
         if local:
             cmd.append("-local=true")
@@ -34,7 +81,10 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
         if retry:
             cmd.append("-retry=true")
 
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_dir) as p:
+        if not showAnimation: # default is true in the CLI
+            cmd.append("-show-animation=false")
+
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
             for line in p.stdout:
                 if "Initialized IO file at:" in line:
                     parts = line.split()

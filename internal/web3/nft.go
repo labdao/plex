@@ -59,6 +59,7 @@ func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error unmarshaling io file: %v", err)
 	}
+
 	for _, ioEntry := range ioMap {
 		removeFilepathKeys(ioEntry)
 	}

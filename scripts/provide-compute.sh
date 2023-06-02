@@ -161,7 +161,7 @@ runBacalhau() {
     fi
     export owner=$owner // so that we have the variable on restarts
     echo "export owner=$owner" >> ~/.bashrc # for future shells
-    screen -dmS bacalhau bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner
+    screen -dmS bacalhau bacalhau serve --node-type compute,requester --ipfs-connect $IPFS_CONNECT --limit-total-gpu 1 --limit-job-memory 12gb --job-selection-accept-networked --job-selection-data-locality anywhere --labels owner=$owner --private-internal-ipfs=false
 }
 
 installConda() {
