@@ -174,7 +174,6 @@ func triggerMinting(recipientAddress, cid string) error {
 	}
 	defer resp.Body.Close()
 
-	// TODO: Handle response
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
@@ -188,3 +187,13 @@ func triggerMinting(recipientAddress, cid string) error {
 
 	return nil
 }
+
+// TODO: move MintNFT functionality to delegatedMintNFT; add logic for which minting function to call within MintNFT
+
+// func delegatedMintNFT() {
+// 	fmt.Println("Delegated minting not yet implemented")
+// }
+
+// func userMintNFT() {
+// 	fmt.Println("User minting not yet implemented")
+// }
