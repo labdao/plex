@@ -11,7 +11,7 @@ on:
 jobs:
   canary:
     runs-on: ubuntu-20.04
-    environment: test
+    environment: ci
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -31,7 +31,7 @@ jobs:
         run: |
           ./plex -tool equibind -input-dir testdata/binding/abl 2>&1 | tee plex_out.log
           plex_result_code=${PIPESTATUS[0]}
-          if [ $plex_result_code -gt 0 ] then
+          if [ $plex_result_code -gt 0 ]; then
             # exit immediately if plex exited with an error
             exit $plex_result_code
           fi
@@ -44,11 +44,10 @@ jobs:
             echo "Docked files found"
           fi
         env:
-          # PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
-          PLEX_ACCESS_TOKEN: mellon 
+          PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
 
       - name: Check in with Heii On-Call
         run: |
-          curl -X POST -H 'Authorization: Bearer heii_l5iNt7vLIXmiULchN9O5jI034zMwUKS5m5OnCczXCPwRiVGb_7ede0fe1' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
+          curl -X POST -H 'Authorization: Bearer ${{ secrets.HEII_ON_CALL_API_KEY }}' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
         env:
           HEII_ON_CALL_INBOUND_TRIGGER_ID: e720588c-35cd-4392-9d02-bec350aa34e9
