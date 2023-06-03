@@ -39,7 +39,5 @@ RUN unzip input.zip
 # Set work directory to the script location
 WORKDIR /app/DLKcat/DeeplearningApproach/Code/example
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT [ "/entrypoint.sh" ]
+CMD ["conda", "run", "-n", "env", "python", "prediction_for_input.py", "/app/DLKcat/DeeplearningApproach/Code/example/input.tsv"]
 

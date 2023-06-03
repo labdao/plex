@@ -6,7 +6,7 @@
     "arguments": [
         "conda run -n env python prediction_for_input.py /inputs/input.tsv && mv output.tsv /outputs/"
     ],
-    "dockerPull": "docker.io/mcmenemy/plex-dlkcat@sha256:9442c583098d344cfe3281cf3ccc657d62e5182b33fe3affe82c772ea0175397",
+    "dockerPull": "docker.io/mcmenemy/plex-dlkcat@sha256:92cfec2676bc5b8d75ee37c0fc31eb9c2e43c73a2acce2e4aaa60066b7a56f38",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
