@@ -24,7 +24,7 @@ downloadPlex() {
 
         if [ "$OS" = "darwin" ]
         then
-            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
+            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "i386" ]
             then
                 curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
