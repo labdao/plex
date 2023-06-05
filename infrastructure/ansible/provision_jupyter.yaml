@@ -60,6 +60,13 @@
           tljh-config add-item https.letsencrypt.domains {{ letsencrypt_domain }}
           tljh-config reload proxy
 
+    - name: Install the file permission setter
+      become: yes
+      ansible.builtin.copy:
+        src: files/set_permissions.py
+        dest: /opt/tljh/user/etc/jupyter/set_permissions.py
+        mode: "755"
+
     - name: Reload the tljh configuration
       become: yes
       ansible.builtin.command: tljh-config reload
