@@ -43,7 +43,7 @@
 
     - name: Place canary srcript
       ansible.builtin.template:
-        src: files/equibind_canary.template
+        src: files/equibind_canary.sh
         dest: "{{ canary_dir }}/equibind_canary.sh"
         mode: 'u+x'
 

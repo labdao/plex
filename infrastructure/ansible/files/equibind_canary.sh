@@ -28,5 +28,6 @@ fi
 
 rm -rf $result_dir
 
-curl -X POST -H 'Authorization: Bearer ${HEII_ON_CALL_API_KEY}' https://api.heiioncall.com./triggers/a7660c2f-5262-4392-918b-d98aee244890/alert
+curl -X POST -H "Authorization: Bearer ${HEII_ON_CALL_API_KEY}" https://api.heiioncall.com./triggers/a7660c2f-5262-4392-918b-d98aee244890/checkin
 
+echo "Canary success"
