@@ -110,3 +110,22 @@ def print_io_graph_status(io_graph):
     for state, count in state_count.items():
         print(f"IOs in {state} state: {count}")
 
+def mint_nft(tool_filepath, io_json_path, web3=True, plex_path="./plex"):
+    # check if io_json_path is a valid file path
+    if not os.path.isfile(io_json_path):
+        raise ValueError('io_json_path must be a valid file path')
+    
+    # check if tool_filepath is a valid file path
+    if not os.path.isfile(tool_filepath):
+        raise ValueError('tool_filepath must be a valid file path')
+    
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    cmd = [plex_path, "-tool", tool_filepath, "-input-io", io_json_path]
+
+    if web3:
+        cmd.append("-web3=true")
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            print(line, end='')
