@@ -45,3 +45,9 @@ jobs:
           fi
         env:
           PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
+
+      - name: Check in with Heii On-Call
+        run: |
+          curl -X POST -H 'Authorization: Bearer ${{ secrets.HEII_ON_CALL_API_KEY }}' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
+        env:
+          HEII_ON_CALL_INBOUND_TRIGGER_ID: df86b926-d9c1-4584-8c91-28ffde7af8c2
