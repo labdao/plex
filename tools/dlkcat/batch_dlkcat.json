@@ -1,0 +1,25 @@
+{
+    "class": "CommandLineTool",
+    "name": "dlkcat",
+    "description": "batch predict enzyme catalytic activity from a protein sequence and molecule smile",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "conda run -n env python prediction_for_input.py /inputs/input.tsv && mv output.tsv /outputs/"
+    ],
+    "dockerPull": "docker.io/mcmenemy/plex-dlkcat@sha256:92cfec2676bc5b8d75ee37c0fc31eb9c2e43c73a2acce2e4aaa60066b7a56f38",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "input_tsv": {
+            "type": "File",
+            "glob": ["input.tsv"]
+        }
+    },
+    "outputs": {
+        "scores": {
+            "type": "File",
+            "glob": ["output.tsv"]
+        }
+    }
+}
+
