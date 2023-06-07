@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"github.com/labdao/plex/internal/ipwl"
@@ -31,7 +32,12 @@ func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, ret
 		id := uuid.New()
 		var cwd string
 		if outputDir != "" {
-			cwd = outputDir
+			absPath, err := filepath.Abs(outputDir)
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
+			cwd = absPath
 		} else {
 			cwd, err = os.Getwd()
 			if err != nil {
