@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,6 +45,40 @@ func getLatestReleaseVersionStr() (string, error) {
 	latestReleaseVersionStr := urlPartition[len(urlPartition)-1]
 
 	return latestReleaseVersionStr, nil
+}
+
+func getLocalFilesSHA(toolsFolderPath string) (map[string]string, error) {
+	localFilesSHA := make(map[string]string)
+
+	err := filepath.Walk(toolsFolderPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			relPath, _ := filepath.Rel(toolsFolderPath, path)
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			h := sha1.New()
+			if _, err := io.Copy(h, file); err != nil {
+				return err
+			}
+			sha := fmt.Sprintf("%x", h.Sum(nil))
+			localFilesSHA[relPath] = sha
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return localFilesSHA, nil
 }
 
 func downloadFile(url, destination string) error {
