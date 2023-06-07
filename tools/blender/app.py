@@ -86,8 +86,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Please provide input and output file paths")
     else:
-        input_file_path = sys.argv[4]
-        output_file_path = sys.argv[5]
+        input_file_path = sys.argv[5]
+        output_file_path = sys.argv[6]
         main(input_file_path, output_file_path)
 
 # blender --background --python /inputs/app.py -- /inputs/5RGA.pdb /outputs/file.png
