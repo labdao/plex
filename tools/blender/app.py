@@ -86,9 +86,9 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Please provide input and output file paths")
     else:
-        input_file_path = sys.argv[1]
-        output_file_path = sys.argv[2]
+        input_file_path = sys.argv[4]
+        output_file_path = sys.argv[5]
         main(input_file_path, output_file_path)
 
-# blender --background --python script.py -- /inputs/file.pdb /outputs/file.png
-# docker run -it -v /Users/rindtorff/github/labdao/plex/tools/blender:/inputs -v /Users/rindtorff/github/labdao/plex/tools/blender:/outputs nytimes/blender:3.3.1-cpu-ubuntu18.04 bash
+# blender --background --python /inputs/app.py -- /inputs/5RGA.pdb /outputs/file.png
+# sudo docker run -it -v /home/jupyter-niklas/plex/tools/blender:/inputs -v /home/jupyter-niklas/plex/tools/blender:/outputs nytimes/blender:3.3.1-cpu-ubuntu18.04 bash
