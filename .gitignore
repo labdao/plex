@@ -212,6 +212,7 @@ dist/
 job-*
 /*-*-*-*
 job.yaml
+job/*
 
 # Tool manifest
 .manifest.json
