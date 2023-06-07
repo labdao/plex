@@ -316,6 +316,12 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 		}
 	}
 
+	// remove empty outputs folder now that files have been moved
+	err = os.Remove(bacalOutputsDirPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return nil
 }
 
