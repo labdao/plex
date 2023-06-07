@@ -6,8 +6,8 @@
     "arguments": [
         "blender --background --python app.py -- $(inputs.protein.filepath) /outputs/protein.png"
     ],
-    "dockerPull": "linuxserver/blender:3.4.1",
-    "gpuBool": true,
+    "dockerPull": "quay.io/labdao/blender@sha256:1ee7bdc2e100bc3a8c968025579be950f50e685b440bd610971248b168f2bb74",
+    "gpuBool": false,
     "networkBool": false,
     "inputs": {
       "protein": {
