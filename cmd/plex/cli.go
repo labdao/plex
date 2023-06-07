@@ -14,7 +14,7 @@ func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local, 
 	// mint an NFT if web3 flag is set
 	if web3 {
 		fmt.Println("Minting NFT...")
-		web3pkg.MintNFT(toolPath, ioJsonPath)
+		web3pkg.MintNFT(ioJsonPath)
 		return
 	}
 
