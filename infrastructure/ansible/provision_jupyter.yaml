@@ -48,6 +48,9 @@
         name:
           - biopython
           - matplotlib
+          - numpy
+          - scipy
+          - pandas
         executable: /opt/tljh/user/bin/pip
         state: latest
 
