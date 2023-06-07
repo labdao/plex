@@ -31,6 +31,7 @@ func main() {
 	inputDir := flag.String("input-dir", "", "input directory path")
 	ioJsonPath := flag.String("input-io", "", "IO JSON path")
 	workDir := flag.String("work-dir", "", "PLEx working directory path")
+	outputDir := flag.String("output-dir", "", "direcoty to store job results")
 	verbose := flag.Bool("verbose", false, "show verbose debugging logs")
 	layers := flag.Int("layers", 2, "Number of layers to search in the directory path")
 	concurrency := flag.Int("concurrency", 1, "How many IO entries to run at once")
@@ -56,13 +57,13 @@ func main() {
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else if *workDir != "" {
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")
 	}
