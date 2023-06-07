@@ -53,7 +53,7 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
     
     return io_json_graph
 
-def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, showAnimation=False, outputDir="./jobs", plex_path="./plex"):
+def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, showAnimation=False, outputDir="./jobs", web3=False, plex_path="./plex"):
     if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
         raise ValueError('io must be a dict or a list of dicts')
 
@@ -80,6 +80,9 @@ def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=Fa
 
         if retry:
             cmd.append("-retry=true")
+
+        if web3:
+            cmd.append("-web3=true")
 
         if not showAnimation: # default is true in the CLI
             cmd.append("-show-animation=false")
@@ -110,18 +113,14 @@ def print_io_graph_status(io_graph):
     for state, count in state_count.items():
         print(f"IOs in {state} state: {count}")
 
-def mint_nft(tool_filepath, io_json_path, web3=True, plex_path="./plex"):
+def mint_nft(io_json_path, web3=True, plex_path="./plex"):
     # check if io_json_path is a valid file path
     if not os.path.isfile(io_json_path):
         raise ValueError('io_json_path must be a valid file path')
     
-    # check if tool_filepath is a valid file path
-    if not os.path.isfile(tool_filepath):
-        raise ValueError('tool_filepath must be a valid file path')
-    
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-    cmd = [plex_path, "-tool", tool_filepath, "-input-io", io_json_path]
+    cmd = [plex_path, "-input-io", io_json_path]
 
     if web3:
         cmd.append("-web3=true")
