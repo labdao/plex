@@ -1,0 +1,25 @@
+{
+    "class": "CommandLineTool",
+    "name": "blender",
+    "description": "let's create some fancy protein graphics",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "blender --background --python app.py -- $(inputs.protein.filepath) /outputs/protein.png"
+    ],
+    "dockerPull": "linuxserver/blender:3.4.1",
+    "gpuBool": true,
+    "networkBool": false,
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "glob": "*.pdb"
+      }
+    },
+    "outputs": {
+        "image": {
+          "type": "File",
+          "glob": "*.png"
+        }
+    }
+  }
+  
