@@ -35,25 +35,13 @@ func removeFilepathKeys(obj map[string]interface{}) {
 	}
 }
 
-func buildTokenMetadata(toolPath, ioPath string) (string, error) {
-	toolBytes, err := ioutil.ReadFile(toolPath)
-	if err != nil {
-		return "", fmt.Errorf("error reading tool file: %v", err)
-	}
-
+func buildTokenMetadata(ioPath string) (string, error) {
 	ioBytes, err := ioutil.ReadFile(ioPath)
 	if err != nil {
 		return "", fmt.Errorf("error reading io file: %v", err)
 	}
 
-	var toolMap map[string]interface{}
 	var ioMap []map[string]interface{}
-
-	err = json.Unmarshal(toolBytes, &toolMap)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshaling tool file: %v", err)
-	}
-	removeFilepathKeys(toolMap)
 
 	err = json.Unmarshal(ioBytes, &ioMap)
 	if err != nil {
@@ -69,6 +57,21 @@ func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 	graphs := []map[string]interface{}{}
 
 	for _, ioEntry := range ioMap {
+		// Read tool file for each ioEntry
+		toolPath := ioEntry["tool"].(string)
+		toolBytes, err := ioutil.ReadFile(toolPath)
+		if err != nil {
+			return "", fmt.Errorf("error reading tool file: %v", err)
+		}
+
+		var toolMap map[string]interface{}
+		err = json.Unmarshal(toolBytes, &toolMap)
+		if err != nil {
+			return "", fmt.Errorf("error unmarshaling tool file: %v", err)
+		}
+
+		removeFilepathKeys(toolMap)
+
 		graph := map[string]interface{}{
 			"tool":    toolMap,
 			"inputs":  ioEntry["inputs"],
@@ -94,7 +97,7 @@ func buildTokenMetadata(toolPath, ioPath string) (string, error) {
 	return string(tokenMetadata), nil
 }
 
-func MintNFT(toolPath, ioJsonPath string) {
+func MintNFT(ioJsonPath string) {
 	if recipientWallet == "" {
 		fmt.Println("RECIPIENT_WALLET must be set")
 		os.Exit(1)
@@ -107,7 +110,7 @@ func MintNFT(toolPath, ioJsonPath string) {
 
 	// Build NFT metadata
 	fmt.Println("Preparing NFT metadata...")
-	metadata, err := buildTokenMetadata(toolPath, ioJsonPath)
+	metadata, err := buildTokenMetadata(ioJsonPath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
