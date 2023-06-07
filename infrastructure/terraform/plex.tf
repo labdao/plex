@@ -50,3 +50,11 @@ resource "aws_eip" "plex_prod" {
     Name = "plex-prod-gateway"
   }
 }
+
+resource "cloudflare_record" "plex_compute_prod" {
+  zone_id = var.cloudflare_zone_id
+  name    = "bacalhau"
+  value   = aws_eip.plex_prod.public_dns
+  type    = "CNAME"
+  ttl     = 3600
+}

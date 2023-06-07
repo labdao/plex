@@ -10,35 +10,45 @@ import (
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
 
-func Run(toolPath, inputDir, ioJsonPath, workDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
+func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
 	// mint an NFT if web3 flag is set
 	if web3 {
 		fmt.Println("Minting NFT...")
-		web3pkg.MintNFT(toolPath, ioJsonPath)
+		web3pkg.MintNFT(ioJsonPath)
 		return
 	}
 
 	var workDirPath string
 	var err error
-	if workDir != "" {
+	if workDir != "" && outputDir != "" {
+		fmt.Println("Error: workDir and outputDir cannot be used at the same time")
+		os.Exit(1)
+	} else if workDir != "" {
 		workDirPath = workDir
 		fmt.Println("Resumed working directory: ", workDirPath)
 	} else {
 		// Create plex working directory
 		id := uuid.New()
-		cwd, err := os.Getwd()
-		if err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
+		var cwd string
+		if outputDir != "" {
+			cwd = outputDir
+		} else {
+			cwd, err = os.Getwd()
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
+			cwd = path.Join(cwd, "jobs")
 		}
 		workDirPath = path.Join(cwd, id.String())
-		err = os.Mkdir(workDirPath, 0755)
+		err = os.MkdirAll(workDirPath, 0755)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
 		fmt.Println("Created working directory: ", workDirPath)
 	}
+
 	// first thing to generate io json and save to plex work dir
 	var ioEntries []ipwl.IO
 	if toolPath != "" {

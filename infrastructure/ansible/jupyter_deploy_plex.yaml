@@ -4,40 +4,22 @@
   vars:
     plex_dir: /opt/local/plex
   tasks:
-    - name: Pull the plex repository
+    - name: Create plex dir, writable by user
       become: yes
+      ansible.builtin.file:
+        path: "{{ plex_dir }}"
+        owner: ubuntu
+        group: ubuntu 
+        state: directory
+
+    - name: Pull the plex repository
       ansible.builtin.git:
         repo: https://github.com/labdao/plex.git
         dest: "{{ plex_dir }}/"
 
-    - name: Get the latest plex release
-      community.general.github_release:
-        repo: plex
-        user: labdao
-        action: latest_release
-      register: latest_release
-
-    - name: Download the latest plex binary
-      become: yes
-      ansible.builtin.get_url:
-        #https://github.com/labdao/plex/releases/download/v0.7.0/plex_0.7.0_linux_amd64.tar.gz
-        url: https://github.com/labdao/plex/releases/download/{{ latest_release.tag }}/plex_{{ latest_release.tag | regex_replace('^v([0-9]\.[0-9]\.[0-9])$', '\1') }}_linux_amd64.tar.gz
-        dest: /tmp/plex_release.tar.gz
-
-    - name: Unzip the plex release
-      become: yes
-      ansible.builtin.unarchive:
-        src: /tmp/plex_release.tar.gz
-        remote_src: true
-        include: plex
-        dest: "{{ plex_dir }}"
-
-    - name: Link the plex binary to the system path
-      become: yes
-      ansible.builtin.file:
-        src: "{{ plex_dir }}/plex"
-        dest: /usr/local/bin/plex
-        state: link
+    - name: Install Plex
+      ansible.builtin.include_tasks:
+        file: install_plex_tasks.yaml
 
     - name: Add plex python wrapper to the conda path
       become: yes

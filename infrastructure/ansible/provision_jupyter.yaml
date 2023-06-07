@@ -48,6 +48,9 @@
         name:
           - biopython
           - matplotlib
+          - numpy
+          - scipy
+          - pandas
         executable: /opt/tljh/user/bin/pip
         state: latest
 
@@ -59,6 +62,13 @@
           tljh-config set https.letsencrypt.email {{ letsencrypt_email }}
           tljh-config add-item https.letsencrypt.domains {{ letsencrypt_domain }}
           tljh-config reload proxy
+
+    - name: Install custom notebook configuration
+      become: yes
+      ansible.builtin.copy:
+        src: files/jupyter_notebook_config.py
+        dest: /opt/tljh/user/etc/jupyter/jupyter_notebook_config.py
+        mode: "755"
 
     - name: Reload the tljh configuration
       become: yes

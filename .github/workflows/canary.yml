@@ -3,7 +3,7 @@ name: Canary Run Equibind Tool
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '23 * * * *'
 
 jobs:
   canary:
@@ -50,4 +50,4 @@ jobs:
         run: |
           curl -X POST -H 'Authorization: Bearer ${{ secrets.HEII_ON_CALL_API_KEY }}' https://api.heiioncall.com./triggers/${HEII_ON_CALL_INBOUND_TRIGGER_ID}/checkin
         env:
-          HEII_ON_CALL_INBOUND_TRIGGER_ID: e720588c-35cd-4392-9d02-bec350aa34e9
+          HEII_ON_CALL_INBOUND_TRIGGER_ID: df86b926-d9c1-4584-8c91-28ffde7af8c2
