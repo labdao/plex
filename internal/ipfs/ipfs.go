@@ -58,3 +58,20 @@ func GetFileCid(filePath string) (string, error) {
 	}
 	return cid, nil
 }
+
+// func IsValidCID(cid string) (bool, error) {
+// 	if cid == "" {
+// 		return false, fmt.Errorf("empty cid")
+// 	}
+
+// 	c, err := cid.Parse()
+// 	if err != nil {
+// 		return false, fmt.Errorf("error parsing cid: %w", err)
+// 	}
+
+// 	if !c.Defined() {
+// 		return false, fmt.Errorf("cid not defined")
+// 	}
+
+// 	return true, nil
+// }
