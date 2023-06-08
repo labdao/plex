@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/labdao/plex/internal/bacalhau"
 )
@@ -59,19 +60,11 @@ func GetFileCid(filePath string) (string, error) {
 	return cid, nil
 }
 
-// func IsValidCID(cid string) (bool, error) {
-// 	if cid == "" {
-// 		return false, fmt.Errorf("empty cid")
-// 	}
-
-// 	c, err := cid.Parse()
-// 	if err != nil {
-// 		return false, fmt.Errorf("error parsing cid: %w", err)
-// 	}
-
-// 	if !c.Defined() {
-// 		return false, fmt.Errorf("cid not defined")
-// 	}
-
-// 	return true, nil
-// }
+func IsValidCID(cidStr string) bool {
+	_, err := cid.Decode(cidStr)
+	if err != nil {
+		// Invalid CID
+		return false
+	}
+	return true
+}

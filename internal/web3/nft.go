@@ -86,8 +86,11 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	imageCID := "bafybeiba666bzbff5vu6rayvp5st2tk7tdltqnwjppzyvpljcycfhshdhq"
 
 	if imageCIDs[0] != "" {
-		// TODO: CID validation needed
-		imageCID = imageCIDs[0]
+		if ipfs.IsValidCID(imageCIDs[0]) {
+			imageCID = imageCIDs[0]
+		} else {
+			return "", fmt.Errorf("invalid image CID: %s", imageCIDs[0])
+		}
 	}
 
 	outputMap := map[string]interface{}{
