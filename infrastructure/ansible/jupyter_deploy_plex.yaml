@@ -12,6 +12,11 @@
         group: ubuntu 
         state: directory
 
+    - name: Ensure all files in plex dir are owned by the user
+      become: yes
+      ansible.builtin.command:
+        cmd: chown -R {{ ansible_user }}:{{ ansible_user }} {{ plex_dir }}
+
     - name: Pull the plex repository
       ansible.builtin.git:
         repo: https://github.com/labdao/plex.git
