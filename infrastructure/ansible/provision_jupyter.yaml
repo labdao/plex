@@ -26,6 +26,18 @@
         state: latest
         update_cache: true
 
+    - name: Download Quarto CLI .deb file
+      become: yes
+      ansible.builtin.get_url:
+        url: https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.361/quarto-1.3.361-linux-amd64.deb
+        dest: /tmp/quarto-1.3.361-linux-amd64.deb
+        mode: '0644'
+
+    - name: Install Quarto CLI
+      become: yes
+      ansible.builtin.apt:
+        deb: /tmp/quarto-1.3.361-linux-amd64.deb
+
     - name: Install required pip packages
       become: yes
       ansible.builtin.pip:
