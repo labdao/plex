@@ -60,6 +60,7 @@
         name:
           - biopython
           - matplotlib
+          - nglview
           - numpy
           - scipy
           - pandas
