@@ -12,7 +12,20 @@ import (
 )
 
 func ProtoRun(toolPath, inputDir string) {
-	fmt.Println("Running protoRun function...")
+	fmt.Println("Running ProtoRun function...")
+	// var ioEntries []ipwl.IO
+	// if toolPath != "" {
+	// 	fmt.Println("Reading tool config: ", toolPath)
+	// 	toolConfig, err := ipwl.ReadToolConfig(toolPath)
+	// 	if err != nil {
+	// 		fmt.Println("Error:", err)
+	// 		os.Exit(1)
+	// 	}
+	// 	fmt.Println("Creating IO Entries from input directory: ", toolConfig)
+	// 	ioEntries = ipwl.CreateIOEntriesFromInputDir(inputDir, toolConfig)
+	// } else {
+	// 	fmt.Println("something")
+	// }
 }
 
 func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {

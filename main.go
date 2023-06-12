@@ -38,6 +38,7 @@ func main() {
 	local := flag.Bool("local", false, "Use Docker on local machine to run job instead of Bacalhau")
 	showAnimation := flag.Bool("show-animation", true, "Show animation while Bacalhau job is running")
 	retry := flag.Bool("retry", false, "Retry any io subgraphs that failed")
+	proto := flag.Bool("proto", false, "Option to run in prototype mode")
 
 	web3 := flag.Bool("web3", false, "Option to mint an NFT")
 
@@ -57,14 +58,25 @@ func main() {
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
-		// plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
-		plex.ProtoRun(*toolPath, *inputDir)
+		if *proto {
+			plex.ProtoRun(*toolPath, *inputDir)
+		} else {
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		}
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		if *proto {
+			plex.ProtoRun(*toolPath, *inputDir)
+		} else {
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		}
 	} else if *workDir != "" {
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		if *proto {
+			plex.ProtoRun(*toolPath, *inputDir)
+		} else {
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		}
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")
 	}
