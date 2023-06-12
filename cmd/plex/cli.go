@@ -11,6 +11,10 @@ import (
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
 
+func ProtoRun(toolPath, inputDir string) {
+	fmt.Println("Running protoRun function...")
+}
+
 func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
 	// mint an NFT if web3 flag is set
 	if web3 {

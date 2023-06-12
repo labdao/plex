@@ -57,7 +57,8 @@ func main() {
 			os.Exit(1)
 		}
 		*retry = false // can only retry from an PLEx work dir not input directory input
-		plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		// plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+		plex.ProtoRun(*toolPath, *inputDir)
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
