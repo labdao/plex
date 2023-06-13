@@ -111,7 +111,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 
 			ioList[index].Outputs[outputKey] = FileOutput{
 				Class:    "File",
-				FilePath: filePath,
+				FileName: filePath,
 				IPFS:     cid,
 			}
 		} else if output.Type == "Array" && output.Item == "File" {
@@ -124,7 +124,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 
 				files = append(files, FileOutput{
 					Class:    "File",
-					FilePath: filePath,
+					FileName: filePath,
 					IPFS:     cid,
 				})
 			}

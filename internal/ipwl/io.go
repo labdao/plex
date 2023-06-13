@@ -9,13 +9,13 @@ import (
 
 type FileInput struct {
 	Class    string `json:"class"`
-	FilePath string `json:"filepath"`
+	FileName string `json:"filename"`
 	IPFS     string `json:"ipfs"`
 }
 
 type FileOutput struct {
 	Class    string `json:"class"`
-	FilePath string `json:"filepath"`
+	FileName string `json:"filename"`
 	IPFS     string `json:"ipfs"`
 }
 

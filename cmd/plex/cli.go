@@ -11,21 +11,49 @@ import (
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
 
-func ProtoRun(toolPath, inputDir string) {
+func ProtoRun(toolPath, inputDir string, layers int) {
 	fmt.Println("Running ProtoRun function...")
-	// var ioEntries []ipwl.IO
-	// if toolPath != "" {
-	// 	fmt.Println("Reading tool config: ", toolPath)
-	// 	toolConfig, err := ipwl.ReadToolConfig(toolPath)
-	// 	if err != nil {
-	// 		fmt.Println("Error:", err)
-	// 		os.Exit(1)
-	// 	}
-	// 	fmt.Println("Creating IO Entries from input directory: ", toolConfig)
-	// 	ioEntries = ipwl.CreateIOEntriesFromInputDir(inputDir, toolConfig)
-	// } else {
-	// 	fmt.Println("something")
-	// }
+
+	// Create job working directory
+	var workDirPath string
+	id := uuid.New()
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	workDirPath = path.Join(cwd, "jobs", id.String())
+	err = os.MkdirAll(workDirPath, 0755)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Created working directory: ", workDirPath)
+
+	var ioEntries []ipwl.IO
+	if toolPath != "" {
+		fmt.Println("Reading tool config: ", toolPath)
+		toolConfig, err := ipwl.ReadToolConfig(toolPath)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Creating IO entries from input directory: ", inputDir)
+		ioEntries, err = ipwl.ProtoCreateIOJson(inputDir, toolConfig, toolPath, layers)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+	}
+
+	var ioJsonPath string
+	ioJsonPath = path.Join(workDirPath, "io.json")
+	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Initialized IO file at: ", ioJsonPath)
 }
 
 func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
