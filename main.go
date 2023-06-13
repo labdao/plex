@@ -41,6 +41,7 @@ func main() {
 	proto := flag.Bool("proto", false, "Option to run in prototype mode")
 
 	web3 := flag.Bool("web3", false, "Option to mint an NFT")
+	image := flag.String("image", "", "Image to add to NFT metadata")
 
 	flag.Parse()
 
@@ -61,7 +62,7 @@ func main() {
 		if *proto {
 			plex.ProtoRun(*toolPath, *inputDir, *layers)
 		} else {
-			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3, *image)
 		}
 	} else if *ioJsonPath != "" {
 		fmt.Println("Running IPWL io path")
@@ -69,13 +70,13 @@ func main() {
 		if *proto {
 			plex.ProtoRun(*toolPath, *inputDir, *layers)
 		} else {
-			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3, *image)
 		}
 	} else if *workDir != "" {
 		if *proto {
 			plex.ProtoRun(*toolPath, *inputDir, *layers)
 		} else {
-			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3)
+			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3, *image)
 		}
 	} else {
 		fmt.Println("Requirements invalid. Please run './plex -h' for help.")

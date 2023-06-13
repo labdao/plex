@@ -65,11 +65,10 @@ func ProtoRun(toolPath, inputDir string, layers int) {
 	fmt.Println("Initial IO file CID: ", cid)
 }
 
-func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
+func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool, imageCID string) {
 	// mint an NFT if web3 flag is set
 	if web3 {
-		fmt.Println("Minting NFT...")
-		web3pkg.MintNFT(ioJsonPath)
+		web3pkg.MintNFT(ioJsonPath, imageCID)
 		return
 	}
 

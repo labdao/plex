@@ -35,7 +35,7 @@ func removeFilepathKeys(obj map[string]interface{}) {
 	}
 }
 
-func buildTokenMetadata(ioPath string) (string, error) {
+func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	ioBytes, err := ioutil.ReadFile(ioPath)
 	if err != nil {
 		return "", fmt.Errorf("error reading io file: %v", err)
@@ -82,10 +82,21 @@ func buildTokenMetadata(ioPath string) (string, error) {
 		graphs = append(graphs, graph)
 	}
 
+	// default NFT image is glitchy labdao logo gif
+	imageCID := "bafybeiba666bzbff5vu6rayvp5st2tk7tdltqnwjppzyvpljcycfhshdhq"
+
+	if imageCIDs[0] != "" {
+		if ipfs.IsValidCID(imageCIDs[0]) {
+			imageCID = imageCIDs[0]
+		} else {
+			return "", fmt.Errorf("invalid image CID: %s", imageCIDs[0])
+		}
+	}
+
 	outputMap := map[string]interface{}{
 		"name":        tokenName,
 		"description": "Research, Reimagined. All Scientists Welcome.",
-		"image":       "ipfs://bafybeiba666bzbff5vu6rayvp5st2tk7tdltqnwjppzyvpljcycfhshdhq/",
+		"image":       "ipfs://" + imageCID,
 		"graph":       graphs,
 	}
 
@@ -97,7 +108,7 @@ func buildTokenMetadata(ioPath string) (string, error) {
 	return string(tokenMetadata), nil
 }
 
-func MintNFT(ioJsonPath string) {
+func MintNFT(ioJsonPath string, imageCIDs ...string) {
 	if recipientWallet == "" {
 		fmt.Println("RECIPIENT_WALLET must be set")
 		os.Exit(1)
@@ -110,7 +121,7 @@ func MintNFT(ioJsonPath string) {
 
 	// Build NFT metadata
 	fmt.Println("Preparing NFT metadata...")
-	metadata, err := buildTokenMetadata(ioJsonPath)
+	metadata, err := buildTokenMetadata(ioJsonPath, imageCIDs...)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
