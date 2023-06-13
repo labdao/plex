@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/labdao/plex/internal/bacalhau"
 )
@@ -57,4 +58,13 @@ func GetFileCid(filePath string) (string, error) {
 		return "", fmt.Errorf("error adding file to IPFS: %w", err)
 	}
 	return cid, nil
+}
+
+func IsValidCID(cidStr string) bool {
+	_, err := cid.Decode(cidStr)
+	if err != nil {
+		// Invalid CID
+		return false
+	}
+	return true
 }
