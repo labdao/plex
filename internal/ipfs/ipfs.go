@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/labdao/plex/internal/bacalhau"
 )
@@ -46,7 +47,20 @@ func addFileHttp(ipfsNodeUrl, filePath string) (cid string, err error) {
 	return cid, err
 }
 
-// returns the CID of the file
+// returns the cid of a directory
+func GetDirCid(dirPath string) (string, error) {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
+	}
+	cid, err := AddDirHttp(ipfsNodeUrl, dirPath)
+	if err != nil {
+		return "", fmt.Errorf("error adding directory to IPFS: %w", err)
+	}
+	return cid, nil
+}
+
+// returns the CID of a file
 func GetFileCid(filePath string) (string, error) {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
@@ -57,4 +71,13 @@ func GetFileCid(filePath string) (string, error) {
 		return "", fmt.Errorf("error adding file to IPFS: %w", err)
 	}
 	return cid, nil
+}
+
+func IsValidCID(cidStr string) bool {
+	_, err := cid.Decode(cidStr)
+	if err != nil {
+		// Invalid CID
+		return false
+	}
+	return true
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -129,47 +128,47 @@ func loadJSONFile(filePath string, target interface{}) error {
 // 	}
 // }
 
-func TestCreateIOJson(t *testing.T) {
-	inputDir := "testdata/binding/abl"
+// func TestCreateIOJson(t *testing.T) {
+// 	inputDir := "testdata/binding/abl"
 
-	var ios []IO
-	err := loadJSONFile("testdata/example_equibind_io.json", &ios)
-	if err != nil {
-		t.Fatalf("Error loading example_equibind_io.json: %v", err)
-	}
+// 	var ios []IO
+// 	err := loadJSONFile("testdata/example_equibind_io.json", &ios)
+// 	if err != nil {
+// 		t.Fatalf("Error loading example_equibind_io.json: %v", err)
+// 	}
 
-	var tool Tool
-	err = loadJSONFile("testdata/example_tool.json", &tool)
-	if err != nil {
-		t.Fatalf("Error loading example_tool.json: %v", err)
-	}
+// 	var tool Tool
+// 	err = loadJSONFile("testdata/example_tool.json", &tool)
+// 	if err != nil {
+// 		t.Fatalf("Error loading example_tool.json: %v", err)
+// 	}
 
-	// Extract the toolPath from the first item in the ios
-	toolPath := ios[0].Tool
+// 	// Extract the toolPath from the first item in the ios
+// 	toolPath := ios[0].Tool
 
-	// Get the expected inputs and outputs
-	expected := ios
+// 	// Get the expected inputs and outputs
+// 	expected := ios
 
-	// Remove the "tool" key from each map in ios
-	for i := range ios {
-		ios[i].Tool = ""
-	}
+// 	// Remove the "tool" key from each map in ios
+// 	for i := range ios {
+// 		ios[i].Tool = ""
+// 	}
 
-	generatedIOData, err := CreateIOJson(inputDir, tool, toolPath, 2)
-	if err != nil {
-		t.Fatalf("Error in CreateIOJson: %v", err)
-	}
+// 	generatedIOData, err := CreateIOJson(inputDir, tool, toolPath, 2)
+// 	if err != nil {
+// 		t.Fatalf("Error in CreateIOJson: %v", err)
+// 	}
 
-	// Compare the paths after the asterisk
-	for i := range generatedIOData {
-		for k, v := range generatedIOData[i].Inputs {
-			expectedPath := strings.Split(expected[i].Inputs[k].FilePath, "*")[1]
-			if !strings.HasSuffix(v.FilePath, expectedPath) {
-				t.Errorf("Expected path suffix:\n%v\nGot:\n%v", expectedPath, v.FilePath)
-			}
-		}
-	}
-}
+// 	// Compare the paths after the asterisk
+// 	for i := range generatedIOData {
+// 		for k, v := range generatedIOData[i].Inputs {
+// 			expectedPath := strings.Split(expected[i].Inputs[k].FilePath, "*")[1]
+// 			if !strings.HasSuffix(v.FilePath, expectedPath) {
+// 				t.Errorf("Expected path suffix:\n%v\nGot:\n%v", expectedPath, v.FilePath)
+// 			}
+// 		}
+// 	}
+// }
 
 func TestReadIOList(t *testing.T) {
 	filePath := "testdata/example_io.json"

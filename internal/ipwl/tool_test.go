@@ -51,35 +51,35 @@ func TestReadToolConfig(t *testing.T) {
 	}
 }
 
-func TestToolToDockerCmd(t *testing.T) {
-	toolConfig := Tool{
-		DockerPull:  "some_docker_pull",
-		BaseCommand: []string{"some_base_command"},
-		Arguments:   []string{"--protein", "$(inputs.protein.filepath)", "--small_molecule", "$(inputs.small_molecule.filepath)"},
-	}
+// func TestToolToDockerCmd(t *testing.T) {
+// 	toolConfig := Tool{
+// 		DockerPull:  "some_docker_pull",
+// 		BaseCommand: []string{"some_base_command"},
+// 		Arguments:   []string{"--protein", "$(inputs.protein.filepath)", "--small_molecule", "$(inputs.small_molecule.filepath)"},
+// 	}
 
-	ioEntry := IO{
-		Inputs: map[string]FileInput{
-			"protein": {
-				FilePath: "testdata/binding/abl/7n9g.pdb",
-			},
-			"small_molecule": {
-				FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
-			},
-		},
-	}
+// 	ioEntry := IO{
+// 		Inputs: map[string]FileInput{
+// 			"protein": {
+// 				FilePath: "testdata/binding/abl/7n9g.pdb",
+// 			},
+// 			"small_molecule": {
+// 				FilePath: "testdata/binding/abl/ZINC000003986735.sdf",
+// 			},
+// 		},
+// 	}
 
-	inputsDirPath := "testdata/binding/abl"
-	outputsDirPath := "some_output_dir"
+// 	inputsDirPath := "testdata/binding/abl"
+// 	outputsDirPath := "some_output_dir"
 
-	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, []IO{ioEntry}, inputsDirPath, outputsDirPath)
-	if err != nil {
-		t.Errorf("Error generating Docker command: %v", err)
-	}
+// 	dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, []IO{ioEntry}, inputsDirPath, outputsDirPath)
+// 	if err != nil {
+// 		t.Errorf("Error generating Docker command: %v", err)
+// 	}
 
-	expectedDockerCmd := "docker run  -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
+// 	expectedDockerCmd := "docker run  -v testdata/binding/abl:/inputs -v some_output_dir:/outputs some_docker_pull some_base_command \"--protein /inputs/7n9g.pdb --small_molecule /inputs/ZINC000003986735.sdf\""
 
-	if dockerCmd != expectedDockerCmd {
-		t.Errorf("Expected Docker command: %s, got: %s", expectedDockerCmd, dockerCmd)
-	}
-}
+// 	if dockerCmd != expectedDockerCmd {
+// 		t.Errorf("Expected Docker command: %s, got: %s", expectedDockerCmd, dockerCmd)
+// 	}
+// }

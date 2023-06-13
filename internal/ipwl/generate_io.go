@@ -3,6 +3,7 @@ package ipwl
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/labdao/plex/internal/ipfs"
@@ -85,6 +86,72 @@ func generateInputCombinations(inputFilepaths map[string][]string) []map[string]
 	return combinations
 }
 
+func protoCreateIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
+	var ioData []IO
+
+	for _, combination := range inputCombinations {
+		ioEntry := IO{
+			Tool:    toolPath,
+			State:   "created",
+			Inputs:  map[string]FileInput{},
+			Outputs: map[string]Output{},
+		}
+
+		for inputName, path := range combination {
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				log.Printf("Error converting to absolute path: %v", err)
+				continue
+			}
+
+			tempDir, err := ioutil.TempDir("", "inputFile")
+			if err != nil {
+				log.Printf("Error creating temporary directory: %v", err)
+				continue
+			}
+
+			defer os.RemoveAll(tempDir)
+
+			_, fileName := filepath.Split(absPath)
+			tempFilePath := filepath.Join(tempDir, fileName)
+
+			err = copyFile(absPath, tempFilePath)
+			if err != nil {
+				log.Printf("Error copying file to temporary directory: %v", err)
+				continue
+			}
+
+			cid, err := ipfs.GetDirCid(tempDir)
+			if err != nil {
+				log.Printf("Error getting CID for directory %s: %v", tempDir, err)
+				continue
+			}
+			ioEntry.Inputs[inputName] = FileInput{
+				Class:    "File",
+				FileName: fileName,
+				IPFS:     cid,
+			}
+		}
+
+		for outputName, output := range tool.Outputs {
+			if output.Type == "File" {
+				ioEntry.Outputs[outputName] = FileOutput{
+					Class: "File",
+				}
+			} else if output.Type == "Array" && output.Item == "File" {
+				ioEntry.Outputs[outputName] = ArrayFileOutput{
+					Class: "Array",
+					Files: []FileOutput{},
+				}
+			}
+		}
+
+		ioData = append(ioData, ioEntry)
+	}
+
+	return ioData
+}
+
 func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
 	var ioData []IO
 
@@ -109,7 +176,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class:    "File",
-				FilePath: absPath,
+				FileName: absPath,
 				IPFS:     cid,
 			}
 		}
@@ -131,6 +198,18 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 	}
 
 	return ioData
+}
+
+func ProtoCreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {
+	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
+	if err != nil {
+		return nil, err
+	}
+
+	inputCombinations := generateInputCombinations(inputFilepaths)
+	ioData := protoCreateIOEntries(toolPath, tool, inputCombinations)
+
+	return ioData, nil
 }
 
 func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {

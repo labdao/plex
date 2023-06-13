@@ -7,15 +7,68 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
 
-func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
+func ProtoRun(toolPath, inputDir string, layers int) {
+	fmt.Println("Running ProtoRun function...")
+
+	// Create job working directory
+	var workDirPath string
+	id := uuid.New()
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	workDirPath = path.Join(cwd, "jobs", id.String())
+	err = os.MkdirAll(workDirPath, 0755)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Created working directory: ", workDirPath)
+
+	var ioEntries []ipwl.IO
+	if toolPath != "" {
+		fmt.Println("Reading tool config: ", toolPath)
+		toolConfig, err := ipwl.ReadToolConfig(toolPath)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		fmt.Println("Creating IO entries from input directory: ", inputDir)
+		ioEntries, err = ipwl.ProtoCreateIOJson(inputDir, toolConfig, toolPath, layers)
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+	}
+
+	var ioJsonPath string
+	ioJsonPath = path.Join(workDirPath, "io.json")
+	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Initialized IO file at: ", ioJsonPath)
+
+	var cid string
+	cid, err = ipfs.GetFileCid(ioJsonPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Initial IO file CID: ", cid)
+}
+
+func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool, imageCID string) {
 	// mint an NFT if web3 flag is set
 	if web3 {
-		fmt.Println("Minting NFT...")
-		web3pkg.MintNFT(ioJsonPath)
+		web3pkg.MintNFT(ioJsonPath, imageCID)
 		return
 	}
 
