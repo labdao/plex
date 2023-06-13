@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
@@ -54,6 +55,14 @@ func ProtoRun(toolPath, inputDir string, layers int) {
 		os.Exit(1)
 	}
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
+
+	var cid string
+	cid, err = ipfs.GetFileCid(ioJsonPath)
+	if err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	fmt.Println("Initial IO file CID: ", cid)
 }
 
 func Run(toolPath, inputDir, ioJsonPath, workDir, outputDir string, verbose, retry, local, showAnimation bool, concurrency, layers int, web3 bool) {
