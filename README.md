@@ -56,9 +56,9 @@ Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lab
 ./plex -tool tools/equibind.json -input-dir ./testdata/binding/abl
 ```
 
-4. Learn how to run plex with your own data and tools
 ![Getting Started](./readme-getting-started-2x.gif)
 
+4. [Read the docs](https://docs.labdao.xyz/) to learn how to use PLEX with your own data and tools
 
 ## 💡 Use-Cases
 * 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
