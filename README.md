@@ -35,19 +35,30 @@ PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech
 
 ## 🚀 PLEX in one minute
 
-Install the client and adjust permissions.
+1 . Install the client
 
+Mac/Linux users open terminal and run
 ```
 source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
 chmod +x ./plex
 ```
-Claim an access token and submit an example.
 
+Windows users open terminal as an adminstrator and run
+```
+Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/labdao/plex/main/install.ps1" -UseBasicParsing).Content
+```
+
+2. Claim a beta access token and follow the instructions to export to your terminal env
+[Beta Access Form](https://airtable.com/shrfEDQj2fPffUge8)
+
+3. Submit an example PLEX job
 ```
 ./plex -tool tools/equibind.json -input-dir ./testdata/binding/abl
 ```
 
+4. Learn how to run plex with your own data and tools
 ![Getting Started](./readme-getting-started-2x.gif)
+
 
 ## 💡 Use-Cases
 * 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
