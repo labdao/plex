@@ -128,7 +128,7 @@ func protoCreateIOEntries(toolPath string, tool Tool, inputCombinations []map[st
 			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class:    "File",
-				FileName: fileName,
+				FilePath: fileName,
 				IPFS:     cid,
 			}
 		}
@@ -176,7 +176,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class:    "File",
-				FileName: absPath,
+				FilePath: absPath,
 				IPFS:     cid,
 			}
 		}
