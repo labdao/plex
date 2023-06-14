@@ -68,6 +68,18 @@ func main() {
 		fmt.Println("Running IPWL io path")
 		*retry = false // can only retry from an PLEx work dir not io json path input
 		if *proto {
+			// mcmenemy change ProtoRun to GenerateIO
+			// GenerateIO will use helper functions to generate an IO,
+			// pin the IO, and return CID of the IO
+			// we will also add an *autoRun flag that defaults to true
+			// autoRun true means plex will automitaclly send the IO to bacalhau
+			// and start process, false means it will just print the IO CID
+
+			// simplify Run to just take the ioCID, outputDir, verbose, retry, showAnimation, and concurrency arguments
+			// Run will submit the job to Bacalhau and update the local IO.json with checkpoints
+			// on run completion it will pin the IO.json
+			// add a root level mint function and autoMint with default false flag
+			// if autoMint is tru call the plex Mint function * aakaash can fill in the exact interface
 			plex.ProtoRun(*toolPath, *inputDir, *layers)
 		} else {
 			plex.Run(*toolPath, *inputDir, *ioJsonPath, *workDir, *outputDir, *verbose, *retry, *local, *showAnimation, *concurrency, *layers, *web3, *image)

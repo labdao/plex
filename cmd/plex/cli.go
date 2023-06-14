@@ -12,10 +12,12 @@ import (
 	web3pkg "github.com/labdao/plex/internal/web3"
 )
 
+// mcmenemy change to GenerateIO
 func ProtoRun(toolPath, inputDir string, layers int) {
 	fmt.Println("Running ProtoRun function...")
 
 	// Create job working directory
+	// change to temp directory, the Run function will create the local workDir
 	var workDirPath string
 	id := uuid.New()
 	cwd, err := os.Getwd()
@@ -31,8 +33,11 @@ func ProtoRun(toolPath, inputDir string, layers int) {
 	}
 	fmt.Println("Created working directory: ", workDirPath)
 
+	// mcmenemy change the struct from FilePath to FileName
+	// also update tool configs args to still work
 	var ioEntries []ipwl.IO
 	if toolPath != "" {
+		// mcmenemy bonus move to CID
 		fmt.Println("Reading tool config: ", toolPath)
 		toolConfig, err := ipwl.ReadToolConfig(toolPath)
 		if err != nil {
@@ -47,6 +52,7 @@ func ProtoRun(toolPath, inputDir string, layers int) {
 		}
 	}
 
+	// mcmenemy this will be moved to a temp directory
 	var ioJsonPath string
 	ioJsonPath = path.Join(workDirPath, "io.json")
 	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
@@ -57,11 +63,14 @@ func ProtoRun(toolPath, inputDir string, layers int) {
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
 	var cid string
+	// mcmenemy change name of getfilecid since it pins
 	cid, err = ipfs.GetFileCid(ioJsonPath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
+
+	// mcmenemy return the cid don't just print it
 	fmt.Println("Initial IO file CID: ", cid)
 }
 
