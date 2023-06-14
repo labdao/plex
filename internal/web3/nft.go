@@ -208,11 +208,11 @@ func triggerMinting(recipientAddress, cid string) error {
 	}
 
 	if result.Status == "success" {
-		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 sapling emojis for open science
+		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 saplings for open science
 		fmt.Println("Minting process successful.")
 		fmt.Println("Thank you for making science more reproducible, open, and collaborative!")
 		fmt.Println("You can view your ProofOfScience NFT at https://testnets.opensea.io/.")
-		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 more sapling emojis for open science
+		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 more saplings for open science
 	} else {
 		fmt.Println("Minting process failed.")
 		fmt.Printf("Response from Autotask: %s\n", string(body))
