@@ -344,18 +344,18 @@ func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
 
 func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
-	match := re.FindStringSubmatch(input.FileName)
+	match := re.FindStringSubmatch(input.FilePath)
 
 	if match == nil {
 		// The input.FilePath is a normal file path
-		return input.FileName, nil
+		return input.FilePath, nil
 	}
 
 	// Extract the index and key from the matched pattern
 	indexStr, key := match[1], match[2]
 	index, err := strconv.Atoi(indexStr)
 	if err != nil {
-		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FileName)
+		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FilePath)
 	}
 
 	if index < 0 || index >= len(ioGraph) {
@@ -376,7 +376,7 @@ func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
 	outputFilepath := ""
 	switch output := output.(type) {
 	case FileOutput:
-		outputFilepath = output.FileName
+		outputFilepath = output.FilePath
 	case ArrayFileOutput:
 		return "", fmt.Errorf("PLEx does not currently support ArrayFileOutput as an input")
 	default:
