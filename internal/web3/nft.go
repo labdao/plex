@@ -113,13 +113,15 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 }
 
 func MintNFT(ioJsonPath string, imageCIDs ...string) {
-	if recipientWallet == "" {
-		fmt.Println("RECIPIENT_WALLET must be set")
+	if autotaskWebhook == "" {
+		fmt.Println("AUTOTASK_WEBHOOK must be set")
+		fmt.Println("Please visit https://airtable.com/shrfEDQj2fPffUge8 for instructions")
 		os.Exit(1)
 	}
 
-	if autotaskWebhook == "" {
-		fmt.Println("AUTOTASK_WEBHOOK must be set")
+	if recipientWallet == "" {
+		fmt.Println("RECIPIENT_WALLET must be set")
+		fmt.Println("Please visit https://airtable.com/shrfEDQj2fPffUge8 for instructions")
 		os.Exit(1)
 	}
 
