@@ -19,6 +19,10 @@ type postData struct {
 	Cid              string `json:"cid"`
 }
 
+type Response struct {
+	Status string `json:"status"`
+}
+
 func removeFilepathKeys(obj map[string]interface{}) {
 	delete(obj, "filepath")
 
@@ -197,7 +201,22 @@ func triggerMinting(recipientAddress, cid string) error {
 		return err
 	}
 
-	fmt.Printf("Response from Autotask: %s\n", string(body))
+	var result Response
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return err
+	}
+
+	if result.Status == "success" {
+		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 saplings for open science
+		fmt.Println("Minting process successful.")
+		fmt.Println("Thank you for making science more reproducible, open, and collaborative!")
+		fmt.Println("You can view your ProofOfScience NFT at https://testnets.opensea.io/.")
+		fmt.Println("\U0001F331\U0001F331\U0001F331\U0001F331\U0001F331") // 5 more saplings for open science
+	} else {
+		fmt.Println("Minting process failed.")
+		fmt.Printf("Response from Autotask: %s\n", string(body))
+	}
 
 	return nil
 }
