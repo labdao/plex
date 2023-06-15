@@ -63,8 +63,6 @@ func DownloadFile(cid, filepath string) error {
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Use the cat method to get the file with the specified CID
-	fmt.Println("Cid")
-	fmt.Println(cid)
 	reader, err := sh.Cat(cid)
 	if err != nil {
 		return err

@@ -67,7 +67,9 @@ func CreateIO(toolpath, inputDir string, layers int) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	fmt.Println("Initial IO file CID: ", cid)
+
+	// The Python SDK string matches here so make sure to change in both places
+	fmt.Println("Initial IO JSON file CID: ", cid)
 	return cid, nil
 }
 
