@@ -200,18 +200,6 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 	return ioData
 }
 
-func ProtoCreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {
-	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
-	if err != nil {
-		return nil, err
-	}
-
-	inputCombinations := generateInputCombinations(inputFilepaths)
-	ioData := protoCreateIOEntries(toolPath, tool, inputCombinations)
-
-	return ioData, nil
-}
-
 func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {
 	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
 	if err != nil {
@@ -219,7 +207,7 @@ func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO
 	}
 
 	inputCombinations := generateInputCombinations(inputFilepaths)
-	ioData := createIOEntries(toolPath, tool, inputCombinations)
+	ioData := protoCreateIOEntries(toolPath, tool, inputCombinations)
 
 	return ioData, nil
 }
