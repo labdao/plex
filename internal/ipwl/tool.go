@@ -107,20 +107,3 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 
 	return cmd, nil
 }
-
-func toolToDockerCmd(toolConfig Tool, ioEntry IO, ioGraph []IO, inputsDirPath, outputsDirPath string) (string, error) {
-	cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
-	if err != nil {
-		return "", err
-	}
-
-	// Add the GPU flag if GpuBool is true
-	gpuFlag := ""
-	if toolConfig.GpuBool {
-		gpuFlag = "--gpus all"
-	}
-
-	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, cmd)
-
-	return dockerCmd, nil
-}

@@ -93,20 +93,6 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error reading IO graph: %w", err)
 	}
 
-	dependsReady, err := checkSubgraphDepends(ioEntry, ioGraph)
-	if err != nil {
-		updateIOWithError(ioJsonPath, index, err, fileMutex)
-		return fmt.Errorf("error updating IO state: %w", err)
-	} else if !dependsReady {
-		err := updateIOState(ioJsonPath, index, "waiting", fileMutex)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error updating IO state: %w", err)
-		}
-		fmt.Printf("IO Subgraph at %d is still waiting on inputs to complete \n", index)
-		return errOutputPathEmpty
-	}
-
 	err = updateIOState(ioJsonPath, index, "processing", fileMutex)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
@@ -296,23 +282,6 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 	}
 
 	return nil
-}
-
-func checkSubgraphDepends(ioEntry IO, ioGraph []IO) (bool, error) {
-	dependsReady := true
-
-	for _, input := range ioEntry.Inputs {
-		_, err := DetermineSrcPath(input, ioGraph)
-		if err != nil {
-			if errors.Is(err, errOutputPathEmpty) {
-				dependsReady = false
-				break
-			}
-			return false, fmt.Errorf("failed to determine source path: %w", err)
-		}
-	}
-
-	return dependsReady, nil
 }
 
 func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
