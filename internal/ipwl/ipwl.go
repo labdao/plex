@@ -140,7 +140,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error reading tool config: %w", err)
 	}
 
-	err = copyInputFilesToDir(ioEntry, ioGraph, inputsDirPath)
+	err = downloadInputFilesToDir(ioEntry, ioGraph, inputsDirPath)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error copying files to results input directory: %w", err)
@@ -231,7 +231,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	return nil
 }
 
-func copyInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
+func downloadInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	// Ensure the destination directory exists
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
@@ -239,29 +239,17 @@ func copyInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	}
 
 	for _, input := range ioEntry.Inputs {
-		// mcmenemy now use cid logic instead of local path logic
-		// srcPath, err := DetermineSrcPath(input, ioGraph)
-		// if err != nil {
-		// 	return err
-		// }
-		// destPathj
-		// destPath := filepath.Join(dirPath, filepath.Base(srcPath))
-		destPath := filepath.Join(dirPath, input.FilePath) // change to FileName
+		destPath := filepath.Join(dirPath, input.FilePath)
 		fmt.Println("Dest Path:")
 		fmt.Println(destPath)
 
 		// download from ipfs
-		// err = copyFile(srcPath, destPath)
-		// if err != nil {
-		// 	return err
-		// }
 		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
 		if err != nil {
 			return err
 		}
-		fmt.Println("IPFS CID")
-		fmt.Println(input.IPFS + "/" + input.FilePath)
-		err = ipfs.DownloadFromIPFS(ipfsNodeUrl, input.IPFS+"/"+input.FilePath, destPath)
+		cidPath := input.IPFS + "/" + input.FilePath
+		err = ipfs.DownloadFromIPFS(ipfsNodeUrl, cidPath, destPath)
 		if err != nil {
 			return err
 		}
