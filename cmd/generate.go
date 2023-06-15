@@ -13,6 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	toolPath string
+	inputDir string
+	layers   int
+)
+
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Creates and pins an IO JSON",

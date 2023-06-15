@@ -13,8 +13,6 @@ import (
 )
 
 var (
-	toolPath      string
-	inputDir      string
 	ioJsonPath    string
 	workDir       string
 	outputDir     string
@@ -23,7 +21,6 @@ var (
 	local         bool
 	showAnimation bool
 	concurrency   int
-	layers        int
 	web3          bool
 	imageCID      string
 )
