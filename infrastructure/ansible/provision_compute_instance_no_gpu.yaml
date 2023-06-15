@@ -1,0 +1,168 @@
+- name: Provisition Plex Without Gpu
+  remote_user: ubuntu
+  hosts: tag_Type_compute:&tag_Env_dev
+  vars:
+    ipfs_path: /opt/local/ipfs
+  environment:
+    IPFS_PATH: "{{ ipfs_path }}"
+  tasks:
+    # Aptitude is preferred by ansible
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    # Docker
+    - name: Add Docker GPG key
+      become: yes
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/trusted.gpg.d/docker.asc
+
+    - name: Add Docker Repository
+      become: yes
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Create the docker group
+      become: yes
+      ansible.builtin.group:
+        name: docker
+
+    - name: Add ubuntu user to docker group
+      become: yes
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+
+    - name: Install required system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: Install Golag
+      become: yes
+      vars:
+        go_version: 1.20.3
+      block:
+        - name: Download Go binary
+          ansible.builtin.get_url:
+            url: https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz
+            dest: /tmp/go-binary.tar.gz
+        - name: Unzip Go binary
+          ansible.builtin.command:
+            cmd: tar -C /usr/local -xzf /tmp/go-binary.tar.gz
+
+    - name: Install IPFS
+      ansible.builtin.get_url:
+        url: https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
+        dest: /tmp/ipfs.tar.gz  
+    
+    - name: Make a folder to put IPFS files in
+      ansible.builtin.file:
+        path: /tmp/ipfs
+        state: directory
+
+    - name: Unzip IPFS
+      become: yes
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: /tmp/ipfs.tar.gz
+        dest: /tmp/ipfs
+
+    - name: Install Kubo
+      become: yes
+      ansible.builtin.command: /tmp/ipfs/kubo/install.sh
+
+    - name: Create IPFS directory
+      become: yes
+      ansible.builtin.file:
+        owner: ubuntu
+        group: ubuntu
+        path: /opt/local/ipfs
+        state: directory
+
+    - name: Put the IPFS directory in env for future shells
+      become: yes
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        line: IPFS_PATH={{ ipfs_path }}
+
+    - name: Initiazlie IPFS
+      ansible.builtin.command:
+        cmd: ipfs init
+        creates: "{{ ipfs_path }}/config"
+
+    - name: Configure IPFS
+      ansible.builtin.shell: |
+        ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+        ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+        ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
+        ipfs config Pinning.Recursive true
+
+    - name: Install the IPFS systemd unit
+      become: yes
+      ansible.builtin.copy:
+        src: files/ipfs.service
+        dest: /etc/systemd/system
+      notify:
+        - Systemd Daemon Reload
+
+    - name: Enable and start the IPFS Daemon
+      become: yes
+      ansible.builtin.service:
+        name: ipfs
+        state: started
+        enabled: true
+
+    - name: Install Bacalhau
+      ansible.builtin.shell:
+        cmd: curl -sL https://get.bacalhau.org/install.sh | bash
+
+    - name: Bump System Resources
+      become: yes
+      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
+
+    - name: Install the Bacalhau systemd unit
+      become: yes
+      ansible.builtin.template:
+        src: files/bacalhau-dev.service
+        dest: /etc/systemd/system
+      vars:
+        owner: labdao
+        ipfs_connect: /ip4/127.0.0.1/tcp/5001
+        receptor_url: http://ec2-44-211-222-198.compute-1.amazonaws.com
+      notify:
+        - Systemd Daemon Reload
+
+    - name: Enable and start Bacalhau
+      become: yes
+      ansible.builtin.service:
+        name: bacalhau
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart docker
+      become: yes
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+    - name: Systemd Daemon Reload
+      become: yes
+      ansible.builtin.systemd:
+        daemon_reload: true
