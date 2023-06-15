@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"sync"
 	"time"
 
@@ -282,54 +280,6 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 	}
 
 	return nil
-}
-
-func DetermineSrcPath(input FileInput, ioGraph []IO) (string, error) {
-	re := regexp.MustCompile(`^\$\{(\d+)\[(\w+)\]\}$`)
-	match := re.FindStringSubmatch(input.FilePath)
-
-	if match == nil {
-		// The input.FilePath is a normal file path
-		return input.FilePath, nil
-	}
-
-	// Extract the index and key from the matched pattern
-	indexStr, key := match[1], match[2]
-	index, err := strconv.Atoi(indexStr)
-	if err != nil {
-		return "", fmt.Errorf("invalid index in input.FilePath: %s", input.FilePath)
-	}
-
-	if index < 0 || index >= len(ioGraph) {
-		return "", fmt.Errorf("index out of range: %d", index)
-	}
-
-	// Check that dependent subgraph has not failed
-	if ioGraph[index].State == "failed" {
-		return "", fmt.Errorf("dependent subgraph %d failed", index)
-	}
-
-	// Get the output Filepath of the corresponding key
-	output, ok := ioGraph[index].Outputs[key]
-	if !ok {
-		return "", fmt.Errorf("key not found in outputs: %s", key)
-	}
-
-	outputFilepath := ""
-	switch output := output.(type) {
-	case FileOutput:
-		outputFilepath = output.FilePath
-	case ArrayFileOutput:
-		return "", fmt.Errorf("PLEx does not currently support ArrayFileOutput as an input")
-	default:
-		return "", fmt.Errorf("unknown output type")
-	}
-
-	if outputFilepath == "" {
-		return "", errOutputPathEmpty
-	}
-
-	return outputFilepath, nil
 }
 
 func setRetryState(ioJsonPath string) error {

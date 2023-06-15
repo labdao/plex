@@ -36,6 +36,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Docker.Image = container
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
+	// job.Spec.Annotations = []string{"plex"}
 
 	// had problems getting selector to work in bacalhau v0.28
 	var selectorLabel string

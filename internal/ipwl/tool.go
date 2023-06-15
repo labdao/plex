@@ -72,17 +72,13 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 
 		var replacement string
 		input := ioEntry.Inputs[key]
-		srcFilepath, err := DetermineSrcPath(input, ioGraph)
-		if err != nil {
-			return "", err
-		}
 		switch match[2] {
 		case ".filepath":
-			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(srcFilepath))
+			replacement = fmt.Sprintf("/inputs/%s", input.FilePath)
 		case ".basename":
-			replacement = strings.TrimSuffix(filepath.Base(srcFilepath), filepath.Ext(srcFilepath))
+			replacement = strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))
 		case ".ext":
-			ext := filepath.Ext(srcFilepath)
+			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")
 		case ".default":
 			replacement = toolConfig.Inputs[key].Default
