@@ -153,7 +153,7 @@ func MintNFT(ioJsonPath string, imageCIDs ...string) {
 	}
 
 	fmt.Println("Uploading NFT metadata to IPFS...")
-	cid, err := ipfs.GetFileCid(tempFile.Name())
+	cid, err := ipfs.AddFile(tempFile.Name())
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)

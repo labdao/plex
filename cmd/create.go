@@ -60,7 +60,7 @@ func CreateIO(toolpath, inputDir string, layers int) {
 	}
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
-	cid, err := ipfs.GetFileCid(ioJsonPath)
+	cid, err := ipfs.AddFile(ioJsonPath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
@@ -71,7 +71,7 @@ func CreateIO(toolpath, inputDir string, layers int) {
 func init() {
 	createCmd.Flags().StringVarP(&toolPath, "toolPath", "t", "", "Path to the tool JSON file")
 	createCmd.Flags().StringVarP(&inputDir, "inputDir", "i", "", "Directory containing input files")
-	createCmd.Flags().IntVarP(&layers, "layers", "l", 1, "Number of layers to search input directory")
+	createCmd.Flags().IntVarP(&layers, "layers", "", 2, "Number of layers to search input directory")
 
 	rootCmd.AddCommand(createCmd)
 }

@@ -58,14 +58,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 	fmt.Println("Created working directory: ", workDirPath)
 
 	ioJsonPath := path.Join(workDirPath, "io.json")
-	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-	if err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
-	}
-	fmt.Println("iojsoncid")
-	fmt.Println(ioJsonCid)
-	err = ipfs.DownloadFromIPFS(ipfsNodeUrl, ioJsonCid, ioJsonPath)
+	err = ipfs.DownloadFile(ioJsonCid, ioJsonPath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
@@ -79,12 +72,10 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 }
 
 func init() {
-	runCmd.Flags().StringVarP(&inputDir, "inputDir", "i", "", "Directory containing input files")
-	runCmd.Flags().IntVarP(&layers, "layers", "l", 1, "Number of layers to search input directory")
-	runCmd.Flags().StringVarP(&ioJsonCid, "ioJsonPath", "j", "", "Path to IO JSON")
+	runCmd.Flags().StringVarP(&ioJsonCid, "ioJsonCid", "i", "", "Path to IO JSON")
 	runCmd.Flags().StringVarP(&outputDir, "outputDir", "o", "", "Output directory")
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
-	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "s", false, "Show animation")
+	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	runCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
 
 	rootCmd.AddCommand(runCmd)

@@ -146,13 +146,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error copying files to results input directory: %w", err)
 	}
 
-	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-	if err != nil {
-		updateIOWithError(ioJsonPath, index, err, fileMutex)
-		return fmt.Errorf("error deriving IPFS Url: %w", err)
-	}
-
-	cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputsDirPath)
+	cid, err := ipfs.AddDir(inputsDirPath)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error adding inputs to IPFS: %w", err)
@@ -243,13 +237,8 @@ func downloadInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 		fmt.Println("Dest Path:")
 		fmt.Println(destPath)
 
-		// download from ipfs
-		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-		if err != nil {
-			return err
-		}
 		cidPath := input.IPFS + "/" + input.FilePath
-		err = ipfs.DownloadFromIPFS(ipfsNodeUrl, cidPath, destPath)
+		err = ipfs.DownloadFile(cidPath, destPath)
 		if err != nil {
 			return err
 		}

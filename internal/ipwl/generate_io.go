@@ -121,7 +121,7 @@ func protoCreateIOEntries(toolPath string, tool Tool, inputCombinations []map[st
 				continue
 			}
 
-			cid, err := ipfs.GetDirCid(tempDir)
+			cid, err := ipfs.AddDir(tempDir)
 			if err != nil {
 				log.Printf("Error getting CID for directory %s: %v", tempDir, err)
 				continue
@@ -169,7 +169,7 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 				log.Printf("Error converting to absolute path: %v", err)
 				continue
 			}
-			cid, err := ipfs.GetFileCid(absPath)
+			cid, err := ipfs.AddFile(absPath)
 			if err != nil {
 				log.Printf("Error getting CID for file %s: %v", absPath, err)
 				continue
