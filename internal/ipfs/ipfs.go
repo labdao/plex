@@ -2,12 +2,42 @@ package ipfs
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/labdao/plex/internal/bacalhau"
 )
+
+func DownloadFromIPFS(ipfsNodeUrl, cid, filepath string) error {
+	// Connect to the local IPFS node
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	// Use the cat method to get the file with the specified CID
+	fmt.Println("Cid")
+	fmt.Println(cid)
+	reader, err := sh.Cat(cid)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	// Create the destination file
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Copy the data from the IPFS file to the local file
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func DeriveIpfsNodeUrl() (string, error) {
 	bacalApiHost := bacalhau.GetBacalhauApiHost()

@@ -18,7 +18,7 @@ import (
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local, showAnimation bool, maxConcurrency int) {
+func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool, maxConcurrency int) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 
@@ -60,7 +60,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local, showAnimati
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
-				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, local, showAnimation, &fileMutex)
+				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, showAnimation, &fileMutex)
 				if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Waiting to process IO entry %d \n", index)
 				} else if err != nil {
@@ -83,7 +83,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, local, showAnimati
 	}
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, local, showAnimation bool, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, showAnimation bool, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -146,100 +146,80 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error copying files to results input directory: %w", err)
 	}
 
-	if local {
-		dockerCmd, err := toolToDockerCmd(toolConfig, ioEntry, ioGraph, inputsDirPath, outputsDirPath)
-		if verbose {
-			fmt.Println("Generated docker cmd:", dockerCmd)
-		}
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error converting tool to Docker cmd: %w", err)
-		}
+	ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error deriving IPFS Url: %w", err)
+	}
 
-		output, err := runDockerCmd(dockerCmd)
-		if verbose {
-			fmt.Printf("Docker ran with output: %s \n", output)
-		}
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error running Docker cmd: %w", err)
-		}
+	cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputsDirPath)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error adding inputs to IPFS: %w", err)
+	}
+
+	if verbose {
+		fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
+	}
+
+	cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error converting tool to cmd: %w", err)
+	}
+	if verbose {
+		fmt.Printf("Generated cmd: %s\n", cmd)
+	}
+
+	// this memory type conversion is for backwards compatibility with the -app flag
+	var memory int
+	if toolConfig.MemoryGB == nil {
+		memory = 0
 	} else {
-		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error deriving IPFS Url: %w", err)
-		}
+		memory = *toolConfig.MemoryGB
+	}
 
-		cid, err := ipfs.AddDirHttp(ipfsNodeUrl, inputsDirPath)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error adding inputs to IPFS: %w", err)
-		}
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, memory, toolConfig.GpuBool, toolConfig.NetworkBool)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error creating Bacalhau job: %w", err)
+	}
 
-		if verbose {
-			fmt.Printf("Added inputs directory to IPFS with CID: %s\n", cid)
-		}
+	if verbose {
+		fmt.Println("Submitting Bacalhau job")
+	}
+	submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error submitting Bacalhau job: %w", err)
+	}
 
-		cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error converting tool to cmd: %w", err)
-		}
-		if verbose {
-			fmt.Printf("Generated cmd: %s\n", cmd)
-		}
+	if verbose {
+		fmt.Println("Getting Bacalhau job")
+	}
+	results, err := bacalhau.GetBacalhauJobResults(submittedJob, showAnimation)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error getting Bacalhau job results: %w", err)
+	}
 
-		// this memory type conversion is for backwards compatibility with the -app flag
-		var memory int
-		if toolConfig.MemoryGB == nil {
-			memory = 0
-		} else {
-			memory = *toolConfig.MemoryGB
-		}
+	if verbose {
+		fmt.Println("Downloading Bacalhau job")
+		fmt.Printf("Output dir of %s \n", outputsDirPath)
+	}
+	err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error downloading Bacalhau results: %w", err)
+	}
 
-		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, memory, toolConfig.GpuBool, toolConfig.NetworkBool)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error creating Bacalhau job: %w", err)
-		}
-
-		if verbose {
-			fmt.Println("Submitting Bacalhau job")
-		}
-		submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error submitting Bacalhau job: %w", err)
-		}
-
-		if verbose {
-			fmt.Println("Getting Bacalhau job")
-		}
-		results, err := bacalhau.GetBacalhauJobResults(submittedJob, showAnimation)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error getting Bacalhau job results: %w", err)
-		}
-
-		if verbose {
-			fmt.Println("Downloading Bacalhau job")
-			fmt.Printf("Output dir of %s \n", outputsDirPath)
-		}
-		err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error downloading Bacalhau results: %w", err)
-		}
-
-		if verbose {
-			fmt.Println("Cleaning Bacalhau job")
-		}
-		err = cleanBacalhauOutputDir(outputsDirPath, verbose)
-		if err != nil {
-			updateIOWithError(ioJsonPath, index, err, fileMutex)
-			return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
-		}
+	if verbose {
+		fmt.Println("Cleaning Bacalhau job")
+	}
+	err = cleanBacalhauOutputDir(outputsDirPath, verbose)
+	if err != nil {
+		updateIOWithError(ioJsonPath, index, err, fileMutex)
+		return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
 	}
 
 	err = updateIOWithResult(ioJsonPath, toolConfig, index, outputsDirPath, fileMutex)
@@ -259,13 +239,29 @@ func copyInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	}
 
 	for _, input := range ioEntry.Inputs {
-		srcPath, err := DetermineSrcPath(input, ioGraph)
+		// mcmenemy now use cid logic instead of local path logic
+		// srcPath, err := DetermineSrcPath(input, ioGraph)
+		// if err != nil {
+		// 	return err
+		// }
+		// destPathj
+		// destPath := filepath.Join(dirPath, filepath.Base(srcPath))
+		destPath := filepath.Join(dirPath, input.FilePath) // change to FileName
+		fmt.Println("Dest Path:")
+		fmt.Println(destPath)
+
+		// download from ipfs
+		// err = copyFile(srcPath, destPath)
+		// if err != nil {
+		// 	return err
+		// }
+		ipfsNodeUrl, err := ipfs.DeriveIpfsNodeUrl()
 		if err != nil {
 			return err
 		}
-		destPath := filepath.Join(dirPath, filepath.Base(srcPath))
-
-		err = copyFile(srcPath, destPath)
+		fmt.Println("IPFS CID")
+		fmt.Println(input.IPFS + "/" + input.FilePath)
+		err = ipfs.DownloadFromIPFS(ipfsNodeUrl, input.IPFS+"/"+input.FilePath, destPath)
 		if err != nil {
 			return err
 		}

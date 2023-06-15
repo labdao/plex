@@ -52,7 +52,7 @@ func CreateIO(toolpath, inputDir string, layers int) {
 		os.Exit(1)
 	}
 
-	ioJsonPath = path.Join(tempDirPath, "io.json")
+	ioJsonPath := path.Join(tempDirPath, "io.json")
 	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
 	if err != nil {
 		fmt.Println("Error:", err)

@@ -12,7 +12,7 @@ var rootCmd = &cobra.Command{
 	Short: "Plex is a CLI application",
 	Long:  `Plex is a CLI application. Complete documentation is available at http://example.com`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Do Stuff Here
+		fmt.Println("Type ./plex --help to see commands")
 	},
 }
 
