@@ -86,7 +86,7 @@ func generateInputCombinations(inputFilepaths map[string][]string) []map[string]
 	return combinations
 }
 
-func protoCreateIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
+func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
 	var ioData []IO
 
 	for _, combination := range inputCombinations {
@@ -152,54 +152,6 @@ func protoCreateIOEntries(toolPath string, tool Tool, inputCombinations []map[st
 	return ioData
 }
 
-func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]string) []IO {
-	var ioData []IO
-
-	for _, combination := range inputCombinations {
-		ioEntry := IO{
-			Tool:    toolPath,
-			State:   "created",
-			Inputs:  map[string]FileInput{},
-			Outputs: map[string]Output{},
-		}
-
-		for inputName, path := range combination {
-			absPath, err := filepath.Abs(path)
-			if err != nil {
-				log.Printf("Error converting to absolute path: %v", err)
-				continue
-			}
-			cid, err := ipfs.AddFile(absPath)
-			if err != nil {
-				log.Printf("Error getting CID for file %s: %v", absPath, err)
-				continue
-			}
-			ioEntry.Inputs[inputName] = FileInput{
-				Class:    "File",
-				FilePath: absPath,
-				IPFS:     cid,
-			}
-		}
-
-		for outputName, output := range tool.Outputs {
-			if output.Type == "File" {
-				ioEntry.Outputs[outputName] = FileOutput{
-					Class: "File",
-				}
-			} else if output.Type == "Array" && output.Item == "File" {
-				ioEntry.Outputs[outputName] = ArrayFileOutput{
-					Class: "Array",
-					Files: []FileOutput{},
-				}
-			}
-		}
-
-		ioData = append(ioData, ioEntry)
-	}
-
-	return ioData
-}
-
 func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO, error) {
 	inputFilepaths, err := findMatchingFiles(inputDir, tool, layers)
 	if err != nil {
@@ -207,7 +159,7 @@ func CreateIOJson(inputDir string, tool Tool, toolPath string, layers int) ([]IO
 	}
 
 	inputCombinations := generateInputCombinations(inputFilepaths)
-	ioData := protoCreateIOEntries(toolPath, tool, inputCombinations)
+	ioData := createIOEntries(toolPath, tool, inputCombinations)
 
 	return ioData, nil
 }
