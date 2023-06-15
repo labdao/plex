@@ -1,0 +1,27 @@
+- name: Provision Receptor
+  remote_user: ubuntu
+  hosts: tag_Type_receptor
+  vars:
+    plex_dir: /opt/local/plex
+  tasks:
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: present
+        update_cache: true
+
+    - name: Create plex dir, writable by user
+      become: yes
+      ansible.builtin.file:
+        path: "{{ plex_dir }}"
+        owner: ubuntu
+        group: ubuntu 
+        state: directory
+
+    - name: Pull the plex repository
+      ansible.builtin.git:
+        repo: https://github.com/labdao/plex.git
+        dest: "{{ plex_dir }}/"
+        single_branch: yes
+        version: ops/receptor
