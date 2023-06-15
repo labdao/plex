@@ -23,5 +23,10 @@
       ansible.builtin.git:
         repo: https://github.com/labdao/plex.git
         dest: "{{ plex_dir }}/"
-        single_branch: yes
         version: ops/receptor
+
+    - name: Install system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - golang-go

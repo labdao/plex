@@ -140,11 +140,11 @@
       become: yes
       ansible.builtin.template:
         src: files/bacalhau-dev.service
-        dest: /etc/systemd/system
+        dest: /etc/systemd/system/bacalhau.service
       vars:
         owner: labdao
         ipfs_connect: /ip4/127.0.0.1/tcp/5001
-        receptor_url: http://ec2-44-211-222-198.compute-1.amazonaws.com
+        receptor_url: http://ec2-44-201-112-233.compute-1.amazonaws.com:8080/judge
       notify:
         - Systemd Daemon Reload
 

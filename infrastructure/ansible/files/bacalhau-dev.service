@@ -11,8 +11,8 @@ ExecStart=bacalhau serve \
   --limit-job-memory 2gb \
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere \
-  --labels owner={{ owner }} \
-  --job-selection-probe-http {{ receptor_url }}
+  --job-selection-probe-http {{ receptor_url }} \
+  --labels owner={{ owner }}
 
 [Install]
 WantedBy=multi-user.target
