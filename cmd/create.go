@@ -27,6 +27,7 @@ var createCmd = &cobra.Command{
 		cid, err := CreateIO(toolPath, inputDir, layers)
 		if err != nil {
 			fmt.Println("Error:", err)
+			os.Exit(1)
 		}
 		if autoRun {
 			PlexRun(cid, outputDir, verbose, showAnimation, concurrency, annotations)

@@ -100,6 +100,6 @@ getTools
 
 Write-Host "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
 Write-Host "To get started, please run the following steps:"
-Write-Host "1. Please add your access token to use plex. To request an access token, visit https://airtable.com/shrfEDQj2fPffUge8"
+Write-Host "1. Please add your access token to use plex. To request an access token, visit https://try.labdao.xyz"
 Write-Host "2. After these steps, you're ready to generate computational biology data! Run the following command to run Equibind on test data:"
 Write-Host "./plex -tool equibind -input-dir testdata/binding/abl"
