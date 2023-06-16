@@ -24,7 +24,7 @@ Let’s get started!
 
 ---
 
-Overview:
+**Overview:**
 
 The steps to run a small molecule binding tool with PLEX on your own data are as follows:
 
@@ -33,7 +33,7 @@ The steps to run a small molecule binding tool with PLEX on your own data are as
 2. Run the command, pointing to this folder as the input directory:
 
 ```
-./plex -tool equibind -input-dir ~/downloads/plexbindingdata
+./plex create -t tools/equibind.json -i ~/downloads/plexbindingdata --autoRun=true
 ```
 
 :::note
@@ -97,13 +97,13 @@ Now we're ready to run PLEX for small molecule binding.
 For Equibind, run the command below, changing the input directory to match where your data is stored.
 
 ```
-./plex -tool equibind -input-dir ~/downloads/plexbindingdata
+./plex create -t tools/equibind.json -i ~/downloads/plexbindingdata --autoRun=true
 ```
 
 For Diffdock, run the command below, changing the input directory to match where your data is stored:
 
 ```
-./plex -tool diffdock -input-dir ~/downloads/plexbindingdata -gpu=true -network=true
+./plex create -t tools/diffdock.json -i ~/downloads/plexbindingdata --autoRun=true
 ```
 
 ## 5. Visualize the results
