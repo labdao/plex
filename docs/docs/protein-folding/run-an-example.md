@@ -33,7 +33,7 @@ After [installing PLEX](../getting-started/install-plex.md), follow the steps be
 Copy and paste the following command to run the tool using our provided test data and press **Enter**:
 
 ```
-./plex -tool colabfold-mini -input-dir testdata/folding
+./plex create -t tools/colabfold-mini.json -i testdata/folding --autoRun=true
 ```
 
 You should see the following:
