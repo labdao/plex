@@ -49,7 +49,7 @@ Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lab
 ```
 
 2. Claim a beta access token and follow the instructions to export to your terminal env
-[Beta Access Form](https://airtable.com/shrfEDQj2fPffUge8)
+[Beta Access Form](https://try.labdao.xyz)
 
 3. Submit an example PLEX job
 ```
