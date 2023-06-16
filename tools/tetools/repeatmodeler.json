@@ -1,7 +1,7 @@
 {
     "class": "CommandLineTool",
     "name": "repeatmodeler",
-    "description": "Identify repeats in assembled genomes",
+    "description": "Builds database from assemlbed genome (multi-)fasta and identifies repeats in assembled genomes",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "BuildDatabase -name /outputs/repeat_db -engine ncbi $(inputs.assemled_ncbi_genome.filepath);",
