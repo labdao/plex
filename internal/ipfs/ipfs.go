@@ -2,7 +2,10 @@ package ipfs
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -15,7 +18,11 @@ func DeriveIpfsNodeUrl() (string, error) {
 	return ipfsUrl, nil
 }
 
-func AddDirHttp(ipfsNodeUrl, dirPath string) (cid string, err error) {
+func PinDir(dirPath string) (cid string, err error) {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", err
+	}
 	sh := shell.NewShell(ipfsNodeUrl)
 	cid, err = sh.AddDir(dirPath)
 	if err != nil {
@@ -25,8 +32,11 @@ func AddDirHttp(ipfsNodeUrl, dirPath string) (cid string, err error) {
 	return cid, err
 }
 
-// Used to generate the IPFS cid for each file; each cid added to IO struct
-func addFileHttp(ipfsNodeUrl, filePath string) (cid string, err error) {
+func PinFile(filePath string) (cid string, err error) {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", err
+	}
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Open the file and ensure it gets closed
@@ -47,37 +57,85 @@ func addFileHttp(ipfsNodeUrl, filePath string) (cid string, err error) {
 	return cid, err
 }
 
-// returns the cid of a directory
-func GetDirCid(dirPath string) (string, error) {
+// wraps a file in a directory and adds it to IPFS
+func WrapAndPinFile(filePath string) (cid string, err error) {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
-		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
+		return "", err
 	}
-	cid, err := AddDirHttp(ipfsNodeUrl, dirPath)
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	absPath, err := filepath.Abs(filePath)
 	if err != nil {
-		return "", fmt.Errorf("error adding directory to IPFS: %w", err)
+		return cid, err
 	}
-	return cid, nil
+
+	tempDir, err := ioutil.TempDir("", "inputFile")
+	if err != nil {
+		return cid, err
+	}
+
+	defer os.RemoveAll(tempDir)
+
+	_, fileName := filepath.Split(absPath)
+	tempFilePath := filepath.Join(tempDir, fileName)
+
+	srcFile, err := os.Open(filePath)
+	if err != nil {
+		return cid, err
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(tempFilePath)
+	if err != nil {
+		return cid, err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return cid, err
+	}
+
+	cid, err = sh.AddDir(tempDir)
+	if err != nil {
+		return cid, err
+	}
+
+	return cid, err
 }
 
-// returns the CID of a file
-func GetFileCid(filePath string) (string, error) {
+func DownloadFile(cid, filepath string) error {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
-		return "", fmt.Errorf("error deriving IPFS node URL: %w", err)
+		return err
 	}
-	cid, err := addFileHttp(ipfsNodeUrl, filePath)
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	// Use the cat method to get the file with the specified CID
+	reader, err := sh.Cat(cid)
 	if err != nil {
-		return "", fmt.Errorf("error adding file to IPFS: %w", err)
+		return err
 	}
-	return cid, nil
+	defer reader.Close()
+
+	// Create the destination file
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Copy the data from the IPFS file to the local file
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func IsValidCID(cidStr string) bool {
 	_, err := cid.Decode(cidStr)
-	if err != nil {
-		// Invalid CID
-		return false
-	}
-	return true
+	return err == nil
 }
