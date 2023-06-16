@@ -53,47 +53,77 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
     
     return io_json_graph
 
-def run_plex(io: Union[Dict, List[Dict]], concurrency=1, local=False, verbose=False, retry=False, showAnimation=False, outputDir="./jobs", web3=False, plex_path="./plex"):
-    if not (isinstance(io, dict) or (isinstance(io, list) and all(isinstance(i, dict) for i in io))):
-        raise ValueError('io must be a dict or a list of dicts')
 
-    io_json_path = ""
-    # Use a context manager for the temporary directory
-    with TemporaryDirectory() as temp_dir:
+def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="./plex"):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    cmd = [plex_path, "create", "-t", toolpath, "-i", inputDir, f"--layers={layers}"]
 
-        # Generate the JSON file name in the temporary directory
-        json_file_path = os.path.join(temp_dir, 'io_data.json')
+    if outputDir:
+        cmd.append(f"-o={outputDir}")
 
-        # Save the io data to the JSON file
-        with open(json_file_path, 'w') as json_file:
-            json.dump(io, json_file, indent=4)
+    if verbose:
+        cmd.append("-v=true")
 
-        cwd = os.getcwd()
-        plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-        cmd = [plex_path, "-input-io", json_file_path, "-concurrency", str(concurrency), "-output-dir", outputDir]
+    if concurrency:
+        cmd.append(f"--concurrency={concurrency}")
 
-        if local:
-            cmd.append("-local=true")
+    if annotations:
+        cmd.append(f"--annotations={annotations.join(',')}")
 
-        if verbose:
-            cmd.append("-verbose=true")
+    if not showAnimation: # default is true in the CLI
+        cmd.append("--showAnimation=false")
 
-        if retry:
-            cmd.append("-retry=true")
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            if "Initial IO JSON file CID:" in line:
+                parts = line.split()
+                io_json_cid = parts[-1]
+            print(line, end='')
+    return io_json_cid
 
-        if web3:
-            cmd.append("-web3=true")
 
-        if not showAnimation: # default is true in the CLI
-            cmd.append("-show-animation=false")
+def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="./plex"):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    cmd = [plex_path, "run", "-i", io_json_cid]
 
-        with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
-            for line in p.stdout:
-                if "Initialized IO file at:" in line:
-                    parts = line.split()
-                    io_json_path = parts[-1]
-                print(line, end='')
+    if outputDir:
+        cmd.append(f"-o={outputDir}")
+
+    if verbose:
+        cmd.append("-v=true")
+
+    if concurrency:
+        cmd.append(f"--concurrency={concurrency}")
+
+    if annotations:
+        cmd.append(f"--annotations={annotations.join(',')}")
+
+    if not showAnimation: # default is true in the CLI
+        cmd.append("--showAnimation=false")
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            if "Completed IO JSON CID:" in line:
+                parts = line.split()
+                io_json_path = parts[-1]
+            print(line, end='')
     return io_json_path
+
+
+def plex_mint(io_json_cid: str, imageCid="", plex_path="./plex"):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    cmd = [plex_path, "mint", "-i", io_json_cid]
+
+    if imageCid:
+        cmd.append(f"-imageCid={imageCid}")
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            print(line, end='')
+
 
 def print_io_graph_status(io_graph):
     state_count = {}
@@ -112,6 +142,7 @@ def print_io_graph_status(io_graph):
     # Print the number of IOs in each state
     for state, count in state_count.items():
         print(f"IOs in {state} state: {count}")
+
 
 def mint_nft(io_json_path, plex_path="./plex"):
     # check if io_json_path is a valid file path
