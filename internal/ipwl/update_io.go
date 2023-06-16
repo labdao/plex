@@ -104,7 +104,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 			filePath := matchingFiles[0]
 
 			// Update IO entry
-			cid, err := ipfs.AddFile(filePath)
+			cid, err := ipfs.WrapAndPinFile(filePath)
 			if err != nil {
 				return fmt.Errorf("error generating file IPFS cid: %w", err)
 			}
@@ -117,7 +117,7 @@ func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDir
 		} else if output.Type == "Array" && output.Item == "File" {
 			var files []FileOutput
 			for _, filePath := range matchingFiles {
-				cid, err := ipfs.AddFile(filePath)
+				cid, err := ipfs.PinFile(filePath)
 				if err != nil {
 					return fmt.Errorf("error generating file IPFS cid: %w", err)
 				}

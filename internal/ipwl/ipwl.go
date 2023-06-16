@@ -130,7 +130,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error copying files to results input directory: %w", err)
 	}
 
-	cid, err := ipfs.AddDir(inputsDirPath)
+	cid, err := ipfs.PinDir(inputsDirPath)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error adding inputs to IPFS: %w", err)

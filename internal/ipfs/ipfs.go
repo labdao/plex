@@ -3,7 +3,9 @@ package ipfs
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -16,7 +18,7 @@ func DeriveIpfsNodeUrl() (string, error) {
 	return ipfsUrl, nil
 }
 
-func AddDir(dirPath string) (cid string, err error) {
+func PinDir(dirPath string) (cid string, err error) {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
 		return "", err
@@ -30,7 +32,7 @@ func AddDir(dirPath string) (cid string, err error) {
 	return cid, err
 }
 
-func AddFile(filePath string) (cid string, err error) {
+func PinFile(filePath string) (cid string, err error) {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
 		return "", err
@@ -49,6 +51,54 @@ func AddFile(filePath string) (cid string, err error) {
 	cid, err = sh.Add(file)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s", err)
+		return cid, err
+	}
+
+	return cid, err
+}
+
+// wraps a file in a directory and adds it to IPFS
+func WrapAndPinFile(filePath string) (cid string, err error) {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", err
+	}
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		return cid, err
+	}
+
+	tempDir, err := ioutil.TempDir("", "inputFile")
+	if err != nil {
+		return cid, err
+	}
+
+	defer os.RemoveAll(tempDir)
+
+	_, fileName := filepath.Split(absPath)
+	tempFilePath := filepath.Join(tempDir, fileName)
+
+	srcFile, err := os.Open(filePath)
+	if err != nil {
+		return cid, err
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(tempFilePath)
+	if err != nil {
+		return cid, err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return cid, err
+	}
+
+	cid, err = sh.AddDir(tempDir)
+	if err != nil {
 		return cid, err
 	}
 

@@ -63,7 +63,7 @@ func CreateIO(toolpath, inputDir string, layers int) (string, error) {
 	}
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
-	cid, err := ipfs.AddFile(ioJsonPath)
+	cid, err := ipfs.PinFile(ioJsonPath)
 	if err != nil {
 		return "", nil
 	}

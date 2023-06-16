@@ -3,7 +3,6 @@ package ipwl
 import (
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/labdao/plex/internal/ipfs"
@@ -98,34 +97,14 @@ func createIOEntries(toolPath string, tool Tool, inputCombinations []map[string]
 		}
 
 		for inputName, path := range combination {
-			absPath, err := filepath.Abs(path)
+			_, fileName := filepath.Split(path)
+
+			cid, err := ipfs.WrapAndPinFile(path)
 			if err != nil {
-				log.Printf("Error converting to absolute path: %v", err)
+				log.Printf("Error getting CID for file %s: %v", path, err)
 				continue
 			}
 
-			tempDir, err := ioutil.TempDir("", "inputFile")
-			if err != nil {
-				log.Printf("Error creating temporary directory: %v", err)
-				continue
-			}
-
-			defer os.RemoveAll(tempDir)
-
-			_, fileName := filepath.Split(absPath)
-			tempFilePath := filepath.Join(tempDir, fileName)
-
-			err = copyFile(absPath, tempFilePath)
-			if err != nil {
-				log.Printf("Error copying file to temporary directory: %v", err)
-				continue
-			}
-
-			cid, err := ipfs.AddDir(tempDir)
-			if err != nil {
-				log.Printf("Error getting CID for directory %s: %v", tempDir, err)
-				continue
-			}
 			ioEntry.Inputs[inputName] = FileInput{
 				Class:    "File",
 				FilePath: fileName,

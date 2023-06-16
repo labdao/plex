@@ -68,7 +68,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 	fmt.Println("Processing IO Entries")
 	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, concurrency, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
-	completedIoJsonCid, err = ipfs.AddFile(ioJsonPath)
+	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
 	if err != nil {
 		return completedIoJsonCid, ioJsonPath, err
 	}
