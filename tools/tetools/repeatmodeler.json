@@ -1,0 +1,25 @@
+{
+    "class": "CommandLineTool",
+    "name": "repeatmodeler",
+    "description": "Builds database from assemlbed genome (multi-)fasta and identifies repeats in assembled genomes",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "BuildDatabase -name /outputs/repeat_db -engine ncbi $(inputs.assemled_ncbi_genome.filepath);",
+      "RepeatModeler -database /outputs/repeat_db -engine ncbi -threads 4"
+    ],
+    "dockerPull": "dfam/tetools:1.85",
+    "gpuBool": false,
+    "networkBool": true,
+    "memoryGB": 12,
+    "inputs": {
+      "assemled_ncbi_genome": {
+        "type": "File",
+        "glob": ["*.fna", "*.fasta", "*.fa"]}
+    },
+    "outputs": {
+      "database": {
+        "type": "File",
+        "glob": ["*.nsq"]
+      }
+    }
+}
