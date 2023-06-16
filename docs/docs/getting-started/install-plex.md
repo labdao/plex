@@ -40,14 +40,19 @@ Let's get started!
 ### 1. Open your terminal
 To install PLEX, first open up the Terminal application.
 
-- On Mac: Go to “Spotlight Search” in the top right hand corner of your screen (it’s the magnifying glass icon). Type “terminal” and select the first option.
-- On Windows: To use on Windows, please send us an [email](mailto:stewards@labdao.com) and we'll get you set up.
-
 ### 2. Type in the installation commands
 Once you have your terminal open, you can download PLEX by copy and pasting this command into your terminal:
 
+**Mac/Linux:**
+
 ```
 source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
+```
+
+**Windows:**
+
+```
+Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/labdao/plex/main/install.ps1" -UseBasicParsing).Content
 ```
 
 After you have pasted the command into the terminal, press **Enter** on your keyboard to download and install PLEX.
