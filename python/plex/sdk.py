@@ -54,7 +54,7 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
     return io_json_graph
 
 
-def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="./plex"):
+def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
     cmd = [plex_path, "create", "-t", toolpath, "-i", inputDir, f"--layers={layers}"]
@@ -83,7 +83,7 @@ def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=Fa
     return io_json_cid
 
 
-def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="./plex"):
+def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
     cmd = [plex_path, "run", "-i", io_json_cid]
@@ -112,7 +112,7 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
     return io_json_path
 
 
-def plex_mint(io_json_cid: str, imageCid="", plex_path="./plex"):
+def plex_mint(io_json_cid: str, imageCid="", plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
     cmd = [plex_path, "mint", "-i", io_json_cid]
@@ -142,18 +142,3 @@ def print_io_graph_status(io_graph):
     # Print the number of IOs in each state
     for state, count in state_count.items():
         print(f"IOs in {state} state: {count}")
-
-
-def mint_nft(io_json_path, plex_path="./plex"):
-    # check if io_json_path is a valid file path
-    if not os.path.isfile(io_json_path):
-        raise ValueError('io_json_path must be a valid file path')
-
-    cwd = os.getcwd()
-    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-
-    cmd = [plex_path, "-input-io", io_json_path, "-web3=true"]
-
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
-        for line in p.stdout:
-            print(line, end='')
