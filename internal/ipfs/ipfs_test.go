@@ -6,7 +6,7 @@ import (
 
 func TestPinDir(t *testing.T) {
 	expectedCid := "QmWVKoVYBWHWdRLrL8Td5kUpqN2qH6zQ5piwtdCE1fjSYt"
-	actualCid, err := PinDir("../../testdata/ipfs_test")
+	actualCid, err := AddDir("../../testdata/ipfs_test")
 	if err != nil {
 		t.Fatalf("error creating client: %v", err)
 	}
