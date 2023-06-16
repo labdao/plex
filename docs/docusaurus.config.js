@@ -70,7 +70,7 @@ const createConfig = async () => {
           },
           items: [
             {
-              href: 'https://github.com/labdao/docs',
+              href: 'https://github.com/labdao/plex/tree/main/docs',
               position: 'right',
               className: 'header-github-link',
             },
