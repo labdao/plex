@@ -135,6 +135,26 @@ func DownloadFile(cid, filepath string) error {
 	return nil
 }
 
+func DownloadFileToTemp(cid, fileName string) (string, error) {
+	// Create a temporary directory
+	tempDir, err := ioutil.TempDir("", "prefix")
+	if err != nil {
+		return "", err
+	}
+
+	// Generate a random file name
+	tempFilePath := filepath.Join(tempDir, fileName)
+
+	// Download the file from IPFS to the temporary file
+	err = DownloadFile(cid, tempFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	// Return the path to the temporary file
+	return tempFilePath, nil
+}
+
 func IsValidCID(cidStr string) bool {
 	_, err := cid.Decode(cidStr)
 	return err == nil

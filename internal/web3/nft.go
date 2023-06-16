@@ -23,22 +23,6 @@ type Response struct {
 	Status string `json:"status"`
 }
 
-func removeFilepathKeys(obj map[string]interface{}) {
-	delete(obj, "filepath")
-
-	for _, value := range obj {
-		if asMap, ok := value.(map[string]interface{}); ok {
-			removeFilepathKeys(asMap)
-		} else if asSlice, ok := value.([]interface{}); ok {
-			for _, itemInSlice := range asSlice {
-				if asMap, ok := itemInSlice.(map[string]interface{}); ok {
-					removeFilepathKeys(asMap)
-				}
-			}
-		}
-	}
-}
-
 func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	ioBytes, err := ioutil.ReadFile(ioPath)
 	if err != nil {
@@ -50,10 +34,6 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	err = json.Unmarshal(ioBytes, &ioMap)
 	if err != nil {
 		return "", fmt.Errorf("error unmarshaling io file: %v", err)
-	}
-
-	for _, ioEntry := range ioMap {
-		removeFilepathKeys(ioEntry)
 	}
 
 	tokenName := GenerateTokenName()
@@ -73,8 +53,6 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error unmarshaling tool file: %v", err)
 		}
-
-		removeFilepathKeys(toolMap)
 
 		graph := map[string]interface{}{
 			"tool":    toolMap,
@@ -115,13 +93,13 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 func MintNFT(ioJsonPath string, imageCIDs ...string) {
 	if autotaskWebhook == "" {
 		fmt.Println("AUTOTASK_WEBHOOK must be set")
-		fmt.Println("Please visit https://airtable.com/shrfEDQj2fPffUge8 for instructions")
+		fmt.Println("Please visit https://try.labdao.xyz for instructions")
 		os.Exit(1)
 	}
 
 	if recipientWallet == "" {
 		fmt.Println("RECIPIENT_WALLET must be set")
-		fmt.Println("Please visit https://airtable.com/shrfEDQj2fPffUge8 for instructions")
+		fmt.Println("Please visit https://try.labdao.xyz for instructions")
 		os.Exit(1)
 	}
 
