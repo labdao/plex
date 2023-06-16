@@ -29,7 +29,7 @@ var createCmd = &cobra.Command{
 			fmt.Println("Error:", err)
 		}
 		if autoRun {
-			PlexRun(cid, outputDir, verbose, showAnimation, concurrency)
+			PlexRun(cid, outputDir, verbose, showAnimation, concurrency, annotations)
 		}
 	},
 }
@@ -82,6 +82,7 @@ func init() {
 	createCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	createCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	createCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
+	createCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(createCmd)
 }

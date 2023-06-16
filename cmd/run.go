@@ -18,6 +18,7 @@ var (
 	verbose       bool
 	showAnimation bool
 	concurrency   int
+	annotations   []string
 )
 
 var runCmd = &cobra.Command{
@@ -25,14 +26,14 @@ var runCmd = &cobra.Command{
 	Short: "Runs the Run function",
 	Long:  `Runs the Run function`,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency)
+		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
 	},
 }
 
-func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurrency int) (completedIoJsonCid, ioJsonPath string, err error) {
+func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	// Create plex working directory
 	id := uuid.New()
 	var cwd string
@@ -65,7 +66,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 
 	retry := false
 	fmt.Println("Processing IO Entries")
-	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, concurrency)
+	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, concurrency, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	completedIoJsonCid, err = ipfs.AddFile(ioJsonPath)
 	if err != nil {
@@ -83,6 +84,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	runCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
+	runCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(runCmd)
 }
