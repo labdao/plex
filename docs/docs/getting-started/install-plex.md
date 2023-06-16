@@ -30,7 +30,7 @@ Let's get started!
 
 **Requirements:**
 
-- [Get an access token here](https://airtable.com/shrfEDQj2fPffUge8) (we'll email you automatically so you can use PLEX straight away).
+- [Get an access token here](https://try.labdao.xyz) (we'll email you automatically so you can use PLEX straight away).
 - No previous technical experience - we’ll walk through each step.
 
 ---
@@ -75,7 +75,7 @@ It is expected that after pressing **Enter**, **there will NOT be a notificatio
 
 ### 4. Add an access token
 
-PLEX will prompt you for an access token - [you can get an access token here](https://airtable.com/shrfEDQj2fPffUge8). We'll email you one automatically, so you can run a tool straight away.
+PLEX will prompt you for an access token - [you can get an access token here](https://try.labdao.xyz). We'll email you one automatically, so you can run a tool straight away.
 
 Type the following command into your command line, replacing "< your token here >" with the provided access token:
 

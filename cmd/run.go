@@ -29,6 +29,7 @@ var runCmd = &cobra.Command{
 		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
+			os.Exit(1)
 		}
 	},
 }
@@ -79,7 +80,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 }
 
 func init() {
-	runCmd.Flags().StringVarP(&ioJsonCid, "ioJsonCid", "i", "", "Path to IO JSON")
+	runCmd.Flags().StringVarP(&ioJsonCid, "ioJsonCid", "i", "", "IPFS CID of IO JSON")
 	runCmd.Flags().StringVarP(&outputDir, "outputDir", "o", "", "Output directory")
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
