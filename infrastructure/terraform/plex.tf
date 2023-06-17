@@ -28,7 +28,7 @@ resource "aws_instance" "plex_compute_prod" {
   availability_zone      = var.availability_zones[0]
 
   root_block_device {
-    volume_size = 1000
+    volume_size = 2000
     tags = {
       Name = "plex-prod-${each.key}"
     }
