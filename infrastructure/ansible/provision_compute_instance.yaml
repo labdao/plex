@@ -1,6 +1,6 @@
-- name: Provisition Plex
+- name: Provisition Bacalhau
   remote_user: ubuntu
-  hosts: tag_Type_compute
+  hosts: tag_Type_compute:&tag_Env_prod
   vars:
     nvidia_distribution: ubuntu2004
     nvidia_container_toolkit_key_path: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
