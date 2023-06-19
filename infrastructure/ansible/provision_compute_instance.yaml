@@ -1,4 +1,4 @@
-- name: Provisition Bacalhau
+- name: Provision Bacalhau
   remote_user: ubuntu
   hosts: tag_Type_compute:&tag_Env_prod
   vars:
