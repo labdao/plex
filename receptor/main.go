@@ -11,7 +11,7 @@ func main() {
 
   r := gin.Default()
 
-  r.GET("/_health", health)
+  r.GET("/_health_check", health)
   r.POST("/judge", judge)
 
   r.Run()
@@ -25,10 +25,9 @@ func judge(c *gin.Context) {
 
   // createa job row
   job := models.Job{}
-  if err:=c.BindJSON(&job);err!=nil{
-    c.AbortWithError(http.StatusBadRequest,err)
-    return
-  }
+
+  // normally want to catch an err here, but for now we always want to return 200
+  c.BindJSON(&job)
 
   models.DB.Create(&job)
 

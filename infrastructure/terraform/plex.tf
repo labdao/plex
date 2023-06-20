@@ -106,3 +106,14 @@ resource "cloudflare_record" "plex_compute_prod" {
 #     Type        = "receptor"
 #   }
 # }
+
+resource "aws_db_instance" "default" {
+  allocated_storage    = 1
+  db_name              = "receptordb"
+  engine               = "postgres"
+  engine_version       = "15.3"
+  instance_class       = "db.t3.small"
+  username             = "receptor"
+  skip_final_snapshot  = true
+  manage_master_user_password = true
+}
