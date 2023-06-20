@@ -107,9 +107,12 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
         for line in p.stdout:
             if "Completed IO JSON CID:" in line:
                 parts = line.split()
-                io_json_path = parts[-1]
+                io_json_cid = parts[-1]
+            if "Initialized IO file at:" in line:
+                parts = line.split()
+                io_json_local_filepath = parts[-1]
             print(line, end='')
-    return io_json_path
+    return io_json_cid, io_json_local_filepath
 
 
 def plex_mint(io_json_cid: str, imageCid="", plex_path="plex"):
