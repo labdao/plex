@@ -36,6 +36,7 @@ resource "aws_instance" "plex_compute_prod" {
 
   tags = {
     Name        = "plex-prod-${each.key}"
+    Env         = "prod"
     InstanceKey = each.key
     Type        = "compute"
   }
