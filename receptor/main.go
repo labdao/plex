@@ -1,16 +1,19 @@
 package main
 
 import (
+  "log"
   "net/http"
   "github.com/gin-gonic/gin"
   "github.com/labdao/receptor/models"
 )
 
 func main() {
+  log.Print("Connecting to database")
   models.ConnectDatabase()
 
   r := gin.Default()
 
+  log.Print("Setting up routes")
   r.GET("/_health_check", health)
   r.POST("/judge", judge)
 
