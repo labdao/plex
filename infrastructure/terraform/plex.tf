@@ -65,7 +65,7 @@ resource "aws_instance" "receptor" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "t3.small"
 
-  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
+  vpc_security_group_ids = [aws_security_group.external_ssh.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 

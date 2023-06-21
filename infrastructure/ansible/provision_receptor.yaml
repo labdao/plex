@@ -31,11 +31,11 @@
     - name: Place the config file
       ansible.builtin.template:
         src: files/receptor-config
-        dest: /opt/local/receptor/configs
+        dest: "{{ receptor_dir }}/configs"
 
     - name: Ensure sercrets file exists
       ansible.builtin.file:
-        path: /opt/local/receptor/secrets
+        path: "{{ receptor_dir }}/secrets"
         state: touch
 
     - name: Pull the plex repository
@@ -64,6 +64,16 @@
       ansible.builtin.service:
         name: receptor
         state: restarted
+
+    - name: Add to bashrc file
+      ansible.builtin.blockinfile:
+        create: true
+        path: /home/ubuntu/.bashrc
+        block: |
+          set -o allexport
+          source {{ receptor_dir }}/configs
+          source {{ receptor_dir }}/secrets
+          set +o allexport
 
   handlers:
     - name: Systemd Daemon Reload
