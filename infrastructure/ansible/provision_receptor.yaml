@@ -3,6 +3,7 @@
   hosts: tag_Type_receptor
   vars:
     plex_dir: /opt/local/plex
+    receptor_dir: /opt/local/receptor
   tasks:
     - name: Install aptitude
       become: yes
@@ -22,9 +23,19 @@
         - "{{ plex_dir }}"
         - /opt/local/receptor
 
-    - name: Ensure env file exists
+    - name: Download root certs for db connection
+      ansible.builtin.get_url:
+        url: https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+        dest: "{{ receptor_dir }}/global-bundle.pem"
+
+    - name: Place the config file
+      ansible.builtin.template:
+        src: files/receptor-config
+        dest: /opt/local/receptor/configs
+
+    - name: Ensure sercrets file exists
       ansible.builtin.file:
-        path: /opt/local/receptor/env
+        path: /opt/local/receptor/secrets
         state: touch
 
     - name: Pull the plex repository
@@ -38,3 +49,24 @@
       ansible.builtin.apt:
         pkg:
           - golang-go
+
+    - name: Place the receptor systemd unit
+      become: yes
+      ansible.builtin.template:
+        src: files/receptor.service
+        dest: /etc/systemd/system
+      notify:
+        - Systemd Daemon Reload
+        - Restart receptor
+
+  handlers:
+    - name: Restart receptor
+      become: yes
+      ansible.builtin.service:
+        name: receptor
+        state: restarted
+
+    - name: Systemd Daemon Reload
+      become: yes
+      ansible.builtin.systemd:
+        daemon_reload: true

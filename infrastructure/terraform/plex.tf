@@ -89,7 +89,7 @@ resource "aws_instance" "receptor" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "t3.small"
 
-  vpc_security_group_ids = [aws_security_group.plex.id]
+  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
@@ -117,4 +117,5 @@ resource "aws_db_instance" "default" {
   username             = "receptor"
   skip_final_snapshot  = true
   manage_master_user_password = true
+  vpc_security_group_ids = [aws_security_group.internal.id,]
 }

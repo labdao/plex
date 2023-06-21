@@ -184,13 +184,7 @@
         ipfs_connect: /ip4/127.0.0.1/tcp/5001
       notify:
         - Systemd Daemon Reload
-
-    - name: Enable and start Bacalhau
-      become: yes
-      ansible.builtin.service:
-        name: bacalhau
-        state: started
-        enabled: true
+        - Restart Bacalhau
 
   handlers:
     - name: Restart docker
@@ -198,6 +192,13 @@
       ansible.builtin.service:
         name: docker
         state: restarted
+
+    - name: Restart Bacalhau
+      become: yes
+      ansible.builtin.service:
+        name: bacalhau
+        state: restarted
+        enabled: true
 
     - name: Systemd Daemon Reload
       become: yes

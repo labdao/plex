@@ -5,6 +5,7 @@ import (
   "net/http"
   "github.com/gin-gonic/gin"
   "github.com/labdao/receptor/models"
+  "gorm.io/gorm/clause"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func judge(c *gin.Context) {
   // normally want to catch an err here, but for now we always want to return 200
   c.BindJSON(&job)
 
-  models.DB.Create(&job)
+  models.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&job)
 
   // the judge endpoint always returns status 200 to accept all jobs (for now)
   c.JSON(http.StatusOK, gin.H{})    
