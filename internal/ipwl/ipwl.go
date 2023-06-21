@@ -219,7 +219,7 @@ func downloadInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	for _, input := range ioEntry.Inputs {
 		destPath := filepath.Join(dirPath, input.FilePath)
 		cidPath := input.IPFS + "/" + input.FilePath
-		err = ipfs.DownloadFile(cidPath, destPath)
+		err = ipfs.DownloadFileContents(cidPath, destPath)
 		if err != nil {
 			return err
 		}

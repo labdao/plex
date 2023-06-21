@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/ipfs/go-cid"
@@ -105,7 +106,26 @@ func WrapAndPinFile(filePath string) (cid string, err error) {
 	return cid, err
 }
 
-func DownloadFile(cid, filepath string) error {
+func DownloadToDirectory(cid, directory string) error {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return err
+	}
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	// Construct the full directory path where the CID content will be downloaded
+	downloadPath := path.Join(directory, cid)
+
+	// Use the Get method to download the file or directory with the specified CID
+	err = sh.Get(cid, downloadPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DownloadFileContents(cid, filepath string) error {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {
 		return err
@@ -146,7 +166,7 @@ func DownloadFileToTemp(cid, fileName string) (string, error) {
 	tempFilePath := filepath.Join(tempDir, fileName)
 
 	// Download the file from IPFS to the temporary file
-	err = DownloadFile(cid, tempFilePath)
+	err = DownloadFileContents(cid, tempFilePath)
 	if err != nil {
 		return "", err
 	}

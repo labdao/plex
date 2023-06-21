@@ -17,6 +17,7 @@ var uploadCmd = &cobra.Command{
 	Short: "Upload a file or directory to IPFS",
 	Long:  `Upload and pins a file or directory to IPFS. Will wrap single files in a directory before uploading. (50MB max). A`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Uploading ", localPath, " to IPFS...")
 		cid, err := uploadPath(localPath)
 		if err != nil {
 			fmt.Println("Error:", err)
