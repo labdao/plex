@@ -12,6 +12,7 @@ ExecStart=bacalhau serve \
   --limit-job-memory 12gb \
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere \
+  --job-selection-probe-http {{ receptor_url }} \
   --labels owner={{ owner }}
 
 [Install]

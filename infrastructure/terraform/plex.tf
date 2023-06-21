@@ -60,30 +60,6 @@ resource "cloudflare_record" "plex_compute_prod" {
   ttl     = 3600
 }
 
-resource "aws_instance" "plex_compute_dev" {
-  for_each      = toset(["compute-dev"])
-  ami           = "ami-053b0d53c279acc90"
-  instance_type = "m5.large"
-
-  vpc_security_group_ids = [aws_security_group.plex.id]
-  key_name               = var.key_main
-  availability_zone      = var.availability_zones[0]
-
-  root_block_device {
-    volume_size = 10
-    tags = {
-      Name = "plex-prod-${each.key}"
-    }
-  }
-
-  tags = {
-    Name        = "plex-prod-${each.key}"
-    InstanceKey = each.key
-    Type        = "compute"
-    Env         = "dev"
-  }
-}
-
 resource "aws_instance" "receptor" {
   for_each      = toset(["judgy"])
   ami           = "ami-053b0d53c279acc90"

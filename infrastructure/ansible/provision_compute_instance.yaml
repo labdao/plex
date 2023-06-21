@@ -182,6 +182,7 @@
       vars:
         owner: labdao
         ipfs_connect: /ip4/127.0.0.1/tcp/5001
+        receptor_url: http://ip-172-31-82-107.ec2.internal:8080/judge
       notify:
         - Systemd Daemon Reload
         - Restart Bacalhau
