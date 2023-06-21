@@ -11,13 +11,21 @@
         state: present
         update_cache: true
 
-    - name: Create plex dir, writable by user
+    - name: Create required  directories, writable by user
       become: yes
       ansible.builtin.file:
-        path: "{{ plex_dir }}"
+        path: "{{ item }}"
         owner: ubuntu
         group: ubuntu 
         state: directory
+      loop:
+        - "{{ plex_dir }}"
+        - /opt/local/receptor
+
+    - name: Ensure env file exists
+      ansible.builtin.file:
+        path: /opt/local/receptor/env
+        state: touch
 
     - name: Pull the plex repository
       ansible.builtin.git:

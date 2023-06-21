@@ -1,17 +1,25 @@
 package models
 
 import (
+  "os"
+  "fmt"
   "gorm.io/gorm"
-  "gorm.io/driver/sqlite"
-  // "gorm.io/driver/postgres"
-  "gorm.io/gorm"
+  "gorm.io/driver/postgres"
 )
 
 var DB *gorm.DB
 
 func ConnectDatabase() {
 
-    database, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+    dsn := fmt.Sprintf(
+      "host=%s user=%s password=%s dbname=%s",
+      os.Getenv("PGHOST"),
+      os.Getenv("PGUSER"),
+      os.Getenv("PGPASSWORD"),
+      os.Getenv("PGDATABASE"),
+    )
+    database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    // database, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 
     if err != nil {
       panic("Failed to connect to database!")

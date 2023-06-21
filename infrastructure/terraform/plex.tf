@@ -60,56 +60,57 @@ resource "cloudflare_record" "plex_compute_prod" {
   ttl     = 3600
 }
 
-# resource "aws_instance" "plex_compute_dev" {
-#   for_each      = toset(["compute-dev"])
-#   ami           = "ami-053b0d53c279acc90"
-#   instance_type = "m5.large"
+resource "aws_instance" "plex_compute_dev" {
+  for_each      = toset(["compute-dev"])
+  ami           = "ami-053b0d53c279acc90"
+  instance_type = "m5.large"
 
-#   vpc_security_group_ids = [aws_security_group.plex.id]
-#   key_name               = var.key_main
-#   availability_zone      = var.availability_zones[0]
+  vpc_security_group_ids = [aws_security_group.plex.id]
+  key_name               = var.key_main
+  availability_zone      = var.availability_zones[0]
 
-#   root_block_device {
-#     volume_size = 10
-#     tags = {
-#       Name = "plex-prod-${each.key}"
-#     }
-#   }
+  root_block_device {
+    volume_size = 10
+    tags = {
+      Name = "plex-prod-${each.key}"
+    }
+  }
 
-#   tags = {
-#     Name        = "plex-prod-${each.key}"
-#     InstanceKey = each.key
-#     Type        = "compute"
-#     Env         = "dev"
-#   }
-# }
+  tags = {
+    Name        = "plex-prod-${each.key}"
+    InstanceKey = each.key
+    Type        = "compute"
+    Env         = "dev"
+  }
+}
 
-# resource "aws_instance" "receptor" {
-#   for_each      = toset(["judgy"])
-#   ami           = "ami-053b0d53c279acc90"
-#   instance_type = "t3.small"
+resource "aws_instance" "receptor" {
+  for_each      = toset(["judgy"])
+  ami           = "ami-053b0d53c279acc90"
+  instance_type = "t3.small"
 
-#   vpc_security_group_ids = [aws_security_group.plex.id]
-#   key_name               = var.key_main
-#   availability_zone      = var.availability_zones[0]
+  vpc_security_group_ids = [aws_security_group.plex.id]
+  key_name               = var.key_main
+  availability_zone      = var.availability_zones[0]
 
-#   root_block_device {
-#     volume_size = 10
-#     tags = {
-#       Name = "plex-receptor-${each.key}"
-#     }
-#   }
+  root_block_device {
+    volume_size = 10
+    tags = {
+      Name = "plex-receptor-${each.key}"
+    }
+  }
 
-#   tags = {
-#     Name        = "plex-receptor-${each.key}"
-#     InstanceKey = each.key
-#     Type        = "receptor"
-#   }
-# }
+  tags = {
+    Name        = "plex-receptor-${each.key}"
+    InstanceKey = each.key
+    Type        = "receptor"
+    Env         = "dev"
+  }
+}
 
 resource "aws_db_instance" "default" {
-  allocated_storage    = 1
-  db_name              = "receptordb"
+  allocated_storage    = 10
+  db_name              = "receptor"
   engine               = "postgres"
   engine_version       = "15.3"
   instance_class       = "db.t3.small"
