@@ -48,6 +48,7 @@
       become: yes
       ansible.builtin.apt:
         pkg:
+          - postgresql-client
           - golang-go
 
     - name: Place the receptor systemd unit
@@ -57,15 +58,14 @@
         dest: /etc/systemd/system
       notify:
         - Systemd Daemon Reload
-        - Restart receptor
 
-  handlers:
     - name: Restart receptor
       become: yes
       ansible.builtin.service:
         name: receptor
         state: restarted
 
+  handlers:
     - name: Systemd Daemon Reload
       become: yes
       ansible.builtin.systemd:

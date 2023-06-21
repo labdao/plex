@@ -7,6 +7,6 @@ import (
 
 type Job struct {
 	gorm.Model
-  JobID       string `json:"job_id" gorm:"index,unique"`
+  JobID       string `json:"job_id" gorm:"uniqueIndex"`
   Spec        datatypes.JSON `json:"spec"`
 }
