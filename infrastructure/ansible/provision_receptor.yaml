@@ -42,7 +42,6 @@
       ansible.builtin.git:
         repo: https://github.com/labdao/plex.git
         dest: "{{ plex_dir }}/"
-        version: ops/receptor
 
     - name: Install system packages
       become: yes
