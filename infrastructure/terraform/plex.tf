@@ -23,7 +23,7 @@ resource "aws_instance" "plex_compute_prod" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "g5.2xlarge"
 
-  vpc_security_group_ids = [aws_security_group.plex.id]
+  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
