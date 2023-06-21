@@ -4,7 +4,7 @@ resource "aws_security_group" "plex" {
 }
 
 resource "aws_security_group" "internal" {
-  name = "receptor-web"
+  name = "internal-sg"
   description = "allow all internal traffic"
   ingress {
     from_port        = 0
