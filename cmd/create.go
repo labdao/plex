@@ -39,7 +39,7 @@ var createCmd = &cobra.Command{
 	},
 }
 
-func CreateIO(toolpath, inputDir string, layers int) (string, error) {
+func CreateIO(toolPath, inputDir string, layers int) (string, error) {
 	tempDirPath, err := ioutil.TempDir("", uuid.New().String())
 	if err != nil {
 		return "", err
@@ -52,13 +52,13 @@ func CreateIO(toolpath, inputDir string, layers int) (string, error) {
 	fmt.Println("Reading tool config: ", toolPath)
 	// mcmenemy this will have to change to use a CID
 
-	toolConfig, err := ipwl.ReadToolConfig(toolPath)
+	toolConfig, toolInfo, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
 		return "", err
 	}
 
 	fmt.Println("Creating IO entries from input directory: ", inputDir)
-	ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolPath, layers)
+	ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolInfo, layers)
 	if err != nil {
 		return "", err
 	}

@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/labdao/plex/internal/ipfs"
-	"github.com/labdao/plex/internal/ipwl"
 )
 
 var recipientWallet = os.Getenv("RECIPIENT_WALLET")
@@ -42,16 +41,16 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	graphs := []map[string]interface{}{}
 
 	for _, ioEntry := range ioMap {
-		// Read tool file for each ioEntry
-		toolPath := ioEntry["tool"].(string)
+		// // Read tool file for each ioEntry
+		// toolPath := ioEntry["tool"].(string)
 
-		tool, err := ipwl.ReadToolConfig(toolPath)
-		if err != nil {
-			return "", fmt.Errorf("error reading tool file: %v", err)
-		}
+		// tool, toolName, toolCID, err := ipwl.ReadToolConfig(toolPath)
+		// if err != nil {
+		// 	return "", fmt.Errorf("error reading tool file: %v", err)
+		// }
 
 		graph := map[string]interface{}{
-			"tool":    tool,
+			"tool":    ioEntry["tool"],
 			"inputs":  ioEntry["inputs"],
 			"outputs": ioEntry["outputs"],
 			"state":   ioEntry["state"],

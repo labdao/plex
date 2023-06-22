@@ -38,8 +38,9 @@ type Tool struct {
 	Outputs     map[string]ToolOutput `json:"outputs"`
 }
 
-func ReadToolConfig(toolPath string) (Tool, error) {
+func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	var tool Tool
+	var toolInfo ToolInfo
 	var toolFilePath string
 	var err error
 
@@ -49,22 +50,22 @@ func ReadToolConfig(toolPath string) (Tool, error) {
 	}
 
 	if ipfs.IsValidCID(toolPath) {
+		toolInfo.IPFS = toolPath
 		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
-		fmt.Println("toolFilePath", toolFilePath)
 		if err != nil {
-			return tool, err
+			return tool, toolInfo, err
 		}
 
 		fileInfo, err := os.Stat(toolFilePath)
 		if err != nil {
-			return tool, err
+			return tool, toolInfo, err
 		}
 
 		// If the downloaded content is a directory, search for a .json file in it
 		if fileInfo.IsDir() {
 			files, err := ioutil.ReadDir(toolFilePath)
 			if err != nil {
-				return tool, err
+				return tool, toolInfo, err
 			}
 
 			for _, file := range files {
@@ -78,27 +79,29 @@ func ReadToolConfig(toolPath string) (Tool, error) {
 		if _, err := os.Stat(toolPath); err == nil {
 			toolFilePath = toolPath
 		} else {
-			return tool, fmt.Errorf("Tool not found")
+			return tool, toolInfo, fmt.Errorf("Tool not found")
 		}
 	}
 
 	file, err := os.Open(toolFilePath)
 	if err != nil {
-		return tool, fmt.Errorf("failed to open file: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
 	bytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return tool, fmt.Errorf("failed to read file: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	err = json.Unmarshal(bytes, &tool)
 	if err != nil {
-		return tool, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	return tool, nil
+	toolInfo.Name = tool.Name
+
+	return tool, toolInfo, nil
 }
 
 func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {

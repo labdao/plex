@@ -118,7 +118,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	toolConfig, err := ReadToolConfig(ioEntry.Tool)
+	toolConfig, _, err := ReadToolConfig(ioEntry.Tool.IPFS)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error reading tool config: %w", err)
