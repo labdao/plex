@@ -24,10 +24,6 @@ var createCmd = &cobra.Command{
 	Short: "Creates and pins an IO JSON",
 	Long:  `Creates and pins an IO JSON`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// mcmenemy CreateIO should take toolCid not toolPath
-		// plex tool --list
-		// plex create -t equibind ...
-		// plex create -t QM..
 		cid, err := CreateIO(toolPath, inputDir, layers)
 		if err != nil {
 			fmt.Println("Error:", err)
@@ -50,7 +46,6 @@ func CreateIO(toolPath, inputDir string, layers int) (string, error) {
 
 	var ioEntries []ipwl.IO
 	fmt.Println("Reading tool config: ", toolPath)
-	// mcmenemy this will have to change to use a CID
 
 	toolConfig, toolInfo, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
