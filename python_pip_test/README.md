@@ -1,16 +1,17 @@
-Direction to publish on PyPi
-From the python directory
-On Linux
-* `python3 setup.py bdist_wheel --plat-name manylinux1_x86_64`
+## Direction to publish on PyPi
 
-On Mac M1
+# Go to the python_pip_test directory
+* `cd python_pip_test`
+
+# Build and publish for every OS
+* `python setup.py bdist_wheel --plat-name macosx_10_9_x86_64`
+* `twine upload dist/*`
+
 * `python setup.py bdist_wheel --plat-name macosx_11_0_arm64`
+* `twine upload dist/*`
 
-On Windows
-* TODO
+* `python setup.py bdist_wheel --plat-name manylinux2014_x86_64`
+* `twine upload dist/*`
 
-On Mac Intel
-* TODO
-
-Then run to publish
+* `python setup.py bdist_wheel --plat-name win_amd64`
 * `twine upload dist/*`

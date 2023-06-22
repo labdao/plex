@@ -14,21 +14,18 @@ class PostInstallCommand(install):
 
         print("Running post-installation...")
 
-        # Determine platform 
-        os_type = platform.system().lower()
-        arch = platform.machine().lower()
+        # Retrieve platform from environment variable
+        plat_name = os.environ['PLAT_NAME']
 
-        # set default go bin url 
-        go_bin_url = None
+        # map plat_name to go_bin_url
+        urls = {
+            "darwin_x86_64": "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_darwin_amd64.tar.gz",
+            "darwin_arm64": "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_darwin_arm64.tar.gz",
+            "linux_x86_64": "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_linux_amd64.tar.gz",
+            "win_amd64": "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_windows_amd64.tar.gz",
+        }
 
-        if os_type == "darwin" and arch in ["amd64", "x86_64", "i386"]:
-            go_bin_url = "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_darwin_amd64.tar.gz"
-        elif os_type == "darwin" and arch == "arm64":
-            go_bin_url = "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_darwin_arm64.tar.gz"
-        elif os_type == "linux" and arch in ["amd64", "x86_64"]:
-            go_bin_url = "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_linux_amd64.tar.gz"
-        elif os_type == "windows" and arch in ["amd64", "x86_64"]:
-            go_bin_url = "https://github.com/labdao/plex/releases/download/v0.8.0/plex_0.8.0_windows_amd64.tar.gz"
+        go_bin_url = urls.get(plat_name)
 
         if go_bin_url:
             try:
@@ -57,7 +54,7 @@ class PostInstallCommand(install):
 
 setup(
     name="PlexLabExchange",
-    version="0.8.6",
+    version="0.8.8",
     packages=find_packages(),
     cmdclass={
         'install': PostInstallCommand,
