@@ -17,33 +17,31 @@ var uploadCmd = &cobra.Command{
 	Short: "Upload a file or directory to IPFS",
 	Long:  `Upload and pins a file or directory to IPFS. Will wrap single files in a directory before uploading. (50MB max). A`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Uploading ", localPath, " to IPFS...")
-		cid, err := uploadPath(localPath)
+		info, err := os.Stat(localPath)
+
+		if os.IsNotExist(err) {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+
+		if err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+
+		var cid string
+		if info.IsDir() {
+			cid, err = ipfs.PinDir(localPath)
+		} else {
+			cid, err = ipfs.WrapAndPinFile(localPath)
+		}
+
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
 		fmt.Println("Uploaded CID: ", cid)
 	},
-}
-
-func uploadPath(path string) (cid string, err error) {
-	info, err := os.Stat(path)
-
-	if os.IsNotExist(err) {
-		return "", err
-	}
-
-	if err != nil {
-		// Handle other possible errors here
-		return "", err
-	}
-
-	if info.IsDir() {
-		return ipfs.PinDir(path)
-	} else {
-		return ipfs.WrapAndPinFile(path)
-	}
 }
 
 func init() {
