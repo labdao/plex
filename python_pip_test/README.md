@@ -1,7 +1,9 @@
 ## Direction to publish on PyPi
 
 # Go to the python_pip_test directory
-* `cd python_pip_test`
+```
+cd python_pip_test
+```
 
 # Build and publish for every OS
 ```
