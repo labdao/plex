@@ -49,7 +49,6 @@ func ReadToolConfig(toolPath string) (Tool, error) {
 	}
 
 	if ipfs.IsValidCID(toolPath) {
-		fmt.Println("CID provided", toolPath)
 		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
 		fmt.Println("toolFilePath", toolFilePath)
 		if err != nil {
@@ -151,6 +150,7 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 
 // You can use custom tools by passing the cid directly to plex -t arguments
 var CORE_TOOLS = map[string]string{
-	"equibind": "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
-	"diffdock": "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
+	"equibind":       "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
+	"diffdock":       "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
+	"colabfold-mini": "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD",
 }

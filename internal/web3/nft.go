@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/ipwl"
 )
 
 var recipientWallet = os.Getenv("RECIPIENT_WALLET")
@@ -44,20 +45,13 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 		// Read tool file for each ioEntry
 		toolPath := ioEntry["tool"].(string)
 
-		// mcmenemy change to use ipfs.ReadToolConfig
-		toolBytes, err := ioutil.ReadFile(toolPath)
+		tool, err := ipwl.ReadToolConfig(toolPath)
 		if err != nil {
 			return "", fmt.Errorf("error reading tool file: %v", err)
 		}
 
-		var toolMap map[string]interface{}
-		err = json.Unmarshal(toolBytes, &toolMap)
-		if err != nil {
-			return "", fmt.Errorf("error unmarshaling tool file: %v", err)
-		}
-
 		graph := map[string]interface{}{
-			"tool":    toolMap,
+			"tool":    tool,
 			"inputs":  ioEntry["inputs"],
 			"outputs": ioEntry["outputs"],
 			"state":   ioEntry["state"],
