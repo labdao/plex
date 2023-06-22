@@ -125,6 +125,28 @@ func DownloadToDirectory(cid, directory string) error {
 	return nil
 }
 
+func DownloadToTempDir(cid string) (string, error) {
+	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
+	if err != nil {
+		return "", err
+	}
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	// Get the system's temporary directory
+	tempDir := os.TempDir()
+
+	// Construct the full directory path where the CID content will be downloaded
+	downloadPath := path.Join(tempDir, cid)
+
+	// Use the Get method to download the file or directory with the specified CID
+	err = sh.Get(cid, downloadPath)
+	if err != nil {
+		return "", err
+	}
+
+	return downloadPath, nil
+}
+
 func DownloadFileContents(cid, filepath string) error {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {

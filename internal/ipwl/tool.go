@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 type ToolInput struct {
@@ -35,10 +38,52 @@ type Tool struct {
 	Outputs     map[string]ToolOutput `json:"outputs"`
 }
 
-func ReadToolConfig(filePath string) (Tool, error) {
+func ReadToolConfig(toolPath string) (Tool, error) {
 	var tool Tool
+	var toolFilePath string
+	var err error
 
-	file, err := os.Open(filePath)
+	// Check if toolPath is a key in CORE_TOOLS
+	if cid, ok := CORE_TOOLS[toolPath]; ok {
+		toolPath = cid
+	}
+
+	if ipfs.IsValidCID(toolPath) {
+		fmt.Println("CID provided", toolPath)
+		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
+		fmt.Println("toolFilePath", toolFilePath)
+		if err != nil {
+			return tool, err
+		}
+
+		fileInfo, err := os.Stat(toolFilePath)
+		if err != nil {
+			return tool, err
+		}
+
+		// If the downloaded content is a directory, search for a .json file in it
+		if fileInfo.IsDir() {
+			files, err := ioutil.ReadDir(toolFilePath)
+			if err != nil {
+				return tool, err
+			}
+
+			for _, file := range files {
+				if strings.HasSuffix(file.Name(), ".json") {
+					toolFilePath = path.Join(toolFilePath, file.Name())
+					break
+				}
+			}
+		}
+	} else {
+		if _, err := os.Stat(toolPath); err == nil {
+			toolFilePath = toolPath
+		} else {
+			return tool, fmt.Errorf("Tool not found")
+		}
+	}
+
+	file, err := os.Open(toolFilePath)
 	if err != nil {
 		return tool, fmt.Errorf("failed to open file: %w", err)
 	}
@@ -102,4 +147,10 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 	cmd := fmt.Sprintf("%s \"%s\"", strings.Join(toolConfig.BaseCommand, " "), arguments)
 
 	return cmd, nil
+}
+
+// You can use custom tools by passing the cid directly to plex -t arguments
+var CORE_TOOLS = map[string]string{
+	"equibind": "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
+	"diffdock": "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
 }

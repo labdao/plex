@@ -43,6 +43,8 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	for _, ioEntry := range ioMap {
 		// Read tool file for each ioEntry
 		toolPath := ioEntry["tool"].(string)
+
+		// mcmenemy change to use ipfs.ReadToolConfig
 		toolBytes, err := ioutil.ReadFile(toolPath)
 		if err != nil {
 			return "", fmt.Errorf("error reading tool file: %v", err)
