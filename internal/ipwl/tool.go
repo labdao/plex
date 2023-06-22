@@ -42,13 +42,16 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	var tool Tool
 	var toolInfo ToolInfo
 	var toolFilePath string
+	var cid string
 	var err error
 
 	// Check if toolPath is a key in CORE_TOOLS
 	if cid, ok := CORE_TOOLS[toolPath]; ok {
 		toolPath = cid
 		toolInfo.IPFS = toolPath
-	} else if ipfs.IsValidCID(toolPath) {
+	}
+
+	if ipfs.IsValidCID(toolPath) {
 		toolInfo.IPFS = toolPath
 		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
 		if err != nil {
