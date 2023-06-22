@@ -3,43 +3,43 @@ import os
 import subprocess
 import logging
 import itertools
+import tempfile
 
 from enum import Enum
-from tempfile import TemporaryDirectory
-from typing import Dict, List, Union
-
+from typing import Dict, List
 
 
 class ScatteringMethod(Enum):
     DOT_PRODUCT = 'dot_product'
-    FLAT_CROSSPRODUCT = 'flat_crossproduct'
-    NESTED_CROSSPRODUCT = 'nested_crossproduct'
+    FLAT_CROSSPRODUCT = 'flat_crossproduct'  # can depreciate
+    NESTED_CROSSPRODUCT = 'nested_crossproduct'  # can depreciate
+    CROSS_PRODUCT = 'cross_product'
 
-# TODO: Move most of this logic to the go client
+
 def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
     # Open the file and load its content
     with open(tool_filepath, 'r') as f:
         tool = json.load(f)
-    
+
     # Check if all kwargs are in the tool's inputs
     for arg in kwargs:
         if arg not in tool['inputs']:
             logging.error(f'The argument {arg} is not in the tool inputs.')
             logging.info(f'Available keys: {list(tool["inputs"].keys())}')
             raise ValueError(f'The argument {arg} is not in the tool inputs.')
-    
+
     # Scattering methods
     if scattering_method == ScatteringMethod.DOT_PRODUCT:
         if len(set(len(x) for x in kwargs.values())) != 1:
             logging.error('All input arguments must have the same length for dot_product scattering method.')
             raise ValueError('All input arguments must have the same length for dot_product scattering method.')
         inputs_list = list(zip(*kwargs.values()))
-    elif scattering_method in [ScatteringMethod.FLAT_CROSSPRODUCT, ScatteringMethod.NESTED_CROSSPRODUCT]:
+    elif scattering_method in [ScatteringMethod.CROSS_PRODUCT, ScatteringMethod.FLAT_CROSSPRODUCT, ScatteringMethod.NESTED_CROSSPRODUCT]:
         inputs_list = list(itertools.product(*kwargs.values()))
     else:
         logging.error(f'Invalid scattering method: {scattering_method}')
         raise ValueError(f'Invalid scattering method: {scattering_method}')
-    
+
     # Build the io_json_graph
     io_json_graph = []
     for inputs in inputs_list:
@@ -50,8 +50,28 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
             'state': 'created',
             'errMsg': '',
         })
-    
-    return io_json_graph
+
+    # Save io_json_graph to temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp:
+        json.dump(io_json_graph, temp)
+        tempIoJsonFilePath = temp.name
+
+    io_json_cid = plex_upload(tempIoJsonFilePath)
+    os.remove(tempIoJsonFilePath)
+
+    return io_json_cid, io_json_graph
+
+
+def plex_upload(filePath: str, plex_path="plex"):
+    cmd = [plex_path, "upload", "-p", filePath]
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            if "FILL IN WITH CORRECT LOG:" in line:
+                parts = line.split()
+                io_json_cid = parts[-1]
+            print(line, end='')
+    return io_json_cid
 
 
 def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
