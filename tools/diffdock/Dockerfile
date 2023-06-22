@@ -15,7 +15,7 @@ RUN apt-get clean && \
     apt-get -y install git curl wget python3.9
 
 ## Install CUDA Toolkit (and fix libcusparse.so.11 issue - /opt/conda/lib/libcusparse.so.11)
-RUN conda install --yes cudatoolkit=11.3 -c pytorch && \
+RUN conda install -vvv --yes cudatoolkit=11.3 -c pytorch && \
     conda clean --all -f -y && \
     export LD_LIBRARY_PATH="/opt/conda/lib/:$LD_LIBRARY_PATH" && \
     export PATH="/opt/conda/lib/:$PATH"
