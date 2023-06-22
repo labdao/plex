@@ -47,9 +47,8 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	// Check if toolPath is a key in CORE_TOOLS
 	if cid, ok := CORE_TOOLS[toolPath]; ok {
 		toolPath = cid
-	}
-
-	if ipfs.IsValidCID(toolPath) {
+		toolInfo.IPFS = toolPath
+	} else if ipfs.IsValidCID(toolPath) {
 		toolInfo.IPFS = toolPath
 		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
 		if err != nil {
@@ -78,8 +77,13 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	} else {
 		if _, err := os.Stat(toolPath); err == nil {
 			toolFilePath = toolPath
+			cid, err = ipfs.WrapAndPinFile(toolFilePath)
+			if err != nil {
+				return tool, toolInfo, fmt.Errorf("failed to pin tool file")
+			}
+			toolInfo.IPFS = cid
 		} else {
-			return tool, toolInfo, fmt.Errorf("Tool not found")
+			return tool, toolInfo, fmt.Errorf("tool not found")
 		}
 	}
 
