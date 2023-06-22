@@ -118,7 +118,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		return fmt.Errorf("error creating output directory: %w", err)
 	}
 
-	toolConfig, err := ReadToolConfig(ioEntry.Tool)
+	toolConfig, _, err := ReadToolConfig(ioEntry.Tool.IPFS)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error reading tool config: %w", err)
@@ -219,7 +219,7 @@ func downloadInputFilesToDir(ioEntry IO, ioGraph []IO, dirPath string) error {
 	for _, input := range ioEntry.Inputs {
 		destPath := filepath.Join(dirPath, input.FilePath)
 		cidPath := input.IPFS + "/" + input.FilePath
-		err = ipfs.DownloadFile(cidPath, destPath)
+		err = ipfs.DownloadFileContents(cidPath, destPath)
 		if err != nil {
 			return err
 		}

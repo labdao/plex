@@ -41,21 +41,16 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	graphs := []map[string]interface{}{}
 
 	for _, ioEntry := range ioMap {
-		// Read tool file for each ioEntry
-		toolPath := ioEntry["tool"].(string)
-		toolBytes, err := ioutil.ReadFile(toolPath)
-		if err != nil {
-			return "", fmt.Errorf("error reading tool file: %v", err)
-		}
+		// // Read tool file for each ioEntry
+		// toolPath := ioEntry["tool"].(string)
 
-		var toolMap map[string]interface{}
-		err = json.Unmarshal(toolBytes, &toolMap)
-		if err != nil {
-			return "", fmt.Errorf("error unmarshaling tool file: %v", err)
-		}
+		// tool, toolName, toolCID, err := ipwl.ReadToolConfig(toolPath)
+		// if err != nil {
+		// 	return "", fmt.Errorf("error reading tool file: %v", err)
+		// }
 
 		graph := map[string]interface{}{
-			"tool":    toolMap,
+			"tool":    ioEntry["tool"],
 			"inputs":  ioEntry["inputs"],
 			"outputs": ioEntry["outputs"],
 			"state":   ioEntry["state"],
