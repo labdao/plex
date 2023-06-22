@@ -31,7 +31,7 @@
       },
       "inference_steps": {
         "type": "int",
-        "default": "20"
+        "default": "18"
       },
       "samples_per_complex": {
         "type": "int",
