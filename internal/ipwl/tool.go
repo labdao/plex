@@ -153,7 +153,17 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 
 // You can use custom tools by passing the cid directly to plex -t arguments
 var CORE_TOOLS = map[string]string{
-	"equibind":       "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
-	"diffdock":       "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
-	"colabfold-mini": "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD",
+	"equibind":             "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
+	"diffdock":             "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
+	"colabfold-mini":       "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD",
+	"colabfold-standard":   "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk",
+	"colabfold-large":      "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi",
+	"bam2fastq":            "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq",
+	"oddt":                 "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf",
+	"rfdiffusion":          "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2",
+	"repeatmodeler":        "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC",
+	"gnina":                "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne",
+	"batch-dlkcat":         "QmThdvypN8gDDwwyNnpSYsdwvyxCET8s1jym3HZCTaBzmD",
+	"openbabel-pdb-to-sdf": "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3",
+	"openbabel-rmsd":       "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA",
 }
