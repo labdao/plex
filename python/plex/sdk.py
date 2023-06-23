@@ -16,7 +16,40 @@ class ScatteringMethod(Enum):
     CROSS_PRODUCT = 'cross_product'
 
 
-def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
+class CoreTools(Enum):
+    EQUIBIND = "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB"
+    DIFFDOCK = "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM"
+    COLABFOLD_MINI = "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD"
+    COLABFOLD_STANDARD = "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk"
+    COLABFOLD_LARGE = "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi"
+    BAM2FASTQ = "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq"
+    ODDT = "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf"
+    RFDIFFUSION = "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2"
+    REPEATMODELER = "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC"
+    GNINA = "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne"
+    BATCH_DLKCAT = "QmThdvypN8gDDwwyNnpSYsdwvyxCET8s1jym3HZCTaBzmD"
+    OPENBABEL_PDB_TO_SDF = "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3"
+    OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
+
+
+def isFilePath(file_path: str):
+    if os.path.isfile(file_path):
+        return True
+    elif os.path.isdir(file_path):
+        return True
+    elif os.path.isfile(file_path):
+        return True
+    elif "/" in file_path:
+        return True
+    else:
+        return False
+
+
+def generate_io_graph_from_tool(toolCID, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
+    if isFilePath(toolCID):
+        print("Use plex_upload to upload a tool to IPFS")
+        raise ValueError(f'The tool argument must be a CID, not a filepath: {tool}')
+
     # Open the file and load its content
     with open(tool_filepath, 'r') as f:
         tool = json.load(f)
@@ -44,7 +77,7 @@ def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMetho
     io_json_graph = []
     for inputs in inputs_list:
         io_json_graph.append({
-            'tool': tool_filepath,
+            'tool': {},
             'inputs': {arg: {'class': tool['inputs'][arg]['type'], 'filepath': filepath} for arg, filepath in zip(kwargs.keys(), inputs)},
             'outputs': {arg: {'class': tool['outputs'][arg]['type'], 'filepath': ''} for arg in tool['outputs']},
             'state': 'created',
