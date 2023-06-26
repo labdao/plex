@@ -32,8 +32,9 @@ RUN pip install ipython-autotime && \
     pip install spyrmsd==0.5.2 --quiet && \
     pip install pandas==1.3.5 --quiet && \
     pip install biopandas==0.4.1 --quiet && \
-    pip install py3Dmol==1.8.1 --quiet && \
-    pip install torch==1.12.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
+    pip install py3Dmol==1.8.1 --quiet
+
+RUN pip install torch==1.12.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
 
 ### Git DiffDock
 RUN mkdir /app && \
