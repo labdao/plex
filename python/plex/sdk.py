@@ -10,9 +10,7 @@ from typing import Dict, List
 
 
 class ScatteringMethod(Enum):
-    DOT_PRODUCT = 'dot_product'
-    FLAT_CROSSPRODUCT = 'flat_crossproduct'  # can depreciate
-    NESTED_CROSSPRODUCT = 'nested_crossproduct'  # can depreciate
+    DOT_PRODUCT = 'dotproduct'
     CROSS_PRODUCT = 'cross_product'
 
 
@@ -45,13 +43,12 @@ def isFilePath(file_path: str):
         return False
 
 
-def generate_io_graph_from_tool(toolCID, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
-    if isFilePath(toolCID):
-        print("Use plex_upload to upload a tool to IPFS")
-        raise ValueError(f'The tool argument must be a CID, not a filepath: {tool}')
+def plex_generate(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
-    # Open the file and load its content
-    with open(tool_filepath, 'r') as f:
+    # Open the tool file and load its content
+    with open(toolpath, 'r') as f:
         tool = json.load(f)
 
     # Check if all kwargs are in the tool's inputs
@@ -61,38 +58,20 @@ def generate_io_graph_from_tool(toolCID, scattering_method=ScatteringMethod.DOT_
             logging.info(f'Available keys: {list(tool["inputs"].keys())}')
             raise ValueError(f'The argument {arg} is not in the tool inputs.')
 
-    # Scattering methods
-    if scattering_method == ScatteringMethod.DOT_PRODUCT:
-        if len(set(len(x) for x in kwargs.values())) != 1:
-            logging.error('All input arguments must have the same length for dot_product scattering method.')
-            raise ValueError('All input arguments must have the same length for dot_product scattering method.')
-        inputs_list = list(zip(*kwargs.values()))
-    elif scattering_method in [ScatteringMethod.CROSS_PRODUCT, ScatteringMethod.FLAT_CROSSPRODUCT, ScatteringMethod.NESTED_CROSSPRODUCT]:
-        inputs_list = list(itertools.product(*kwargs.values()))
-    else:
-        logging.error(f'Invalid scattering method: {scattering_method}')
-        raise ValueError(f'Invalid scattering method: {scattering_method}')
+    # Convert kwargs dictionary to a JSON string
+    inputs = json.dumps(kwargs)
 
-    # Build the io_json_graph
-    io_json_graph = []
-    for inputs in inputs_list:
-        io_json_graph.append({
-            'tool': {},
-            'inputs': {arg: {'class': tool['inputs'][arg]['type'], 'filepath': filepath} for arg, filepath in zip(kwargs.keys(), inputs)},
-            'outputs': {arg: {'class': tool['outputs'][arg]['type'], 'filepath': ''} for arg in tool['outputs']},
-            'state': 'created',
-            'errMsg': '',
-        })
+    cmd = [plex_path, "generate", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
 
-    # Save io_json_graph to temp file
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp:
-        json.dump(io_json_graph, temp)
-        tempIoJsonFilePath = temp.name
+    io_json_cid = ""
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            if "Pinned IO JSON CID:" in line:
+                parts = line.split()
+                io_json_cid = parts[-1]
+            print(line, end='')
 
-    io_json_cid = plex_upload(tempIoJsonFilePath)
-    os.remove(tempIoJsonFilePath)
-
-    return io_json_cid, io_json_graph
+    return io_json_cid
 
 
 def plex_upload(filePath: str, plex_path="plex"):

@@ -11,8 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var toolFilePath string
-var inputs string
+var (
+	toolFilePath     string
+	inputs           string
+	scatteringMethod string
+)
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -25,7 +28,7 @@ var generateCmd = &cobra.Command{
 			log.Fatal("Invalid inputs JSON:", err)
 		}
 
-		ioJson, err := GenerateIOGraphFromTool(toolFilePath, "dotProduct", kwargs)
+		ioJson, err := GenerateIOGraphFromTool(toolFilePath, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -153,10 +156,16 @@ func GenerateIOGraphFromTool(toolPath string, scatteringMethod string, inputVect
 
 		for i, inputValue := range inputs {
 			inputKey := inputKeys[i]
+
+			cid, err := ipfs.WrapAndPinFile(inputValue) // Pin the file and get the CID
+			if err != nil {
+				return nil, err
+			}
+
 			io.Inputs[inputKey] = ipwl.FileInput{
 				Class:    tool.Inputs[inputKey].Type,
 				FilePath: inputValue, // Use the respective input value from inputsList
-				IPFS:     "",         // Assuming IPFS is not provided, adapt as needed
+				IPFS:     cid,        // Use the CID returned by WrapAndPinFile
 			}
 		}
 
@@ -176,6 +185,7 @@ func GenerateIOGraphFromTool(toolPath string, scatteringMethod string, inputVect
 func init() {
 	generateCmd.Flags().StringVarP(&toolFilePath, "toolFilePath", "t", "", "Tool file path (required)")
 	generateCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format (required)")
+	generateCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format (required)")
 
 	rootCmd.AddCommand(generateCmd)
 }
