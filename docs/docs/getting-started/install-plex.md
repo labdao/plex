@@ -69,16 +69,7 @@ If the installation is successful, you will see a large LabDAO logo appear on yo
     speed={1.5}
 />
 
-### 3. Give PLEX the right permissions
-After the installation is complete, you need to give PLEX the permissions it needs to run. To do this, copy and paste the following command into your terminal and press **Enter**:
-
-```
-chmod +x ./plex
-```
-
-It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
-
-### 4. Add an access token
+### 3. Add an access token
 
 PLEX will prompt you for an access token - [you can get an access token here](https://try.labdao.xyz). We'll email you one automatically, so you can run a tool straight away.
 
@@ -90,7 +81,7 @@ export PLEX_ACCESS_TOKEN=<your token here>
 
 It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
 
-### 5. [Linux only] Allow download of large results
+### 4. [Linux only] Allow download of large results
 
 If you recieve a warning about download speeds on Linux, then you can optionally paste the following command:
 
