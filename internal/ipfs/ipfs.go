@@ -201,3 +201,19 @@ func IsValidCID(cidStr string) bool {
 	_, err := cid.Decode(cidStr)
 	return err == nil
 }
+
+func IsDirectory(cidStr string) (bool, error) {
+	filePath, err := DownloadToTempDir(cidStr)
+	if err != nil {
+		return false, err
+	}
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return false, err
+	}
+	if fileInfo.IsDir() {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
