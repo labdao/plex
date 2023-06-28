@@ -18,10 +18,10 @@ var (
 	scatteringMethod string
 )
 
-var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generate IO graph from tool",
-	Long:  `This command generates an IO graph based on the provided tool and inputs.`,
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initilizes an IO JSON from Tool config and inputs",
+	Long:  `This command initlizes an IO JSON based on the provided Tool and inputs.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var kwargs map[string][]string
 		err := json.Unmarshal([]byte(inputs), &kwargs)
@@ -29,7 +29,7 @@ var generateCmd = &cobra.Command{
 			log.Fatal("Invalid inputs JSON:", err)
 		}
 
-		ioJson, err := GenerateIOGraphFromTool(toolFilePath, scatteringMethod, kwargs)
+		ioJson, err := InitilizeIo(toolFilePath, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -67,7 +67,7 @@ var generateCmd = &cobra.Command{
 	},
 }
 
-func GenerateIOGraphFromTool(toolPath string, scatteringMethod string, inputVectors map[string][]string) ([]ipwl.IO, error) {
+func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[string][]string) ([]ipwl.IO, error) {
 	// Open the file and load its content
 	tool, toolInfo, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
@@ -185,9 +185,9 @@ func GenerateIOGraphFromTool(toolPath string, scatteringMethod string, inputVect
 }
 
 func init() {
-	generateCmd.Flags().StringVarP(&toolFilePath, "toolFilePath", "t", "", "Tool file path (required)")
-	generateCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format (required)")
-	generateCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format (required)")
+	initCmd.Flags().StringVarP(&toolFilePath, "toolFilePath", "t", "", "Tool file path (required)")
+	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format (required)")
+	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format (required)")
 
-	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(initCmd)
 }

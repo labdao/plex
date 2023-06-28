@@ -2,8 +2,6 @@ import json
 import os
 import subprocess
 import logging
-import itertools
-import tempfile
 
 from enum import Enum
 from typing import Dict, List
@@ -43,7 +41,7 @@ def isFilePath(file_path: str):
         return False
 
 
-def plex_generate(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
+def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
@@ -61,7 +59,7 @@ def plex_generate(toolpath: str, scatteringMethod="dotProduct", plex_path="plex"
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)
 
-    cmd = [plex_path, "generate", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
+    cmd = [plex_path, "init", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
 
     io_json_cid = ""
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
