@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
@@ -51,11 +52,12 @@ var generateCmd = &cobra.Command{
 			log.Fatalf("Failed to write to temporary file: %v", err)
 		}
 
-		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+		cid, err := ipfs.PinFile(tempFile.Name())
 		if err != nil {
 			log.Fatalf("Failed to pin the file: %v", err)
 		}
 
+		// Used by Python SDK do not change
 		fmt.Println("Pinned IO JSON CID:", cid)
 
 		// Remember to close the file
@@ -164,8 +166,8 @@ func GenerateIOGraphFromTool(toolPath string, scatteringMethod string, inputVect
 
 			io.Inputs[inputKey] = ipwl.FileInput{
 				Class:    tool.Inputs[inputKey].Type,
-				FilePath: inputValue, // Use the respective input value from inputsList
-				IPFS:     cid,        // Use the CID returned by WrapAndPinFile
+				FilePath: filepath.Base(inputValue), // Use the respective input value from inputsList
+				IPFS:     cid,                       // Use the CID returned by WrapAndPinFile
 			}
 		}
 
