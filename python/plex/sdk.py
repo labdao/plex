@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import logging
 
 from enum import Enum
 from typing import Dict, List
@@ -44,17 +43,6 @@ def isFilePath(file_path: str):
 def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-
-    # Open the tool file and load its content
-    with open(toolpath, 'r') as f:
-        tool = json.load(f)
-
-    # Check if all kwargs are in the tool's inputs
-    for arg in kwargs:
-        if arg not in tool['inputs']:
-            logging.error(f'The argument {arg} is not in the tool inputs.')
-            logging.info(f'Available keys: {list(tool["inputs"].keys())}')
-            raise ValueError(f'The argument {arg} is not in the tool inputs.')
 
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)
