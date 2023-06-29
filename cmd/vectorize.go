@@ -37,31 +37,25 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 	id := uuid.New()
 	workDirPath := ""
 
-	cwd, err := os.Getwd()
+	var cwd string
+	var err error
+	if outputDir == "" {
+		cwd, err = os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		cwd = outputDir
+	}
+
+	workDirPath = path.Join(cwd, id.String())
+	err = os.Mkdir(workDirPath, 0755)
 	if err != nil {
 		return nil, err
 	}
 
-	if outputDir != "" {
-		absPath, err := filepath.Abs(outputDir)
-		if err != nil {
-			return nil, err
-		}
-		cwd = absPath
-		workDirPath = cwd
-		err = os.MkdirAll(workDirPath, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	var ioJsonFilPath string
 	if isCID {
-		workDirPath = path.Join(cwd, id.String())
-		err = os.Mkdir(workDirPath, 0755)
-		if err != nil {
-			return nil, err
-		}
 		ioJsonFilPath = path.Join(workDirPath, "io.json")
 		err = ipfs.DownloadFileContents(ioPath, ioJsonFilPath)
 		if err != nil {
@@ -71,9 +65,6 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 		ioJsonFilPath, err = filepath.Abs(ioPath)
 		if err != nil {
 			return nil, err
-		}
-		if workDirPath == "" {
-			workDirPath = filepath.Dir(ioJsonFilPath)
 		}
 	}
 
