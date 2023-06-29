@@ -1,57 +1,62 @@
 import json
 import os
 import subprocess
-import logging
-import itertools
 
 from enum import Enum
-from tempfile import TemporaryDirectory
-from typing import Dict, List, Union
-
+from typing import Dict, List
 
 
 class ScatteringMethod(Enum):
-    DOT_PRODUCT = 'dot_product'
-    FLAT_CROSSPRODUCT = 'flat_crossproduct'
-    NESTED_CROSSPRODUCT = 'nested_crossproduct'
+    DOT_PRODUCT = 'dotproduct'
+    CROSS_PRODUCT = 'cross_product'
 
-# TODO: Move most of this logic to the go client
-def generate_io_graph_from_tool(tool_filepath, scattering_method=ScatteringMethod.DOT_PRODUCT, **kwargs):
-    # Open the file and load its content
-    with open(tool_filepath, 'r') as f:
-        tool = json.load(f)
-    
-    # Check if all kwargs are in the tool's inputs
-    for arg in kwargs:
-        if arg not in tool['inputs']:
-            logging.error(f'The argument {arg} is not in the tool inputs.')
-            logging.info(f'Available keys: {list(tool["inputs"].keys())}')
-            raise ValueError(f'The argument {arg} is not in the tool inputs.')
-    
-    # Scattering methods
-    if scattering_method == ScatteringMethod.DOT_PRODUCT:
-        if len(set(len(x) for x in kwargs.values())) != 1:
-            logging.error('All input arguments must have the same length for dot_product scattering method.')
-            raise ValueError('All input arguments must have the same length for dot_product scattering method.')
-        inputs_list = list(zip(*kwargs.values()))
-    elif scattering_method in [ScatteringMethod.FLAT_CROSSPRODUCT, ScatteringMethod.NESTED_CROSSPRODUCT]:
-        inputs_list = list(itertools.product(*kwargs.values()))
-    else:
-        logging.error(f'Invalid scattering method: {scattering_method}')
-        raise ValueError(f'Invalid scattering method: {scattering_method}')
-    
-    # Build the io_json_graph
-    io_json_graph = []
-    for inputs in inputs_list:
-        io_json_graph.append({
-            'tool': tool_filepath,
-            'inputs': {arg: {'class': tool['inputs'][arg]['type'], 'filepath': filepath} for arg, filepath in zip(kwargs.keys(), inputs)},
-            'outputs': {arg: {'class': tool['outputs'][arg]['type'], 'filepath': ''} for arg in tool['outputs']},
-            'state': 'created',
-            'errMsg': '',
-        })
-    
-    return io_json_graph
+
+class CoreTools(Enum):
+    EQUIBIND = "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB"
+    DIFFDOCK = "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM"
+    COLABFOLD_MINI = "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD"
+    COLABFOLD_STANDARD = "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk"
+    COLABFOLD_LARGE = "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi"
+    BAM2FASTQ = "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq"
+    ODDT = "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf"
+    RFDIFFUSION = "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2"
+    REPEATMODELER = "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC"
+    GNINA = "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne"
+    BATCH_DLKCAT = "QmThdvypN8gDDwwyNnpSYsdwvyxCET8s1jym3HZCTaBzmD"
+    OPENBABEL_PDB_TO_SDF = "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3"
+    OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
+
+
+def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+
+    # Convert kwargs dictionary to a JSON string
+    inputs = json.dumps(kwargs)
+
+    cmd = [plex_path, "init", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
+
+    io_json_cid = ""
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        for line in p.stdout:
+            if "Pinned IO JSON CID:" in line:
+                parts = line.split()
+                io_json_cid = parts[-1]
+            print(line, end='')
+
+    return io_json_cid
+
+
+def plex_upload(filePath: str, plex_path="plex"):
+    cmd = [plex_path, "upload", "-p", filePath]
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        for line in p.stdout:
+            if "FILL IN WITH CORRECT LOG:" in line:
+                parts = line.split()
+                io_json_cid = parts[-1]
+            print(line, end='')
+    return io_json_cid
 
 
 def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
