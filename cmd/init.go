@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	toolFilePath     string
 	inputs           string
 	scatteringMethod string
 )
@@ -29,7 +28,7 @@ var initCmd = &cobra.Command{
 			log.Fatal("Invalid inputs JSON:", err)
 		}
 
-		ioJson, err := InitilizeIo(toolFilePath, scatteringMethod, kwargs)
+		ioJson, err := InitilizeIo(toolPath, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -185,9 +184,9 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 }
 
 func init() {
-	initCmd.Flags().StringVarP(&toolFilePath, "toolFilePath", "t", "", "Tool file path (required)")
-	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format (required)")
-	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format (required)")
+	initCmd.Flags().StringVarP(&toolPath, "toolPath", "t", "", "Path of the Tool config (can be a local path or an IPFS CID)")
+	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format")
+	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format")
 
 	rootCmd.AddCommand(initCmd)
 }

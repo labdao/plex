@@ -27,19 +27,6 @@ class CoreTools(Enum):
     OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
 
 
-def isFilePath(file_path: str):
-    if os.path.isfile(file_path):
-        return True
-    elif os.path.isdir(file_path):
-        return True
-    elif os.path.isfile(file_path):
-        return True
-    elif "/" in file_path:
-        return True
-    else:
-        return False
-
-
 def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
