@@ -108,7 +108,7 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 					// Check if the file is already downloaded
 					if _, err := os.Stat(absoluteFilePath); os.IsNotExist(err) {
 						// Download the file from IPFS to the local file path
-						err = ipfs.DownloadToDirectory(fileOutput.IPFS, filepath.Dir(absoluteFilePath))
+						err = ipfs.UnwrapAndDownloadFileContents(fileOutput.IPFS, absoluteFilePath)
 						if err != nil {
 							return nil, err
 						}
@@ -136,7 +136,8 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 	}
 	outputVectorsFile.Write(jsonData)
 
-	fmt.Println("Output Vectors Were saved at:", outputVectorsPath)
+	// Exact text is used by Python SDK, do not modify
+	fmt.Println("Output Vectors were saved at:", outputVectorsPath)
 
 	return outputMap, nil
 }
