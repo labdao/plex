@@ -49,33 +49,35 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 		}
 		cwd = absPath
 		workDirPath = cwd
-		err = os.Mkdir(workDirPath, 0755)
+		err = os.MkdirAll(workDirPath, 0755)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	var ioJsonFilPath string
 	if isCID {
 		workDirPath = path.Join(cwd, id.String())
 		err = os.Mkdir(workDirPath, 0755)
 		if err != nil {
 			return nil, err
 		}
-		err = ipfs.DownloadToDirectory(ioPath, workDirPath)
+		ioJsonFilPath = path.Join(workDirPath, "io.json")
+		err = ipfs.DownloadFileContents(ioPath, ioJsonFilPath)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		ioPath, err = filepath.Abs(ioPath)
+		ioJsonFilPath, err = filepath.Abs(ioPath)
 		if err != nil {
 			return nil, err
 		}
 		if workDirPath == "" {
-			workDirPath = filepath.Dir(ioPath)
+			workDirPath = filepath.Dir(ioJsonFilPath)
 		}
 	}
 
-	file, err := os.Open(ioPath)
+	file, err := os.Open(ioJsonFilPath)
 	if err != nil {
 		return nil, err
 	}
