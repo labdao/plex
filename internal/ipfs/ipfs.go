@@ -147,6 +147,77 @@ func DownloadToTempDir(cid string) (string, error) {
 	return downloadPath, nil
 }
 
+func UnwrapAndDownloadFileContents(cid, outputFilePath string) error {
+	// First download the CID content to a temporary file
+	tempDirPath, err := DownloadToTempDir(cid)
+	if err != nil {
+		return err
+	}
+
+	// Ensure that the temporary directory is deleted after we are done
+	defer os.RemoveAll(tempDirPath)
+
+	onlyOneFile, tempFilePath, err := onlyOneFile(tempDirPath)
+	if err != nil {
+		return err
+	}
+
+	if !onlyOneFile {
+		return fmt.Errorf("more than one file in the CID %s content", cid)
+	}
+
+	// Now copy the downloaded content to the output file path
+	inputFile, err := os.Open(tempFilePath)
+	if err != nil {
+		return err
+	}
+	defer inputFile.Close()
+
+	// Ensure the directory exists
+	outputDir := filepath.Dir(outputFilePath)
+	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+		err = os.MkdirAll(outputDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		return err
+	}
+	defer outputFile.Close()
+
+	_, err = io.Copy(outputFile, inputFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func onlyOneFile(dirPath string) (bool, string, error) {
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return false, "", err
+	}
+
+	var filePath string
+	fileCount := 0
+	for _, file := range files {
+		if !file.IsDir() {
+			fileCount++
+			filePath = filepath.Join(dirPath, file.Name())
+		}
+	}
+
+	if fileCount == 1 {
+		return true, filePath, nil
+	} else {
+		return false, "", nil
+	}
+}
+
 func DownloadFileContents(cid, filepath string) error {
 	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
 	if err != nil {

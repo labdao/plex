@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import tempfile
 
 from enum import Enum
 from typing import Dict, List
@@ -45,6 +46,24 @@ def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **
             print(line, end='')
 
     return io_json_cid
+
+
+def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
+    cwd = os.getcwd()
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+
+    cmd = [plex_path, "vectorize", "-i", io_path, "-t", tool_cid, "-o", outputDir]
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        outvects = ""
+        for line in p.stdout:
+            if "Output Vectors were saved at:" in line:
+                parts = line.split()
+                io_vector_outpath = parts[-1]
+                with open(io_vector_outpath, 'r') as f:
+                    outvects = json.load(f)
+                os.remove(io_vector_outpath)
+            print(line, end='')
+    return outvects
 
 
 def plex_upload(filePath: str, plex_path="plex"):

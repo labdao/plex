@@ -153,3 +153,8 @@ func PrintIOGraphStatus(ioList []IO) {
 		fmt.Printf("IOs in %s state: %d\n", state, count)
 	}
 }
+
+type OutputValues struct {
+	FilePaths []string `json:"filePaths"`
+	CIDs      []string `json:"cids"`
+}
