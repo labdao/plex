@@ -257,7 +257,8 @@ func upgradePlexVersion() error {
 	latestReleaseVersionStr, err := getLatestReleaseVersionStr()
 	if err != nil {
 		fmt.Println("Error getting latest release version:", err)
-		os.Exit(1)
+		fmt.Println("Assuming this is the latest release")
+		return nil
 	}
 
 	latestReleaseVersion, err := semver.NewVersion(latestReleaseVersionStr)
