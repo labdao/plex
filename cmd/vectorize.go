@@ -45,7 +45,10 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 			return nil, err
 		}
 	} else {
-		cwd = outputDir
+		cwd, err = filepath.Abs(outputDir)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	workDirPath = path.Join(cwd, id.String())
