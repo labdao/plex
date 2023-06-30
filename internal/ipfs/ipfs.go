@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -179,20 +178,18 @@ func UnwrapAndDownloadFileContents(cid, outputFilePath string) error {
 	if _, err := os.Stat(outputDir); os.IsNotExist(err) {
 		err = os.MkdirAll(outputDir, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create directory: %v", err)
+			return err
 		}
 	}
 
 	outputFile, err := os.Create(outputFilePath)
 	if err != nil {
-		fmt.Println("here 2")
 		return err
 	}
 	defer outputFile.Close()
 
 	_, err = io.Copy(outputFile, inputFile)
 	if err != nil {
-		fmt.Println("here 3")
 		return err
 	}
 
