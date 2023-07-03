@@ -1,3 +1,5 @@
+# This is a Python script that uses the Typer library for command-line interface (CLI) applications, the Transformers library for natural language processing, and the Biopython library for working with biological sequences.
+
 import typer
 import os
 import pandas as pd
@@ -11,11 +13,14 @@ import re
 import json
 import csv
 
+# set up a new Typer application.
 app = typer.Typer()
 
+# This function computes the softmax of an array, a function often used in machine learning to convert raw scores into probabilities.
 def softmax(arr):
     return np.exp(arr) / np.sum(np.exp(arr), axis=0)
 
+# Generates an embedding for a pre-trained language model from the Hugging Face Transformers library that has been fine-tuned on DNA sequences and a tokenizer, and saves the embedding to a CSV file. Returns the path to the saved embedding file.
 def generate_embedding(record, tokenizer, model, output_path):
     sequence = re.sub(r"[UZOB]", "X", str(record.seq))
     spaced_sequence = " ".join(sequence)
@@ -30,6 +35,7 @@ def generate_embedding(record, tokenizer, model, output_path):
     print(f"embedding saved to {output_file}")
     return(output_file)
 
+# Fills in masked positions in a given sequence using a pre-trained model and saves the filled-in sequence to a JSON file. It replaces certain characters in the sequence with "[MASK]", feeds the masked sequence into the model to get predictions for the masked positions, and then saves those predictions.
 def fill_mask(record, unmasker, output_path):
     sequence = str(record.seq)
     spaced_sequence = " ".join(sequence)
@@ -44,6 +50,7 @@ def fill_mask(record, unmasker, output_path):
     print(f"filled mask saved to {output_file}")
     return(output_file)
 
+# This function generates a conditional probability matrix for a given sequence using the pre-trained model and saves it to a CSV file. It iteratively masks each position in the sequence, feeds the masked sequence into the model to get scores for each possible token at the masked position, and then saves these scores to a matrix.
 def conditional_probability_matrix(record, tokenizer, masked_model, output_path):
     sequence = str(record.seq)
     print("generating scoring matrix for sequence: ", sequence)
@@ -99,6 +106,12 @@ def generate(record, tokenizer, generator_model, output_path, max_length=50, top
     spaced_masked_sequence = spaced_sequence.replace("X", "[MASK]")
     print("prompt sequence: ", spaced_masked_sequence)
 
+# # Generates DNA sequences using a pre-trained language model and saves the sequences to a FASTA file.
+# The generated sequences are created by replacing masked regions in a spaced masked sequence with nucleotides.
+# Each generated sequence is represented as a sequence record using the BioPython SeqRecord function.
+# The sequence records are saved to a FASTA file using the BioPython SeqIO.write function.
+# The path and filename of the output file are printed to the console.
+
     # generate
     generated_sequences = generator_model(spaced_masked_sequence, max_length=max_length, top_k=top_k)
     seq_records = []
@@ -112,6 +125,7 @@ def generate(record, tokenizer, generator_model, output_path, max_length=50, top
         SeqIO.write(seq_records, output_handle, "fasta")
     print(f"Generated sequences saved to {output_file}")
 
+# main
 @app.command()
 def main(
         input: str = typer.Argument(..., help="Path to the input fasta file."),
@@ -160,5 +174,6 @@ def main(
     else:
         typer.echo("Invalid mode. Please choose from 'embedding', 'fill-mask', 'scoring-matrix', 'top-k', or 'sample-n'.")
 
+# This line runs the main function when the script is run as a standalone program (as opposed to being imported as a module).
 if __name__ == "__main__":
     typer.run(main)
