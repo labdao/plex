@@ -282,6 +282,8 @@ docs/.docusaurus/
 
 # Rstudio
 .Rproj.user
+jobs
+tmp
 
 # Do not ignore the following files
 !*.gif
