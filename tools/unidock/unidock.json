@@ -1,0 +1,31 @@
+{
+    "class": "CommandLineTool",
+    "name": "unidock",
+    "description": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      ],
+    "dockerPull": ,
+    "gpuBool": true,
+    "networkBool": true,
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "glob": ["*.pdbqt"]
+      },
+      "small_molecule": {
+        "type": "File",
+        "glob": ["*.pdbqt"]
+      },
+      "search_mode": {
+        "type": "string",
+        "default": "balance"
+      }
+    },
+    "outputs": {
+      "scores": {
+        "type": "File",
+        "glob": [""]
+      }
+    }
+}
