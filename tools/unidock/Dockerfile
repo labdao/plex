@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-runtime-centos7
+FROM us-docker.pkg.dev/colab-images/public/runtime:latest
 
 RUN yum update -y \
     && yum install -y wget
