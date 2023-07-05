@@ -1,0 +1,34 @@
+{
+    "class": "CommandLineTool",
+    "name": "index_zinc22",
+    "description": "A tool that pull pdbqt files from zinc22 and indexes them",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "mkdir -p /outputs/pdbqt;",
+        "./zinc22.sh $(inputs.tranche) $(inputs.zinc22_index);"
+      ],
+    "dockerPull": "quay.io/labdao/unidock:diffdock_batch",
+    "gpuBool": true,
+    "networkBool": true,
+    "inputs": {
+      "zinc22_index": {
+        "type": "File",
+        "glob": ["*.wget"]
+      },
+      "tranche": {
+        "type": "string",
+        "default": "H04"
+      }
+    },
+    "outputs": {
+      "index": {
+        "type": "File",
+        "glob": ["index.txt"]
+      },
+      "small_molecules": {
+        "type": "Array",
+        "items": "File",
+        "glob": ["*.pdbqt"]
+      }
+    }
+}
