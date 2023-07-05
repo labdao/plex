@@ -280,10 +280,12 @@ docs/build/
 docs/node_modules/
 docs/.docusaurus/
 
-# Rstudio
+# Rstudio & EDA
 .Rproj.user
 jobs
 tmp
+*.wget
+*.zip
 
 # Do not ignore the following files
 !*.gif
