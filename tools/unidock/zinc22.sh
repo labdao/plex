@@ -22,6 +22,7 @@ while read -r line; do
 done < $FILE
 
 # pull out the pdbqt files 
+mkdir -p $OUTPUT/pdbqt
 mv zinc22/*/*/*/*/*.pdbqt.tgz $OUTPUT/pdbqt
 
 # decompress pdbqt files and create an index
