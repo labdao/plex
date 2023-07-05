@@ -1,13 +1,3 @@
-# Sample Hardhat Project
+# LabDAO Contracts
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
-```
+ProofOfScience contract on Optimism Goerli: https://goerli-optimism.etherscan.io/address/0xda70C0709d4213eE8441E4731A5F662C0406ed7e

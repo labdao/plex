@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	CurrentPlexVersion = "v0.7.3"
+	CurrentPlexVersion = "v0.8.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
 	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
 )
@@ -26,19 +26,19 @@ const (
 func getLatestReleaseVersionStr() (string, error) {
 	resp, err := http.Get(ReleaseURL)
 	if err != nil {
-		return "", fmt.Errorf("Error getting latest release: %v", err)
+		return "", fmt.Errorf("error getting latest release: %v", err)
 	}
 	defer resp.Body.Close()
 
 	var responseMap map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&responseMap)
 	if err != nil {
-		return "", fmt.Errorf("Error decoding latest release: %v", err)
+		return "", fmt.Errorf("error decoding latest release: %v", err)
 	}
 
 	htmlURL, ok := responseMap["html_url"].(string)
 	if !ok {
-		return "", fmt.Errorf("Error getting latest release html_url")
+		return "", fmt.Errorf("error getting latest release html_url")
 	}
 
 	urlPartition := strings.Split(htmlURL, "/")
@@ -257,7 +257,8 @@ func upgradePlexVersion() error {
 	latestReleaseVersionStr, err := getLatestReleaseVersionStr()
 	if err != nil {
 		fmt.Println("Error getting latest release version:", err)
-		os.Exit(1)
+		fmt.Println("Assuming this is the latest release")
+		return nil
 	}
 
 	latestReleaseVersion, err := semver.NewVersion(latestReleaseVersionStr)

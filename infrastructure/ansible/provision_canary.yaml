@@ -1,0 +1,54 @@
+- name: Provision Canary
+  remote_user: ubuntu
+  hosts: tag_Type_compute
+  vars:
+    canary_dir: /opt/local/canary
+    repo_dir: "{{ canary_dir }}/repo"
+    binary_dir: "{{ canary_dir }}/binary"
+  tasks:
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install required system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - pip
+
+    - name: Ensure directories exist, writable by user
+      become: yes
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: ubuntu
+        group: ubuntu 
+        state: directory
+      loop:
+        - "{{ repo_dir }}"
+        - "{{ binary_dir }}"
+
+    - name: Pull the plex repository
+      ansible.builtin.git:
+        repo: https://github.com/labdao/plex.git
+        dest: "{{ repo_dir }}/"
+
+    - name: Install Plex
+      ansible.builtin.include_tasks:
+        file: install_plex_tasks.yaml
+      vars:
+        plex_dir: "{{ binary_dir }}"
+
+    - name: Place canary srcript
+      ansible.builtin.template:
+        src: files/equibind_canary.sh
+        dest: "{{ canary_dir }}/equibind_canary.sh"
+        mode: 'u+x'
+
+    - name: Set a cron job to run canary
+      ansible.builtin.cron:
+        name: "Run equibind canary"
+        job: "{{ canary_dir }}/equibind_canary.sh"
+        minute: "*/5"

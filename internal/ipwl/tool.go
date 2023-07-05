@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 type ToolInput struct {
@@ -35,26 +38,77 @@ type Tool struct {
 	Outputs     map[string]ToolOutput `json:"outputs"`
 }
 
-func ReadToolConfig(filePath string) (Tool, error) {
+func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	var tool Tool
+	var toolInfo ToolInfo
+	var toolFilePath string
+	var cid string
+	var err error
 
-	file, err := os.Open(filePath)
+	// Check if toolPath is a key in CORE_TOOLS
+	if cid, ok := CORE_TOOLS[toolPath]; ok {
+		toolPath = cid
+		toolInfo.IPFS = toolPath
+	}
+
+	if ipfs.IsValidCID(toolPath) {
+		toolInfo.IPFS = toolPath
+		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
+		if err != nil {
+			return tool, toolInfo, err
+		}
+
+		fileInfo, err := os.Stat(toolFilePath)
+		if err != nil {
+			return tool, toolInfo, err
+		}
+
+		// If the downloaded content is a directory, search for a .json file in it
+		if fileInfo.IsDir() {
+			files, err := ioutil.ReadDir(toolFilePath)
+			if err != nil {
+				return tool, toolInfo, err
+			}
+
+			for _, file := range files {
+				if strings.HasSuffix(file.Name(), ".json") {
+					toolFilePath = path.Join(toolFilePath, file.Name())
+					break
+				}
+			}
+		}
+	} else {
+		if _, err := os.Stat(toolPath); err == nil {
+			toolFilePath = toolPath
+			cid, err = ipfs.WrapAndPinFile(toolFilePath)
+			if err != nil {
+				return tool, toolInfo, fmt.Errorf("failed to pin tool file")
+			}
+			toolInfo.IPFS = cid
+		} else {
+			return tool, toolInfo, fmt.Errorf("tool not found")
+		}
+	}
+
+	file, err := os.Open(toolFilePath)
 	if err != nil {
-		return tool, fmt.Errorf("failed to open file: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 
 	bytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return tool, fmt.Errorf("failed to read file: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	err = json.Unmarshal(bytes, &tool)
 	if err != nil {
-		return tool, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return tool, toolInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	return tool, nil
+	toolInfo.Name = tool.Name
+
+	return tool, toolInfo, nil
 }
 
 func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
@@ -72,17 +126,13 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 
 		var replacement string
 		input := ioEntry.Inputs[key]
-		srcFilepath, err := DetermineSrcPath(input, ioGraph)
-		if err != nil {
-			return "", err
-		}
 		switch match[2] {
 		case ".filepath":
-			replacement = fmt.Sprintf("/inputs/%s", filepath.Base(srcFilepath))
+			replacement = fmt.Sprintf("/inputs/%s", input.FilePath)
 		case ".basename":
-			replacement = strings.TrimSuffix(filepath.Base(srcFilepath), filepath.Ext(srcFilepath))
+			replacement = strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))
 		case ".ext":
-			ext := filepath.Ext(srcFilepath)
+			ext := filepath.Ext(input.FilePath)
 			replacement = strings.TrimPrefix(ext, ".")
 		case ".default":
 			replacement = toolConfig.Inputs[key].Default
@@ -108,19 +158,19 @@ func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 	return cmd, nil
 }
 
-func toolToDockerCmd(toolConfig Tool, ioEntry IO, ioGraph []IO, inputsDirPath, outputsDirPath string) (string, error) {
-	cmd, err := toolToCmd(toolConfig, ioEntry, ioGraph)
-	if err != nil {
-		return "", err
-	}
-
-	// Add the GPU flag if GpuBool is true
-	gpuFlag := ""
-	if toolConfig.GpuBool {
-		gpuFlag = "--gpus all"
-	}
-
-	dockerCmd := fmt.Sprintf(`docker run %s -v %s:/inputs -v %s:/outputs %s %s`, gpuFlag, inputsDirPath, outputsDirPath, toolConfig.DockerPull, cmd)
-
-	return dockerCmd, nil
+// You can use custom tools by passing the cid directly to plex -t arguments
+var CORE_TOOLS = map[string]string{
+	"equibind":             "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
+	"diffdock":             "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
+	"colabfold-mini":       "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD",
+	"colabfold-standard":   "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk",
+	"colabfold-large":      "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi",
+	"bam2fastq":            "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq",
+	"oddt":                 "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf",
+	"rfdiffusion":          "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2",
+	"repeatmodeler":        "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC",
+	"gnina":                "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne",
+	"batch-dlkcat":         "QmThdvypN8gDDwwyNnpSYsdwvyxCET8s1jym3HZCTaBzmD",
+	"openbabel-pdb-to-sdf": "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3",
+	"openbabel-rmsd":       "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA",
 }

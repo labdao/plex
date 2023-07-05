@@ -36,8 +36,13 @@ func (afo ArrayFileOutput) OutputType() string {
 	return afo.Class
 }
 
+type ToolInfo struct {
+	Name string `json:"name"`
+	IPFS string `json:"ipfs"`
+}
+
 type IO struct {
-	Tool    string               `json:"tool"`
+	Tool    ToolInfo             `json:"tool"`
 	Inputs  map[string]FileInput `json:"inputs"`
 	Outputs map[string]Output    `json:"outputs"`
 	State   string               `json:"state"`
@@ -147,4 +152,9 @@ func PrintIOGraphStatus(ioList []IO) {
 	for state, count := range stateCount {
 		fmt.Printf("IOs in %s state: %d\n", state, count)
 	}
+}
+
+type OutputValues struct {
+	FilePaths []string `json:"filePaths"`
+	CIDs      []string `json:"cids"`
 }

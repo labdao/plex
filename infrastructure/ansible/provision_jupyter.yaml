@@ -1,6 +1,9 @@
 - name: Provision Jupyter Notebook Instances
   remote_user: ubuntu
   hosts: tag_Type_jupyter_notebook
+  vars:
+    letsencrypt_email: "josh@labdao.xyz"
+    letsencrypt_domain: "jupyter.labdao.xyz"
   tasks:
     # Aptitude is preferred by ansible
     - name: Install aptitude
@@ -23,6 +26,18 @@
         state: latest
         update_cache: true
 
+    - name: Download Quarto CLI .deb file
+      become: yes
+      ansible.builtin.get_url:
+        url: https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.361/quarto-1.3.361-linux-amd64.deb
+        dest: /tmp/quarto-1.3.361-linux-amd64.deb
+        mode: '0644'
+
+    - name: Install Quarto CLI
+      become: yes
+      ansible.builtin.apt:
+        deb: /tmp/quarto-1.3.361-linux-amd64.deb
+
     - name: Install required pip packages
       become: yes
       ansible.builtin.pip:
@@ -38,6 +53,35 @@
     - name: Set environment to jupyterhub
       become: yes
       ansible.builtin.command: tljh-config set user_environment.default_app jupyterlab
+
+    - name: Add additional pip packages to jupyter user notebooks
+      become: yes
+      ansible.builtin.pip:
+        name:
+          - biopython
+          - matplotlib
+          - nglview
+          - numpy
+          - scipy
+          - pandas
+        executable: /opt/tljh/user/bin/pip
+        state: latest
+
+    - name: Enable HTTPS via letsencrypt
+      become: yes
+      ansible.builtin.shell:
+        cmd: |
+          tljh-config set https.enabled true
+          tljh-config set https.letsencrypt.email {{ letsencrypt_email }}
+          tljh-config add-item https.letsencrypt.domains {{ letsencrypt_domain }}
+          tljh-config reload proxy
+
+    - name: Install custom notebook configuration
+      become: yes
+      ansible.builtin.copy:
+        src: files/jupyter_notebook_config.py
+        dest: /opt/tljh/user/etc/jupyter/jupyter_notebook_config.py
+        mode: "755"
 
     - name: Reload the tljh configuration
       become: yes

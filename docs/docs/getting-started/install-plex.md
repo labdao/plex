@@ -30,7 +30,7 @@ Let's get started!
 
 **Requirements:**
 
-- [Get an access token here](https://airtable.com/shrfEDQj2fPffUge8) (we'll email you automatically so you can use PLEX straight away).
+- [Get an access token here](https://try.labdao.xyz) (we'll email you automatically so you can use PLEX straight away).
 - No previous technical experience - we’ll walk through each step.
 
 ---
@@ -40,14 +40,19 @@ Let's get started!
 ### 1. Open your terminal
 To install PLEX, first open up the Terminal application.
 
-- On Mac: Go to “Spotlight Search” in the top right hand corner of your screen (it’s the magnifying glass icon). Type “terminal” and select the first option.
-- On Windows: To use on Windows, please send us an [email](mailto:stewards@labdao.com) and we'll get you set up.
-
 ### 2. Type in the installation commands
 Once you have your terminal open, you can download PLEX by copy and pasting this command into your terminal:
 
+**Mac/Linux:**
+
 ```
 source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
+```
+
+**Windows:**
+
+```
+Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/labdao/plex/main/install.ps1" -UseBasicParsing).Content
 ```
 
 After you have pasted the command into the terminal, press **Enter** on your keyboard to download and install PLEX.
@@ -64,18 +69,9 @@ If the installation is successful, you will see a large LabDAO logo appear on yo
     speed={1.5}
 />
 
-### 3. Give PLEX the right permissions
-After the installation is complete, you need to give PLEX the permissions it needs to run. To do this, copy and paste the following command into your terminal and press **Enter**:
+### 3. Add an access token
 
-```
-chmod +x ./plex
-```
-
-It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
-
-### 4. Add an access token
-
-PLEX will prompt you for an access token - [you can get an access token here](https://airtable.com/shrfEDQj2fPffUge8). We'll email you one automatically, so you can run a tool straight away.
+PLEX will prompt you for an access token - [you can get an access token here](https://try.labdao.xyz). We'll email you one automatically, so you can run a tool straight away.
 
 Type the following command into your command line, replacing "< your token here >" with the provided access token:
 
@@ -85,7 +81,7 @@ export PLEX_ACCESS_TOKEN=<your token here>
 
 It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
 
-### 5. [Linux only] Allow download of large results
+### 4. [Linux only] Allow download of large results
 
 If you recieve a warning about download speeds on Linux, then you can optionally paste the following command:
 

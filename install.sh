@@ -24,7 +24,7 @@ downloadPlex() {
 
         if [ "$OS" = "darwin" ]
         then
-            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ]
+            if [ "$ARCH" = "amd64" ] || [ "$ARCH" = "x86_64" ] || [ "$ARCH" = "i386" ]
             then
                 curl -sSL https://github.com/labdao/plex/releases/download/$LATEST_RELEASE/plex_${RELEASE_WITHOUT_V}_darwin_amd64.tar.gz | tar xvz
             elif [ "$ARCH" = "arm64" ]
@@ -129,13 +129,5 @@ getTools
 displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
-echo "To get started, please run the following steps:"
-echo "1. Please change the permissions of plex on your system:"
-echo "chmod +x ./plex"
-echo "2. Please add your access token to use plex. To request an access token, visit https://airtable.com/shrfEDQj2fPffUge8"
-echo "export PLEX_ACCESS_TOKEN=<your access token>"
-echo "3. [Linux only] If you recieve a warning about download speeds on Linux you can optionally run:"
-echo "sudo sysctl -w net.core.rmem_max=2500000"
-
-echo "After these steps, you're ready to generate computational biology data! Run the following command to run Equibind on test data:"
-echo "./plex -tool equibind -input-dir testdata/binding/abl"
+echo "You're ready to generate computational biology data! Run the following command to run Equibind on test data:"
+echo "./plex create -t tools/equibind.json -i testdata/binding/abl/ --autoRun=true"
