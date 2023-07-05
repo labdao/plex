@@ -9,10 +9,10 @@
       "chmod +x unidock;",
       "chmod +x parse_docking_result.sh;",
       "unzip $(inputs.small_molecule_set.filepath);",
-      "find zinc22 -type f -name '*.pdbqt' -exec realpath {} \\; | sort | uniq > /outputs/index.txt",
-      "wc /outputs/index.txt",
-      "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /outputs",
-      "./parse_docking_result.sh outputs /outputs/scores.csv"
+      "find zinc22 -type f -name '*.pdbqt' | xargs realpath | sort | uniq > /outputs/index.txt;",
+      "wc /outputs/index.txt;",
+      "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /outputs;",
+      "./parse_docking_result.sh outputs /outputs/scores.csv;"
       ],
     "dockerPull": "us-docker.pkg.dev/colab-images/public/runtime:latest",
     "gpuBool": true,
