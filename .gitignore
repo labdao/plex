@@ -286,6 +286,7 @@ jobs
 tmp
 *.wget
 *.zip
+zinc22
 
 # Do not ignore the following files
 !*.gif

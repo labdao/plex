@@ -22,4 +22,4 @@ find zinc22 -type f -name '*.pdbqt.tgz' -exec tar -xzvf {} -C zinc22/zinc-22d \;
 find zinc22 -type f -name '*.pdbqt' -print | zip $OUTPUT.zip -@
 
 # cleaning up
-rm -r zinc22
+# rm -r zinc22
