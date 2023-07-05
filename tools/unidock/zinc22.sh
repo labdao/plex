@@ -24,20 +24,9 @@ mkdir -p $OUTPUT/tgz
 #mkdir -p $OUTPUT/$PATTERN
 mv zinc22/*/*/*/*/*.pdbqt.tgz $OUTPUT/tgz
 
-# decompress pdbqt files and create an index
-echo "" > $OUTPUT/index.txt
-
 for file in $OUTPUT/tgz/*.tgz; do
   # Decompress the file
   tar -xzvf "$file" -C $OUTPUT/
 done
 
-# enter OUTPUT
-cd $OUTPUT
-# Find all decompressed files and append their absolute paths to the log
-find -type f -name '*.pdbqt' -print >> tmp.txt
-# remove any duplicates
-sort tmp.txt | uniq > index.txt
-
-# Compress the result into a .zip file
-zip -r $PATTERN.zip *
+find $OUTPUT -type f -name '*.pdbqt' -print | zip $OUTPUT.zip -@
