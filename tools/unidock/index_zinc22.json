@@ -5,7 +5,7 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "mkdir -p /outputs/pdbqt;",
-        "./zinc22.sh $(inputs.tranche) $(inputs.zinc22_index);"
+        "./zinc22.sh $(inputs.tranche.default) $(inputs.zinc22_index.filepath);"
       ],
     "dockerPull": "quay.io/labdao/unidock:diffdock_batch",
     "gpuBool": true,
@@ -24,11 +24,6 @@
       "index": {
         "type": "File",
         "glob": ["index.txt"]
-      },
-      "small_molecules": {
-        "type": "Array",
-        "items": "File",
-        "glob": ["*.pdbqt"]
       }
     }
 }
