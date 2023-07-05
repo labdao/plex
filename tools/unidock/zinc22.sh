@@ -32,5 +32,5 @@ for file in $OUTPUT/pdbqt/*.tgz; do
   tar -xzvf "$file"
   
   # Find all decompressed files and append their absolute paths to the log
-  find /outputs/pdbqt/ -type f -name '*.pdbqt' -exec realpath {} \; >> $OUTPUT/index.txt
+  find $OUTPUT/pdbqt/ -type f -name '*.pdbqt' -exec realpath {} \; >> $OUTPUT/index.txt
 done
