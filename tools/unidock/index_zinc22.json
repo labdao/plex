@@ -5,7 +5,7 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "mkdir -p /outputs/pdbqt;",
-        "./zinc22.sh $(inputs.tranche.default) $(inputs.zinc22_index.filepath);"
+        "./zinc22.sh $(inputs.zinc22_index.filepath) $(inputs.tranche.default) /outputs;"
       ],
     "dockerPull": "quay.io/labdao/unidock:diffdock_batch",
     "gpuBool": true,
