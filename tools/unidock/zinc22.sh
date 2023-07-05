@@ -32,8 +32,12 @@ for file in $OUTPUT/tgz/*.tgz; do
   tar -xzvf "$file" -C $OUTPUT/
 done
 
+# enter OUTPUT
+cd $OUTPUT
 # Find all decompressed files and append their absolute paths to the log
-cd $OUTPUT && find -type f -name '*.pdbqt' -print >> $OUTPUT/index.txt
+find -type f -name '*.pdbqt' -print >> tmp.txt
+# remove any duplicates
+sort tmp.txt | uniq > index.txt
 
 # Compress the result into a .zip file
-cd $OUTPUT && zip -r $PATTERN.zip *
+zip -r $PATTERN.zip *
