@@ -14,24 +14,26 @@ PATTERN=$2
 OUTPUT=$3
 
 # subset the index and download files
-while read -r line; do
-    if [[ $line == *"$PATTERN"* ]]; then
-        echo "Downloading: $line"
-        eval "$line"
-    fi
-done < $FILE
+grep "$PATTERN" "$FILE" | while read -r line; do
+    echo "Downloading: $line"
+    eval "$line"
+done
 
 # pull out the pdbqt files 
-mkdir -p $OUTPUT/pdbqt
-mv zinc22/*/*/*/*/*.pdbqt.tgz $OUTPUT/pdbqt
+mkdir -p $OUTPUT/tgz
+#mkdir -p $OUTPUT/$PATTERN
+mv zinc22/*/*/*/*/*.pdbqt.tgz $OUTPUT/tgz
 
 # decompress pdbqt files and create an index
 echo "" > $OUTPUT/index.txt
 
-for file in $OUTPUT/pdbqt/*.tgz; do
+for file in $OUTPUT/tgz/*.tgz; do
   # Decompress the file
-  tar -xzvf "$file" -C $OUTPUT/pdbqt
-  
-  # Find all decompressed files and append their absolute paths to the log
-  find $OUTPUT/pdbqt/ -type f -name '*.pdbqt' -exec realpath {} \; >> $OUTPUT/index.txt
+  tar -xzvf "$file" -C $OUTPUT/
 done
+
+# Find all decompressed files and append their absolute paths to the log
+cd $OUTPUT && find -type f -name '*.pdbqt' -print >> $OUTPUT/index.txt
+
+# Compress the result into a .zip file
+cd $OUTPUT && zip -r $PATTERN.zip *

@@ -4,6 +4,8 @@
     "description": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
+      "cd /inputs && find -type f -name '*.pdbqt' -print >> outputs/index.txt;",
+
       ],
     "dockerPull": ,
     "gpuBool": true,
