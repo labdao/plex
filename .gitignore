@@ -285,7 +285,10 @@ docs/.docusaurus/
 jobs
 tmp
 *.wget
-*.zip
+*3.zip
+*4.zip
+*5.zip
+*6.zip
 zinc22
 
 # Do not ignore the following files

@@ -7,4 +7,4 @@ RUN wget https://github.com/dptech-corp/Uni-Dock/releases/download/1.0.0/unidock
     && chmod +x unidock
 
 COPY . .
-RUN chmod +x zinc22.sh
+RUN chmod +x parse_docking_result.sh

@@ -1,33 +1,36 @@
 {
-    "class": "CommandLineTool",
-    "name": "unidock",
-    "description": "",
-    "baseCommand": ["/bin/bash", "-c"],
-    "arguments": [
-      "cd /inputs && find -type f -name '*.pdbqt' -print >> outputs/index.txt;",
-
-      ],
-    "dockerPull": ,
-    "gpuBool": true,
-    "networkBool": true,
-    "inputs": {
-      "protein": {
-        "type": "File",
-        "glob": ["*.pdbqt"]
-      },
-      "small_molecule": {
-        "type": "File",
-        "glob": ["*.pdbqt"]
-      },
-      "search_mode": {
-        "type": "string",
-        "default": "balance"
-      }
+  "class": "CommandLineTool",
+  "name": "unidock",
+  "description": "",
+  "baseCommand": ["/bin/bash", "-c"],
+  "arguments": [
+    "unzip $(inputs.small_molecule_set.filepath);",
+    "find zinc22 -type f -name '*.pdbqt' -exec realpath {} \\; | sort | uniq > /outputs/index.txt",
+    "wc /outputs/index.txt",
+    "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /outputs",
+    "./parse_docking_result.sh outputs /outputs/scores.csv"
+    ],
+  "dockerPull": "quay.io/labdao/unidock:diffdock_batch",
+  "gpuBool": true,
+  "networkBool": true,
+  "inputs": {
+    "protein": {
+      "type": "File",
+      "glob": ["*.pdbqt"]
     },
-    "outputs": {
-      "scores": {
-        "type": "File",
-        "glob": [""]
-      }
+    "small_molecule_set": {
+      "type": "File",
+      "glob": ["*.zip"]
+    },
+    "search_mode": {
+      "type": "string",
+      "default": "detail"
     }
+  },
+  "outputs": {
+    "scores": {
+      "type": "File",
+      "glob": ["*.csv"]
+    }
+  }
 }

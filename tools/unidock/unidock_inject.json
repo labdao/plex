@@ -5,17 +5,16 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "wget https://github.com/dptech-corp/Uni-Dock/releases/download/1.0.0/unidock;",
-      "wget "
+      "wget https://raw.githubusercontent.com/labdao/plex/diffdock_batch/tools/unidock/parse_docking_result.sh;",
       "chmod +x unidock;",
+      "chmod +x parse_docking_result.sh;",
       "unzip $(inputs.small_molecule_set.filepath);",
-      "find zinc22 -type f -name '*.pdbqt' -exec realpath {} \\; | sort | uniq > index.txt",
-      "wc index.txt",
-      "mkdir E3_out",
-      "./unidock --receptor AF-15552_reduced.pdbqt --search_mode detail --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index index.txt --dir E3_out",
-      "cd /inputs && find -type f -name '*.pdbqt' -print >> outputs/index.txt;",
-
+      "find zinc22 -type f -name '*.pdbqt' -exec realpath {} \\; | sort | uniq > /outputs/index.txt",
+      "wc /outputs/index.txt",
+      "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /outputs",
+      "./parse_docking_result.sh outputs /outputs/scores.csv"
       ],
-    "dockerPull": ,
+    "dockerPull": "us-docker.pkg.dev/colab-images/public/runtime:latest",
     "gpuBool": true,
     "networkBool": true,
     "inputs": {
@@ -29,7 +28,7 @@
       },
       "search_mode": {
         "type": "string",
-        "default": "balanced"
+        "default": "detail"
       }
     },
     "outputs": {
