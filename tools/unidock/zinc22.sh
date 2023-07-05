@@ -30,7 +30,7 @@ echo "" > $OUTPUT/index.txt
 
 for file in $OUTPUT/pdbqt/*.tgz; do
   # Decompress the file
-  tar -xzvf "$file"
+  tar -xzvf "$file" -C $OUTPUT/pdbqt
   
   # Find all decompressed files and append their absolute paths to the log
   find $OUTPUT/pdbqt/ -type f -name '*.pdbqt' -exec realpath {} \; >> $OUTPUT/index.txt

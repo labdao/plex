@@ -7,7 +7,7 @@
         "mkdir -p /outputs/pdbqt;",
         "./zinc22.sh $(inputs.zinc22_index.filepath) $(inputs.tranche.default) /outputs;"
       ],
-    "dockerPull": "quay.io/labdao/unidock:diffdock_batch",
+    "dockerPull": "ubuntu:latest",
     "gpuBool": true,
     "networkBool": true,
     "inputs": {
