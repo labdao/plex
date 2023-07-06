@@ -100,6 +100,6 @@ getTools
 
 Write-Host "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
 Write-Host "To get started, please run the following steps:"
-Write-Host "1. Please add your access token to use plex. To request an access token, visit https://try.labdao.xyz"
-Write-Host "2. After these steps, you're ready to generate computational biology data! Run the following command to run Equibind on test data:"
-Write-Host "./plex -tool equibind -input-dir testdata/binding/abl"
+Write-Host "1. To request access to the Jupyter Hub please visit: https://try.labdao.xyz"
+Write-Host "2. Run the following command to run Equibind on test data:"
+Write-Host "./plex create -t tools/equibind.json -i testdata/binding/abl/ --autoRun=true"

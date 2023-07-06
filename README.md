@@ -40,7 +40,6 @@ PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech
 Mac/Linux users open terminal and run
 ```
 source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
-chmod +x ./plex
 ```
 
 Windows users open terminal as an adminstrator and run
@@ -48,17 +47,17 @@ Windows users open terminal as an adminstrator and run
 Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/labdao/plex/main/install.ps1" -UseBasicParsing).Content
 ```
 
-2. Claim a beta access token and follow the instructions to export to your terminal env
-[Beta Access Form](https://try.labdao.xyz)
-
-3. Submit an example PLEX job
+2. Submit an example PLEX job
 ```
-./plex -tool tools/equibind.json -input-dir ./testdata/binding/abl
+./plex create -t tools/equibind.json -i testdata/binding/abl --autoRun=True
 ```
 
 ![Getting Started](./readme-getting-started-2x.gif)
 
-4. [Read the docs](https://docs.labdao.xyz/) to learn how to use PLEX with your own data and tools
+3. [Read the docs](https://docs.labdao.xyz/) to learn how to use PLEX with your own data and tools
+
+4. Request Access to our VIP Jupyter Hub Enviroment and NFT Testnet Minting.
+[VIP Beta Access Form](https://try.labdao.xyz)
 
 ## 💡 Use-Cases
 * 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion

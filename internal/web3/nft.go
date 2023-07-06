@@ -23,7 +23,7 @@ type Response struct {
 	Status string `json:"status"`
 }
 
-func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
+func buildTokenMetadata(ioPath, imageCid, tokenName string) (string, error) {
 	ioBytes, err := ioutil.ReadFile(ioPath)
 	if err != nil {
 		return "", fmt.Errorf("error reading io file: %v", err)
@@ -36,26 +36,11 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 		return "", fmt.Errorf("error unmarshaling io file: %v", err)
 	}
 
-	tokenName := GenerateTokenName()
-
 	graphs := []map[string]interface{}{}
 
 	for _, ioEntry := range ioMap {
-		// Read tool file for each ioEntry
-		toolPath := ioEntry["tool"].(string)
-		toolBytes, err := ioutil.ReadFile(toolPath)
-		if err != nil {
-			return "", fmt.Errorf("error reading tool file: %v", err)
-		}
-
-		var toolMap map[string]interface{}
-		err = json.Unmarshal(toolBytes, &toolMap)
-		if err != nil {
-			return "", fmt.Errorf("error unmarshaling tool file: %v", err)
-		}
-
 		graph := map[string]interface{}{
-			"tool":    toolMap,
+			"tool":    ioEntry["tool"],
 			"inputs":  ioEntry["inputs"],
 			"outputs": ioEntry["outputs"],
 			"state":   ioEntry["state"],
@@ -64,21 +49,21 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 		graphs = append(graphs, graph)
 	}
 
-	// default NFT image is glitchy labdao logo gif
-	imageCID := "bafybeiba666bzbff5vu6rayvp5st2tk7tdltqnwjppzyvpljcycfhshdhq"
-
-	if imageCIDs[0] != "" {
-		if ipfs.IsValidCID(imageCIDs[0]) {
-			imageCID = imageCIDs[0]
-		} else {
-			return "", fmt.Errorf("invalid image CID: %s", imageCIDs[0])
-		}
+	if !ipfs.IsValidCID(imageCid) {
+		return "", fmt.Errorf("invalid image CID: %s", imageCid)
+	}
+	isDir, err := ipfs.IsDirectory(imageCid)
+	if err != nil {
+		return "", err
+	}
+	if isDir {
+		return "", fmt.Errorf("image CID must be a file, not a directory")
 	}
 
 	outputMap := map[string]interface{}{
 		"name":        tokenName,
 		"description": "Research, Reimagined. All Scientists Welcome.",
-		"image":       "ipfs://" + imageCID,
+		"image":       "ipfs://" + imageCid,
 		"graph":       graphs,
 	}
 
@@ -90,7 +75,7 @@ func buildTokenMetadata(ioPath string, imageCIDs ...string) (string, error) {
 	return string(tokenMetadata), nil
 }
 
-func MintNFT(ioJsonPath string, imageCIDs ...string) {
+func MintNFT(ioJsonPath string, imageCid, tokenName string) {
 	if autotaskWebhook == "" {
 		fmt.Println("AUTOTASK_WEBHOOK must be set")
 		fmt.Println("Please visit https://try.labdao.xyz for instructions")
@@ -105,7 +90,7 @@ func MintNFT(ioJsonPath string, imageCIDs ...string) {
 
 	// Build NFT metadata
 	fmt.Println("Preparing NFT metadata...")
-	metadata, err := buildTokenMetadata(ioJsonPath, imageCIDs...)
+	metadata, err := buildTokenMetadata(ioJsonPath, imageCid, tokenName)
 	if err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
