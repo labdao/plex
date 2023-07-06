@@ -11,8 +11,10 @@
       "unzip $(inputs.small_molecule_set.filepath);",
       "find zinc22 -type f -name '*.pdbqt' | xargs realpath | sort | uniq > /outputs/index.txt;",
       "wc /outputs/index.txt;",
-      "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /outputs;",
-      "./parse_docking_result.sh outputs /outputs/scores.csv;"
+      "mkdir /docked;",
+      "./unidock --receptor $(inputs.protein.filepath) --search_mode $(inputs.search_mode.default) --verbosity 2 --size_x 30 --size_y 30 --size_z 30 --center_x 0 --center_y 0 --center_z 0 --ligand_index /outputs/index.txt --dir /docked;",
+      "./parse_docking_result.sh /docked /outputs/scores.csv;",
+      "zip -r /outputs/docked.zip /docked"
       ],
     "dockerPull": "us-docker.pkg.dev/colab-images/public/runtime:latest",
     "gpuBool": true,
@@ -29,12 +31,40 @@
       "search_mode": {
         "type": "string",
         "default": "detail"
+      },
+      "size_x": {
+        "type": "integer",
+        "default": "30"
+      },
+      "size_y": {
+        "type": "integer",
+        "default": "30"
+      },
+      "size_z": {
+        "type": "integer",
+        "default": "30"
+      },
+      "center_x": {
+        "type": "integer",
+        "default": "0"
+      },
+      "center_y": {
+        "type": "integer",
+        "default": "0"
+      },
+      "center_z": {
+        "type": "integer",
+        "default": "0"
       }
     },
     "outputs": {
       "scores": {
         "type": "File",
         "glob": ["*.csv"]
+      },
+      "docked_small_molecule_set": {
+        "type": "File",
+        "glob": ["*.zip"]
       }
     }
 }
