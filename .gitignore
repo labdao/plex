@@ -283,6 +283,10 @@ docs/.docusaurus/
 
 # Rstudio
 .Rproj.user
+*zip
+*zinc22
+*tmp
+*.wget
 
 # Do not ignore the following files
 !*.gif
