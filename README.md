@@ -68,7 +68,7 @@ pip install PlexLabExchange
 
 2. Run Plex example in a Python file, notebook or REPL
 ```
-from plex import run_plex
+from plex import plex_run
 
 io_json_cid, io_json_local_filepath = plex_run('QmWdKXmSz1p3zGfHmwBb5FHCS7skc4ryEA97pPVxJCT5Wx')
 ```
