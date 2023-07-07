@@ -1,0 +1,57 @@
+{
+    "class": "CommandLineTool",
+    "name": "rfdiffusion",
+    "description": "design protein binders; generally useful for conditional generation of protein backbones",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "mv $(inputs.config.filepath) /app/config/inference;",
+        "source activate SE3nv && python3 /app/scripts/run_inference.py --config-name $(inputs.config.basename) 'contigmap.contigs=[$(inputs.motif.default) $(inputs.binder_length_min.default)-$(inputs.binder_length_max.default)]' inference.input_pdb=$(inputs.protein.filepath) inference.output_prefix=/outputs/$(inputs.protein.basename)_backbone inference.num_designs=$(inputs.number_of_designs.default) denoiser.noise_scale_ca=0 denoiser.noise_scale_frame=0;"
+      ],
+    "dockerPull": "public.ecr.aws/p7l9w5o7/rfdiffusion:latest@sha256:0a6ff53004958ee5e770b0b25cd7f270eaf9fc285f6e91f17ad4024d2cc4ea91",
+    "gpuBool": true,
+    "networkBool": false,
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.pdb"]
+      },
+      "config": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.yaml"]
+      },
+      "motif": {
+        "type": "string",
+        "item": "",
+        "default": "D50-200"
+      },
+      "binder_length_min": {
+        "type": "int",
+        "item": "",
+        "default": "50"
+      },
+      "binder_length_max": {
+        "type": "int",
+        "item": "",
+        "default": "100"
+      },
+      "number_of_designs": {
+        "type": "int",
+        "item": "",
+        "default": "3"
+      }
+    },
+    "outputs": {
+      "designed_backbones": {
+        "type": "Array",
+        "item": "File",
+        "glob": ["*_backbone_*.pdb"]
+      },
+      "first_designed_backbone": {
+        "type": "File",
+        "item": "",
+        "glob": ["*_backbone_0.pdb"]
+      }
+    }
+}

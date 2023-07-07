@@ -18,7 +18,7 @@
       "motif": {
         "type": "string",
         "item": "",
-        "default": "A1-80"
+        "default": "D46-200/0"
       },
       "binder_length_min": {
         "type": "int",
