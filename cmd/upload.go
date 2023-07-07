@@ -40,6 +40,8 @@ var uploadCmd = &cobra.Command{
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
+
+		// Do not change this output format, it is used by the Python wrapper
 		fmt.Println("Uploaded CID: ", cid)
 	},
 }
