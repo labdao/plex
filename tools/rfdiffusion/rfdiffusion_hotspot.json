@@ -23,7 +23,7 @@
       "hotspot": {
         "type": "string",
         "item": "",
-        "default": "'ppi.hotspot_res=[D172, D76, D161]'"
+        "default": "'ppi.hotspot_res=[D170, D171, D172, D173, D174, D76, D161]'"
       },
       "binder_length_min": {
         "type": "int",
@@ -38,7 +38,7 @@
       "number_of_designs": {
         "type": "int",
         "item": "",
-        "default": "3"
+        "default": "10"
       }
     },
     "outputs": {
