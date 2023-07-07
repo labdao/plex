@@ -31,7 +31,7 @@ var upgradeCmd = &cobra.Command{
 }
 
 const (
-	CurrentPlexVersion = "v0.8.1"
+	CurrentPlexVersion = "v0.8.2"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
 	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
 )
