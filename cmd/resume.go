@@ -19,6 +19,9 @@ var resumeCmd = &cobra.Command{
 	Short: "Resumes processing an IO JSON",
 	Long:  `Resumes processing a local IO JSON in a plex working directory.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, concurrency, annotations)
 		if err != nil {
 			fmt.Println("Error:", err)

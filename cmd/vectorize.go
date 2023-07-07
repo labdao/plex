@@ -24,6 +24,9 @@ var vectorizeCmd = &cobra.Command{
 	Short: "Transform an IO JSON file into a list of outputs",
 	Long:  `Transform an IO JSON file into a list of outputs.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		_, err := VectorizeOutputs(ioPath, toolCid, outputDir)
 		if err != nil {
 			fmt.Println("Error:", err)

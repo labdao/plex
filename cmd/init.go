@@ -23,6 +23,9 @@ var initCmd = &cobra.Command{
 	Short: "Initilizes an IO JSON from Tool config and inputs",
 	Long:  `This command initlizes an IO JSON based on the provided Tool and inputs.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		var kwargs map[string][]string
 		err := json.Unmarshal([]byte(inputs), &kwargs)
 		if err != nil {

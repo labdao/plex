@@ -19,6 +19,9 @@ var mintCmd = &cobra.Command{
 	Short: "Mints a Proof of Science NFT",
 	Long:  `Mints a Proof of Science NFT`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		filePath, err := ipfs.DownloadFileToTemp(ioJsonCid, "io.json")
 		if err != nil {
 			fmt.Println("Error: ", err)

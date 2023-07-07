@@ -24,6 +24,9 @@ var createCmd = &cobra.Command{
 	Short: "Creates and pins an IO JSON",
 	Long:  `Creates and pins an IO JSON`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		cid, err := CreateIO(toolPath, inputDir, layers)
 		if err != nil {
 			fmt.Println("Error:", err)
