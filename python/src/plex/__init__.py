@@ -92,7 +92,7 @@ def plex_upload(filePath: str, plex_path="plex"):
             print(line, end='')
 
     if file_cid == "":
-        raise PlexError("Failed to vectorize IO JSON CID")
+        raise PlexError("Failed to upload file to IPFS")
 
     return file_cid
 
