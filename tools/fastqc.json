@@ -1,0 +1,32 @@
+{
+    "class": "Tool",
+    "name": "fastqc",
+    "description": "Comprehensive quality control tool for high-throughput sequence data",
+    "doi": "https://doi.org/10.48550/arXiv.2202.05146",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "fastqc $(inputs.reads.filepath) --outdir=/outputs/$(inputs.reads.basename)"
+    ],
+    
+    "dockerPull": "staphb/fastqc:0.12.1@sha256:f5d8f72753269e0cee071fe198c89a59a1f8071445739b3398f7818f7cb039ae",
+    "gpuBool": false,
+    "networkBool": false,
+
+    "inputs": {
+      "reads": {
+        "type": "File",
+        "glob": ["*.bam", "*.sam", "*.fastq"]
+      },
+    },
+
+    "outputs": {
+      "report": {
+        "type": "File",
+        "glob": ["*.html"],
+      },      
+      "outdata": {
+        "type": "File",
+        "glob": ["*.gzip"],
+      }
+    }
+  }
