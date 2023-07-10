@@ -31,7 +31,7 @@ var upgradeCmd = &cobra.Command{
 }
 
 const (
-	CurrentPlexVersion = "v0.8.2"
+	CurrentPlexVersion = "v0.8.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
 	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
 )
@@ -285,7 +285,7 @@ func upgradePlexVersion(dry bool) error {
 		fmt.Printf("The version of plex you are running (v%s) is outdated.\n", localReleaseVersion)
 
 		if dry {
-			fmt.Println("We highly recomend running plex upgrade")
+			fmt.Println("We highly recommend running `plex upgrade`")
 		} else {
 			fmt.Printf("Updating to latest plex version (v%s)...\n", latestReleaseVersion)
 
