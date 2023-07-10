@@ -64,6 +64,7 @@
           - numpy
           - scipy
           - pandas
+          - plexlabexchange
         executable: /opt/tljh/user/bin/pip
         state: latest
 

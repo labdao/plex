@@ -1,21 +1,34 @@
-package main
+package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"archive/tar"
 	"compress/gzip"
 	"crypto/sha1"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/Masterminds/semver"
+
+	"github.com/spf13/cobra"
 )
+
+var upgradeCmd = &cobra.Command{
+	Use:   "upgrade",
+	Short: "Upgrade Plex binary to the latest version",
+	Long:  `Upgrade Plex binary to the latest version by checking the Github releases`,
+	Run: func(cmd *cobra.Command, args []string) {
+		dry := false
+		upgradePlexVersion(dry)
+	},
+}
 
 const (
 	CurrentPlexVersion = "v0.8.1"
@@ -246,7 +259,7 @@ func upgradeToolsFolder(latestReleaseVersionStr string) error {
 	return writeManifestFile(manifestPath, updatedManifest)
 }
 
-func upgradePlexVersion() error {
+func upgradePlexVersion(dry bool) error {
 	// Auto update to latest plex version
 	localReleaseVersion, err := semver.NewVersion(CurrentPlexVersion)
 	if err != nil {
@@ -264,88 +277,98 @@ func upgradePlexVersion() error {
 	latestReleaseVersion, err := semver.NewVersion(latestReleaseVersionStr)
 	if err != nil {
 		fmt.Printf("Error parsing latest release version: %v\n", err)
-		os.Exit(1)
+		fmt.Println("Assuming this is the latest release")
+		return nil
 	}
 
 	if localReleaseVersion.LessThan(latestReleaseVersion) {
 		fmt.Printf("The version of plex you are running (v%s) is outdated.\n", localReleaseVersion)
-		fmt.Printf("Updating to latest plex version (v%s)...\n", latestReleaseVersion)
 
-		userOS := runtime.GOOS
-		userArch := runtime.GOARCH
-		fmt.Printf("- Operating System detected: %s\n- Chip Architecture detected: %s\n", userOS, userArch)
+		if dry {
+			fmt.Println("We highly recommend running `plex upgrade`")
+		} else {
+			fmt.Printf("Updating to latest plex version (v%s)...\n", latestReleaseVersion)
 
-		// Upgrade tools folder
-		err := upgradeToolsFolder(latestReleaseVersionStr)
-		if err != nil {
-			fmt.Println("Error upgrading tools folder:", err)
-			os.Exit(1)
-		}
+			userOS := runtime.GOOS
+			userArch := runtime.GOARCH
+			fmt.Printf("- Operating System detected: %s\n- Chip Architecture detected: %s\n", userOS, userArch)
 
-		// Upgrade plex binary
-		oldBinaryPath := os.Args[0]
-		backupBinaryPath := fmt.Sprintf("%s.bak", oldBinaryPath)
-		err = os.Rename(oldBinaryPath, backupBinaryPath)
-		if err != nil {
-			fmt.Printf("Error renaming the current binary: %v\n", err)
-			os.Exit(1)
-		}
-
-		binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s_%s.tar.gz", latestReleaseVersionStr, strings.TrimPrefix(latestReleaseVersionStr, "v"), userOS, userArch)
-
-		tempFile, err := ioutil.TempFile("", "plex_*")
-		if err != nil {
-			fmt.Printf("Error creating temporary file: %v\n", err)
-			os.Exit(1)
-		}
-		defer os.Remove(tempFile.Name())
-
-		err = downloadAndDecompressBinary(binaryURL, tempFile.Name())
-		if err != nil {
-			fmt.Printf("Error downloading and decompressing latest binary: %v\n", err)
-			os.Exit(1)
-		}
-
-		out, err := os.Create("plex_new")
-		if err != nil {
-			fmt.Printf("Error creating new binary: %v\n", err)
-			os.Exit(1)
-		}
-		defer out.Close()
-
-		_, err = io.Copy(out, tempFile)
-		if err != nil {
-			fmt.Printf("Error writing to new binary: %v\n", err)
-			os.Exit(1)
-		}
-
-		err = os.Chmod("plex_new", 0755)
-		if err != nil {
-			fmt.Printf("Error setting permissions on new binary: %v\n", err)
-			// Rollback the rename operation by restoring the backup binary
-			if err := os.Rename(backupBinaryPath, oldBinaryPath); err != nil {
-				fmt.Printf("Error restoring the backup binary: %v\n", err)
+			// Upgrade tools folder
+			err := upgradeToolsFolder(latestReleaseVersionStr)
+			if err != nil {
+				fmt.Println("Error upgrading tools folder:", err)
+				os.Exit(1)
 			}
+
+			// Upgrade plex binary
+			oldBinaryPath := os.Args[0]
+			backupBinaryPath := fmt.Sprintf("%s.bak", oldBinaryPath)
+			err = os.Rename(oldBinaryPath, backupBinaryPath)
+			if err != nil {
+				fmt.Printf("Error renaming the current binary: %v\n", err)
+				os.Exit(1)
+			}
+
+			binaryURL := fmt.Sprintf("https://github.com/labdao/plex/releases/download/%s/plex_%s_%s_%s.tar.gz", latestReleaseVersionStr, strings.TrimPrefix(latestReleaseVersionStr, "v"), userOS, userArch)
+
+			tempFile, err := ioutil.TempFile("", "plex_*")
+			if err != nil {
+				fmt.Printf("Error creating temporary file: %v\n", err)
+				os.Exit(1)
+			}
+			defer os.Remove(tempFile.Name())
+
+			err = downloadAndDecompressBinary(binaryURL, tempFile.Name())
+			if err != nil {
+				fmt.Printf("Error downloading and decompressing latest binary: %v\n", err)
+				os.Exit(1)
+			}
+
+			out, err := os.Create("plex_new")
+			if err != nil {
+				fmt.Printf("Error creating new binary: %v\n", err)
+				os.Exit(1)
+			}
+			defer out.Close()
+
+			_, err = io.Copy(out, tempFile)
+			if err != nil {
+				fmt.Printf("Error writing to new binary: %v\n", err)
+				os.Exit(1)
+			}
+
+			err = os.Chmod("plex_new", 0755)
+			if err != nil {
+				fmt.Printf("Error setting permissions on new binary: %v\n", err)
+				// Rollback the rename operation by restoring the backup binary
+				if err := os.Rename(backupBinaryPath, oldBinaryPath); err != nil {
+					fmt.Printf("Error restoring the backup binary: %v\n", err)
+				}
+				os.Exit(1)
+			}
+
+			err = os.Rename("plex_new", "plex")
+			if err != nil {
+				fmt.Printf("Error renaming new binary: %v\n", err)
+				os.Exit(1)
+			}
+
+			err = os.Remove(backupBinaryPath)
+			if err != nil {
+				fmt.Printf("Error removing backup binary: %v\n", err)
+				os.Exit(1)
+			}
+
+			fmt.Printf("Plex updated successfully to (v%s). Please re-run your desired command.\n", latestReleaseVersion)
 			os.Exit(1)
 		}
-
-		err = os.Rename("plex_new", "plex")
-		if err != nil {
-			fmt.Printf("Error renaming new binary: %v\n", err)
-			os.Exit(1)
-		}
-
-		err = os.Remove(backupBinaryPath)
-		if err != nil {
-			fmt.Printf("Error removing backup binary: %v\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Plex updated successfully to (v%s). Please re-run your desired command.\n", latestReleaseVersion)
-		os.Exit(1)
 	} else {
 		fmt.Printf("Plex version (v%s) up to date.\n", localReleaseVersion)
 	}
 
 	return nil
+}
+
+func init() {
+	rootCmd.AddCommand(upgradeCmd)
 }

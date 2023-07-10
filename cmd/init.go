@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strings"
 
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
@@ -22,6 +23,9 @@ var initCmd = &cobra.Command{
 	Short: "Initilizes an IO JSON from Tool config and inputs",
 	Long:  `This command initlizes an IO JSON based on the provided Tool and inputs.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		var kwargs map[string][]string
 		err := json.Unmarshal([]byte(inputs), &kwargs)
 		if err != nil {
@@ -158,15 +162,28 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 		for i, inputValue := range inputs {
 			inputKey := inputKeys[i]
 
-			cid, err := ipfs.WrapAndPinFile(inputValue) // Pin the file and get the CID
-			if err != nil {
-				return nil, err
-			}
-
-			io.Inputs[inputKey] = ipwl.FileInput{
-				Class:    tool.Inputs[inputKey].Type,
-				FilePath: filepath.Base(inputValue), // Use the respective input value from inputsList
-				IPFS:     cid,                       // Use the CID returned by WrapAndPinFile
+			if strings.Count(inputValue, "/") == 1 {
+				parts := strings.Split(inputValue, "/")
+				cid := parts[0]
+				fileName := parts[1]
+				if !ipfs.IsValidCID(cid) {
+					return nil, fmt.Errorf("invalid CID: %s", cid)
+				}
+				io.Inputs[inputKey] = ipwl.FileInput{
+					Class:    tool.Inputs[inputKey].Type,
+					FilePath: fileName,
+					IPFS:     cid,
+				}
+			} else {
+				cid, err := ipfs.WrapAndPinFile(inputValue) // Pin the file and get the CID
+				if err != nil {
+					return nil, err
+				}
+				io.Inputs[inputKey] = ipwl.FileInput{
+					Class:    tool.Inputs[inputKey].Type,
+					FilePath: filepath.Base(inputValue), // Use the respective input value from inputsList
+					IPFS:     cid,                       // Use the CID returned by WrapAndPinFile
+				}
 			}
 		}
 

@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import tempfile
 
 from enum import Enum
 from typing import Dict, List
@@ -28,6 +27,14 @@ class CoreTools(Enum):
     OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
 
 
+class PlexError(Exception):
+    def __init__(self, message):
+        self.message = message
+        self.github_issue_message = ("If this error persists, please submit an issue at "
+                                     "https://github.com/labdao/plex/issues")
+        super().__init__(f"{self.message}\n{self.github_issue_message}")
+
+
 def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
@@ -44,6 +51,9 @@ def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **
                 parts = line.split()
                 io_json_cid = parts[-1]
             print(line, end='')
+
+    if io_json_cid == "":
+        raise PlexError("Failed to initialize IO JSON CID")
 
     return io_json_cid
 
@@ -63,6 +73,10 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
                     outvects = json.load(f)
                 os.remove(io_vector_outpath)
             print(line, end='')
+
+    if outvects == "":
+        raise PlexError("Failed to vectorize IO JSON CID")
+
     return outvects
 
 
@@ -70,12 +84,17 @@ def plex_upload(filePath: str, plex_path="plex"):
     cmd = [plex_path, "upload", "-p", filePath]
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        file_cid = ""
         for line in p.stdout:
-            if "FILL IN WITH CORRECT LOG:" in line:
+            if "Uploaded CID:" in line:
                 parts = line.split()
-                io_json_cid = parts[-1]
+                file_cid = parts[-1]
             print(line, end='')
-    return io_json_cid
+
+    if file_cid == "":
+        raise PlexError("Failed to upload file to IPFS")
+
+    return file_cid
 
 
 def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
@@ -99,17 +118,23 @@ def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=Fa
         cmd.append("--showAnimation=false")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        io_json_cid = ""
         for line in p.stdout:
             if "Initial IO JSON file CID:" in line:
                 parts = line.split()
                 io_json_cid = parts[-1]
             print(line, end='')
+
+    if io_json_cid == "":
+        raise PlexError("Failed to create IO JSON CID")
+
     return io_json_cid
 
 
 def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
     cwd = os.getcwd()
-    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    # plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(cwd))
     cmd = [plex_path, "run", "-i", io_json_cid]
 
     if outputDir:
@@ -128,6 +153,8 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
         cmd.append("--showAnimation=false")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+        io_json_cid = ""
+        io_json_local_filepath = ""
         for line in p.stdout:
             if "Completed IO JSON CID:" in line:
                 parts = line.split()
@@ -136,6 +163,10 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
                 parts = line.split()
                 io_json_local_filepath = parts[-1]
             print(line, end='')
+
+    if io_json_cid == "" or io_json_local_filepath == "":
+        raise PlexError("Failed to run IO JSON CID")
+
     return io_json_cid, io_json_local_filepath
 
 

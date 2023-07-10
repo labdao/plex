@@ -23,9 +23,12 @@ var (
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Runs the Run function",
-	Long:  `Runs the Run function`,
+	Short: "Processes an IO JSON",
+	Long:  `Processes an IO JSON on Bacalhau and IPFS`,
 	Run: func(cmd *cobra.Command, args []string) {
+		dry := true
+		upgradePlexVersion(dry)
+
 		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
