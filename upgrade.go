@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	CurrentPlexVersion = "v0.8.0"
+	CurrentPlexVersion = "v0.8.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
 	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
 )
@@ -257,7 +257,8 @@ func upgradePlexVersion() error {
 	latestReleaseVersionStr, err := getLatestReleaseVersionStr()
 	if err != nil {
 		fmt.Println("Error getting latest release version:", err)
-		os.Exit(1)
+		fmt.Println("Assuming this is the latest release")
+		return nil
 	}
 
 	latestReleaseVersion, err := semver.NewVersion(latestReleaseVersionStr)

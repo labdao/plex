@@ -68,7 +68,7 @@
 [16.949579, "o", "l"]
 [17.907267, "o", "\u001b[?1l\u001b>"]
 [17.90738, "o", "\u001b[?2004l\r\r\n"]
-[17.910427, "o", "\u001b]2;./plex -tool equibind -input-dir testdata/binding/abl\u0007\u001b]1;./plex\u0007"]
+[17.910427, "o", "\u001b]2;./plex create -t tools/equibind.json -i testdata/binding/abl/ --autoRun=true\u0007\u001b]1;./plex\u0007"]
 [18.278642, "o", "Plex version (v0.5.1) up to date.\r\n"]
 [18.278834, "o", "BACALHAU_API_HOST not set, using default host\r\n"]
 [18.278869, "o", "toolPath tools/equibind.json\r\nRunning IPWL tool path\r\n"]

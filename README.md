@@ -40,7 +40,6 @@ PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech
 Mac/Linux users open terminal and run
 ```
 source <(curl -sSL https://raw.githubusercontent.com/labdao/plex/main/install.sh)
-chmod +x ./plex
 ```
 
 Windows users open terminal as an adminstrator and run

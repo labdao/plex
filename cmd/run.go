@@ -59,7 +59,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 	fmt.Println("Created working directory: ", workDirPath)
 
 	ioJsonPath = path.Join(workDirPath, "io.json")
-	err = ipfs.DownloadFile(ioJsonCid, ioJsonPath)
+	err = ipfs.DownloadFileContents(ioJsonCid, ioJsonPath)
 	if err != nil {
 		return completedIoJsonCid, ioJsonPath, err
 	}

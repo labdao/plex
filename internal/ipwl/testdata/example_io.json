@@ -1,6 +1,9 @@
 [
   {
-    "tool": "tools/equibind.json",
+    "tool": {
+      "name": "equibind",
+      "ipfs": "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB"
+    },
     "inputs": {
       "protein": {
         "class": "File",
