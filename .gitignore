@@ -207,6 +207,7 @@ go.work
 # Module binary
 /plex
 dist/
+/python/plex
 
 # Job files
 job-*

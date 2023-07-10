@@ -6,7 +6,7 @@ pip install wheel
 pip install twine
 ```
 
-# Go to the python_pip_test directory
+# Go to the python directory (if not already in it)
 ```
 cd python
 ```
