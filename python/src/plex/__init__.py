@@ -45,11 +45,13 @@ def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **
     cmd = [plex_path, "init", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
 
     io_json_cid = ""
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         for line in p.stdout:
             if "Pinned IO JSON CID:" in line:
                 parts = line.split()
                 io_json_cid = parts[-1]
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
     if io_json_cid == "":
@@ -63,7 +65,7 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
     cmd = [plex_path, "vectorize", "-i", io_path, "-t", tool_cid, "-o", outputDir]
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         outvects = ""
         for line in p.stdout:
             if "Output Vectors were saved at:" in line:
@@ -72,6 +74,8 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
                 with open(io_vector_outpath, 'r') as f:
                     outvects = json.load(f)
                 os.remove(io_vector_outpath)
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
     if outvects == "":
@@ -83,12 +87,14 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
 def plex_upload(filePath: str, plex_path="plex"):
     cmd = [plex_path, "upload", "-p", filePath]
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         file_cid = ""
         for line in p.stdout:
             if "Uploaded CID:" in line:
                 parts = line.split()
                 file_cid = parts[-1]
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
     if file_cid == "":
@@ -117,12 +123,14 @@ def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=Fa
     if not showAnimation: # default is true in the CLI
         cmd.append("--showAnimation=false")
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         io_json_cid = ""
         for line in p.stdout:
             if "Initial IO JSON file CID:" in line:
                 parts = line.split()
                 io_json_cid = parts[-1]
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
     if io_json_cid == "":
@@ -152,7 +160,7 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
     if not showAnimation: # default is true in the CLI
         cmd.append("--showAnimation=false")
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         io_json_cid = ""
         io_json_local_filepath = ""
         for line in p.stdout:
@@ -162,6 +170,8 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
             if "Initialized IO file at:" in line:
                 parts = line.split()
                 io_json_local_filepath = parts[-1]
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
     if io_json_cid == "" or io_json_local_filepath == "":
@@ -178,8 +188,10 @@ def plex_mint(io_json_cid: str, imageCid="", plex_path="plex"):
     if imageCid:
         cmd.append(f"-imageCid={imageCid}")
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         for line in p.stdout:
+            print(line, end='')
+        for line in p.stderr:
             print(line, end='')
 
 
