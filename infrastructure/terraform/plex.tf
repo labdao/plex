@@ -23,7 +23,7 @@ resource "aws_instance" "plex_compute_prod" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "g5.2xlarge"
 
-  vpc_security_group_ids = [aws_security_group.plex.id]
+  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
@@ -58,4 +58,40 @@ resource "cloudflare_record" "plex_compute_prod" {
   value   = aws_eip.plex_prod.public_dns
   type    = "CNAME"
   ttl     = 3600
+}
+
+resource "aws_instance" "receptor" {
+  for_each      = toset(["judgy"])
+  ami           = "ami-053b0d53c279acc90"
+  instance_type = "t3.small"
+
+  vpc_security_group_ids = [aws_security_group.external_ssh.id, aws_security_group.internal.id]
+  key_name               = var.key_main
+  availability_zone      = var.availability_zones[0]
+
+  root_block_device {
+    volume_size = 10
+    tags = {
+      Name = "plex-receptor-${each.key}"
+    }
+  }
+
+  tags = {
+    Name        = "plex-receptor-${each.key}"
+    InstanceKey = each.key
+    Type        = "receptor"
+    Env         = "dev"
+  }
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage    = 10
+  db_name              = "receptor"
+  engine               = "postgres"
+  engine_version       = "15.3"
+  instance_class       = "db.t3.small"
+  username             = "receptor"
+  skip_final_snapshot  = true
+  manage_master_user_password = true
+  vpc_security_group_ids = [aws_security_group.internal.id,]
 }
