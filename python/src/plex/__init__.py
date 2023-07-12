@@ -81,7 +81,10 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
 
 
 def plex_upload(filePath: str, wrapFile=True, plex_path="plex"):
-    cmd = [plex_path, "upload", "-p", filePath, "-w", wrapFile]
+    cmd = [plex_path, "upload", "-p", filePath]
+
+    if not wrapFile:
+        cmd.append("-w=false")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         file_cid = ""
