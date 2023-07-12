@@ -36,7 +36,12 @@ var uploadCmd = &cobra.Command{
 		if info.IsDir() {
 			cid, err = ipfs.PinDir(localPath)
 		} else {
-			cid, err = ipfs.WrapAndPinFile(localPath)
+			// Check if the file is an image, which should not be wrapped in a directory
+			if ipfs.IsImage(localPath) {
+				cid, err = ipfs.PinFile(localPath)
+			} else {
+				cid, err = ipfs.WrapAndPinFile(localPath)
+			}
 		}
 
 		if err != nil {
