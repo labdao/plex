@@ -52,10 +52,12 @@ func buildTokenMetadata(ioPath, imageCid, tokenName string) (string, error) {
 	if !ipfs.IsValidCID(imageCid) {
 		return "", fmt.Errorf("invalid image CID: %s", imageCid)
 	}
+
 	isDir, err := ipfs.IsDirectory(imageCid)
 	if err != nil {
 		return "", err
 	}
+
 	if isDir {
 		return "", fmt.Errorf("image CID must be a file, not a directory")
 	}
@@ -75,7 +77,7 @@ func buildTokenMetadata(ioPath, imageCid, tokenName string) (string, error) {
 	return string(tokenMetadata), nil
 }
 
-func MintNFT(ioJsonPath string, imageCid, tokenName string) {
+func MintNFT(ioJsonPath, imageCid, tokenName string) {
 	if autotaskWebhook == "" {
 		fmt.Println("AUTOTASK_WEBHOOK must be set")
 		fmt.Println("Please visit https://try.labdao.xyz for instructions")

@@ -10,12 +10,13 @@ import (
 
 var (
 	localPath string
+	wrapFile  bool
 )
 
 var uploadCmd = &cobra.Command{
 	Use:   "upload",
 	Short: "Upload a file or directory to IPFS",
-	Long:  `Upload and pins a file or directory to IPFS. Will wrap single files in a directory before uploading. (50MB max). A`,
+	Long:  `Upload and pins a file or directory to IPFS. Default wraps single files in a directory before uploading. (50MB max). A`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dry := true
 		upgradePlexVersion(dry)
@@ -36,7 +37,11 @@ var uploadCmd = &cobra.Command{
 		if info.IsDir() {
 			cid, err = ipfs.PinDir(localPath)
 		} else {
-			cid, err = ipfs.WrapAndPinFile(localPath)
+			if wrapFile {
+				cid, err = ipfs.WrapAndPinFile(localPath)
+			} else {
+				cid, err = ipfs.PinFile(localPath)
+			}
 		}
 
 		if err != nil {
@@ -51,6 +56,7 @@ var uploadCmd = &cobra.Command{
 
 func init() {
 	uploadCmd.Flags().StringVarP(&localPath, "path", "p", "", "Local file path to the file or dir to upload")
+	uploadCmd.Flags().BoolVarP(&wrapFile, "wrap", "w", true, "Wrap single files in a directory before uploading (default true)")
 
 	rootCmd.AddCommand(uploadCmd)
 }

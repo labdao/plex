@@ -53,7 +53,7 @@ class PostInstallCommand(install):
 
 setup(
     name="PlexLabExchange",
-    version="0.8.11",
+    version="0.8.14",
     packages=find_packages(where='src'),  # tell setuptools to look in the 'src' directory for packages
     package_dir={'': 'src'},  # tell setuptools that the packages are under the 'src' directory
     cmdclass={
