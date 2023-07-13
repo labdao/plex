@@ -1,0 +1,13 @@
+[Unit]
+Description=Receptor Web Service
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory={{ plex_dir }}/receptor
+ExecStart=go run main.go
+EnvironmentFile={{ receptor_dir }}/configs
+EnvironmentFile={{ receptor_dir }}/secrets
+
+[Install]
+WantedBy=multi-user.target

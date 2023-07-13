@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
@@ -287,4 +288,12 @@ func IsDirectory(cidStr string) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func IsImage(filepath string) bool {
+	lowercaseFilePath := strings.ToLower(filepath)
+	return strings.HasSuffix(lowercaseFilePath, ".jpg") ||
+		strings.HasSuffix(lowercaseFilePath, ".jpeg") ||
+		strings.HasSuffix(lowercaseFilePath, ".png") ||
+		strings.HasSuffix(lowercaseFilePath, ".gif")
 }

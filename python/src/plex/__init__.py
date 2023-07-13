@@ -85,10 +85,13 @@ def plex_vectorize(io_path: str, tool_cid: str, output_dir="", plex_path="plex")
     return outvects
 
 
-def plex_upload(file_path: str, plex_path="plex"):
+def plex_upload(file_path: str, wrap_file=True, plex_path="plex"):
     cmd = [plex_path, "upload", "-p", file_path]
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+    if not wrap_file:
+        cmd.append("-w=false")
+
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         file_cid = ""
         for line in p.stdout:
             if "Uploaded CID:" in line:
