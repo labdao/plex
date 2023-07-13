@@ -29,8 +29,6 @@ jobs:
       run: go build
 
     - name: Test
-      env:
-        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
       run: go test ./... -v
 
     - name: Run Equibind
@@ -44,5 +42,3 @@ jobs:
           echo "Docked files found:"
           find . -name '*docked.sdf' | grep 'docked.sdf'
         fi
-      env:
-        PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
