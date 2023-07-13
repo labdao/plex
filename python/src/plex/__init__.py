@@ -7,8 +7,9 @@ from typing import Dict, List
 
 
 class ScatteringMethod(Enum):
-    DOT_PRODUCT = 'dotproduct'
-    CROSS_PRODUCT = 'cross_product'
+    # values are camel case to match GoLang CLI
+    DOT_PRODUCT = 'dotProduct'
+    CROSS_PRODUCT = 'crossProduct'
 
 
 class CoreTools(Enum):
@@ -35,14 +36,14 @@ class PlexError(Exception):
         super().__init__(f"{self.message}\n{self.github_issue_message}")
 
 
-def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **kwargs):
+def plex_init(tool_path: str, scattering_method="dotProduct", plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)
 
-    cmd = [plex_path, "init", "-t", toolpath, "-i", inputs, f"--scatteringMethod={scatteringMethod}"]
+    cmd = [plex_path, "init", "-t", tool_path, "-i", inputs, f"--scatteringMethod={scattering_method}"]
 
     io_json_cid = ""
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
@@ -60,11 +61,11 @@ def plex_init(toolpath: str, scatteringMethod="dotProduct", plex_path="plex", **
     return io_json_cid
 
 
-def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
+def plex_vectorize(io_path: str, tool_cid: str, output_dir="", plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
-    cmd = [plex_path, "vectorize", "-i", io_path, "-t", tool_cid, "-o", outputDir]
+    cmd = [plex_path, "vectorize", "-i", io_path, "-t", tool_cid, "-o", output_dir]
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         outvects = ""
         for line in p.stdout:
@@ -84,8 +85,8 @@ def plex_vectorize(io_path: str, tool_cid: str, outputDir="", plex_path="plex"):
     return outvects
 
 
-def plex_upload(filePath: str, plex_path="plex"):
-    cmd = [plex_path, "upload", "-p", filePath]
+def plex_upload(file_path: str, plex_path="plex"):
+    cmd = [plex_path, "upload", "-p", file_path]
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         file_cid = ""
@@ -103,13 +104,13 @@ def plex_upload(filePath: str, plex_path="plex"):
     return file_cid
 
 
-def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
+def plex_create(tool_path: str, input_dir: str, layers=2, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=[], plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-    cmd = [plex_path, "create", "-t", toolpath, "-i", inputDir, f"--layers={layers}"]
+    cmd = [plex_path, "create", "-t", tool_path, "-i", input_dir, f"--layers={layers}"]
 
-    if outputDir:
-        cmd.append(f"-o={outputDir}")
+    if output_dir:
+        cmd.append(f"-o={output_dir}")
 
     if verbose:
         cmd.append("-v=true")
@@ -120,7 +121,7 @@ def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=Fa
     if annotations:
         cmd.append(f"--annotations={annotations.join(',')}")
 
-    if not showAnimation: # default is true in the CLI
+    if not show_animation: # default is true in the CLI
         cmd.append("--showAnimation=false")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
@@ -139,14 +140,14 @@ def plex_create(toolpath: str, inputDir: str, layers=2, outputDir="", verbose=Fa
     return io_json_cid
 
 
-def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False, concurrency="1", annotations=[], plex_path="plex"):
+def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=[], plex_path="plex"):
     cwd = os.getcwd()
     # plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(cwd))
     cmd = [plex_path, "run", "-i", io_json_cid]
 
-    if outputDir:
-        cmd.append(f"-o={outputDir}")
+    if output_dir:
+        cmd.append(f"-o={output_dir}")
 
     if verbose:
         cmd.append("-v=true")
@@ -157,7 +158,7 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
     if annotations:
         cmd.append(f"--annotations={annotations.join(',')}")
 
-    if not showAnimation: # default is true in the CLI
+    if not show_animation: # default is true in the CLI
         cmd.append("--showAnimation=false")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
@@ -180,13 +181,13 @@ def plex_run(io_json_cid: str, outputDir="", verbose=False, showAnimation=False,
     return io_json_cid, io_json_local_filepath
 
 
-def plex_mint(io_json_cid: str, imageCid="", plex_path="plex"):
+def plex_mint(io_json_cid: str, image_cid="", plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
     cmd = [plex_path, "mint", "-i", io_json_cid]
 
-    if imageCid:
-        cmd.append(f"-imageCid={imageCid}")
+    if image_cid:
+        cmd.append(f"-imageCid={image_cid}")
 
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         for line in p.stdout:
