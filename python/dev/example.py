@@ -1,6 +1,6 @@
 import os
 
-from plex import CoreTools, ScatteringMethod, plex_init, plex_run, plex_vectorize
+from plex import CoreTools, ScatteringMethod, plex_init, plex_run, plex_vectorize, plex_mint
 
 plex_dir = os.path.dirname(os.path.dirname(os.getcwd()))
 plex_path = os.path.join(plex_dir, "plex")
@@ -26,3 +26,5 @@ vectors = plex_vectorize(io_file_path, CoreTools.EQUIBIND.value, plex_path=plex_
 print(vectors)
 print(vectors['best_docked_small_molecule']['filePaths'])
 print(vectors['best_docked_small_molecule']['cids'])
+
+plex_mint(completed_io_cid, plex_path=plex_path)

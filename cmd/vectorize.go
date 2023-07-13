@@ -111,8 +111,10 @@ func VectorizeOutputs(ioPath string, toolCid string, outputDir string) (map[stri
 						}
 					}
 
+					cidPath := fmt.Sprintf("%s/%s", fileOutput.IPFS, fileOutput.FilePath)
 					ov.FilePaths = append(ov.FilePaths, absoluteFilePath)
 					ov.CIDs = append(ov.CIDs, fileOutput.IPFS)
+					ov.CidPaths = append(ov.CidPaths, cidPath)
 					outputMap[key] = ov
 				}
 			}

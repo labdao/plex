@@ -36,7 +36,7 @@ class PlexError(Exception):
         super().__init__(f"{self.message}\n{self.github_issue_message}")
 
 
-def plex_init(tool_path: str, scattering_method="dotProduct", plex_path="plex", **kwargs):
+def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.value, plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
@@ -44,6 +44,8 @@ def plex_init(tool_path: str, scattering_method="dotProduct", plex_path="plex", 
     inputs = json.dumps(kwargs)
 
     cmd = [plex_path, "init", "-t", tool_path, "-i", inputs, f"--scatteringMethod={scattering_method}"]
+
+    print(' '.join(cmd))
 
     io_json_cid = ""
     with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
@@ -91,7 +93,7 @@ def plex_upload(file_path: str, wrap_file=True, plex_path="plex"):
     if not wrap_file:
         cmd.append("-w=false")
 
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         file_cid = ""
         for line in p.stdout:
             if "Uploaded CID:" in line:
