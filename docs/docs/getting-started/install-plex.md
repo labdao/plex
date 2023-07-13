@@ -30,9 +30,6 @@ Let's get started!
 
 **Requirements:**
 
-- [Get an access token here](https://try.labdao.xyz) (we'll email you automatically so you can use PLEX straight away).
-- No previous technical experience - we’ll walk through each step.
-
 ---
 
 ## Install PLEX
@@ -69,19 +66,7 @@ If the installation is successful, you will see a large LabDAO logo appear on yo
     speed={1.5}
 />
 
-### 3. Add an access token
-
-PLEX will prompt you for an access token - [you can get an access token here](https://try.labdao.xyz). We'll email you one automatically, so you can run a tool straight away.
-
-Type the following command into your command line, replacing "< your token here >" with the provided access token:
-
-```
-export PLEX_ACCESS_TOKEN=<your token here>
-```
-
-It is expected that after pressing **Enter**, **there will NOT be a notification** in your terminal (i.e. *nothing will happen*).
-
-### 4. [Linux only] Allow download of large results
+### 3. [Linux only] Allow download of large results
 
 If you recieve a warning about download speeds on Linux, then you can optionally paste the following command:
 
