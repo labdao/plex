@@ -16,7 +16,7 @@ class PostInstallCommand(install):
         # Retrieve platform from environment variable
         plat_name = os.environ['PLAT_NAME']
 
-        current_binary_version = "0.8.2"
+        current_binary_version = "0.8.3"
         # map plat_name to go_bin_url
         urls = {
             "darwin_x86_64": f"https://github.com/labdao/plex/releases/download/v{current_binary_version}/plex_{current_binary_version}_darwin_amd64.tar.gz",
@@ -54,7 +54,7 @@ class PostInstallCommand(install):
 
 setup(
     name="PlexLabExchange",
-    version="0.8.16",
+    version="0.8.17",
     packages=find_packages(where='src'),  # tell setuptools to look in the 'src' directory for packages
     package_dir={'': 'src'},  # tell setuptools that the packages are under the 'src' directory
     cmdclass={

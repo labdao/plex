@@ -157,4 +157,5 @@ func PrintIOGraphStatus(ioList []IO) {
 type OutputValues struct {
 	FilePaths []string `json:"filePaths"`
 	CIDs      []string `json:"cids"`
+	CidPaths  []string `json:"cidPaths"`
 }

@@ -23,3 +23,10 @@ export PLAT_NAME=win_amd64
 python setup.py bdist_wheel --plat-name win_amd64
 twine upload dist/*
 ```
+
+# Dev Setups
+```
+cd python/dev
+pip install -e ../
+python example.py
+```
