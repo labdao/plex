@@ -18,7 +18,7 @@ var (
 	verbose       bool
 	showAnimation bool
 	concurrency   int
-	annotations   []string
+	annotations   *[]string
 )
 
 var runCmd = &cobra.Command{
@@ -26,10 +26,11 @@ var runCmd = &cobra.Command{
 	Short: "Processes an IO JSON",
 	Long:  `Processes an IO JSON on Bacalhau and IPFS`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(*annotations)
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, annotations)
+		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, *annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
@@ -39,6 +40,7 @@ var runCmd = &cobra.Command{
 
 func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	// Create plex working directory
+	fmt.Println(annotations)
 	id := uuid.New()
 	var cwd string
 	if outputDir != "" {
@@ -88,7 +90,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	runCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
-	runCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
+	annotations = runCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(runCmd)
 }

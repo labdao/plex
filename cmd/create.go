@@ -33,7 +33,7 @@ var createCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if autoRun {
-			PlexRun(cid, outputDir, verbose, showAnimation, concurrency, annotations)
+			PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotations)
 		}
 	},
 }
