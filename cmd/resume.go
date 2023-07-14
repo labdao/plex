@@ -22,7 +22,7 @@ var resumeCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, concurrency, annotations)
+		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, concurrency, *annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
