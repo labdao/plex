@@ -26,7 +26,6 @@ var runCmd = &cobra.Command{
 	Short: "Processes an IO JSON",
 	Long:  `Processes an IO JSON on Bacalhau and IPFS`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(*annotations)
 		dry := true
 		upgradePlexVersion(dry)
 
@@ -40,7 +39,6 @@ var runCmd = &cobra.Command{
 
 func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	// Create plex working directory
-	fmt.Println(annotations)
 	id := uuid.New()
 	var cwd string
 	if outputDir != "" {
