@@ -42,6 +42,48 @@ resource "aws_instance" "plex_compute_prod" {
   }
 }
 
+resource "aws_instance" "plex_compute_only" {
+  for_each      = toset(["compute_only_1"])
+  ami           = "ami-053b0d53c279acc90"
+  instance_type = "g5.2xlarge"
+
+  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
+  key_name               = var.key_main
+  availability_zone      = var.availability_zones[0]
+
+  root_block_device {
+    volume_size = 1000
+    tags = {
+      Name = "plex-prod-${each.key}"
+    }
+  }
+
+  tags = {
+    Name        = "plex-compute-only-${each.key}"
+    Env         = "prod"
+    InstanceKey = each.key
+    Type        = "compute_only"
+  }
+}
+
+resource "aws_instance" "plex_requester" {
+  ami           = "ami-053b0d53c279acc90"
+  instance_type = "m5.large"
+
+  vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
+  key_name               = var.key_main
+  availability_zone      = var.availability_zones[0]
+
+  root_block_device {
+    volume_size = 10
+  }
+
+  tags = {
+    Name        = "plex-requester-prod"
+    Env         = "prod"
+    Type        = "requester"
+  }
+}
 
 resource "aws_eip" "plex_prod" {
   instance = aws_instance.plex_compute_prod["compute1"].id

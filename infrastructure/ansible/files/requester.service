@@ -1,0 +1,17 @@
+[Unit]
+Description=Bacalhau Requester
+
+[Service]
+User=ubuntu
+Group=ubuntu
+ExecStart=bacalhau serve \
+  --node-type requester \
+  --ipfs-connect {{ ipfs_connect }} \
+  --private-internal-ipfs=false \
+{% if receptor_url is defined %}
+  --job-selection-probe-http {{ receptor_url }} \
+{% endif %}
+  --labels owner={{ owner }}
+
+[Install]
+WantedBy=multi-user.target
