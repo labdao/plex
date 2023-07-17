@@ -43,7 +43,7 @@ resource "aws_instance" "plex_compute_prod" {
 }
 
 resource "aws_instance" "plex_compute_only" {
-  for_each      = toset([
+  for_each = toset([
     "compute_only_1"
   ])
   ami           = "ami-053b0d53c279acc90"
@@ -81,9 +81,9 @@ resource "aws_instance" "plex_requester" {
   }
 
   tags = {
-    Name        = "plex-requester-prod"
-    Env         = "prod"
-    Type        = "requester"
+    Name = "plex-requester-prod"
+    Env  = "prod"
+    Type = "requester"
   }
 }
 
@@ -129,13 +129,13 @@ resource "aws_instance" "receptor" {
 }
 
 resource "aws_db_instance" "default" {
-  allocated_storage    = 10
-  db_name              = "receptor"
-  engine               = "postgres"
-  engine_version       = "15.3"
-  instance_class       = "db.t3.small"
-  username             = "receptor"
-  skip_final_snapshot  = true
+  allocated_storage           = 10
+  db_name                     = "receptor"
+  engine                      = "postgres"
+  engine_version              = "15.3"
+  instance_class              = "db.t3.small"
+  username                    = "receptor"
+  skip_final_snapshot         = true
   manage_master_user_password = true
-  vpc_security_group_ids = [aws_security_group.internal.id,]
+  vpc_security_group_ids      = [aws_security_group.internal.id, ]
 }
