@@ -1,0 +1,162 @@
+- name: Provision Bacalhau Compute Instance
+  remote_user: ubuntu
+  hosts: tag_Type_compute_only:&tag_Env_prod
+  vars:
+    nvidia_distribution: ubuntu2004
+    nvidia_container_toolkit_key_path: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    ipfs_path: /opt/local/ipfs
+    requester_peer: /ip4/172.31.90.74/tcp/1235/p2p/QmbETsVtL1sQ97KKV1jPQA5ng8RSyzPWUiDgRBQp7AcjRt
+    gpu: true
+  environment:
+    IPFS_PATH: "{{ ipfs_path }}"
+  tasks:
+    # Aptitude is preferred by ansible
+    - name: Install aptitude
+      become: yes
+      ansible.builtin.apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    # Docker
+    - name: Add Docker GPG key
+      become: yes
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/trusted.gpg.d/docker.asc
+
+    - name: Add Docker Repository
+      become: yes
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+
+    - name: Create the docker group
+      become: yes
+      ansible.builtin.group:
+        name: docker
+
+    - name: Add ubuntu user to docker group
+      become: yes
+      ansible.builtin.user:
+        name: ubuntu
+        groups: docker
+
+    # Nvidia
+    - name: Get Nvidia drivers apt key
+      ansible.builtin.get_url:
+        url: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.0-1_all.deb
+        dest: /tmp/cuda-keyring.deb
+      when: gpu
+
+    - name: Add Nvidia Keyring
+      become: yes
+      ansible.builtin.apt:
+        deb: /tmp/cuda-keyring.deb
+      when: gpu
+          
+    - name: Get Nvidia Container Tookit GPG key
+      become: yes
+      ansible.builtin.shell:
+        cmd: curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --yes --dearmor -o {{ nvidia_container_toolkit_key_path }}
+        creates: "{{ nvidia_container_toolkit_key_path }}"
+      when: gpu
+
+    - name: Add Nvidia Container Tookit Repository
+      become: yes
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by={{ nvidia_container_toolkit_key_path }}] https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/$(ARCH) /
+        state: present
+      when: gpu
+
+    - name: Install required system packages for gpu build
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - cuda-drivers
+        state: latest
+        update_cache: true
+      when: gpu
+
+    - name: Install required system packages
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: latest
+        update_cache: true
+
+    - name: Install Nvidia Container Tookit
+      become: yes
+      ansible.builtin.apt:
+        pkg:
+          - nvidia-docker2
+      notify:
+        - Restart docker
+      when: gpu
+
+    - name: Ensure Nvidia persitence daemon is started
+      ansible.builtin.systemd:
+        name: nvidia-persistenced
+      when: gpu
+
+    - name: Install Golag
+      become: yes
+      vars:
+        go_version: 1.20.3
+      block:
+        - name: Download Go binary
+          ansible.builtin.get_url:
+            url: https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz
+            dest: /tmp/go-binary.tar.gz
+        - name: Unzip Go binary
+          ansible.builtin.command:
+            cmd: tar -C /usr/local -xzf /tmp/go-binary.tar.gz
+
+    - name: Install IPFS
+      ansible.builtin.import_tasks: install_ipfs_tasks.yaml
+
+    - name: Install Bacalhau
+      ansible.builtin.shell:
+        cmd: curl -sL https://get.bacalhau.org/install.sh | bash
+
+    - name: Bump System Resources
+      become: yes
+      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
+
+    - name: Install the Bacalhau systemd unit
+      become: yes
+      ansible.builtin.template:
+        src: files/compute.service
+        dest: /etc/systemd/system
+      vars:
+        owner: labdao
+        ipfs_connect: /ip4/127.0.0.1/tcp/5001
+      notify:
+        - Restart Bacalhau
+
+    - name: Systemd Daemon Reload
+      become: yes
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+  handlers:
+    - name: Restart docker
+      become: yes
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+    - name: Restart Bacalhau
+      become: yes
+      ansible.builtin.service:
+        name: compute
+        state: restarted
+        enabled: true

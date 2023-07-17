@@ -1,0 +1,21 @@
+[Unit]
+Description=Bacalhau
+
+[Service]
+User=ubuntu
+Group=ubuntu
+ExecStart=bacalhau serve \
+  --node-type compute \
+  --ipfs-connect {{ ipfs_connect }} \
+  --private-internal-ipfs=false \
+{% if gpu %}
+  --limit-total-gpu 1 \
+{% endif %}
+  --limit-job-memory 12gb \
+  --job-selection-accept-networked \
+  --job-selection-data-locality anywhere \
+  --labels owner={{ owner }} \
+  --peer {{ requester_peer }} 
+
+[Install]
+WantedBy=multi-user.target
