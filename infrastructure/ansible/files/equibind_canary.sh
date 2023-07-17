@@ -6,7 +6,7 @@ set -e
 # plex must run from the same place as tools directory
 cd {{ repo_dir }}
 
-plex create -t {{ repo_dir }}/tools/equibind.json -i {{ repo_dir }}/testdata/binding/pdbbind_processed_size1 --autoRun=true 2>&1 | tee plex_out.log
+plex create -t {{ repo_dir }}/tools/equibind.json -i {{ repo_dir }}/testdata/binding/pdbbind_processed_size1 -a test -a cron --autoRun=true 2>&1 | tee plex_out.log
 # capture the exit status of the plex call
 plex_result_code=${PIPESTATUS[0]}
 # exit immediately if plex exited with an error
