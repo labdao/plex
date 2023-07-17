@@ -33,7 +33,7 @@ jobs:
 
     - name: Run Equibind
       run: |
-        result_dir=$(./plex create -t tools/equibind.json -i testdata/binding/pdbbind_processed_size1 --autoRun=true -a test -c cron | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+        result_dir=$(./plex create -t tools/equibind.json -i testdata/binding/pdbbind_processed_size1 --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
         cd "$result_dir/entry-0/outputs"
         if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
           echo "No docked files found"
