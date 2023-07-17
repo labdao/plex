@@ -1,4 +1,4 @@
-- name: Provision Compute Bacalhau Instance
+- name: Provision Bacalhau Compute Instance
   remote_user: ubuntu
   hosts: tag_Type_compute_only:&tag_Env_prod
   vars:
@@ -121,64 +121,7 @@
             cmd: tar -C /usr/local -xzf /tmp/go-binary.tar.gz
 
     - name: Install IPFS
-      ansible.builtin.get_url:
-        url: https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
-        dest: /tmp/ipfs.tar.gz  
-    
-    - name: Make a folder to put IPFS files in
-      ansible.builtin.file:
-        path: /tmp/ipfs
-        state: directory
-
-    - name: Unzip IPFS
-      become: yes
-      ansible.builtin.unarchive:
-        remote_src: true
-        src: /tmp/ipfs.tar.gz
-        dest: /tmp/ipfs
-
-    - name: Install Kubo
-      become: yes
-      ansible.builtin.command: /tmp/ipfs/kubo/install.sh
-
-    - name: Create IPFS directory
-      become: yes
-      ansible.builtin.file:
-        owner: ubuntu
-        group: ubuntu
-        path: /opt/local/ipfs
-        state: directory
-
-    - name: Put the IPFS directory in env for future shells
-      become: yes
-      ansible.builtin.lineinfile:
-        path: /etc/environment
-        line: IPFS_PATH={{ ipfs_path }}
-
-    - name: Initiazlie IPFS
-      ansible.builtin.command:
-        cmd: ipfs init
-        creates: "{{ ipfs_path }}/config"
-
-    - name: Configure IPFS
-      ansible.builtin.shell: |
-        ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
-        ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
-        ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
-        ipfs config Pinning.Recursive true
-
-    - name: Install the IPFS systemd unit
-      become: yes
-      ansible.builtin.copy:
-        src: files/ipfs.service
-        dest: /etc/systemd/system
-
-    - name: Enable and start the IPFS Daemon
-      become: yes
-      ansible.builtin.service:
-        name: ipfs
-        state: started
-        enabled: true
+      ansible.builtin.import_tasks: install_ipfs_tasks.yaml
 
     - name: Install Bacalhau
       ansible.builtin.shell:

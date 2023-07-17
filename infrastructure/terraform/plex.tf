@@ -43,7 +43,9 @@ resource "aws_instance" "plex_compute_prod" {
 }
 
 resource "aws_instance" "plex_compute_only" {
-  for_each      = toset(["compute_only_1"])
+  for_each      = toset([
+    "compute_only_1"
+  ])
   ami           = "ami-053b0d53c279acc90"
   instance_type = "g5.2xlarge"
 
