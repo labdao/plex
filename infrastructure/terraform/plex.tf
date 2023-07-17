@@ -85,13 +85,13 @@ resource "aws_instance" "receptor" {
 }
 
 resource "aws_db_instance" "default" {
-  allocated_storage    = 10
-  db_name              = "receptor"
-  engine               = "postgres"
-  engine_version       = "15.3"
-  instance_class       = "db.t3.small"
-  username             = "receptor"
-  skip_final_snapshot  = true
+  allocated_storage           = 10
+  db_name                     = "receptor"
+  engine                      = "postgres"
+  engine_version              = "15.3"
+  instance_class              = "db.t3.small"
+  username                    = "receptor"
+  skip_final_snapshot         = true
   manage_master_user_password = true
-  vpc_security_group_ids = [aws_security_group.internal.id,]
+  vpc_security_group_ids      = [aws_security_group.internal.id, ]
 }

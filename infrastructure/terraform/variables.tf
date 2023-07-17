@@ -19,6 +19,6 @@ variable "availability_zones" {
 }
 
 variable "cloudflare_zone_id" {
-  type = string
+  type    = string
   default = "858fe9f16ace6df3deefd366cb7defd6"
 }

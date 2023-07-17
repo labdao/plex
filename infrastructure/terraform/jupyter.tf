@@ -1,6 +1,6 @@
 resource "aws_instance" "plex_jupyter" {
   for_each      = toset(["littlehub"])
-  ami = var.ami_main
+  ami           = var.ami_main
   instance_type = "t3.xlarge"
 
   vpc_security_group_ids = [aws_security_group.plex.id]
