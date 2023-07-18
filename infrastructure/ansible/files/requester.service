@@ -11,7 +11,9 @@ ExecStart=bacalhau serve \
 {% if receptor_url is defined %}
   --job-selection-probe-http {{ receptor_url }} \
 {% endif %}
-  --labels owner={{ owner }}
+  --labels owner={{ owner }} \
+  --job-selection-accept-networked \
+  --job-selection-data-locality anywhere
 
 [Install]
 WantedBy=multi-user.target

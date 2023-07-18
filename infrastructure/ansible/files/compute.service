@@ -8,14 +8,14 @@ ExecStart=bacalhau serve \
   --node-type compute \
   --ipfs-connect {{ ipfs_connect }} \
   --private-internal-ipfs=false \
-{% if gpu %}
-  --limit-total-gpu 1 \
-{% endif %}
-  --limit-job-memory 12gb \
-  --job-selection-accept-networked \
-  --job-selection-data-locality anywhere \
   --labels owner={{ owner }} \
-  --peer {{ requester_peer }} 
+  --peer {{ requester_peer }} \
+  --limit-job-memory 12gb \
+{% if gpu %}
+  --limit-job-gpu 1 \
+{% endif %}
+  --job-selection-accept-networked \
+  --job-selection-data-locality anywhere
 
 [Install]
 WantedBy=multi-user.target
