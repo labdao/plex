@@ -33,7 +33,6 @@ var createCmd = &cobra.Command{
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
-		fmt.Println(*annotationsForAutoRun)
 		if autoRun {
 			_, _, err := PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotationsForAutoRun)
 			if err != nil {
