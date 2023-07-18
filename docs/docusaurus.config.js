@@ -29,13 +29,13 @@ const createConfig = async () => {
             remarkPlugins: [mdxMermaid.default],
             editUrl: ({ docPath }) => {
               const pathArr = docPath.split('/');
-              let repo = 'docs';
+              let repo = 'plex';
               let pathSliceIndex = 0;
               if (pathArr.length > 1 && pathArr[0] === '_projects') {
                 repo = pathArr[1];
                 pathSliceIndex = 3;
               }
-              return `https://github.com/labdao/${repo}/edit/main/docs/${pathArr.slice(pathSliceIndex).join('/')}`
+              return `https://github.com/labdao/${repo}/edit/main/docs/docs/${pathArr.slice(pathSliceIndex).join('/')}`
             },
             routeBasePath: '/',
             exclude: [
