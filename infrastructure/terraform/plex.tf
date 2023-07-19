@@ -88,7 +88,7 @@ resource "aws_instance" "plex_requester" {
 }
 
 resource "aws_eip" "plex_prod" {
-  instance = aws_instance.plex_compute_prod["compute1"].id
+  instance = aws_instance.plex_requester.id
   vpc      = true
 
   tags = {
