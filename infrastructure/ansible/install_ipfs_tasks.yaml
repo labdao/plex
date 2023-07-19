@@ -1,18 +1,12 @@
-- name: Install IPFS
-  ansible.builtin.get_url:
-    url: https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
-    dest: /tmp/ipfs.tar.gz  
-
 - name: Make a folder to put IPFS files in
   ansible.builtin.file:
     path: /tmp/ipfs
     state: directory
 
-- name: Unzip IPFS
-  become: yes
+- name: Download and Unzip IPFS
   ansible.builtin.unarchive:
     remote_src: true
-    src: /tmp/ipfs.tar.gz
+    src: https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
     dest: /tmp/ipfs
 
 - name: Install Kubo
@@ -37,6 +31,8 @@
   ansible.builtin.command:
     cmd: ipfs init
     creates: "{{ ipfs_path }}/config"
+  environment:
+    IPFS_PATH: "{{ ipfs_path }}"
 
 - name: Configure IPFS
   ansible.builtin.shell: |
