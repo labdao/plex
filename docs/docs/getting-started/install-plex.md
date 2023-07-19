@@ -5,7 +5,7 @@ sidebar_label: Getting Started
 sidebar_position: 1
 ---
 
-PLEX is a Python package developed by LabDAO that enables you to seamlessly run computational biology tools. PLEX manages all dependencies and installations, and requests compute-time from the LabDAO network, ensuring an effortless experience.
+PLEX is a Python package developed by LabDAO that enables you to seamlessly run computational biology tools. PLEX manages all dependencies and installations and requests compute-time from the LabDAO network, ensuring an effortless experience.
 
 :::note
 
