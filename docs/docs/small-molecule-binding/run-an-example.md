@@ -3,8 +3,6 @@ title: Run an example
 sidebar_position: 4
 ---
 
-import AsciinemaPlayer from '../../src/components/AsciinemaPlayer.js';
-
 This tutorial will guide you through the steps required to run a small molecule binding tool directly from your computer.
 
 By the end of this tutorial, you will have:
@@ -35,20 +33,6 @@ Copy and paste the following command to run the tool using our provided test dat
 ```
 ./plex create -t tools/equibind.json -i testdata/binding/abl/ --autoRun=true
 ```
-
-You should see the following:
-
-<div style={{ marginBottom: '20px' }}>
-    <AsciinemaPlayer 
-        src="/terminal-recordings/small-molecule-binding-run-an-example.cast"
-        rows={20}
-        idleTimeLimit={3}
-        preload={true}
-        autoPlay={true}
-        loop={false}
-        speed={2.5}
-    />
-</div>
 
 :::tip
 
