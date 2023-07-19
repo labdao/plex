@@ -7,8 +7,6 @@ slug: /
 
 You shouldn't have to spend days researching and setting up BioML tools.
 
-Get started in less than 5 minutes, with best-in-class tools for Small Molecule Binding and Protein Folding - plus more coming soon!
-
 ## Introducing PLEX
 PLEX is a library that allows you to run BioML tools direct from your command line, without having to worry about failing dependencies or managing compute.
 
@@ -25,7 +23,6 @@ In these docs, you can find:
 
 - [Install PLEX here with 1 line of code.](/getting-started/install-plex)
 
-
 - Run a tool - check out our [Small Molecule Binding](../small-molecule-binding/overview) or [Protein Folding](../protein-folding/overview) toolsets. For example, our small molecule binding toolset includes a workflow for docking small molecules & proteins, and for visualizing the results. **You can install PLEX, run an example model, and visualize the results in less than 5 mins!**
 
 - Find out more about our tools on our [website](https://labdao.xyz/tools).
@@ -34,7 +31,7 @@ In these docs, you can find:
 
 ## About PLEX
 
-PLEX is a library built upon [Bacalhau](https://docs.bacalhau.org/) that allows you to easily run BioML models for a wide range of applications. It is written in Go.
+PLEX is a library built upon [Bacalhau](https://docs.bacalhau.org/) that allows you to easily run BioML models for a wide range of applications. It is written in Python and Go.
 
 When you run a tool, Plex requests compute-time from members of the LabDAO network, so you don’t have to worry about hardware requirements or setting up the necessary compute infrastructure.
 
