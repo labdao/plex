@@ -1,7 +1,7 @@
 ---
-title: Available tools
+title: Available Tools
 description: Tools available through the PLEX client
-sidebar_label: Available tools
+sidebar_label: Available Tools
 sidebar_position: 2
 ---
 

@@ -1,12 +1,20 @@
 ---
-title: Running ColabFold
-sidebar_label: ColabFold
+title: Folding proteins with ColabFold
+sidebar_label: Protein Folding
 sidebar_position: 3
 ---
 
-import OpenInColab from '../../../src/components/OpenInColab.js';
+import OpenInColab from '../../src/components/OpenInColab.js';
 
 <OpenInColab link="https://colab.research.google.com/drive/1AmxLoU5W2vYoi9KDw9IDoj3k4ijSCqoh?usp=sharing"></OpenInColab>
+
+## Protein folding in silico
+
+Protein folding is a crucial process in drug discovery. It helps research understand the 3D structure of experimental proteins and identify potential drug targets. With PLEX, predicting a protein's 3D structure from the amino acid sequence is streamlined and efficient.
+
+In this tutorial, we'll walk through an example of how to use PLEX to predict a protein's 3D structure using [ColabFold](https://www.nature.com/articles/s41592-022-01488-1).
+
+![img](../../static/img/protein-folding-graphic.png)
 
 ## Install PLEX
 
@@ -22,6 +30,7 @@ import OpenInColab from '../../../src/components/OpenInColab.js';
     Successfully installed PlexLabExchange-0.8.18
 
 
+Then, create a directory where we can save our project files.
 
 ```python
 import os
@@ -32,7 +41,9 @@ cwd = os.getcwd()
 dir_path = f"{cwd}/project"
 ```
 
-## Download `.fasta` file
+## Download protein sequence
+
+We'll download a `.fasta` file containing the sequence of the protein we want to fold. Here, we're using the sequence of Streptavidin.
 
 
 ```python
@@ -61,8 +72,9 @@ fasta_filepath = download_file(url, dir_path)
     Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests) (3.4)
 
 
-## Fold the protein using ColabFold
+## Fold the protein
 
+With the sequence downloaded, we can now use ColabFold to fold the protein.
 
 ```python
 from plex import CoreTools, plex_create
@@ -79,7 +91,7 @@ initial_io_cid = plex_create(CoreTools.COLABFOLD_MINI.value, dir_path)
     Initialized IO file at:  /tmp/2604ada3-04ec-4d58-9ecc-1e65134c15674117000244/io.json
     Initial IO JSON file CID:  QmUhysTE4aLZNw2ePRMCxHWko868xmQoXnGP25fKM1aofb
 
-
+This code initiates the folding process. We'll need to run it to complete the operation.
 
 ```python
 from plex import plex_run
@@ -107,6 +119,7 @@ completed_io_cid, completed_io_filepath = plex_run(initial_io_cid, dir_path)
     Completed IO JSON CID: QmdnjMsUar6nTqGwgjCwN1Fyjaan4i3zyht9SE9L235YRm
     2023/07/20 04:50:10 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 2048 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Receive-Buffer-Size for details.
 
+After the job is complete, we can retrieve and view the results.
 
 
 ```python
@@ -173,3 +186,4 @@ with open(completed_io_filepath, 'r') as f:
         }
     ]
 
+The output is a JSON file with information about the folded protein structures. This can be used for further analysis, visualization, and more.

@@ -1,12 +1,20 @@
 ---
-title: Running Equibind
-sidebar_label: Equibind
+title: Small molecule binding with Equibind
+sidebar_label: Small Molecule Binding
 sidebar_position: 1
 ---
 
-import OpenInColab from '../../../src/components/OpenInColab.js';
+import OpenInColab from '../../src/components/OpenInColab.js';
 
 <OpenInColab link="https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing"></OpenInColab>
+
+## Small molecule binding in silico
+
+Small molecule binding is a fundamental aspect of drug discovery, facilitating the interaction of potential drugs with target proteins. With PLEX, this intricate process is simplified and made efficient. 
+
+In the following tutorial, we illustrate how PLEX can be used to conduct small molecule binding studies to explore potential drug interactions with proteins. We demonstrate this with [Equibind](https://hannes-stark.com/assets/EquiBind.pdf).
+
+![small-molecule-binding](../../static/img/small-molecule-binding-graphic.png)
 
 ## Install PLEX
 
@@ -26,8 +34,7 @@ We first install the plex pip package.
 
 ## Load small molecule and protein data
 
-Next, we load the small molecule and protein data which are available on IPFS. This data is used to initialize an IO JSON that serves as job instructions.
-
+Next, we need to load the data about the small molecule and the protein that we're studying. This data, which is available on IPFS, will be used to initialize an IO JSON. This JSON file will serve as the job instructions for our binding study.
 
 ```python
 small_molecule_path = ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf"]
@@ -52,8 +59,7 @@ initial_io_cid = plex_init(
 
 ## Dock the small molecule and protein using Equibind
 
-With the IO JSON created and pinned to IPFS, we can now submit the job to the LabDAO Bacalhau cluster for compute.
-
+Now that we've prepared our job instructions, we're ready to dock the small molecule and protein using Equibind. With the IO JSON created and pinned to IPFS, we submit the job to the LabDAO Bacalhau cluster for computation.
 
 ```python
 from plex import plex_run
@@ -81,7 +87,9 @@ completed_io_cid, io_local_filepath = plex_run(initial_io_cid)
     Completed IO JSON CID: QmVG4mT2kkPSb6wzT5QxYZndB5VbKLU8nH2dErZW2zxae6
 
 
-Time to view our results!
+## Viewing the results
+
+The final step is to view our results. We read in the IO JSON file that contains the output from our job and print it. This data includes the best docked small molecule and the protein used, each with their own IPFS CIDs.
 
 
 ```python
@@ -128,3 +136,4 @@ with open(io_local_filepath, 'r') as f:
         }
     ]
 
+This output provides us with key information about the small molecule-protein interaction. The "best_docked_small_molecule" represents the most likely interaction between the protein and the small molecule, which can inform subsequent analysis and experiments.
