@@ -1,7 +1,7 @@
 ---
 title: Install PLEX
 description: How to install PLEX
-sidebar_label: Getting Started
+sidebar_label: Installation
 sidebar_position: 1
 ---
 

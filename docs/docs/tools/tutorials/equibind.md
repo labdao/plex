@@ -1,9 +1,10 @@
 ---
-title: Equibind example
-sidebar_position: 5
+title: Running Equibind
+sidebar_label: Equibind
+sidebar_position: 1
 ---
 
-import OpenInColab from '../../src/components/OpenInColab.js';
+import OpenInColab from '../../../src/components/OpenInColab.js';
 
 <OpenInColab link="https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing"></OpenInColab>
 
