@@ -91,9 +91,9 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 			return results, err
 		}
 		if updatedJob.State.State == model.JobStateCancelled {
-			return results, fmt.Errorf("bacalhau cancelled job")
+			return results, fmt.Errorf("bacalhau cancelled job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
 		} else if updatedJob.State.State == model.JobStateError {
-			return results, fmt.Errorf("bacalhau errored job")
+			return results, fmt.Errorf("bacalhau errored job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
 		} else if updatedJob.State.State == model.JobStateCompleted {
 			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
 			if err != nil {
