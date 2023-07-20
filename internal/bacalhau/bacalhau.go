@@ -86,12 +86,24 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
 
 	for i := 0; i < maxTrys; i++ {
-		results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+		updatedJob, _, err := client.Get(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
 		}
-		if len(results) > 0 {
-			return results, err
+		if updatedJob.State.State == model.JobStateCancelled {
+			return results, fmt.Errorf("bacalhau cancelled job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
+		} else if updatedJob.State.State == model.JobStateError {
+			return results, fmt.Errorf("bacalhau errored job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
+		} else if updatedJob.State.State == model.JobStateCompleted {
+			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
+			if err != nil {
+				return results, err
+			}
+			if len(results) > 0 {
+				return results, err
+			} else {
+				return results, fmt.Errorf("bacalhau job completed but no results found")
+			}
 		}
 		if showAnimation {
 			saplingIndex := i % 5
