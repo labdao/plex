@@ -86,7 +86,6 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
 
 	for i := 0; i < maxTrys; i++ {
-		// mcmenemy check for status first
 		updatedJob, _, err := client.Get(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
