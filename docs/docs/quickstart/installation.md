@@ -13,7 +13,7 @@ PLEX is a Python package developed by LabDAO that enables you to seamlessly run 
 - < 1 minute
 
 **Requirements:**
-- Python 3.6 or higher
+- Python 3.8 or higher
 - [pip](https://pip.pypa.io/en/stable/installation/)
 
 :::
