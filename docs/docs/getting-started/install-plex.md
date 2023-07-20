@@ -38,5 +38,5 @@ If using a Jupyter notebook or Google Colab, you should prefix the command with 
 
 After installation, ensure PLEX is working as expected by running one of the following tools:
 
-- [Small Molecule Binding Tool](../small-molecule-binding/run-an-example.md): A quick-run algorithm; complete a job and visualize results within 5 minutes.
-- [Protein Folding Tool](../protein-folding/run-an-example.md): Comprehensive guide provided for a step-by-step walkthrough.
+- [Small Molecule Binding Tool](../tools/tutorials/equibind): A quick-run algorithm; complete a job and visualize results within 5 minutes.
+- [Protein Folding Tool](../tools/tutorials/colabfold): Comprehensive guide provided for a step-by-step walkthrough.
