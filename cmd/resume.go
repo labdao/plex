@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	ioJsonPath string
-	retry      bool
+	ioJsonPath           string
+	retry                bool
+	annotationsForResume *[]string
 )
 
 var resumeCmd = &cobra.Command{
@@ -22,7 +23,7 @@ var resumeCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, concurrency, *annotations)
+		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, concurrency, *annotationsForResume)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -51,7 +52,7 @@ func init() {
 	resumeCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	resumeCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	resumeCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
-	resumeCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
+	annotationsForResume = resumeCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 	resumeCmd.Flags().BoolVarP(&retry, "retry", "", true, "Retry failed jobs")
 
 	rootCmd.AddCommand(resumeCmd)

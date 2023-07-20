@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	toolPath string
-	inputDir string
-	autoRun  bool
-	layers   int
+	toolPath              string
+	inputDir              string
+	autoRun               bool
+	layers                int
+	annotationsForAutoRun *[]string
 )
 
 var createCmd = &cobra.Command{
@@ -33,7 +34,11 @@ var createCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		if autoRun {
-			PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotations)
+			_, _, err := PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotationsForAutoRun)
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
 		}
 	},
 }
@@ -87,7 +92,7 @@ func init() {
 	createCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	createCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	createCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
-	createCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
+	annotationsForAutoRun = createCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(createCmd)
 }
