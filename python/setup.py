@@ -51,10 +51,12 @@ class PostInstallCommand(install):
     def download_and_extract(self, go_bin_url, temp_dir):
         subprocess.run(f"curl -sSL {go_bin_url} | tar xvz -C {temp_dir}", shell=True, check=True)
 
+with open("pip-description.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
     name="PlexLabExchange",
-    version="0.8.17",
+    version="0.8.19",
     packages=find_packages(where='src'),  # tell setuptools to look in the 'src' directory for packages
     package_dir={'': 'src'},  # tell setuptools that the packages are under the 'src' directory
     cmdclass={
@@ -63,6 +65,8 @@ setup(
     author="LabDAO",
     author_email="media@labdao.xyz",
     description="A Python interface to the Plex Go CLI.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/labdao/plex",
     classifiers=[
         "Development Status :: 3 - Alpha",
