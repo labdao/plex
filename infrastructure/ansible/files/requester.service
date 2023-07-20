@@ -13,7 +13,8 @@ ExecStart=bacalhau serve \
 {% endif %}
   --labels owner={{ owner }} \
   --job-selection-accept-networked \
-  --job-selection-data-locality anywhere
+  --job-selection-data-locality anywhere \
+  --peer none
 
 [Install]
 WantedBy=multi-user.target

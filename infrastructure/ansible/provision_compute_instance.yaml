@@ -50,13 +50,13 @@
       become: yes
       ansible.builtin.apt:
         deb: /tmp/cuda-keyring.deb
-          
+
     - name: Get Nvidia Container Tookit GPG key
       become: yes
       ansible.builtin.shell:
         cmd: curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --yes --dearmor -o {{ nvidia_container_toolkit_key_path }}
         creates: "{{ nvidia_container_toolkit_key_path }}"
- 
+
     - name: Add Nvidia Container Tookit Repository
       become: yes
       ansible.builtin.apt_repository:
@@ -107,8 +107,8 @@
     - name: Install IPFS
       ansible.builtin.get_url:
         url: https://dist.ipfs.tech/kubo/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz
-        dest: /tmp/ipfs.tar.gz  
-    
+        dest: /tmp/ipfs.tar.gz
+
     - name: Make a folder to put IPFS files in
       ansible.builtin.file:
         path: /tmp/ipfs
@@ -182,7 +182,6 @@
       vars:
         owner: labdao
         ipfs_connect: /ip4/127.0.0.1/tcp/5001
-        receptor_url: http://ip-172-31-82-127.ec2.internal:8080/judge
       notify:
         - Restart Bacalhau
 

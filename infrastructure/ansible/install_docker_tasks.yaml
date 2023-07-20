@@ -1,0 +1,34 @@
+---
+# Docker
+- name: Add Docker GPG key
+  become: yes
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/trusted.gpg.d/docker.asc
+
+- name: Add Docker Repository
+  become: yes
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Create the docker group
+  become: yes
+  ansible.builtin.group:
+    name: docker
+
+- name: Add ubuntu user to docker group
+  become: yes
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+
+- name: Install docker
+  become: yes
+  ansible.builtin.apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    update_cache: true
