@@ -24,6 +24,8 @@ We are using an aws plug in that provides dynamic ec2 inventory. Through configu
 
 # Environment
 
+Use tags to limit targetting specific environment using `--limit tag_Env_staging` for Staging and `--limit tag_Env_prod` for prod.
+
 Environment related vars file are available to be run under `vars/<env.yaml>`.
 
 To pass in extra-vars do:

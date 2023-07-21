@@ -4,6 +4,12 @@
   vars:
     ipfs_path: /opt/local/ipfs
   tasks:
+    # Must provide limit flag to ensure running against current environment
+    - fail:
+        msg: "you must use -l or --limit"
+      when: ansible_limit is not defined
+      run_once: true
+
     # Aptitude is preferred by ansible
     - name: Install aptitude
       become: yes
