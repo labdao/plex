@@ -24,7 +24,7 @@
       ansible.builtin.file:
         path: "{{ item }}"
         owner: ubuntu
-        group: ubuntu 
+        group: ubuntu
         state: directory
       loop:
         - "{{ repo_dir }}"

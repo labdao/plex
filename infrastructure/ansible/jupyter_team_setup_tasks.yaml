@@ -39,7 +39,7 @@
     groups: "{{ item.team }}"
   loop: "{{ item.users }}"
   loop_control:
-    loop_var: user 
+    loop_var: user
 
 - name: Link shared folder into the users home directory
   become: yes
@@ -49,10 +49,10 @@
     owner: jupyter-{{ user }}
     group: jupyter-{{ user }}
     follow: false
-    state: link 
+    state: link
   loop: "{{ item.users }}"
   loop_control:
-    loop_var: user 
+    loop_var: user
 
 - name: Ensure the symlink exists to the examples directory for every user
   become: yes
