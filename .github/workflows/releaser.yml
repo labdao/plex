@@ -35,7 +35,7 @@ jobs:
           else
             echo "CurrentPlexVersion in cmd/upgrade.go ($current_version) matches tag ($tag_name)"
           fi
-          
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
@@ -53,7 +53,7 @@ jobs:
 
       - name: Download release file
         run: curl -sSL https://github.com/labdao/plex/releases/download/${{ steps.tag_name.outputs.tag }}/plex_${{ steps.tag_name.outputs.release }}_linux_amd64.tar.gz -o plex_${{ steps.tag_name.outputs.release }}_linux_amd64.tar.gz
-      
+
       - name: Extract release file
         run: tar -xvzf plex_${{ steps.tag_name.outputs.release }}_linux_amd64.tar.gz
 
