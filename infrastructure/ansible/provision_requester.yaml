@@ -4,6 +4,12 @@
   vars:
     ipfs_path: /opt/local/ipfs
   tasks:
+    # Must provide limit flag to ensure running against current environment
+    - fail:
+        msg: "you must use -l or --limit"
+      when: ansible_limit is not defined
+      run_once: true
+
     # Aptitude is preferred by ansible
     - name: Install aptitude
       become: yes
@@ -31,7 +37,6 @@
       vars:
         owner: labdao
         ipfs_connect: /ip4/127.0.0.1/tcp/5001
-        receptor_url: http://ip-172-31-82-127.ec2.internal:8080/judge
       notify:
         - Restart Bacalhau
 

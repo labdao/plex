@@ -9,7 +9,7 @@
       ansible.builtin.file:
         path: "{{ plex_dir }}"
         owner: ubuntu
-        group: ubuntu 
+        group: ubuntu
         state: directory
 
     - name: Ensure all files in plex dir are owned by the user

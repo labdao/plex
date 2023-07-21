@@ -22,10 +22,20 @@ Ansible configuration consists of playbooks you run using `ansible-playbook [pla
 
 We are using an aws plug in that provides dynamic ec2 inventory. Through configuration in `inventory.aws_ec2.yaml` we tell the dynamic inventory mechanism to group instances together based on AWS instance tags. Setting (for example) a Type tag on your aws instances of the same type (in Terraform) will allow you to target the instances you wish you perform tasks on.
 
+# Environment
+
+Use tags to limit targetting specific environment using `--limit tag_Env_staging` for Staging and `--limit tag_Env_prod` for prod.
+
+Environment related vars file are available to be run under `vars/<env.yaml>`.
+
+To pass in extra-vars do:
+
+`ansible-playbook -e "@vars/staging.yaml" ............`
+
 # Playbooks
 
 * `provision_jupyter.yaml` Targets `jupyter_notebook` instances and installs [The Littlest Jupyter Hub](https://tljh.jupyter.org/). It does not do any configuration beyond installation.
-* `set_jupyter_users.yaml` Sets the admins, users, and defines access permissions to a team folder 
+* `set_jupyter_users.yaml` Sets the admins, users, and defines access permissions to a team folder
 
 # The teams.yaml
 

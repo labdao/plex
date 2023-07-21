@@ -5,6 +5,12 @@
     plex_dir: /opt/local/plex
     receptor_dir: /opt/local/receptor
   tasks:
+    # Must provide limit flag to ensure running against current environment
+    - fail:
+        msg: "you must use -l or --limit"
+      when: ansible_limit is not defined
+      run_once: true
+
     - name: Install aptitude
       become: yes
       ansible.builtin.apt:
@@ -17,7 +23,7 @@
       ansible.builtin.file:
         path: "{{ item }}"
         owner: ubuntu
-        group: ubuntu 
+        group: ubuntu
         state: directory
       loop:
         - "{{ plex_dir }}"

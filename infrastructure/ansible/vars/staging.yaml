@@ -1,0 +1,9 @@
+---
+
+# Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
+requester_peer: /dns/requester.staging.labdao.xyz/tcp/1235/p2p/QmPx1rC5REq3BCo4MSZiH5X1SzVgZPdtCRtXCRsjSdh3wL
+
+# IPFS PeerID, `curl -s -X POST http://bacalhau.staging.labdao.xyz:5001/api/v0/config/show | jq -r '.Identity.PeerID'`
+requester_ipfs_peer: /dns/requester.staging.labdao.xyz/tcp/4001/p2p/12D3KooWLX9txzKDCVbzxwYsdNNxU3ogumX5yXc9pUwJo9b42ZdG
+
+nvidia_distribution: ubuntu2204

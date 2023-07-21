@@ -1,0 +1,4 @@
+---
+receptor_url: http://ip-172-31-82-127.ec2.internal:8080/judge
+requester_peer: /ip4/172.31.90.74/tcp/1235/p2p/QmbETsVtL1sQ97KKV1jPQA5ng8RSyzPWUiDgRBQp7AcjRt
+requester_ipfs_peer: /ip4/172.31.90.74/tcp/4001/p2p/12D3KooWAjYbsjXAQWqPRCPTTaMkDkUjhschznkLrDoKUyfQvHAP

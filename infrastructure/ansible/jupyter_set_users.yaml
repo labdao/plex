@@ -15,7 +15,7 @@
       ansible.builtin.command:
         cmd: tljh-config add-item users.admin {{ item }}
       loop: "{{ admins | default([])}}"
-       
+
     - name: Create teams
       include_tasks: jupyter_team_setup_tasks.yaml
       loop: "{{ teams | default([])}}"
