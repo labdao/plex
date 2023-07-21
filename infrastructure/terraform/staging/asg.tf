@@ -4,6 +4,8 @@ resource "aws_autoscaling_group" "labdao_requester_asg" {
   max_size         = 1
   min_size         = 1
 
+  termination_policies      = ["OldestInstance"]
+
   vpc_zone_identifier = data.aws_subnets.default_filtered.ids
 
   launch_template {
@@ -21,8 +23,10 @@ resource "aws_autoscaling_group" "labdao_requester_asg" {
 resource "aws_autoscaling_group" "labdao_compute_asg" {
   name             = "labdao_compute_asg"
   desired_capacity = 1
-  max_size         = 1
+  max_size         = 10
   min_size         = 1
+
+  termination_policies      = ["OldestInstance"]
 
   vpc_zone_identifier = data.aws_subnets.default_filtered.ids
 
