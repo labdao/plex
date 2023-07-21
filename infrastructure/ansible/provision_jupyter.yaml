@@ -1,6 +1,6 @@
 - name: Provision Jupyter Notebook Instances
   remote_user: ubuntu
-  hosts: tag_Type_jupyter_notebook
+  hosts: "{{ target_hosts | default('tag_Type_jupyter_notebook') }}"
   vars:
     letsencrypt_email: "josh@labdao.xyz"
     letsencrypt_domain: "jupyter.labdao.xyz"

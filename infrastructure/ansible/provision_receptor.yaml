@@ -1,6 +1,6 @@
 - name: Provision Receptor
   remote_user: ubuntu
-  hosts: tag_Type_receptor
+  hosts: "{{ target_hosts | default('tag_Type_receptor') }}"
   vars:
     plex_dir: /opt/local/plex
     receptor_dir: /opt/local/receptor

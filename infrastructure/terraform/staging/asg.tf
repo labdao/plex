@@ -50,6 +50,7 @@ resource "aws_autoscaling_group" "labdao_compute_asg" {
       }
     }
   }
+
 }
 
 # NOTE: autoscaling to stop instances at Friday 8pm EST
@@ -58,6 +59,40 @@ resource "aws_autoscaling_schedule" "labdao_compute_asg_schedule_0" {
   autoscaling_group_name = aws_autoscaling_group.labdao_compute_asg.name
   recurrence             = "00 20 * * FRI"
   time_zone              = "America/Toronto"
+
+  # NOT Adjusting
+  min_size = -1
+
+  # NOT Adjusting
+  max_size = -1
+
+  # NOTE: Dropping to 0
+  desired_capacity = 0
+}
+
+# NOTE: autoscaling to start single instance on Monday 8am CEST
+resource "aws_autoscaling_schedule" "labdao_compute_asg_schedule_1" {
+  scheduled_action_name  = "labdao-${var.environment}-compute-asg-count-1"
+  autoscaling_group_name = aws_autoscaling_group.labdao_compute_asg.name
+  recurrence             = "00 8 * * MON"
+  time_zone              = "Europe/Berlin"
+
+  # NOT Adjusting
+  min_size = -1
+
+  # NOT Adjusting
+  max_size = -1
+
+  # NOTE: Upping to 1
+  desired_capacity = 1
+}
+
+# NOTE: autoscaling to stop instances at Friday 8pm EST
+resource "aws_autoscaling_schedule" "labdao_compute_asg_schedule_0" {
+  scheduled_action_name  = "labdao-${var.environment}-compute-asg-count-0"
+  autoscaling_group_name = aws_autoscaling_group.labdao_compute_asg.name
+  recurrence             = "00 20 * * FRI"
+  time_zone              = "America/New_York"
 
   # NOT Adjusting
   min_size = -1

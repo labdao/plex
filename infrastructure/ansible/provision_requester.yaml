@@ -1,6 +1,6 @@
 - name: Provision Bacalhau Requester
   remote_user: ubuntu
-  hosts: tag_Type_requester
+  hosts: "{{ target_hosts | default('tag_Type_requester') }}"
   vars:
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"

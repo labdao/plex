@@ -7,6 +7,13 @@ resource "aws_instance" "plex_jupyter" {
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
+
   root_block_device {
     volume_size = 1000
   }

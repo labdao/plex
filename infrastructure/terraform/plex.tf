@@ -6,6 +6,13 @@ resource "aws_instance" "plex_prod" {
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
+
   root_block_device {
     volume_size = 1000
     tags = {
@@ -26,6 +33,13 @@ resource "aws_instance" "plex_compute_prod" {
   vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
+
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
 
   root_block_device {
     volume_size = 2000
@@ -53,6 +67,13 @@ resource "aws_instance" "plex_compute_only" {
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
 
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
+
   root_block_device {
     volume_size = 1000
     tags = {
@@ -75,6 +96,13 @@ resource "aws_instance" "plex_requester" {
   vpc_security_group_ids = [aws_security_group.plex.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
+
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
 
   root_block_device {
     volume_size = 10
@@ -104,6 +132,15 @@ resource "cloudflare_record" "plex_compute_prod" {
   ttl     = 3600
 }
 
+# Private DNS record for requester 
+resource "cloudflare_record" "plex_compute_prod_private" {
+  zone_id = var.cloudflare_zone_id
+  name    = "requester"
+  value   = aws_eip.plex_prod.private_dns
+  type    = "CNAME"
+  ttl     = 3600
+}
+
 resource "aws_instance" "receptor" {
   for_each      = toset(["judgy"])
   ami           = "ami-053b0d53c279acc90"
@@ -112,6 +149,13 @@ resource "aws_instance" "receptor" {
   vpc_security_group_ids = [aws_security_group.external_ssh.id, aws_security_group.internal.id]
   key_name               = var.key_main
   availability_zone      = var.availability_zones[0]
+
+  # Enabling metadata option with instance metadata tags - required for self bootstrapping
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
 
   root_block_device {
     volume_size = 10
