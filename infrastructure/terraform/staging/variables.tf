@@ -10,7 +10,7 @@ variable "requester_instance_type" {
 
 variable "compute_instance_type" {
   type    = string
-  default = "g5.2xlarge"
+  default = "g5.xlarge"
 }
 
 variable "ssh_key" {
