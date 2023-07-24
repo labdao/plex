@@ -1,5 +1,5 @@
 # PLEX 🧫×🧬→💊
-⚡ **Build highly reproducible container workflows on top of a decentralised compute network.** ⚡
+⚡ **Run highly reproducible life science containers on top of a decentralised compute network.** ⚡
 
 <p align="left">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
