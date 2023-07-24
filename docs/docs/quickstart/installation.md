@@ -1,7 +1,7 @@
 ---
 title: Install PLEX
 description: How to install PLEX
-sidebar_label: Getting Started
+sidebar_label: Install PLEX
 sidebar_position: 1
 ---
 
@@ -13,7 +13,7 @@ PLEX is a Python package developed by LabDAO that enables you to seamlessly run 
 - < 1 minute
 
 **Requirements:**
-- Python 3.6 or higher
+- Python 3.8 or higher
 - [pip](https://pip.pypa.io/en/stable/installation/)
 
 :::
@@ -38,5 +38,5 @@ If using a Jupyter notebook or Google Colab, you should prefix the command with 
 
 After installation, ensure PLEX is working as expected by running one of the following tools:
 
-- [Small Molecule Binding Tool](../small-molecule-binding/run-an-example.md): A quick-run algorithm; complete a job and visualize results within 5 minutes.
-- [Protein Folding Tool](../protein-folding/run-an-example.md): Comprehensive guide provided for a step-by-step walkthrough.
+- [Small Molecule Binding Tool](../tutorials/small-molecule-binding): A quick-run algorithm; complete a job and visualize results within 5 minutes.
+- [Protein Folding Tool](../tutorials/protein-folding): Comprehensive guide provided for a step-by-step walkthrough.
