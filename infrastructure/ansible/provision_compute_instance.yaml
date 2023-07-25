@@ -8,7 +8,7 @@
   environment:
     IPFS_PATH: "{{ ipfs_path }}"
   tasks:
-    # Must provide limit flag to ensure running against current environment
+    # Must provide limit flag to ensure running against correct environment
     - fail:
         msg: "you must use -l or --limit"
       when: ansible_limit is not defined
@@ -159,7 +159,7 @@
 
     - name: Install the IPFS systemd unit
       become: yes
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: files/ipfs.service
         dest: /etc/systemd/system
       notify:
@@ -209,5 +209,3 @@
         name: bacalhau
         state: restarted
         enabled: true
-
-

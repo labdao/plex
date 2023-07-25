@@ -5,7 +5,7 @@
     plex_dir: /opt/local/plex
     receptor_dir: /opt/local/receptor
   tasks:
-    # Must provide limit flag to ensure running against current environment
+    # Must provide limit flag to ensure running against correct environment
     - fail:
         msg: "you must use -l or --limit"
       when: ansible_limit is not defined

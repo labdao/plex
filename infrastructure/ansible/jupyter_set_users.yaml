@@ -17,7 +17,7 @@
       loop: "{{ admins | default([])}}"
 
     - name: Create teams
-      include_tasks: jupyter_team_setup_tasks.yaml
+      include_tasks: tasks/jupyter_team_setup_tasks.yaml
       loop: "{{ teams | default([])}}"
 
     - name: Reload the tljh configuration
