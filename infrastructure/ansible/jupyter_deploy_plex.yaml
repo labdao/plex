@@ -24,7 +24,7 @@
 
     - name: Install Plex
       ansible.builtin.include_tasks:
-        file: install_plex_tasks.yaml
+        file: tasks/install_plex_tasks.yaml
 
     - name: Add plex python wrapper to the conda path
       become: yes

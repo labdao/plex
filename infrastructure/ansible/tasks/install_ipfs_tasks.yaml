@@ -1,0 +1,109 @@
+- name: Bump System resources
+  become: true
+  ansible.posix.sysctl:
+    name: net.core.rmem_max
+    value: 2500000
+    sysctl_file: /etc/sysctl.d/10-ipfs.conf
+
+# Try running Kubo first, to see what version it is.
+- name: Check kubo (ipfs) version
+  ansible.builtin.command: /usr/local/bin/ipfs version
+  register: existing_kubo_version
+  ignore_errors: true
+  changed_when: false
+  no_log: true
+  check_mode: false
+
+- name: Print installed kubo version
+  ansible.builtin.debug:
+    msg: "Installed kubo version: {{ existing_kubo_version.stdout.split('ipfs version ')[1] }} vs {{ ipfs_version }}"
+  when: existing_kubo_version.stdout != ''
+
+# Compare the latest version of kubo with the version that is already installed, if any.
+- name: Install or update kubo (IPFS)
+  when:
+    "(existing_kubo_version.stdout == '') or (existing_kubo_version.stdout.split('ipfs version ')[1] not in ipfs_version)"
+  block:
+    - name: Download IPFS binary
+      become: true
+      ansible.builtin.unarchive:
+        src: "https://dist.ipfs.tech/kubo/v{{ ipfs_version }}/kubo_v{{ ipfs_version }}_linux-amd64.tar.gz"
+        dest: /usr/local/bin
+        # Letting when condition control if needs installing/upgrading
+        # creates: /usr/local/bin/ipfs
+        extra_opts:
+          - --strip=1
+          - --wildcards
+          - '*/ipfs'
+        remote_src: "true"
+      register: ipfs_unarchive
+      retries: 5
+      delay: 3
+      until: ipfs_unarchive is succeeded
+
+    - name: Create IPFS directory
+      become: true
+      ansible.builtin.file:
+        owner: ubuntu
+        group: ubuntu
+        path: "{{ ipfs_path }}"
+        state: directory
+
+    - name: Put the IPFS directory in env for future shells
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/environment
+        line: IPFS_PATH={{ ipfs_path }}
+
+    - name: Initiazlie IPFS
+      ansible.builtin.command:
+        cmd: ipfs init
+        creates: "{{ ipfs_path }}/config"
+      environment:
+        IPFS_PATH: "{{ ipfs_path }}"
+
+    - name: Configure IPFS
+      ansible.builtin.shell: |
+        ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+        ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+        ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
+        ipfs config Pinning.Recursive true
+      environment:
+        IPFS_PATH: "{{ ipfs_path }}"
+
+    - name: Install the IPFS systemd unit
+      become: true
+      ansible.builtin.template:
+        src: files/ipfs.service
+        dest: /etc/systemd/system
+
+    - name: Enable and start the IPFS Daemon
+      become: true
+      ansible.builtin.service:
+        name: ipfs
+        state: started
+        enabled: true
+
+    - name: Wait for IPFS to be healthy
+      become: true
+      command:
+        cmd: ipfs --api=/ip4/127.0.0.1/tcp/5001 dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn
+      register: ipfs_healthcheck
+      retries: 5
+      delay: 3
+      until: ipfs_healthcheck is successful
+
+- name: Only run swarm when node type is compute
+  when: bacalhau_node_type == "compute"
+  tags: ipfs_swarm
+  block:
+    - name: Run ipfs swarm inside container
+      command:
+        cmd: ipfs swarm connect {{ requester_ipfs_peer }}
+      environment:
+        IPFS_PATH: "{{ ipfs_path }}"
+      register: ipfs_swarm_command
+
+    - name: Print ipfs_swarm_output
+      ansible.builtin.debug:
+        var: ipfs_swarm_command.stdout

@@ -5,7 +5,7 @@ Description=IPFS daemon
 User=ubuntu
 Group=ubuntu
 ExecStart=ipfs daemon --routing=dhtclient
-Environment="IPFS_PATH=/opt/local/ipfs"
+Environment="IPFS_PATH={{ ipfs_path }}"
 
 [Install]
 WantedBy=multi-user.target
