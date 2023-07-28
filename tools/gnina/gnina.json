@@ -28,7 +28,7 @@
       }
     },
     "outputs": {
-      "docked_scored_sdf": {
+      "docked_small_molecule": {
         "type": "File",
         "glob": ["*_docked_scored.sdf"]
       }
