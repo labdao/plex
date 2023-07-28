@@ -17,6 +17,9 @@
     <a href="https://github.com/labdao/plex/actions/workflows/go.yml" alt="Tests">
         <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
     </a>
+    <a href="https://labdao.xyz/">
+        <img alt="LabDAO website" src="https://img.shields.io/badge/website-bacalhau.org-red">
+    </a>
     <a href="https://twitter.com/intent/follow?screen_name=lab_dao">
         <img src="https://img.shields.io/twitter/follow/lab_dao?style=social&logo=twitter" alt="follow on Twitter">
     </a>
