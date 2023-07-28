@@ -20,7 +20,7 @@
       },  
       "exhaustiveness": {
         "type": "int",
-        "default": "32"
+        "default": "8"
       },
       "cnn_scoring": {
         "type": "string",
