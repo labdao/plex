@@ -46,7 +46,7 @@ resource "aws_launch_template" "labdao_requester" {
       Type = "requester"
     }
   }
-  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { name = var.environment }))
+  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { environment = var.environment }))
 }
 
 resource "aws_launch_template" "labdao_compute" {
@@ -97,5 +97,5 @@ resource "aws_launch_template" "labdao_compute" {
     }
   }
 
-  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { name = var.environment }))
+  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { environment = var.environment }))
 }

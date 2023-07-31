@@ -1,6 +1,7 @@
 - name: Provision Bacalhau Compute Instance
   remote_user: ubuntu
-  hosts: tag_Type_compute_only
+  # Ability to override host, useful to running playbook in local mode
+  hosts: "{{ target_hosts | default('tag_Type_compute_only') }}"
   vars:
     nvidia_distribution: ubuntu2004
     ipfs_version: "0.18.0"
@@ -47,13 +48,13 @@
     - name: flush handlers
       ansible.builtin.meta: flush_handlers
 
-    # Required docker since IPFS runs in container
+    # Install IPFS
     - name: Install IPFS
       ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
       tags: ipfs_install
 
     # Run Bacalhau agent
-    - name: Run Baclahau container
+    - name: Run Baclahau agent
       ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
       tags: bacalhau
 

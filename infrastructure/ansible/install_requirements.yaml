@@ -1,0 +1,9 @@
+- name: Install requirements on the host
+  remote_user: ubuntu
+  # Ability to override host, useful to running playbook in local mode
+  hosts: "{{ target_hosts | default('all') }}"
+  tasks:
+    - name: Install collections and roles together
+      community.general.ansible_galaxy_install:
+        type: both
+        requirements_file: "{{ playbook_dir }}/requirements.yaml"

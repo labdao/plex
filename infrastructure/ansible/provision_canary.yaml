@@ -1,6 +1,6 @@
 - name: Provision Canary
   remote_user: ubuntu
-  hosts: tag_Type_compute
+  hosts: "{{ target_hosts | default('tag_Type_compute') }}"
   vars:
     canary_dir: /opt/local/canary
     repo_dir: "{{ canary_dir }}/repo"

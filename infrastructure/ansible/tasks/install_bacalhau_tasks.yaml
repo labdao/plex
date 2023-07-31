@@ -7,16 +7,53 @@
   no_log: true
   check_mode: false
 
+- name: Set fact for currently installed version
+  ansible.builtin.set_fact:
+    bacalhau_installed_version: "{{ existing_bacalhau_version.stdout.split('Server Version: ')[1] }}"
+  when: existing_bacalhau_version.stdout != ''
+
 - name: Print installed kubo version
   ansible.builtin.debug:
-    msg: "Installed bacalhau version: {{ existing_bacalhau_version.stdout.split('Server Version: ')[1] }} vs {{ bacalhau_version }}"
-  when: existing_kubo_version.stdout != ''
+    msg: "Installed bacalhau version: {{ bacalhau_installed_version }} vs {{ bacalhau_version }}"
+  when: bacalhau_installed_version is defined
 
-# Compare the latest version of bacalhau with the version that is already installed, if any.
-- name: Install or update bacalhau
-  when:
-    "(existing_bacalhau_version.stdout == '') or (existing_bacalhau_version.stdout.split('Server Version: ')[1] != bacalhau_version)"
+- name: Only do this if bacalhau isnt installed or upgrade is needed
+  when: bacalhau_installed_version is undefined or bacalhau_installed_version != bacalhau_version
   block:
+    - name: Fetch AWS EC2 Metadata facts
+      amazon.aws.ec2_metadata_facts:
+
+    - name: Print environment info
+      ansible.builtin.debug:
+        msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
+      when: ansible_ec2_tags_instance_Env is defined
+
+    - name: Set fact when its prod node
+      ansible.builtin.set_fact:
+        bacalhau_hostname: "bacalhau.labdao.xyz"
+        requester_hostname: "requester.labdao.xyz"
+      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
+
+    - name: Set fact when its non-prod node
+      ansible.builtin.set_fact:
+        bacalhau_hostname: "bacalhau.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+        requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
+
+    # Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
+    - name: Determine requester bacalhau peer id
+      ansible.builtin.uri:
+        url: "http://{{ bacalhau_hostname }}:1234/node_info"
+        return_content: true
+      register: bacalhau_output
+      when: bacalhau_hostname is defined
+
+    - name: Set requester_peer url
+      ansible.builtin.set_fact:
+        # requester_peer: /dns4/requester.staging.labdao.xyz/tcp/1235/p2p/QmeLa2fx2FMNDWbeY3UqjELc1MbKwNxggcmdBmLZepY6VK
+        requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ bacalhau_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
+      when: requester_hostname is defined
+
     - name: Download Bacalhau binary
       become: true
       ansible.builtin.unarchive:
