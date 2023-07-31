@@ -4,9 +4,9 @@
     "description": "Docking of small molecules to a protein",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-      "python datasets/esm_embedding_preparation.py --protein_ligand_csv $(inputs.protein.filepath) --out_file /outputs/prepared_for_esm.fasta;",
+      "python datasets/esm_embedding_preparation.py --protein_ligand_csv $(inputs.tsv.filepath) --out_file /outputs/prepared_for_esm.fasta;",
       "HOME=esm/model_weights python esm/scripts/extract.py esm2_t33_650M_UR50D /outputs/prepared_for_esm.fasta /outputs/esm2_output --repr_layers $(inputs.repr_layers.default) --include per_tok && cp -r /outputs/esm2_output data/esm2_output;",
-      "python -m inference --protein_ligand_csv $(inputs.protein.filepath) --ligand $(inputs.csv.filepath) --out_dir /outputs --inference_steps $(inputs.inference_steps.default) --samples_per_complex $(inputs.samples_per_complex.default) --batch_size $(inputs.batch_size.default) --actual_steps $(inputs.actual_steps.default) --no_final_step_noise;",
+      "python -m inference --protein_ligand_csv $(inputs.tsv.filepath) --out_dir /outputs --inference_steps $(inputs.inference_steps.default) --samples_per_complex $(inputs.samples_per_complex.default) --batch_size $(inputs.batch_size.default) --actual_steps $(inputs.actual_steps.default) --no_final_step_noise;",
       "cp $(inputs.protein.filepath) /outputs"
     ],
 
