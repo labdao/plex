@@ -75,6 +75,40 @@
       environment:
         IPFS_PATH: "{{ ipfs_path }}"
 
+    - name: Fetch AWS EC2 Metadata facts
+      amazon.aws.ec2_metadata_facts:
+      when: private_ipfs
+
+    - name: If private IPFS remove bootstrap nodes
+      become: true
+      become_user: ubuntu
+      ansible.builtin.shell: ipfs bootstrap rm --all
+      environment:
+        IPFS_PATH: "{{ ipfs_path }}"
+      when: private_ipfs
+
+        # - name: fetch swarm key if private IPFS
+        #   become: true
+        #   become_user: ubuntu
+        #   ansible.builtin.copy:
+        #     content: |
+        #       {{ lookup('aws_ssm', ansible_ec2_tags_instance_Env + '/ipfs/swarm_key' ) }}
+        #     dest: "{{ ipfs_path }}/swarm.key"
+        #   environment:
+        #     IPFS_PATH: "{{ ipfs_path }}"
+        #   when: private_ipfs
+
+    - name: Generate random swarm key
+      become: true
+      become_user: ubuntu
+      ansible.builtin.copy:
+        content: |
+          /key/swarm/psk/1.0.0/
+          /base16/
+          {{ lookup('community.general.random_string', length=64, override_all='0123456789abcdef') }}
+        dest: "{{ ipfs_path }}/swarm.key"
+      when: private_ipfs
+
     - name: Install the IPFS systemd unit
       become: true
       ansible.builtin.template:
@@ -95,55 +129,3 @@
       retries: 5
       delay: 3
       until: ipfs_healthcheck is successful
-
-- name: Only run swarm when node type is compute
-  when: bacalhau_node_type == "compute"
-  tags: ipfs_swarm
-  block:
-    - name: Fetch AWS EC2 Metadata facts
-      amazon.aws.ec2_metadata_facts:
-
-    - name: Print environment info
-      ansible.builtin.debug:
-        msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
-      when: ansible_ec2_tags_instance_Env is defined
-
-    - name: Set fact when its prod node
-      ansible.builtin.set_fact:
-        bacalhau_hostname: "bacalhau.labdao.xyz"
-        requester_hostname: "requester.labdao.xyz"
-      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
-
-    - name: Set fact when its non-prod node
-      ansible.builtin.set_fact:
-        bacalhau_hostname: "bacalhau.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-        requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
-
-    # curl -s -X POST http://bacalhau.staging.labdao.xyz:5001/api/v0/config/show | jq -r '.Identity.PeerID'
-    - name: Determine ipfs peer id
-      ansible.builtin.uri:
-        url: "http://{{ bacalhau_hostname }}:5001/api/v0/config/show"
-        method: POST
-        return_content: true
-      register: ipfs_output
-      when: bacalhau_hostname is defined
-
-    - name: Set requester_peer url
-      ansible.builtin.set_fact:
-        # IPFS PeerID, `curl -s -X POST http://bacalhau.staging.labdao.xyz:5001/api/v0/config/show | jq -r '.Identity.PeerID'`
-        requester_ipfs_peer: "/dns4/{{ requester_hostname }}/tcp/4001/p2p/{{ ipfs_output.content | from_json | community.general.json_query('Identity.PeerID') }}"
-      when: requester_hostname is defined
-
-    - name: Run ipfs swarm
-      become: true
-      become_user: ubuntu
-      command:
-        cmd: ipfs swarm connect {{ requester_ipfs_peer }}
-      environment:
-        IPFS_PATH: "{{ ipfs_path }}"
-      register: ipfs_swarm_command
-
-    - name: Print ipfs_swarm_output
-      ansible.builtin.debug:
-        var: ipfs_swarm_command.stdout

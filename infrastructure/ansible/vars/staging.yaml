@@ -1,3 +1,4 @@
 ---
 
 nvidia_distribution: ubuntu2204
+private_ipfs: true

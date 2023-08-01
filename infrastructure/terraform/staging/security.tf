@@ -34,18 +34,18 @@ resource "aws_security_group" "labdao_public_bacalhau" {
   }
 }
 
-resource "aws_security_group" "labdao_public_plex" {
-  name        = "labdao-${var.environment}-sg-plex"
+resource "aws_security_group" "labdao_public_ipfs" {
+  name        = "labdao-${var.environment}-sg-ipfs"
   description = "Public Ports SG"
 
-  ingress {
-    description      = "Bacalhau port"
-    from_port        = 1234
-    to_port          = 1234
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  # ingress {
+  #   description      = "Bacalhau port"
+  #   from_port        = 1234
+  #   to_port          = 1234
+  #   protocol         = "tcp"
+  #   cidr_blocks      = ["0.0.0.0/0"]
+  #   ipv6_cidr_blocks = ["::/0"]
+  # }
 
   ingress {
     description      = "IPFS port"
@@ -58,6 +58,9 @@ resource "aws_security_group" "labdao_public_plex" {
 
   tags = {
     Name = "labdao-${var.environment}-sg-plex"
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

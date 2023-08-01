@@ -48,10 +48,10 @@
     - name: flush handlers
       ansible.builtin.meta: flush_handlers
 
-    # Install IPFS
-    - name: Install IPFS
-      ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
-      tags: ipfs_install
+        # # Install IPFS
+        # - name: Install IPFS
+        #   ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
+        #   tags: ipfs_install
 
     # Run Bacalhau agent
     - name: Run Baclahau agent
