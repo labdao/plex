@@ -7,7 +7,8 @@ sidebar_position: 1
 
 ### Purpose
 
-This function initiates the `plex` command, which initializes an Input-Output JSON (IO JSON) based on the provided tool and input parameters. It calls an external Go command to perform the core of the operation. 
+The `plex_init` function initializes an IO JSON from the tool configuration and inputs. These parameters guide the execution of tasks within the Plex application. 
+
 
 ### Syntax
 
