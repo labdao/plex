@@ -18,7 +18,7 @@ plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.value, 
 
 ### Arguments
 
-| Name               | Type                               | Description                                                               | Default                               | Required |
+| Parameter               | Type                               | Description                                                               | Default                               | Required |
 |--------------------|------------------------------------|---------------------------------------------------------------------------|---------------------------------------|----------|
 | `tool_path`        | str                                | The path of the tool configuration. This can be a local path or an IPFS CID. | N/A                                   | Yes      |
 | `scattering_method`| ScatteringMethod Enum value (string) | The method for handling multiple input vectors. It supports 'dotProduct' and 'crossProduct'. | `ScatteringMethod.DOT_PRODUCT.value` | No       |
