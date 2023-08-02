@@ -6,7 +6,7 @@ sidebar_position: 3
 
 import OpenInColab from '../../src/components/OpenInColab.js';
 
-<OpenInColab link="https://colab.research.google.com/drive/1AmxLoU5W2vYoi9KDw9IDoj3k4ijSCqoh?usp=sharing"></OpenInColab>
+<OpenInColab link="https://colab.research.google.com/drive/1AfnJ50Ei4_9KXdKgexwdmEiwwDDXsfWJ?usp=sharing"></OpenInColab>
 
 ## Protein folding in silico
 
@@ -190,4 +190,4 @@ with open(completed_io_filepath, 'r') as f:
 
 The output is a JSON file with information about the folded protein structures. This can be used for further analysis, visualization, and more.
 
-<OpenInColab link="https://colab.research.google.com/drive/1AmxLoU5W2vYoi9KDw9IDoj3k4ijSCqoh?usp=sharing"></OpenInColab>
+<OpenInColab link="https://colab.research.google.com/drive/1AfnJ50Ei4_9KXdKgexwdmEiwwDDXsfWJ?usp=sharing"></OpenInColab>
