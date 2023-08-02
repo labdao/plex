@@ -170,6 +170,12 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error submitting Bacalhau job: %w", err)
+	} else {
+		err = updateIOWithBacalhauJob(ioJsonPath, index, submittedJob.Metadata.ID, fileMutex)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error updating IO with Bacalhau job: %w", err)
+		}
 	}
 
 	if verbose {

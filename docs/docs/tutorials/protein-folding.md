@@ -1,7 +1,7 @@
 ---
 title: Folding proteins with ColabFold
 sidebar_label: Protein Folding
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 import OpenInColab from '../../src/components/OpenInColab.js';
