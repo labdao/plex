@@ -42,11 +42,12 @@ type ToolInfo struct {
 }
 
 type IO struct {
-	Tool    ToolInfo             `json:"tool"`
-	Inputs  map[string]FileInput `json:"inputs"`
-	Outputs map[string]Output    `json:"outputs"`
-	State   string               `json:"state"`
-	ErrMsg  string               `json:"errMsg"`
+	Tool          ToolInfo             `json:"tool"`
+	Inputs        map[string]FileInput `json:"inputs"`
+	Outputs       map[string]Output    `json:"outputs"`
+	State         string               `json:"state"`
+	ErrMsg        string               `json:"errMsg"`
+	BacalhauJobId string               `json:"bacalhauJobId"`
 }
 
 func (io *IO) UnmarshalJSON(data []byte) error {
