@@ -27,20 +27,20 @@ Initializes an input/output (IO) JSON from the tool configuration and inputs. Th
 **Example usage:**
 
 ```python
-plex_init(
-    "/path/to/tool/config", 
-    ScatteringMethod.DOT_PRODUCT.value, 
-    plex_path="plex", 
-    param1=value1, 
-    param2=value2
+
+fasta_filepath = ["home/project/protein.fasta"]
+
+initial_io_cid = plex_init(
+    CoreTools.COLABFOLD_MINI.value, 
+    sequence=fasta_filepath
 )
 ```
 
 **Arguments:**
-* `tool_path` *str*, **required** - path of tool config; can be a local path or IPFS CID
+* `tool_path` *str*, **required** - path of tool config; can be a local path, CoreTools reference, or IPFS CID
 * `scattering_method` *Enum*, *optional* - method for handling multiple input vectors; supports 'dotProduct' and 'crossProduct'
 * `plex_path` *str*, *optional* - path pointing to plex binary
-* `**kwargs` *keyword arguments*, *optional* - additional parameters in the form of a dictionary, where keys are input names and values are input values
+* `**kwargs` *keyword arguments*, *optional* - additional parameters in the form of a list, where keys are input names and values are input values; see each tool config for specific arguments accepted
 
 ---
 
@@ -64,12 +64,8 @@ Runs a job given instructions defined by an IO JSON.
 
 ```python
 io_json_cid, io_json_local_filepath = plex_run(
-    io_json_cid=io_json_cid, 
-    output_dir="/path/to/output/dir", 
-    verbose=True, 
-    show_animation=True, 
-    concurrency="2", 
-    annotations=["annotation1", "annotation2"],
+    io_json_cid=initial_io_cid, 
+    output_dir="home/project", 
 )
 ```
 
@@ -95,7 +91,7 @@ Mints a ProofOfScience token on the Optimism Goerli testnet.
 **Example usage:**
 
 ```python
-plex_mint(completed_io_json_cid)
+plex_mint(io_json_cid)
 ```
 
 **Arguments:**
