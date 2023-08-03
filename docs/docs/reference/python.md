@@ -38,7 +38,9 @@ initial_io_cid = plex_init(
 
 **Arguments:**
 * `tool_path` *str*, **required** - path of tool config; can be a local path, CoreTools reference, or IPFS CID
-* `scattering_method` *Enum*, *optional* - method for handling multiple input vectors; supports 'dotProduct' and 'crossProduct'
+* `scattering_method` *Enum*, *optional* - method for handling multiple input vectors; supports 'dotProduct' and 'crossProduct'; default value is dotProduct
+    * **dotProduct:** Pairs corresponding elements from each input vector into subarrays. Requires all input vectors to have the same length. 
+    * **crossProduct:** Generates all combinations of elements across input vectors, forming the Cartesian product. Input vector lengths can vary.
 * `plex_path` *str*, *optional* - path pointing to plex binary
 * `**kwargs` *keyword arguments*, *optional* - additional parameters in the form of a list, where keys are input names and values are input values; see each tool config for specific arguments accepted
 
@@ -71,11 +73,11 @@ io_json_cid, io_json_local_filepath = plex_run(
 
 **Arguments:**
 * `io_json_cid` *str*, **required** - input/output JSON CID
-* `output_dir` *str*, *optional* - output directory
+* `output_dir` *str*, *optional* - output directory; plex default creates a jobs directory
 * `verbose` *bool*, *optional* - verbose mode with more detailed logs
 * `show_animation` *bool*, *optional* - emote animation during job runs
 * `concurrency` *str*, *optional* - concurrency for processing jobs
-* `annotations` *List[str]*, *optional* - list of annotations for jobs
+* `annotations` *List[str]*, *optional* - list of annotations for jobs; mostly used for usage metrics
 * `plex_path` *str*, *optional* - path pointing to plex binary
 
 ---
