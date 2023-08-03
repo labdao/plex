@@ -40,6 +40,18 @@ def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.val
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
+    # Convert all relative file paths in kwargs to absolute paths
+    for key, value in kwargs.items():
+        if isinstance(value, list):
+            for i in range(len(value)):
+                # If the value is a string and represents a file path
+                if isinstance(value[i], str) and os.path.isfile(value[i]):
+                    # Convert the relative path to an absolute path
+                    value[i] = os.path.abspath(value[i])
+        # If the value is a string and represents a file path
+        elif isinstance(value, str) and os.path.isfile(value):
+            kwargs[key] = os.path.abspath(value)
+
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)
 
