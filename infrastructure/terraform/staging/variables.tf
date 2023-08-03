@@ -32,3 +32,8 @@ variable "availability_zones" {
   type    = list(string)
   default = ["us-east-1c", "us-east-1d"]
 }
+
+variable "domain" {
+  type    = string
+  default = "labdao.xyz"
+}
