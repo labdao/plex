@@ -29,9 +29,9 @@
 PLEX is a simple client for distributed computation.
 * 🌎 **Build once, run anywhere:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
 * 🔍 **Content-addressed by default:** Every file processed by PLEX has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
-* 🪙 **Ownernship tracking built-in** Every compute event on PLEX generates an on-chain token that grants the holder ownership rights over the newly generated data. 
+* 🪙 **Ownernship tracking built-in** Every compute event on PLEX generates an on-chain token that grants the holder rights over the newly generated data. 
 * 🔗 **Strictly composable:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
-* 
+
 PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
 
 ## 🚀 PLEX CLI in one minute
