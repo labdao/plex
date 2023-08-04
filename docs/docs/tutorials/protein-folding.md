@@ -6,7 +6,7 @@ sidebar_position: 2
 
 import OpenInColab from '../../src/components/OpenInColab.js';
 
-<OpenInColab link="https://colab.research.google.com/drive/1AfnJ50Ei4_9KXdKgexwdmEiwwDDXsfWJ?usp=sharing"></OpenInColab>
+<OpenInColab link="https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing"></OpenInColab>
 
 ## Protein folding in silico
 
@@ -183,4 +183,8 @@ with open(completed_io_filepath, 'r') as f:
 
 The output is a JSON file with information about the folded protein structures. This can be used for further analysis, visualization, and more.
 
-<OpenInColab link="https://colab.research.google.com/drive/1AfnJ50Ei4_9KXdKgexwdmEiwwDDXsfWJ?usp=sharing"></OpenInColab>
+## Visualization and NFT minting
+
+For visualization and NFT minting steps, please visit the Colab notebook below.
+
+<OpenInColab link="https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing"></OpenInColab>
