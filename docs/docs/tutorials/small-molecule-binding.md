@@ -8,9 +8,15 @@ import OpenInColab from '../../src/components/OpenInColab.js';
 
 <OpenInColab link="https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing"></OpenInColab>
 
-## Small molecule binding in silico
+## Small molecule docking with PLEX
 
-Small molecule binding is a fundamental aspect of drug discovery, facilitating the interaction of potential drugs with target proteins. With PLEX, this intricate process is simplified and made efficient. 
+In this tutorial we perform small molecule docking with PLEX.
+
+There are multiple reasons we believe PLEX is a new standard for computational biology 🧫:
+1. with a simple python interface, running containerised tools with your data is only a few commands away
+2. the infrastructure of the compute network is fully open source - use the public network or work with us to set up your own node
+3. every event on the compute network is tracked - no more results are lost in an interactive compute session. You can base your decisions and publications on fully reproducible results.
+4. we made adding new tools to the network as easy as possible - moving your favorite tool to PLEX is one JSON document away.
 
 In the following tutorial, we illustrate how PLEX can be used to conduct small molecule binding studies to explore potential drug interactions with proteins. We demonstrate this with [Equibind](https://hannes-stark.com/assets/EquiBind.pdf).
 
