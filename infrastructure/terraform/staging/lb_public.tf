@@ -14,6 +14,9 @@ resource "aws_lb_listener" "labdao_public_1234" {
   port              = "1234"
   protocol          = "HTTP"
 
+  # protocol          = "HTTPS"
+  # certificate_arn = aws_acm_certificate.wildcard_labdao.arn
+
   # default forward to Bacalhau API TG
   default_action {
     target_group_arn = aws_lb_target_group.labdao_requester_bacalhau_tg.arn
@@ -26,6 +29,9 @@ resource "aws_lb_listener" "labdao_public_5001" {
   load_balancer_arn = aws_lb.labdao_public.arn
   port              = "5001"
   protocol          = "HTTP"
+
+  # protocol          = "HTTPS"
+  # certificate_arn = aws_acm_certificate.wildcard_labdao.arn
 
   # default forward to IPFS API TG
   default_action {
