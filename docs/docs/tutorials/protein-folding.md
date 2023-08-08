@@ -10,19 +10,21 @@ import OpenInColab from '../../src/components/OpenInColab.js';
 
 ## Protein folding in silico
 
-In this tutorial, we perform protein folding with PLEX.
+In this tutorial we perform protein folding with **plex**.
 
-There are multiple reasons we believe PLEX is a new standard for computational biology 🧫:
-1. With a simple python interface, running containerised tools with your data is only a few commands away
-2. The infrastructure of the compute network is fully open source - use the public network or work with us to set up your own node
-3. Every event on the compute network is tracked - no more results are lost in an interactive compute session. You can base your decisions and publications on fully reproducible results.
-4. We made adding new tools to the network as easy as possible - moving your favorite tool to PLEX is one JSON document away.
+There are multiple reasons we believe plex is a new standard for computational biology 🧫:
+1. with a simple python interface, running containerised tools with your data is only a few commands away
+2. the infrastructure of the compute network is fully open source - use the public network or work with us to set up your own node
+3. every event on the compute network is tracked - no more results are lost in an interactive compute session. You can base your decisions and publications on fully reproducible results.
+4. we made adding new tools to the network as easy as possible - moving your favorite tool to plex is one JSON document away.
 
-We'll walk through an example of how to use PLEX to predict a protein's 3D structure using [ColabFold](https://www.nature.com/articles/s41592-022-01488-1). We will use the sequence of the Streptavidin protein for this demo.
+In this tutorial, we'll walk through an example of how to use plex to predict a protein's 3D structure using [ColabFold](https://www.nature.com/articles/s41592-022-01488-1). We will use the sequence of the Streptavidin protein for this demo.
 
-![img](../../static/img/protein-folding-graphic.png)
+We will also walk through the process of minting a ProofOfScience NFT. These tokens represent on-chain, verifiable records of the compute job and its input/output data. This enables reproducible scientific results.
 
-## Install PLEX
+![protein-folding-graphic](../../static/img/protein-folding-graphic.png)
+
+## Install plex
 
 
 ```python
@@ -30,13 +32,14 @@ We'll walk through an example of how to use PLEX to predict a protein's 3D struc
 ```
 
     Collecting PlexLabExchange
-      Downloading PlexLabExchange-0.8.18-py3-none-manylinux2014_x86_64.whl (26.9 MB)
-    [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m26.9/26.9 MB[0m [31m20.1 MB/s[0m eta [36m0:00:00[0m
+      Downloading PlexLabExchange-0.8.20-py3-none-manylinux2014_x86_64.whl (26.9 MB)
+    [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m26.9/26.9 MB[0m [31m16.6 MB/s[0m eta [36m0:00:00[0m
     [?25hInstalling collected packages: PlexLabExchange
-    Successfully installed PlexLabExchange-0.8.18
+    Successfully installed PlexLabExchange-0.8.20
 
 
 Then, create a directory where we can save our project files.
+
 
 ```python
 import os
@@ -52,40 +55,50 @@ dir_path = f"{cwd}/project"
 We'll download a `.fasta` file containing the sequence of the protein we want to fold. Here, we're using the sequence of Streptavidin.
 
 
+
+
 ```python
 !wget https://rest.uniprot.org/uniprotkb/P22629.fasta -O {dir_path}/P22629.fasta # Streptavidin
 ```
 
-    --2023-08-01 21:39:21--  https://rest.uniprot.org/uniprotkb/P22629.fasta
+    --2023-08-08 18:49:21--  https://rest.uniprot.org/uniprotkb/P22629.fasta
     Resolving rest.uniprot.org (rest.uniprot.org)... 193.62.193.81
     Connecting to rest.uniprot.org (rest.uniprot.org)|193.62.193.81|:443... connected.
     HTTP request sent, awaiting response... 200 OK
-    Length: 264 [text/plain]
+    Length: unspecified [text/plain]
     Saving to: ‘/content/project/P22629.fasta’
-
-    /content/project/P2 100%[===================>]     264  --.-KB/s    in 0s      
-
-    2023-08-01 21:39:21 (144 MB/s) - ‘/content/project/P22629.fasta’ saved [264/264]
+    
+    /content/project/P2     [ <=>                ]     264  --.-KB/s    in 0s      
+    
+    2023-08-08 18:49:21 (157 MB/s) - ‘/content/project/P22629.fasta’ saved [264]
+    
 
 
 ## Fold the protein
 
 With the sequence downloaded, we can now use ColabFold to fold the protein.
 
-```python
-from plex import CoreTools, plex_create
 
-initial_io_cid = plex_create(CoreTools.COLABFOLD_MINI.value, dir_path)
+
+
+```python
+from plex import CoreTools, plex_init
+
+fasta_local_filepaths = [f"{dir_path}/P22629.fasta"]
+
+initial_io_cid = plex_init(
+    CoreTools.COLABFOLD_MINI.value,
+    sequence=fasta_local_filepaths
+)
 ```
 
+    plex init -t QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD -i {"sequence": ["/content/project/P22629.fasta"]} --scatteringMethod=dotProduct
     Plex version (v0.8.4) up to date.
-    Temporary directory created: /tmp/9ed8c638-c1b0-43da-bf92-7f054517d45c2889128719
-    Reading tool config:  QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD
-    Creating IO entries from input directory:  /content/project
-    Initialized IO file at:  /tmp/9ed8c638-c1b0-43da-bf92-7f054517d45c2889128719/io.json
-    Initial IO JSON file CID:  QmUhysTE4aLZNw2ePRMCxHWko868xmQoXnGP25fKM1aofb
+    Pinned IO JSON CID: QmZgLQypfjvK9kTsqLXwbNRiFifEU5CC7eduWWPbminybi
+
 
 This code initiates the folding process. We'll need to run it to complete the operation.
+
 
 ```python
 from plex import plex_run
@@ -94,27 +107,29 @@ completed_io_cid, completed_io_filepath = plex_run(initial_io_cid, dir_path)
 ```
 
     Plex version (v0.8.4) up to date.
-    Created working directory:  /content/project/2ef79c16-6f59-4e44-aea7-c39db85280cb
-    Initialized IO file at:  /content/project/2ef79c16-6f59-4e44-aea7-c39db85280cb/io.json
+    Created working directory:  /content/project/9102a179-ac65-4823-9a03-93766ea32671
+    Initialized IO file at:  /content/project/9102a179-ac65-4823-9a03-93766ea32671/io.json
     Processing IO Entries
     Starting to process IO entry 0 
     Job running...
-    Bacalhau job id: 476d232b-e1c6-42d6-b1c0-2f4d237244b1 
-
+    Bacalhau job id: 271f4b64-cb2d-4be6-86af-ed16186e69e0 
+    
     Computing default go-libp2p Resource Manager limits based on:
         - 'Swarm.ResourceMgr.MaxMemory': "6.8 GB"
         - 'Swarm.ResourceMgr.MaxFileDescriptors': 524288
-
+    
     Applying any user-supplied overrides on top.
     Run 'ipfs swarm limit all' to see the resulting limits.
-
+    
     Success processing IO entry 0 
-    Finished processing, results written to /content/project/2ef79c16-6f59-4e44-aea7-c39db85280cb/io.json
+    Finished processing, results written to /content/project/9102a179-ac65-4823-9a03-93766ea32671/io.json
     Completed IO JSON CID: QmdnjMsUar6nTqGwgjCwN1Fyjaan4i3zyht9SE9L235YRm
+    2023/08/08 18:51:17 failed to sufficiently increase receive buffer size (was: 208 kiB, wanted: 2048 kiB, got: 416 kiB). See https://github.com/quic-go/quic-go/wiki/UDP-Receive-Buffer-Size for details.
 
-## Viewing the results
 
-After the job is complete, we can retrieve and view the results. The state of each object is written in a JSON object. Every file has a unique content address.
+After the job is complete, we can retrieve and view the results. The state of each object is written in a JSON object. Every file has a unique content-address.
+
+
 
 
 ```python
@@ -181,7 +196,18 @@ with open(completed_io_filepath, 'r') as f:
         }
     ]
 
-The output is a JSON file with information about the folded protein structures. This can be used for further analysis, visualization, and more.
+
+The results can also be viewed using an IPFS gateway. Below, the state of the IO JSON is read using the ipfs.io gateway.
+
+**Note:** Depending on how long it takes for the results to propagate to the ipfs.io nodes, the data may not be available immediately. The results can also be viewed on IPFS Desktop or by accessing IPFS through the Brave browser (ipfs://completed_io_cid)
+
+
+```python
+print(f"View this result on IPFS: https://ipfs.io/ipfs/{completed_io_cid}")
+```
+
+    View this result on IPFS: https://ipfs.io/ipfs/QmdnjMsUar6nTqGwgjCwN1Fyjaan4i3zyht9SE9L235YRm
+
 
 ## Visualization and NFT minting
 
