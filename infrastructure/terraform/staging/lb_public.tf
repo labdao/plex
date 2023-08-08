@@ -3,33 +3,38 @@ resource "aws_lb" "labdao_public" {
   name               = "labdao-${var.environment}-public"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.labdao_public_bacalhau.id, aws_security_group.labdao_public_plex.id, aws_security_group.labdao_egress_all.id]
+  security_groups    = [aws_security_group.labdao_public_bacalhau.id, aws_security_group.labdao_public_ipfs.id, aws_security_group.labdao_egress_all.id]
   ip_address_type    = "ipv4"
   subnets            = data.aws_subnets.default_filtered.ids
 }
 
+# Listener for Bacalhau API endpoint
 resource "aws_lb_listener" "labdao_public_1234" {
   load_balancer_arn = aws_lb.labdao_public.arn
   port              = "1234"
   protocol          = "HTTP"
 
+  # default forward to Bacalhau API TG
   default_action {
     target_group_arn = aws_lb_target_group.labdao_requester_bacalhau_tg.arn
     type             = "forward"
   }
 }
 
+# Listener for IPFS API endponit
 resource "aws_lb_listener" "labdao_public_5001" {
   load_balancer_arn = aws_lb.labdao_public.arn
   port              = "5001"
   protocol          = "HTTP"
 
+  # default forward to IPFS API TG
   default_action {
-    target_group_arn = aws_lb_target_group.labdao_requester_ipfs_tg.arn
+    target_group_arn = aws_lb_target_group.labdao_ipfs_tg.arn
     type             = "forward"
   }
 }
 
+# TG for Bacalhau API endpoint on requester
 resource "aws_lb_target_group" "labdao_requester_bacalhau_tg" {
   name     = "labdao-${var.environment}-requester-tg"
   port     = 1234
@@ -37,8 +42,6 @@ resource "aws_lb_target_group" "labdao_requester_bacalhau_tg" {
 
   # PUT in default VPC for now
   vpc_id = data.aws_vpc.default.id
-
-  # deregistration_delay = 5
 
   # NOTE: amount time for targets to warm up before the load balancer sends them a full share of requests
   slow_start = 60
@@ -55,17 +58,14 @@ resource "aws_lb_target_group" "labdao_requester_bacalhau_tg" {
   }
 }
 
-resource "aws_lb_target_group" "labdao_requester_ipfs_tg" {
-  name     = "labdao-${var.environment}-requester-ipfs-tg"
+# TG for IPFS API endpoint on ipfs nodes
+resource "aws_lb_target_group" "labdao_ipfs_tg" {
+  name     = "labdao-${var.environment}-ipfs-tg"
   port     = 5001
   protocol = "HTTP"
 
   # PUT in default VPC for now
   vpc_id = data.aws_vpc.default.id
-
-  # deregistration_delay = 5
-
-  # slow_start = 60
 
   # TODO: need to figure out healthcheck for IPFS
   # health_check {
@@ -78,7 +78,7 @@ resource "aws_lb_target_group" "labdao_requester_ipfs_tg" {
   # }
 }
 
-# public dns record for recepter
+# public dns record for requester
 resource "cloudflare_record" "labdao_requester" {
   zone_id = var.cloudflare_zone_id
   name    = "bacalhau.${var.environment}"

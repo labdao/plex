@@ -1,13 +1,10 @@
-- name: Provision Bacalhau Requester
+- name: Provision IPFS
   remote_user: ubuntu
-  hosts: "{{ target_hosts | default('tag_Type_requester') }}"
+  hosts: "{{ target_hosts | default('tag_Type_ipfs') }}"
   vars:
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"
-    bacalhau_version: "v1.0.3"
-    bacalhau_node_type: "requester"
     ipfs_connect: /ip4/127.0.0.1/tcp/5001
-    owner: labdao
   tasks:
     # Must provide limit flag to ensure running against current environment
     - fail:
@@ -23,13 +20,8 @@
         state: latest
         update_cache: true
 
-          # - name: Install IPFS
-          #   ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
-
-    # Run Bacalhau agent
-    - name: Install Bacalhau
-      ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
-      tags: bacalhau
+    - name: Install IPFS
+      ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
 
     - name: Systemd Daemon Reload
       become: yes
@@ -37,9 +29,9 @@
         daemon_reload: true
 
   handlers:
-    - name: Restart Bacalhau
+    - name: Restart IPFS
       become: yes
       ansible.builtin.service:
-        name: requester
+        name: ipfs
         state: restarted
         enabled: true
