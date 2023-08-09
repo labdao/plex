@@ -1,11 +1,14 @@
 package ipwl
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/web3"
 )
 
 func findMatchingFiles(inputDir string, tool Tool, layers int) (map[string][]string, error) {
@@ -88,12 +91,22 @@ func generateInputCombinations(inputFilepaths map[string][]string) []map[string]
 func createIOEntries(toolInfo ToolInfo, tool Tool, inputCombinations []map[string]string) []IO {
 	var ioData []IO
 
+	var userID string
+
+	if web3.IsValidEthereumAddress(os.Getenv("RECIPIENT_WALLET")) {
+		userID = os.Getenv("RECIPIENT_WALLET")
+	} else {
+		fmt.Println("RECIPIENT_WALLET is not a valid Ethereum address. Using empty string as user ID.")
+		userID = ""
+	}
+
 	for _, combination := range inputCombinations {
 		ioEntry := IO{
 			Tool:    toolInfo,
 			State:   "created",
 			Inputs:  map[string]FileInput{},
 			Outputs: map[string]Output{},
+			UserID:  userID,
 		}
 
 		for inputName, path := range combination {
