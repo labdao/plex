@@ -103,7 +103,7 @@ After the script run the following command in a separate terminal to start a Bac
 ipfs daemon
 ```
 
-Once the daemon is running, configure the Bacalhau node based on the addresses used by the IFPS node.
+Once the daemon is running, configure the Bacalhau node based on the addresses used by the IPFS node.
 ```
 ipfs id
 
