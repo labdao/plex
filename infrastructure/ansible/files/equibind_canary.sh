@@ -15,7 +15,7 @@ if [ $plex_result_code -gt 0 ]; then
 fi
 
 # parse the output directory from the plex stdout
-result_dir=$(cat plex_out.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+result_dir=$(cat plex_equibind_out.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
 # exit if no docked files are found
 cd "$result_dir/entry-0/outputs"
