@@ -114,6 +114,10 @@ const createConfig = async () => {
                   label: "Twitter",
                   href: "https://twitter.com/lab_dao",
                 },
+                {
+                  label: "Newsletter",
+                  href: "http://eepurl.com/ir0E22",
+                }
               ],
             },
           ],
