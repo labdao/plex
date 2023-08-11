@@ -7,7 +7,7 @@ resource "aws_launch_template" "labdao_requester" {
 
   image_id = data.aws_ami.ubuntu_latest.id
 
-  instance_type = var.requester_instance_type
+  instance_type = var.main_instance_type
 
   key_name = var.ssh_key
 
@@ -33,8 +33,7 @@ resource "aws_launch_template" "labdao_requester" {
 
   network_interfaces {
     associate_public_ip_address = true
-    # TODO: add a closed SG for LB -> Requester traffic
-    security_groups = [aws_security_group.labdao_public_bacalhau.id, aws_security_group.labdao_public_plex.id, aws_security_group.labdao_public_ssh.id, aws_security_group.labdao_egress_all.id, aws_security_group.labdao_private.id]
+    security_groups             = [aws_security_group.labdao_public_bacalhau.id, aws_security_group.labdao_public_ipfs.id, aws_security_group.labdao_public_ssh.id, aws_security_group.labdao_egress_all.id, aws_security_group.labdao_private.id]
   }
 
   tag_specifications {
@@ -46,7 +45,7 @@ resource "aws_launch_template" "labdao_requester" {
       Type = "requester"
     }
   }
-  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { name = var.environment }))
+  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { environment = var.environment }))
 }
 
 resource "aws_launch_template" "labdao_compute" {
@@ -84,7 +83,6 @@ resource "aws_launch_template" "labdao_compute" {
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [aws_security_group.labdao_public_ssh.id, aws_security_group.labdao_egress_all.id, aws_security_group.labdao_private.id]
-    # subnet_id                   = aws_subnet.labdao_public.id
   }
 
   tag_specifications {
@@ -97,5 +95,55 @@ resource "aws_launch_template" "labdao_compute" {
     }
   }
 
-  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { name = var.environment }))
+  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { environment = var.environment }))
+}
+
+resource "aws_launch_template" "labdao_ipfs" {
+  name = "labdao-${var.environment}-ipfs-lt"
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  image_id = data.aws_ami.ubuntu_latest.id
+
+  instance_type = var.main_instance_type
+
+  key_name = var.ssh_key
+
+  metadata_options {
+    http_endpoint          = "enabled"
+    http_tokens            = "optional"
+    instance_metadata_tags = "enabled"
+  }
+
+  block_device_mappings {
+    device_name = "/dev/sda1"
+
+    ebs {
+      volume_size = 500
+      volume_type = "gp3"
+    }
+  }
+
+  monitoring {
+    enabled = true
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.labdao_public_ssh.id, aws_security_group.labdao_egress_all.id, aws_security_group.labdao_private.id]
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "labdao-${var.environment}-ipfs"
+      Env  = "${var.environment}"
+      Type = "ipfs"
+    }
+  }
+
+  user_data = base64encode(templatefile("${path.module}/files/userdata.sh", { environment = var.environment }))
 }

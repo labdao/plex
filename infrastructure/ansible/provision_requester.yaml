@@ -1,8 +1,13 @@
 - name: Provision Bacalhau Requester
   remote_user: ubuntu
-  hosts: tag_Type_requester
+  hosts: "{{ target_hosts | default('tag_Type_requester') }}"
   vars:
-    ipfs_path: /opt/local/ipfs
+    ipfs_version: "0.18.0"
+    ipfs_path: "/opt/ipfs"
+    bacalhau_version: "v1.0.3"
+    bacalhau_node_type: "requester"
+    ipfs_connect: /ip4/127.0.0.1/tcp/5001
+    owner: labdao
   tasks:
     # Must provide limit flag to ensure running against current environment
     - fail:
@@ -10,44 +15,25 @@
       when: ansible_limit is not defined
       run_once: true
 
-    # Aptitude is preferred by ansible
-    - name: Install aptitude
-      become: yes
-      ansible.builtin.apt:
-        name: aptitude
-        state: latest
-        update_cache: true
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
-    - name: Install IPFS
-      ansible.builtin.import_tasks: install_ipfs_tasks.yaml
+          # - name: Install IPFS
+          #   ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
 
+    # Run Bacalhau agent
     - name: Install Bacalhau
-      ansible.builtin.shell:
-        cmd: curl -sL https://get.bacalhau.org/install.sh | bash
-
-    - name: Bump System Resources
-      become: yes
-      ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
-
-    - name: Install the Bacalhau systemd unit
-      become: yes
-      ansible.builtin.template:
-        src: files/requester.service
-        dest: /etc/systemd/system
-      vars:
-        owner: labdao
-        ipfs_connect: /ip4/127.0.0.1/tcp/5001
-      notify:
-        - Restart Bacalhau
+      ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
+      tags: bacalhau
 
     - name: Systemd Daemon Reload
-      become: yes
+      become: true
       ansible.builtin.systemd:
         daemon_reload: true
 
   handlers:
     - name: Restart Bacalhau
-      become: yes
+      become: true
       ansible.builtin.service:
         name: requester
         state: restarted

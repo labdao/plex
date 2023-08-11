@@ -5,21 +5,21 @@
     - vars/teams.yaml
   tasks:
     - name: Create shared folder for teams
-      become: yes
+      become: true
       ansible.builtin.file:
         path: /srv/data/teams
         state: directory
 
     - name: Create admin users
-      become: yes
+      become: true
       ansible.builtin.command:
         cmd: tljh-config add-item users.admin {{ item }}
       loop: "{{ admins | default([])}}"
 
     - name: Create teams
-      include_tasks: jupyter_team_setup_tasks.yaml
+      include_tasks: tasks/jupyter_team_setup_tasks.yaml
       loop: "{{ teams | default([])}}"
 
     - name: Reload the tljh configuration
-      become: yes
+      become: true
       ansible.builtin.command: tljh-config reload

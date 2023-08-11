@@ -20,7 +20,7 @@
       },  
       "exhaustiveness": {
         "type": "int",
-        "default": "32"
+        "default": "8"
       },
       "cnn_scoring": {
         "type": "string",
@@ -28,7 +28,7 @@
       }
     },
     "outputs": {
-      "docked_scored_sdf": {
+      "docked_small_molecule": {
         "type": "File",
         "glob": ["*_docked_scored.sdf"]
       }

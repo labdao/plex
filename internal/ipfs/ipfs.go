@@ -16,6 +16,13 @@ import (
 
 func DeriveIpfsNodeUrl() (string, error) {
 	bacalApiHost := bacalhau.GetBacalhauApiHost()
+
+	// If bacalApiHost already starts with http:// or https://, don't prepend it.
+	if strings.HasPrefix(bacalApiHost, "http://") || strings.HasPrefix(bacalApiHost, "https://") {
+		ipfsUrl := fmt.Sprintf("%s:5001", bacalApiHost)
+		return ipfsUrl, nil
+	}
+
 	ipfsUrl := fmt.Sprintf("http://%s:5001", bacalApiHost)
 	return ipfsUrl, nil
 }

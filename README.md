@@ -1,5 +1,6 @@
 # PLEX 🧫×🧬→💊
-⚡ **Run highly reproducible life science containers on top of a decentralised compute network.** ⚡
+⚡ **Run highly reproducible scientific applications on top of a decentralised compute and storage network.** ⚡
+
 
 <p align="left">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
@@ -30,11 +31,12 @@
 
 
 PLEX is a simple client for distributed computation.
-* 🌎 **Build once, run anywhere at any scale:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
+* 🌎 **Build once, run anywhere:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
+* 🔍 **Content-addressed by default:** Every file processed by PLEX has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
+* 🪙 **Ownernship tracking built-in** Every compute event on PLEX is mintable as an on-chain token that grants the holder rights over the newly generated data. 
 * 🔗 **Strictly composable:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
-* 🔍 **Content-addressed by default:** Every file processed by PLEX has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists. 
 
-PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by [Pydantic](https://docs.pydantic.dev/) and the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
+PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
 
 ## 🐍 Python pip package (Python 3.8+)
 
@@ -106,7 +108,7 @@ After the script run the following command in a separate terminal to start a Bac
 ipfs daemon
 ```
 
-Once the daemon is running, configure the Bacalhau node based on the addresses used by the IFPS node.
+Once the daemon is running, configure the Bacalhau node based on the addresses used by the IPFS node.
 ```
 ipfs id
 

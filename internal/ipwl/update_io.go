@@ -33,6 +33,28 @@ func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.
 	return nil
 }
 
+func updateIOWithBacalhauJob(ioJsonPath string, index int, bacalhauJobId string, fileMutex *sync.Mutex) error {
+	fileMutex.Lock()
+	defer fileMutex.Unlock()
+	ioList, errRead := ReadIOList(ioJsonPath)
+	if errRead != nil {
+		return fmt.Errorf("failed to read IO list: %w", errRead)
+	}
+
+	if index < 0 || index >= len(ioList) {
+		return fmt.Errorf("index out of range: %d", index)
+	}
+
+	ioList[index].BacalhauJobId = bacalhauJobId
+
+	errWrite := WriteIOList(ioJsonPath, ioList)
+	if errWrite != nil {
+		return fmt.Errorf("failed to write updated IO list: %w", errWrite)
+	}
+
+	return nil
+}
+
 func updateIOState(ioJsonPath string, index int, state string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()

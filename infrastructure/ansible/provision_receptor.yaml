@@ -1,25 +1,21 @@
 - name: Provision Receptor
   remote_user: ubuntu
-  hosts: tag_Type_receptor
+  hosts: "{{ target_hosts | default('tag_Type_receptor') }}"
   vars:
     plex_dir: /opt/local/plex
     receptor_dir: /opt/local/receptor
   tasks:
-    # Must provide limit flag to ensure running against current environment
+    # Must provide limit flag to ensure running against correct environment
     - fail:
         msg: "you must use -l or --limit"
       when: ansible_limit is not defined
       run_once: true
 
-    - name: Install aptitude
-      become: yes
-      ansible.builtin.apt:
-        name: aptitude
-        state: present
-        update_cache: true
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
     - name: Create required  directories, writable by user
-      become: yes
+      become: true
       ansible.builtin.file:
         path: "{{ item }}"
         owner: ubuntu
@@ -50,14 +46,14 @@
         dest: "{{ plex_dir }}/"
 
     - name: Install system packages
-      become: yes
+      become: true
       ansible.builtin.apt:
         pkg:
           - postgresql-client
           - golang-go
 
     - name: Place the receptor systemd unit
-      become: yes
+      become: true
       ansible.builtin.template:
         src: files/receptor.service
         dest: /etc/systemd/system
@@ -65,7 +61,7 @@
         - Systemd Daemon Reload
 
     - name: Restart receptor
-      become: yes
+      become: true
       ansible.builtin.service:
         name: receptor
         state: restarted
@@ -82,6 +78,6 @@
 
   handlers:
     - name: Systemd Daemon Reload
-      become: yes
+      become: true
       ansible.builtin.systemd:
         daemon_reload: true

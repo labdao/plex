@@ -1,0 +1,35 @@
+# Nvidia
+- name: Add Nvidia Keyring
+  become: true
+  ansible.builtin.apt:
+    deb: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.1-1_all.deb
+
+- name: Get Nvidia Container Tookit GPG key
+  become: true
+  ansible.builtin.apt_key:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+
+- name: Add Nvidia Container Tookit Repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: deb https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/$(ARCH) /
+    state: present
+
+- name: Install required system packages for gpu build
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - cuda-drivers
+    update_cache: true
+
+- name: Install Nvidia Container Tookit
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - nvidia-docker2
+  notify:
+    - Restart docker
+
+- name: Ensure Nvidia persitence daemon is started
+  ansible.builtin.systemd:
+    name: nvidia-persistenced

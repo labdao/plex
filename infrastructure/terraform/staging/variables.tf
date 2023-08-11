@@ -3,14 +3,14 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "requester_instance_type" {
+variable "main_instance_type" {
   type    = string
   default = "t2.micro"
 }
 
 variable "compute_instance_type" {
   type    = string
-  default = "g5.2xlarge"
+  default = "g5.xlarge"
 }
 
 variable "ssh_key" {
@@ -31,4 +31,9 @@ variable "cloudflare_zone_id" {
 variable "availability_zones" {
   type    = list(string)
   default = ["us-east-1c", "us-east-1d"]
+}
+
+variable "domain" {
+  type    = string
+  default = "labdao.xyz"
 }
