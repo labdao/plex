@@ -7,8 +7,8 @@ slug: /
 
 You shouldn't have to spend days researching and setting up BioML tools.
 
-## Introducing PLEX
-PLEX is a library that allows you to run BioML tools direct from your command line, without having to worry about failing dependencies or managing compute.
+## Introducing plex
+Plex is a library that allows you to run BioML tools direct from your command line, without having to worry about failing dependencies or managing compute.
 
 [Install PLEX here with 1 line of code](quickstart/installation)
 
@@ -21,21 +21,21 @@ In these docs, you can find:
 
 ## What to do next
 
-- [Install PLEX here with 1 line of code.](quickstart/installation)
+- [Install plex here with 1 line of code.](quickstart/installation)
 
-- Run a tool - check out our [Small Molecule Binding](../tutorials/small-molecule-binding) or [Protein Folding](../tutorials/protein-folding) toolsets. For example, our small molecule binding toolset includes a workflow for docking small molecules & proteins, and for visualizing the results. **You can install PLEX, run an example model, and visualize the results in less than 5 mins!**
+- Run a tool - check out our [Small Molecule Binding](../tutorials/small-molecule-binding) or [Protein Folding](../tutorials/protein-folding) toolsets. For example, our small molecule binding toolset includes a workflow for docking small molecules & proteins, and for visualizing the results. **You can install plex, run an example model, and visualize the results in less than 5 mins!**
 
 - Find out more about our tools on our [website](https://labdao.xyz/tools).
 
 - Get involved! If you'd like to help us containerize tools, or you want to explore a scientific collaboration, [you can get involved here](../about-us/mission.md).
 
-## About PLEX
+## About plex
 
-PLEX is a library built upon [Bacalhau](https://docs.bacalhau.org/) that allows you to easily run BioML models for a wide range of applications. It is written in Python and Go.
+Plex is a library built upon [Bacalhau](https://docs.bacalhau.org/) that allows you to easily run BioML models for a wide range of applications. It is written in Python and Go.
 
 When you run a tool, Plex requests compute-time from members of the LabDAO network, so you don’t have to worry about hardware requirements or setting up the necessary compute infrastructure.
 
-## PLEX is maintained by LabDAO
+## Plex is maintained by LabDAO
 
 LabDAO is an online organisation of scientists and engineers. 
 
