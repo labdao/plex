@@ -11,57 +11,47 @@
       when: ansible_limit is not defined
       run_once: true
 
-    # Aptitude is preferred by ansible
-    - name: Install aptitude
-      become: yes
-      ansible.builtin.apt:
-        name: aptitude
-        state: latest
-        update_cache: true
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
     - name: Install required system packages
-      become: yes
+      become: true
       ansible.builtin.apt:
         pkg:
           - python3
           - python3-dev
-          - git
-          - curl
-          - pip
           - libc6
-        state: latest
         update_cache: true
 
     - name: Download Quarto CLI .deb file
-      become: yes
+      become: true
       ansible.builtin.get_url:
         url: https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.361/quarto-1.3.361-linux-amd64.deb
         dest: /tmp/quarto-1.3.361-linux-amd64.deb
         mode: '0644'
 
     - name: Install Quarto CLI
-      become: yes
+      become: true
       ansible.builtin.apt:
         deb: /tmp/quarto-1.3.361-linux-amd64.deb
 
     - name: Install required pip packages
-      become: yes
+      become: true
       ansible.builtin.pip:
         name:
           - pyopenssl
           - github3.py
           - pip
-        state: latest
 
     - name: Install tljh
       shell: curl -L https://tljh.jupyter.org/bootstrap.py | sudo -E python3 -
 
     - name: Set environment to jupyterhub
-      become: yes
+      become: true
       ansible.builtin.command: tljh-config set user_environment.default_app jupyterlab
 
     - name: Add additional pip packages to jupyter user notebooks
-      become: yes
+      become: true
       ansible.builtin.pip:
         name:
           - biopython
@@ -72,10 +62,9 @@
           - pandas
           - plexlabexchange
         executable: /opt/tljh/user/bin/pip
-        state: latest
 
     - name: Enable HTTPS via letsencrypt
-      become: yes
+      become: true
       ansible.builtin.shell:
         cmd: |
           tljh-config set https.enabled true
@@ -84,16 +73,16 @@
           tljh-config reload proxy
 
     - name: Install custom notebook configuration
-      become: yes
+      become: true
       ansible.builtin.copy:
         src: files/jupyter_notebook_config.py
         dest: /opt/tljh/user/etc/jupyter/jupyter_notebook_config.py
         mode: "755"
 
     - name: Reload the tljh configuration
-      become: yes
+      become: true
       ansible.builtin.command: tljh-config reload
 
     - name: Bump system resources
-      become: yes
+      become: true
       ansible.builtin.command: sysctl -w net.core.rmem_max=2500000

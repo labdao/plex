@@ -12,25 +12,20 @@
       when: ansible_limit is not defined
       run_once: true
 
-    # Aptitude is preferred by ansible
-    - name: Install aptitude
-      become: yes
-      ansible.builtin.apt:
-        name: aptitude
-        state: latest
-        update_cache: true
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
     - name: Install IPFS
       ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
 
     - name: Systemd Daemon Reload
-      become: yes
+      become: true
       ansible.builtin.systemd:
         daemon_reload: true
 
   handlers:
     - name: Restart IPFS
-      become: yes
+      become: true
       ansible.builtin.service:
         name: ipfs
         state: restarted
