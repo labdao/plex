@@ -19,21 +19,8 @@
       when: ansible_limit is not defined
       run_once: true
 
-    # Aptitude is preferred by ansible
-    - name: Install aptitude and other required system packages
-      become: yes
-      ansible.builtin.apt:
-        update_cache: true
-        pkg:
-          - aptitude
-          - curl
-          - ca-certificates
-          - gnupg
-          - lsb-release
-          - tar
-          - gzip
-          - unzip
-          - git
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
     # Docker
     - name: Install Docker
@@ -48,10 +35,10 @@
     - name: flush handlers
       ansible.builtin.meta: flush_handlers
 
-    # Install IPFS
-    - name: Install IPFS
-      ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
-      tags: ipfs_install
+        # # Install IPFS
+        # - name: Install IPFS
+        #   ansible.builtin.include_tasks: tasks/install_ipfs_tasks.yaml
+        #   tags: ipfs_install
 
     # Run Bacalhau agent
     - name: Run Baclahau agent
@@ -60,13 +47,13 @@
 
   handlers:
     - name: Restart docker
-      become: yes
+      become: true
       ansible.builtin.service:
         name: docker
         state: restarted
 
     - name: Restart Bacalhau
-      become: yes
+      become: true
       ansible.builtin.service:
         name: compute
         state: restarted

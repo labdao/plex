@@ -181,5 +181,6 @@ resource "aws_db_instance" "default" {
   username                    = "receptor"
   skip_final_snapshot         = true
   manage_master_user_password = true
-  vpc_security_group_ids      = [aws_security_group.internal.id, ]
+  vpc_security_group_ids      = [aws_security_group.internal.id, aws_security_group.allow_metabase_postgres.id]
+  publicly_accessible	        = true
 }

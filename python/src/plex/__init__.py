@@ -22,8 +22,8 @@ class CoreTools(Enum):
     ODDT = "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf"
     RFDIFFUSION = "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2"
     REPEATMODELER = "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC"
-    GNINA = "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne"
-    BATCH_DLKCAT = "Qmb1nTkfYBwtK7DNKrnH58ED8Lp379Bnvpk6JNGqycKmzx"
+    GNINA = "QmZiQWEXj3aMRnJLoU39HHcknMDfKQD2txpfk6ubJAdDRx"
+    BATCH_DLKCAT = "QmQTjvP2utNb1JTtUHeQ8mQPvNkCTg5VRc4LVdptWkUcJ7"
     OPENBABEL_PDB_TO_SDF = "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3"
     OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
 
@@ -39,6 +39,18 @@ class PlexError(Exception):
 def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.value, plex_path="plex", **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
+
+    # Convert all relative file paths in kwargs to absolute paths
+    for key, value in kwargs.items():
+        if isinstance(value, list):
+            for i in range(len(value)):
+                # If the value is a string and represents a file path
+                if isinstance(value[i], str) and os.path.isfile(value[i]):
+                    # Convert the relative path to an absolute path
+                    value[i] = os.path.abspath(value[i])
+        # If the value is a string and represents a file path
+        elif isinstance(value, str) and os.path.isfile(value):
+            kwargs[key] = os.path.abspath(value)
 
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)

@@ -47,6 +47,7 @@ type IO struct {
 	Outputs       map[string]Output    `json:"outputs"`
 	State         string               `json:"state"`
 	ErrMsg        string               `json:"errMsg"`
+	UserID        string               `json:"userId"`
 	BacalhauJobId string               `json:"bacalhauJobId"`
 }
 

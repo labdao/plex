@@ -1,5 +1,7 @@
 # PLEX 🧫×🧬→💊
-⚡ **Build highly reproducible container workflows on top of a decentralised compute and storage network.** ⚡
+
+⚡ **Run highly reproducible scientific applications on top of a decentralised compute and storage network.** ⚡
+
 
 <p align="left">
     <a href="https://github.com/labdao/plex/blob/main/LICENSE.md" alt="License">
@@ -104,7 +106,7 @@ After the script run the following command in a separate terminal to start a Bac
 ipfs daemon
 ```
 
-Once the daemon is running, configure the Bacalhau node based on the addresses used by the IFPS node.
+Once the daemon is running, configure the Bacalhau node based on the addresses used by the IPFS node.
 ```
 ipfs id
 
