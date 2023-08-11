@@ -8,12 +8,6 @@
     masked: true
   when: ansible_facts.services["unattended-upgrades.service"] is defined
 
-- name: Install aptitude
-  become: true
-  ansible.builtin.apt:
-    name: aptitude
-    update_cache: true
-
 - name: Install required system packages
   become: true
   ansible.builtin.apt:
