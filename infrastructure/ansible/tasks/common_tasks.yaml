@@ -1,0 +1,30 @@
+- name: "Gather service facts"
+  ansible.builtin.service_facts:
+
+- name: "Disable unattended upgrades service"
+  ansible.builtin.systemd:
+    name: "unattended-upgrades.service"
+    enabled: false
+    masked: true
+  when: ansible_facts.services["unattended-upgrades.service"] is defined
+
+- name: Install aptitude
+  become: true
+  ansible.builtin.apt:
+    name: aptitude
+    update_cache: true
+
+- name: Install required system packages
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - aptitude
+      - ca-certificates
+      - curl
+      - git
+      - gnupg
+      - gzip
+      - lsb-release
+      - pip
+      - tar
+      - unzip
