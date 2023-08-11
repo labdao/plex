@@ -18,6 +18,9 @@
     <a href="https://github.com/labdao/plex/actions/workflows/go.yml" alt="Tests">
         <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
     </a>
+    <a href="https://labdao.xyz/">
+        <img alt="LabDAO website" src="https://img.shields.io/badge/website-bacalhau.org-red">
+    </a>
     <a href="https://twitter.com/intent/follow?screen_name=lab_dao">
         <img src="https://img.shields.io/twitter/follow/lab_dao?style=social&logo=twitter" alt="follow on Twitter">
     </a>
@@ -35,6 +38,19 @@ PLEX is a simple client for distributed computation.
 
 PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
 
+## 🐍 Python pip package (Python 3.8+)
+
+1. Install Plex with pip
+```
+pip install PlexLabExchange
+```
+
+2. Run Plex example in a Python file, notebook or REPL
+```
+from plex import plex_run
+
+io_json_cid, io_json_local_filepath = plex_run('QmWdKXmSz1p3zGfHmwBb5FHCS7skc4ryEA97pPVxJCT5Wx')
+```
 ## 🚀 PLEX CLI in one minute
 
 1 . Install the client
@@ -61,19 +77,6 @@ Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lab
 4. Request Access to our VIP Jupyter Hub Enviroment and NFT Testnet Minting.
 [VIP Beta Access Form](https://try.labdao.xyz)
 
-## 🐍 Python pip package (Python 3.8+)
-
-1. Install Plex with pip
-```
-pip install PlexLabExchange
-```
-
-2. Run Plex example in a Python file, notebook or REPL
-```
-from plex import plex_run
-
-io_json_cid, io_json_local_filepath = plex_run('QmWdKXmSz1p3zGfHmwBb5FHCS7skc4ryEA97pPVxJCT5Wx')
-```
 
 ## 💡 Use-Cases
 * 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
