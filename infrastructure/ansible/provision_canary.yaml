@@ -1,6 +1,6 @@
 - name: Provision Canary
   remote_user: ubuntu
-  hosts: "{{ target_hosts | default('tag_Type_compute') }}"
+  hosts: "{{ target_hosts | default('tag_Type_compute_only') }}"
   vars:
     canary_dir: /opt/local/canary
     repo_dir: "{{ canary_dir }}/repo"
@@ -31,14 +31,26 @@
       vars:
         plex_dir: "{{ binary_dir }}"
 
-    - name: Place canary srcript
+    - name: Place equibind canary script
       ansible.builtin.template:
         src: files/equibind_canary.sh
         dest: "{{ canary_dir }}/equibind_canary.sh"
         mode: 'u+x'
 
-    - name: Set a cron job to run canary
+    - name: Place colabfold canary script
+      ansible.builtin.template:
+        src: files/colabfold_mini_canary.sh
+        dest: "{{ canary_dir }}/colabfold_mini_canary.sh"
+        mode: 'u+x'
+
+    - name: Set a cron job to run equibind canary
       ansible.builtin.cron:
         name: "Run equibind canary"
         job: "{{ canary_dir }}/equibind_canary.sh"
-        minute: "*/5"
+        minute: "*/5" # every 5 minutes
+
+    - name: Set a cron job to run colabfold
+      ansible.builtin.cron:
+        name: "Run colabfold canary"
+        job: "{{ canary_dir }}/colabfold_mini_canary.sh"
+        minute: "27" # once per hour
