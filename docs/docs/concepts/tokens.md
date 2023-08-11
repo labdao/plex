@@ -4,7 +4,7 @@ sidebar_position: 5
 sidebar_label: Tokens
 ---
 
-**ProofOfScience** represents Plex's unique approach to preserving, acknowledging, and ensuring the reproducibility of scientific computations. By leveraging the power of blockchain, each computation in Plex can be minted into an ERC 1155 token called a ProofOfScience Non-Fungible Token (NFT).
+**ProofOfScience** represents plex's unique approach to preserving, acknowledging, and ensuring the reproducibility of scientific computations. By leveraging the power of blockchain, each computation in plex can be minted into an [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) token called a ProofOfScience Non-Fungible Token (NFT).
 
 ## Minting with `plex_mint`
 
@@ -12,7 +12,9 @@ Once a computation concludes and its results are recorded in a completed `io.jso
 
 ## Metadata Preservation
 
-The NFT's embedded metadata captures essential details about the completed job runs, ensuring a comprehensive overview of the scientific process undertaken. By providing this level of transparency and detail, it enables others in the scientific community to validate, reproduce, or build upon the work.
+Within the NFT's metadata, the `graph` key contains the `io.json` content. All completed job runs are visible. All input and output data are accessible.
+
+By providing this level of transparency and detail, others can validate, reproduce, or build upon the work.
 
 ```json
 {
@@ -58,11 +60,11 @@ The NFT's embedded metadata captures essential details about the completed job r
 
 ## Reproducibility and Acknowledgement
 
-Storing computations as ProofOfScience tokens on-chain not only serves as a testament to the work done but also sets a gold standard for scientific reproducibility. It becomes an immutable record of achievement, open to scrutiny and validation by peers.
+Storing computations as ProofOfScience tokens on-chain sets a gold standard for scientific reproducibility. It becomes an immutable record of achievement, open to scrutiny and validation by peers.
 
 ## Gasless Transactions
 
-Recognizing the potential hurdles of transaction costs, Plex employs an OpenZeppelin Defender Relayer. This means users don't bear the brunt of gas fees when minting their ProofOfScience NFTs. We take care of it, making the minting process smooth and cost-efficient.
+Plex employs an [OpenZeppelin Defender Relayer](https://docs.openzeppelin.com/defender/relay) so users don't have to pay [gas fees](https://ethereum.org/en/developers/docs/gas/) to mint ProofOfScience tokens.
 
 :::warning
 

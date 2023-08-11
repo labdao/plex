@@ -6,13 +6,11 @@ sidebar_label: Tools
 
 Plex is paving the way for permissionless science by ensuring that computational biology tools are not just available, but also easily accessible for open-source, early-stage drug discovery.
 
-Plex champions open-source initiatives by incorporating state-of-the-art tools into its platform. By leveraging Docker containers, these powerful tools have been streamlined for easy accessibility. This ensures that researchers and scientists can easily tap into the most recent and effective computational biology tools without wading through intricate installation processes.
-
-To further facilitate ease of access and the spirit of open science, all Docker images of these tools are made publicly available. This allows for transparency and easy replication, ensuring that researchers can validate, reproduce, and build upon existing work with confidence.
+To facilitate ease of access and the spirit of open science, plex uses Docker containers of computational biology tools and makes them publicly available. These tools enable transparency and easy replication, ensuring that researchers can validate, reproduce, and build upon existing work with confidence.
 
 ## Tool Configs
 
-Plex employs **tool configs** as computation instructions. These are sent to our Bacalhau cluster, orchestrating how computations should be carried out. As demonstrated in the provided JSON example, these configs
+Plex employs **tool configs** as computation templates which dictate how computations should be carried out. As demonstrated in the JSON below, these configs
 
 * Specify the Docker container used
 * Detail the input data format, ensuring that the data fed into the tool aligns with its expectations
