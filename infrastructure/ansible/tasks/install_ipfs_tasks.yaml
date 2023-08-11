@@ -98,6 +98,11 @@
         #     IPFS_PATH: "{{ ipfs_path }}"
         #   when: private_ipfs
 
+    - name: Check if swarm key already exists or not
+      ansible.builtin.stat:
+        path: "{{ ipfs_path }}/swarm.key"
+      register: ipfs_swarm_key
+
     - name: Generate random swarm key
       become: true
       become_user: ubuntu
@@ -107,7 +112,9 @@
           /base16/
           {{ lookup('community.general.random_string', length=64, override_all='0123456789abcdef') }}
         dest: "{{ ipfs_path }}/swarm.key"
-      when: private_ipfs
+      when:
+        - private_ipfs
+        - not ipfs_swarm_key.stat.exists
 
     - name: Install the IPFS systemd unit
       become: true
@@ -123,7 +130,7 @@
         enabled: true
 
     - name: Wait for IPFS to be healthy
-      command:
+      ansible.builtin.command:
         cmd: ipfs --api=/ip4/127.0.0.1/tcp/5001 dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn
       register: ipfs_healthcheck
       retries: 5

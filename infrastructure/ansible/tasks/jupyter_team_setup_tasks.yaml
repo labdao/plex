@@ -1,11 +1,11 @@
 ---
 - name: Create unix group
-  become: yes
+  become: true
   ansible.builtin.group:
     name: "{{ item.team }}"
 
 - name: Create the shared folder
-  become: yes
+  become: true
   ansible.builtin.file:
     path: /srv/data/teams/{{ item.team }}
     state: directory
@@ -15,7 +15,7 @@
 
 # This is required to set the right permissions in the checkpoints folder for the shared team directory
 - name: Create the checkpoint folder in the shared team folder.
-  become: yes
+  become: true
   ansible.builtin.file:
     path: /srv/data/teams/{{ item.team }}/.ipynb_checkpoints
     state: directory
@@ -24,7 +24,7 @@
     mode: "2775"
 
 - name: White list the users
-  become: yes
+  become: true
   ansible.builtin.command:
     cmd: tljh-config add-item users.allowed {{ user }}
   loop: "{{ item.users }}"
@@ -32,7 +32,7 @@
     loop_var: user
 
 - name: Add the users of the team to the group
-  become: yes
+  become: true
   ansible.builtin.user:
     name: jupyter-{{ user }}
     append: true #add users to groups and leave current groups alone
@@ -42,7 +42,7 @@
     loop_var: user
 
 - name: Link shared folder into the users home directory
-  become: yes
+  become: true
   ansible.builtin.file:
     dest: /home/jupyter-{{ user }}/{{ item.team }}
     src: /srv/data/teams/{{ item.team }}
@@ -55,7 +55,7 @@
     loop_var: user
 
 - name: Ensure the symlink exists to the examples directory for every user
-  become: yes
+  become: true
   ansible.builtin.file:
     src: /opt/local/plex/python/notebooks
     dest: /home/jupyter-{{ user }}/examples

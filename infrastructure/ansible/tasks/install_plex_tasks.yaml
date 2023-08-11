@@ -1,12 +1,11 @@
 # {{ plex_dir }} must be writable by the user
 - name: Install required pip packages
-  become: yes
+  become: true
   ansible.builtin.pip:
     name:
       - pip
       - pyopenssl
       - github3.py
-    state: latest
 
 - name: Get the latest plex release
   community.general.github_release:
@@ -29,7 +28,7 @@
     dest: "{{ plex_dir }}"
 
 - name: Link the plex binary to the system path
-  become: yes
+  become: true
   ansible.builtin.file:
     src: "{{ plex_dir }}/plex"
     dest: /usr/local/bin/plex

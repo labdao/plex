@@ -14,34 +14,29 @@
       when: ansible_limit is not defined
       run_once: true
 
-    # Aptitude is preferred by ansible
-    - name: Install aptitude
-      become: yes
-      ansible.builtin.apt:
-        name: aptitude
-        state: latest
-        update_cache: true
+    - name: Run common tasks
+      ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
     # Docker
     - name: Add Docker GPG key
-      become: yes
+      become: true
       ansible.builtin.get_url:
         url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/trusted.gpg.d/docker.asc
 
     - name: Add Docker Repository
-      become: yes
+      become: true
       ansible.builtin.apt_repository:
         repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
         state: present
 
     - name: Create the docker group
-      become: yes
+      become: true
       ansible.builtin.group:
         name: docker
 
     - name: Add ubuntu user to docker group
-      become: yes
+      become: true
       ansible.builtin.user:
         name: ubuntu
         groups: docker
@@ -53,40 +48,35 @@
         dest: /tmp/cuda-keyring.deb
 
     - name: Add Nvidia Keyring
-      become: yes
+      become: true
       ansible.builtin.apt:
         deb: /tmp/cuda-keyring.deb
 
     - name: Get Nvidia Container Tookit GPG key
-      become: yes
+      become: true
       ansible.builtin.shell:
         cmd: curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --yes --dearmor -o {{ nvidia_container_toolkit_key_path }}
         creates: "{{ nvidia_container_toolkit_key_path }}"
 
     - name: Add Nvidia Container Tookit Repository
-      become: yes
+      become: true
       ansible.builtin.apt_repository:
         repo: deb [signed-by={{ nvidia_container_toolkit_key_path }}] https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/$(ARCH) /
         state: present
 
     - name: Install required system packages
-      become: yes
+      become: true
       ansible.builtin.apt:
         pkg:
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
           - docker-ce
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
           - cuda-drivers
-        state: latest
         update_cache: true
 
     - name: Install Nvidia Container Tookit
-      become: yes
+      become: true
       ansible.builtin.apt:
         pkg:
           - nvidia-docker2
@@ -98,7 +88,7 @@
         name: nvidia-persistenced
 
     - name: Install Golag
-      become: yes
+      become: true
       vars:
         go_version: 1.20.3
       block:
@@ -121,18 +111,18 @@
         state: directory
 
     - name: Unzip IPFS
-      become: yes
+      become: true
       ansible.builtin.unarchive:
         remote_src: true
         src: /tmp/ipfs.tar.gz
         dest: /tmp/ipfs
 
     - name: Install Kubo
-      become: yes
+      become: true
       ansible.builtin.command: /tmp/ipfs/kubo/install.sh
 
     - name: Create IPFS directory
-      become: yes
+      become: true
       ansible.builtin.file:
         owner: ubuntu
         group: ubuntu
@@ -140,7 +130,7 @@
         state: directory
 
     - name: Put the IPFS directory in env for future shells
-      become: yes
+      become: true
       ansible.builtin.lineinfile:
         path: /etc/environment
         line: IPFS_PATH={{ ipfs_path }}
@@ -158,7 +148,7 @@
         ipfs config Pinning.Recursive true
 
     - name: Install the IPFS systemd unit
-      become: yes
+      become: true
       ansible.builtin.template:
         src: files/ipfs.service
         dest: /etc/systemd/system
@@ -166,7 +156,7 @@
         - Systemd Daemon Reload
 
     - name: Enable and start the IPFS Daemon
-      become: yes
+      become: true
       ansible.builtin.service:
         name: ipfs
         state: started
@@ -177,11 +167,11 @@
         cmd: curl -sL https://get.bacalhau.org/install.sh | bash
 
     - name: Bump System Resources
-      become: yes
+      become: true
       ansible.builtin.command: sysctl -w net.core.rmem_max=2500000
 
     - name: Install the Bacalhau systemd unit
-      become: yes
+      become: true
       ansible.builtin.template:
         src: files/bacalhau.service
         dest: /etc/systemd/system
@@ -192,19 +182,19 @@
         - Restart Bacalhau
 
     - name: Systemd Daemon Reload
-      become: yes
+      become: true
       ansible.builtin.systemd:
         daemon_reload: true
 
   handlers:
     - name: Restart docker
-      become: yes
+      become: true
       ansible.builtin.service:
         name: docker
         state: restarted
 
     - name: Restart Bacalhau
-      become: yes
+      become: true
       ansible.builtin.service:
         name: bacalhau
         state: restarted
