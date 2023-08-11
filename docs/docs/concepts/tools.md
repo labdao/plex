@@ -12,7 +12,7 @@ To further facilitate ease of access and the spirit of open science, all Docker 
 
 ## Tool Configs
 
-Plex employs 'tool configs' as computation instructions. These are sent to our Bacalhau cluster, orchestrating how computations should be carried out. As demonstrated in the provided JSON example, these configs
+Plex employs **tool configs** as computation instructions. These are sent to our Bacalhau cluster, orchestrating how computations should be carried out. As demonstrated in the provided JSON example, these configs
 
 * Specify the Docker container used
 * Detail the input data format, ensuring that the data fed into the tool aligns with its expectations
