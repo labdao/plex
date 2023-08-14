@@ -36,6 +36,7 @@ type Tool struct {
 	NetworkBool bool                  `json:"networkBool"`
 	Inputs      map[string]ToolInput  `json:"inputs"`
 	Outputs     map[string]ToolOutput `json:"outputs"`
+  Author      string                `json:"author"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
