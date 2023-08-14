@@ -28,6 +28,7 @@ type ToolOutput struct {
 type Tool struct {
 	Name        string                `json:"name"`
 	Description string                `json:"description"`
+  Author      string                `json:"author"`
 	BaseCommand []string              `json:"baseCommand"`
 	Arguments   []string              `json:"arguments"`
 	DockerPull  string                `json:"dockerPull"`
@@ -36,7 +37,6 @@ type Tool struct {
 	NetworkBool bool                  `json:"networkBool"`
 	Inputs      map[string]ToolInput  `json:"inputs"`
 	Outputs     map[string]ToolOutput `json:"outputs"`
-  Author      string                `json:"author"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {

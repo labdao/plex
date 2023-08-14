@@ -9,6 +9,7 @@ func TestReadToolConfig(t *testing.T) {
 	filePath := "testdata/example_tool.json"
 	expected := Tool{
 		Name:        "equibind",
+    Author:      "LabDao",
 		Description: "Docking of small molecules to a protein",
 		BaseCommand: []string{"/bin/bash", "-c"},
 		Arguments: []string{

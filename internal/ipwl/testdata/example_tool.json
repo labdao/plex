@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "equibind",
     "description": "Docking of small molecules to a protein",
+    "author": "LabDao",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
