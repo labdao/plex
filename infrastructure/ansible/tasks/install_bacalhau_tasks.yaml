@@ -30,14 +30,12 @@
 
     - name: Set fact when its prod node
       ansible.builtin.set_fact:
-        bacalhau_hostname: "bacalhau.labdao.xyz"
         requester_hostname: "requester.labdao.xyz"
         ipfs_hostname: "ipfs.labdao.xyz"
       when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
 
     - name: Set fact when its non-prod node
       ansible.builtin.set_fact:
-        bacalhau_hostname: "bacalhau.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
         requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
         ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
       when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
@@ -45,16 +43,16 @@
     # Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
     - name: Determine requester bacalhau peer id
       ansible.builtin.uri:
-        url: "http://{{ bacalhau_hostname }}:1234/node_info"
+        url: "http://{{ requester_hostname }}:1234/node_info"
         return_content: true
-      register: bacalhau_output
-      when: bacalhau_hostname is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+      register: requester_output
+      when: requester_hostname is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
 
     - name: Set requester_peer url
       ansible.builtin.set_fact:
         # requester_peer: /dns4/requester.staging.labdao.xyz/tcp/1235/p2p/QmeLa2fx2FMNDWbeY3UqjELc1MbKwNxggcmdBmLZepY6VK
-        requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ bacalhau_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
-      when: bacalhau_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+        requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ requester_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
+      when: requester_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
 
     - name: Set ipfs connect url
       ansible.builtin.set_fact:
