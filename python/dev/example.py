@@ -20,7 +20,7 @@ initial_io_cid = plex_init(
     protein=proteins)
 
 # Custom annotations for testing
-custom_annotations = ["custom1", "custom2"]
+custom_annotations = ["python_example", "test"]
 
 completed_io_cid, io_file_path = plex_run(initial_io_cid, output_dir=jobs_dir, annotations=custom_annotations, plex_path=plex_path)
 
