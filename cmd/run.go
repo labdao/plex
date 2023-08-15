@@ -68,6 +68,15 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 	}
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
+	userID, err := ipwl.ExtractUserIDFromIOJson(ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+
+	if userID != "" {
+		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
+	}
+
 	retry := false
 	fmt.Println("Processing IO Entries")
 	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, concurrency, annotations)

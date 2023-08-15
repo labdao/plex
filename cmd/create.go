@@ -28,11 +28,18 @@ var createCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		cid, err := CreateIO(toolPath, inputDir, layers)
+		cid, userID, err := CreateIO(toolPath, inputDir, layers)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
 		}
+
+		if autoRun && userID != "" {
+			*annotationsForAutoRun = append(*annotationsForAutoRun, fmt.Sprintf("userId=%s", userID))
+
+			fmt.Printf("Annotations for PlexRun: %v\n", *annotationsForAutoRun)
+		}
+
 		if autoRun {
 			_, _, err := PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotationsForAutoRun)
 			if err != nil {
@@ -43,10 +50,10 @@ var createCmd = &cobra.Command{
 	},
 }
 
-func CreateIO(toolPath, inputDir string, layers int) (string, error) {
+func CreateIO(toolPath, inputDir string, layers int) (string, string, error) {
 	tempDirPath, err := ioutil.TempDir("", uuid.New().String())
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	fmt.Println("Temporary directory created:", tempDirPath)
@@ -57,30 +64,30 @@ func CreateIO(toolPath, inputDir string, layers int) (string, error) {
 
 	toolConfig, toolInfo, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	fmt.Println("Creating IO entries from input directory: ", inputDir)
 	ioEntries, err = ipwl.CreateIOJson(inputDir, toolConfig, toolInfo, layers)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	ioJsonPath := path.Join(tempDirPath, "io.json")
 	err = ipwl.WriteIOList(ioJsonPath, ioEntries)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	fmt.Println("Initialized IO file at: ", ioJsonPath)
 
 	cid, err := ipfs.PinFile(ioJsonPath)
 	if err != nil {
-		return "", nil
+		return "", "", nil
 	}
 
 	// The Python SDK string matches here so make sure to change in both places
 	fmt.Println("Initial IO JSON file CID: ", cid)
-	return cid, nil
+	return cid, ioEntries[0].UserID, nil
 }
 
 func init() {
