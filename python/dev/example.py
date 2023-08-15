@@ -19,7 +19,13 @@ initial_io_cid = plex_init(
     small_molecule=small_molecules,
     protein=proteins)
 
-completed_io_cid, io_file_path = plex_run(initial_io_cid, output_dir=jobs_dir, plex_path=plex_path)
+# Custom annotations for testing
+custom_annotations = ["custom1", "custom2"]
+
+completed_io_cid, io_file_path = plex_run(initial_io_cid, output_dir=jobs_dir, annotations=custom_annotations, plex_path=plex_path)
+
+# Print annotations to verify
+print(f"\nAnnotations used in plex_run: {custom_annotations}\n")
 
 vectors = plex_vectorize(io_file_path, CoreTools.EQUIBIND.value, plex_path=plex_path)
 
