@@ -157,7 +157,7 @@ def plex_create(tool_path: str, input_dir: str, layers=2, output_dir="", verbose
     return io_json_cid
 
 
-def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=["python"], plex_path="plex"):
+def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=None, plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(cwd))
     cmd = [plex_path, "run", "-i", io_json_cid]
@@ -170,6 +170,9 @@ def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=Fals
 
     if concurrency:
         cmd.append(f"--concurrency={concurrency}")
+
+    if annotations is None:
+        annotations = []
 
     # Ensure "python" is always in the annotations list
     if "python" not in annotations:
