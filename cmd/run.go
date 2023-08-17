@@ -73,7 +73,7 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 		return completedIoJsonCid, ioJsonPath, err
 	}
 
-	if userID != "" {
+	if userID != "" && !ipwl.ContainsUserIdAnnotation(annotations) {
 		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
 	}
 

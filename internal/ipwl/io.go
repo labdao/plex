@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type FileInput struct {
@@ -137,6 +138,15 @@ func WriteIOList(ioJsonPath string, ioList []IO) error {
 	}
 
 	return nil
+}
+
+func ContainsUserIdAnnotation(slice []string) bool {
+	for _, a := range slice {
+		if strings.HasPrefix(a, "userId=") {
+			return true
+		}
+	}
+	return false
 }
 
 func ExtractUserIDFromIOJson(ioJsonPath string) (string, error) {
