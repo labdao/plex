@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 type FileInput struct {
@@ -137,6 +138,40 @@ func WriteIOList(ioJsonPath string, ioList []IO) error {
 	}
 
 	return nil
+}
+
+func ContainsUserIdAnnotation(slice []string) bool {
+	for _, a := range slice {
+		if strings.HasPrefix(a, "userId=") {
+			return true
+		}
+	}
+	return false
+}
+
+func ExtractUserIDFromIOJson(ioJsonPath string) (string, error) {
+	file, err := os.Open(ioJsonPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	var ioEntries []IO
+	err = json.Unmarshal(data, &ioEntries)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	if len(ioEntries) == 0 {
+		return "", fmt.Errorf("no IO entries found")
+	}
+
+	return ioEntries[0].UserID, nil
 }
 
 func PrintIOGraphStatus(ioList []IO) {
