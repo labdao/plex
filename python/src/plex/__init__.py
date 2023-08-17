@@ -178,7 +178,11 @@ def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=Fals
     if "python" not in annotations:
         annotations.append("python")
 
-    cmd.append(f"--annotations={','.join(annotations)}")
+    # Add each annotation as a separate parameter to cmd
+    for annotation in annotations:
+        cmd.append(f"--annotations={annotation}")
+
+    print(annotations)
 
     if not show_animation:  # default is true in the CLI
         cmd.append("--showAnimation=false")
