@@ -182,8 +182,6 @@ def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=Fals
     for annotation in annotations:
         cmd.append(f"--annotations={annotation}")
 
-    print(annotations)
-
     if not show_animation:  # default is true in the CLI
         cmd.append("--showAnimation=false")
 
