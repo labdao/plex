@@ -13,14 +13,14 @@ class ScatteringMethod(Enum):
 
 
 class CoreTools(Enum):
-    EQUIBIND = "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB"
-    DIFFDOCK = "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM"
+    EQUIBIND = "QmZWYpZXsrbtzvBCHngh4YEgME5djnV5EedyTpc8DrK7k2"
+    DIFFDOCK = "QmfKhJh48aDHgckzwGEASNmZd1SYstQiR5qLqqYmLQFzq9"
     COLABFOLD_MINI = "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD"
     COLABFOLD_STANDARD = "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk"
     COLABFOLD_LARGE = "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi"
     BAM2FASTQ = "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq"
     ODDT = "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf"
-    RFDIFFUSION = "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2"
+    RFDIFFUSION = "QmTyFGjt2oqTLGQRE5u8mtfiQNft5nzMsieYdvwnpfk3HJ"
     REPEATMODELER = "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC"
     GNINA = "QmZiQWEXj3aMRnJLoU39HHcknMDfKQD2txpfk6ubJAdDRx"
     BATCH_DLKCAT = "QmQTjvP2utNb1JTtUHeQ8mQPvNkCTg5VRc4LVdptWkUcJ7"

@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "pdb to sdf",
     "description": "Convert pdb to sdf using openbabel.",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "obabel $(inputs.pdb_file.filepath) -O /outputs/$(inputs.pdb_file.basename).sdf;"

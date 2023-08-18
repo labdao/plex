@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "bam2fastq",
     "description": "Sort BAM by qname and Extract Fasta reads R1 R2 with RG using samtools",
+    "author": "",
     "inputs": {
         "genome": {
             "type": "File",

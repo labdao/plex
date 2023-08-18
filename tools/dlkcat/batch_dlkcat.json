@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "dlkcat",
     "description": "batch predict enzyme catalytic activity from a protein sequence and molecule smile",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "conda run -n env python prediction_for_input.py $(inputs.input_tsv.filepath) && mv output.tsv /outputs/"

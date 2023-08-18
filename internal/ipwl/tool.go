@@ -28,6 +28,7 @@ type ToolOutput struct {
 type Tool struct {
 	Name        string                `json:"name"`
 	Description string                `json:"description"`
+	Author      string                `json:"author"`
 	BaseCommand []string              `json:"baseCommand"`
 	Arguments   []string              `json:"arguments"`
 	DockerPull  string                `json:"dockerPull"`

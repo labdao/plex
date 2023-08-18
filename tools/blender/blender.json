@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "blender",
     "description": "let's create some fancy protein graphics",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "blender --background --python app.py -- $(inputs.protein.filepath) /outputs/protein.png"

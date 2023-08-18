@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "rmsd",
     "description": "calculate the RMSD of a reference small molecule and a docked small molecule using openbabel.",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "echo 'reference,comparison,RMSD' > /outputs/rmsd.csv && echo -n '$(inputs.reference_structure.basename),$(inputs.comparison_structure.basename),' > /outputs/temp.csv && obrms -firstonly $(inputs.reference_structure.filepath) $(inputs.comparison_structure.filepath) | awk '{print $2}' | tr -d '\\n' >> /outputs/temp.csv && cat /outputs/temp.csv >> /outputs/rmsd.csv && rm /outputs/temp.csv;"

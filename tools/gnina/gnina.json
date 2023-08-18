@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "gnina",
     "description": "Protein-ligand docking using Gnina",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "gnina -r $(inputs.protein.filepath) -l $(inputs.small_molecule.filepath) --exhaustiveness $(inputs.exhaustiveness.default) --autobox_ligand $(inputs.protein.filepath) --cnn_scoring $(inputs.cnn_scoring.default) -o /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked_scored.sdf"

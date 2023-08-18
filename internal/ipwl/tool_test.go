@@ -9,15 +9,20 @@ func TestReadToolConfig(t *testing.T) {
 	filePath := "testdata/example_tool.json"
 	expected := Tool{
 		Name:        "equibind",
+		Author:      "@misc{stärk2022equibind,\n      title={EquiBind: Geometric Deep Learning for Drug Binding Structure Prediction}, \n      author={Hannes Stärk and Octavian-Eugen Ganea and Lagnajit Pattanaik and Regina Barzilay and Tommi Jaakkola},\n      year={2022},\n      eprint={2202.05146},\n      archivePrefix={arXiv},\n      primaryClass={q-bio.BM}\n}",
 		Description: "Docking of small molecules to a protein",
 		BaseCommand: []string{"/bin/bash", "-c"},
 		Arguments: []string{
-			"python main.py --protein $(inputs.protein.filepath) --small_molecule_library $(inputs.small_molecule.filepath);",
-			"mv /outputs/ligands_predicted.sdf /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked.$(inputs.small_molecule.ext);",
-			"cp $(inputs.protein.filepath) /outputs/;",
-			"rmdir /outputs/dummy;",
+			"mkdir -p /tmp-inputs/tmp;",
+			"mkdir -p /tmp-outputs/tmp;",
+			"cp /inputs/* /tmp-inputs/tmp/;",
+			"ls /tmp-inputs/tmp;",
+			"cd /src && python /src/inference.py --config=/src/configs_clean/bacalhau.yml;",
+			"mv /tmp-outputs/tmp/* /outputs/;",
+			"mv /outputs/lig_equibind_corrected.sdf /outputs/$(inputs.protein.basename)_$(inputs.small_molecule.basename)_docked.$(inputs.small_molecule.ext);",
+			"mv /tmp-inputs/tmp/*.pdb /outputs/;",
 		},
-		DockerPull: "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07",
+		DockerPull: "ghcr.io/labdao/equibind:main@sha256:21a381d9ab1ff047565685044569c8536a55e489c9531326498b28d6b3cc244f",
 		GpuBool:    false,
 		Inputs: map[string]ToolInput{
 			"protein": {
@@ -32,7 +37,7 @@ func TestReadToolConfig(t *testing.T) {
 		Outputs: map[string]ToolOutput{
 			"best_docked_small_molecule": {
 				Type: "File",
-				Glob: []string{"*_docked.sdf"},
+				Glob: []string{"*_docked.sdf", "*_docked.mol2"},
 			},
 			"protein": {
 				Type: "File",

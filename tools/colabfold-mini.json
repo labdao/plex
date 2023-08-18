@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "colabfold-mini",
     "description": "Protein folding prediction using Colabfold (mini settings)",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "colabfold_batch --templates --max-msa 32:64 --num-recycle $(inputs.recycle.default) /inputs /outputs;"
