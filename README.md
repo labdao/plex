@@ -1,4 +1,4 @@
-# PLEX 🧫×🧬→💊
+# plex 🧫×🧬→💊
 ⚡ **Run highly reproducible scientific applications on top of a decentralised compute and storage network.** ⚡
 
 
@@ -19,7 +19,7 @@
         <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
     </a>
     <a href="https://labdao.xyz/">
-        <img alt="LabDAO website" src="https://img.shields.io/badge/website-bacalhau.org-red">
+        <img alt="LabDAO website" src="https://img.shields.io/badge/website-labdao.xyz-red">
     </a>
     <a href="https://twitter.com/intent/follow?screen_name=lab_dao">
         <img src="https://img.shields.io/twitter/follow/lab_dao?style=social&logo=twitter" alt="follow on Twitter">
@@ -30,28 +30,28 @@
 </p>
 
 
-PLEX is a simple client for distributed computation.
-* 🌎 **Build once, run anywhere:** PLEX is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
-* 🔍 **Content-addressed by default:** Every file processed by PLEX has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
-* 🪙 **Ownernship tracking built-in** Every compute event on PLEX is mintable as an on-chain token that grants the holder rights over the newly generated data. 
-* 🔗 **Strictly composable:** Every tool in PLEX has declared inputs and outputs. Plugging together tools by other authors should be easy.
+Plex is a simple client for distributed computation.
+* 🌎 **Build once, run anywhere:** Plex is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
+* 🔍 **Content-addressed by default:** Every file processed by plex has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
+* 🪙 **Ownernship tracking built-in** Every compute event on plex is mintable as an on-chain token that grants the holder rights over the newly generated data. 
+* 🔗 **Strictly composable:** Every tool in plex has declared inputs and outputs. Plugging together tools by other authors should be easy.
 
-PLEX is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
+Plex is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
 
 ## 🐍 Python pip package (Python 3.8+)
 
-1. Install Plex with pip
+1. Install plex with pip
 ```
 pip install PlexLabExchange
 ```
 
-2. Run Plex example in a Python file, notebook or REPL
+2. Run plex example in a Python file, notebook or REPL
 ```
 from plex import plex_run
 
 io_json_cid, io_json_local_filepath = plex_run('QmWdKXmSz1p3zGfHmwBb5FHCS7skc4ryEA97pPVxJCT5Wx')
 ```
-## 🚀 PLEX CLI in one minute
+## 🚀 Plex CLI in one minute
 
 1 . Install the client
 
@@ -65,27 +65,27 @@ Windows users open terminal as an adminstrator and run
 Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/labdao/plex/main/install.ps1" -UseBasicParsing).Content
 ```
 
-2. Submit an example PLEX job
+2. Submit an example plex job
 ```
 ./plex create -t tools/equibind.json -i testdata/binding/abl --autoRun=True
 ```
 
 ![Getting Started](./readme-getting-started-2x.gif)
 
-3. [Read the docs](https://docs.labdao.xyz/) to learn how to use PLEX with your own data and tools
+3. [Read the docs](https://docs.labdao.xyz/) to learn how to use plex with your own data and tools
 
 4. Request Access to our VIP Jupyter Hub Enviroment and NFT Testnet Minting.
 [VIP Beta Access Form](https://try.labdao.xyz)
 
 
 ## 💡 Use-Cases
-* 🧬 run PLEX to [design proteins](https://docs.labdao.xyz/protein-folding/run-an-example) with colabfold and RFDiffusion
-* 💊 run PLEX to run [small molecule docking](https://docs.labdao.xyz/small-molecule-binding/run-an-example) with equibind and diffdock
-* 🐋 configure your containerised tool to run on PLEX
+* 🧬 run plex to [fold proteins](https://docs.labdao.xyz/tutorials/protein-folding)
+* 💊 run plex to run [small molecule docking](https://docs.labdao.xyz/tutorials/small-molecule-binding)
+* 🐋 configure your containerised tool to run on plex
 
 ## 🧑‍💻 Developer Guide
 
-### Building PLEX from source
+### Building plex from source
 
 ```
 git clone https://github.com/labdao/plex
