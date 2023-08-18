@@ -9,7 +9,7 @@ func TestReadToolConfig(t *testing.T) {
 	filePath := "testdata/example_tool.json"
 	expected := Tool{
 		Name:        "equibind",
-		Author:      "LabDao",
+		Author:      "@misc{stärk2022equibind,\n      title={EquiBind: Geometric Deep Learning for Drug Binding Structure Prediction}, \n      author={Hannes Stärk and Octavian-Eugen Ganea and Lagnajit Pattanaik and Regina Barzilay and Tommi Jaakkola},\n      year={2022},\n      eprint={2202.05146},\n      archivePrefix={arXiv},\n      primaryClass={q-bio.BM}\n}",
 		Description: "Docking of small molecules to a protein",
 		BaseCommand: []string{"/bin/bash", "-c"},
 		Arguments: []string{
