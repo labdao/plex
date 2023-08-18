@@ -13,7 +13,7 @@ class ScatteringMethod(Enum):
 
 
 class CoreTools(Enum):
-    EQUIBIND = "QmV5scTPXtxpEGUcQkDtUFPz3QLFVK6ZVWMXDmV3beu5cU"
+    EQUIBIND = "QmZWYpZXsrbtzvBCHngh4YEgME5djnV5EedyTpc8DrK7k2"
     DIFFDOCK = "QmfKhJh48aDHgckzwGEASNmZd1SYstQiR5qLqqYmLQFzq9"
     COLABFOLD_MINI = "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD"
     COLABFOLD_STANDARD = "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk"
