@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "colabfold-large",
     "description": "Protein folding prediction using Colabfold (large settings)",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "colabfold_batch --templates --num-recycle $(inputs.recycle.default) --use-gpu-relax --amber /inputs /outputs;"

@@ -2,6 +2,7 @@
   "class": "Tool",
   "name": "fastqc",
   "description": "Comprehensive quality control tool for high-throughput sequence data",
+  "author": "",
   "doi": "https://doi.org/10.48550/arXiv.2202.05146",
   "baseCommand": ["/bin/bash", "-c"],
   "arguments": [

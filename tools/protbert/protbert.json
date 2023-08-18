@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "protbert",
     "description": "Predicting unknown residues with protein language models",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "python3 app.py $(inputs.protein_sequence.filepath) /outputs --mode fill-mask;",

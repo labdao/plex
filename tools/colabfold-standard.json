@@ -2,6 +2,7 @@
     "class": "CommandLineTool",
     "name": "colabfold-standard",
     "description": "Protein folding prediction using Colabfold (standard settings)",
+    "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
       "colabfold_batch --templates --num-recycle $(inputs.recycle.default) /inputs /outputs;"
