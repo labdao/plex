@@ -1,36 +1,36 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func main() {
-	// Set up a new AWS session with the LocalStack configuration.
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String("http://localhost:4566"), // LocalStack endpoint
-	}))
+type WorkflowRequest struct {
+	Workflow string `json:"workflow"`
+}
 
-	// Create an SQS service client
-	svc := sqs.New(sess)
+const IPFSCIDLength = 46 // replace with the correct CID length
 
-	queueURL := "http://localhost:4566/000000000000/job-queue"
-
-	// Send message to the SQS queue
-	result, err := svc.SendMessage(&sqs.SendMessageInput{
-		DelaySeconds: aws.Int64(10),
-		MessageBody:  aws.String("Hello, LocalStack!"),
-		QueueUrl:     &queueURL,
-	})
-
+func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var workflowRequest WorkflowRequest
+	err := json.Unmarshal([]byte(request.Body), &workflowRequest)
 	if err != nil {
-		fmt.Println("Error", err)
-		return
+		return events.APIGatewayProxyResponse{StatusCode: 400}, nil
 	}
 
-	fmt.Println("Message Sent:", *result.MessageId)
+	if len(workflowRequest.Workflow) != IPFSCIDLength {
+		return events.APIGatewayProxyResponse{
+			StatusCode: 400,
+			Body:       fmt.Sprintf("Invalid CID length: expected %d, got %d", IPFSCIDLength, len(workflowRequest.Workflow)),
+		}, nil
+	}
+
+	return events.APIGatewayProxyResponse{StatusCode: 200}, nil
+}
+
+func main() {
+	lambda.Start(handler)
 }

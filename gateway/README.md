@@ -17,4 +17,14 @@ Utility
 ```
 docker ps | grep localstack
 docker restart <id_from_prev_step>
+
+zip function.zip main
+
+aws --endpoint-url=http://localhost:4566 lambda create-function \
+    --function-name gateway \
+    --handler main \
+    --zip-file fileb://./function.zip \
+    --runtime go1.x \
+    --role arn:aws:iam::123456789012:role/dummyrole
+
 ```
