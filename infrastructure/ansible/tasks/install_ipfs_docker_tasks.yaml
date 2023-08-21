@@ -96,7 +96,7 @@
   community.docker.docker_container:
     name: "ipfs"
     hostname: "ipfs"
-    image: "quay.io/labdao/ipfs:0.18.0-ds-s3"
+    image: "quay.io/labdao/ipfs:{{ ipfs_version }}-ds-s3"
       # env:
       # All this is now in template
       # AWS_REGION: "us-east-2"
