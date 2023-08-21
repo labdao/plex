@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/cors" // <-- Add this import for CORS
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -26,6 +28,13 @@ func main() {
 
 	// Migrate the schema
 	db.AutoMigrate(&DataFile{})
+
+	// Set up CORS
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"}, // Allow requests from your React frontend
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST"},
+	})
 
 	// Health check endpoint
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
@@ -65,5 +74,6 @@ func main() {
 		fmt.Fprint(w, "DataFile created successfully!")
 	})
 
-	http.ListenAndServe(":8080", nil)
+	// Start the server with CORS middleware
+	http.ListenAndServe(":8080", corsMiddleware.Handler(http.DefaultServeMux))
 }
