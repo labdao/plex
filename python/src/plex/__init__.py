@@ -60,7 +60,7 @@ def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.val
     print(' '.join(cmd))
 
     io_json_cid = ""
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir, env=os.environ) as p:
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
         for line in p.stdout:
             if "Pinned IO JSON CID:" in line:
                 parts = line.split()
