@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -143,6 +144,8 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 		return nil, fmt.Errorf("invalid scattering method: %s", scatteringMethod)
 	}
 
+	userId := os.Getenv("RECIPIENT_WALLET")
+
 	// populate ioJSONGraph based on inputsList
 	var ioJSONGraph []ipwl.IO
 	for _, inputs := range inputsList {
@@ -152,6 +155,7 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 			Outputs: make(map[string]ipwl.Output),
 			State:   "created",
 			ErrMsg:  "",
+			UserID:  userId,
 		}
 
 		inputKeys := make([]string, 0, len(inputVectors))
