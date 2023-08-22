@@ -36,8 +36,6 @@ var createCmd = &cobra.Command{
 
 		if autoRun && userID != "" {
 			*annotationsForAutoRun = append(*annotationsForAutoRun, fmt.Sprintf("userId=%s", userID))
-
-			fmt.Printf("Annotations for PlexRun: %v\n", *annotationsForAutoRun)
 		}
 
 		if autoRun {

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/web3"
 	"github.com/spf13/cobra"
 )
 
@@ -143,6 +145,15 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 		return nil, fmt.Errorf("invalid scattering method: %s", scatteringMethod)
 	}
 
+	var userId string
+
+	if web3.IsValidEthereumAddress(os.Getenv("RECIPIENT_WALLET")) {
+		userId = os.Getenv("RECIPIENT_WALLET")
+	} else {
+		fmt.Print("Invalid wallet address detected. Using empty string for user ID.\n")
+		userId = ""
+	}
+
 	// populate ioJSONGraph based on inputsList
 	var ioJSONGraph []ipwl.IO
 	for _, inputs := range inputsList {
@@ -152,6 +163,7 @@ func InitilizeIo(toolPath string, scatteringMethod string, inputVectors map[stri
 			Outputs: make(map[string]ipwl.Output),
 			State:   "created",
 			ErrMsg:  "",
+			UserID:  userId,
 		}
 
 		inputKeys := make([]string, 0, len(inputVectors))

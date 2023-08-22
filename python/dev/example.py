@@ -22,6 +22,12 @@ initial_io_cid = plex_init(
 # Custom annotations for testing
 custom_annotations = ["python_example", "test"]
 
+# check that environmental variable for recipient wallet is set
+if not os.environ.get('RECIPIENT_WALLET'):
+    print("RECIPIENT_WALLET environment variable not set")
+else:
+    print(f"RECIPIENT_WALLET environment variable set to {os.environ.get('RECIPIENT_WALLET')}")
+
 completed_io_cid, io_file_path = plex_run(initial_io_cid, output_dir=jobs_dir, annotations=custom_annotations, plex_path=plex_path)
 
 # Print annotations to verify
