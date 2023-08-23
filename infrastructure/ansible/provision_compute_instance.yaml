@@ -186,6 +186,9 @@
       ansible.builtin.systemd:
         daemon_reload: true
 
+    - name: Pull common containers
+      ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
+
   handlers:
     - name: Restart docker
       become: true
