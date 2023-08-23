@@ -1,0 +1,15 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+    padding: 1rem;
+    font-size: 1.5rem;
+}
+  
+.link {
+    text-decoration: none;
+    color: white;
+    /* ... any other styles for the link */
+}
