@@ -1,37 +1,49 @@
 'use client'
 
-/* Instruments */
 import {
    useSelector,
    useDispatch,
-   setName,
-   setEmail,
-   selectName,
-   selectEmail,
+   setUsername,
+   setWalletAddress,
+   setError,
+   startLoading,
+   endLoading,
+   selectUsername,
+   selectWalletAddress,
+   selectUserFormError,
+   selectUserFormIsLoading,
+   saveUserAsync,
 } from '@/lib/redux'
 
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
+import Alert from '@mui/material/Alert';
+import Typography from '@mui/material/Typography';
 
 export const UserForm = () => {
   const dispatch = useDispatch()
 
-  const name = useSelector(selectName)
-  const email = useSelector(selectEmail)
+  const username = useSelector(selectUsername)
+  const walletAddress = useSelector(selectWalletAddress)
+  const errorMessage = useSelector(selectUserFormError)
+  const isLoading = useSelector(selectUserFormIsLoading)
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setName(e.target.value))
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setUsername(e.target.value))
   }
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setEmail(e.target.value))
+  const handleWalletAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setWalletAddress(e.target.value))
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("Form Submitted with:", { name, email })
+    dispatch(startLoading())
+    dispatch(setError(null))
+    await dispatch(saveUserAsync({ username, walletAddress }))
+    dispatch(endLoading())
   }
 
   return (
@@ -43,23 +55,30 @@ export const UserForm = () => {
               fullWidth
               label="Username"
               variant="outlined"
-              value={name}
-              onChange={handleNameChange}
+              value={username}
+              onChange={handleUsernameChange}
             />
           </Grid>
           <Grid item>
-            <TextField
-              fullWidth
-              label="Eth Wallet Address"
-              type="email"
-              variant="outlined"
-              value={email}
-              onChange={handleEmailChange}
-            />
+          <TextField
+            fullWidth
+            label="Eth Wallet Address"
+            type="text"
+            variant="outlined"
+            value={walletAddress}
+            onChange={handleWalletAddressChange}
+          />
           </Grid>
+          {errorMessage && (
+            <Box my={2}>
+              <Alert severity="error" variant="filled">
+                <Typography align="center">{errorMessage}</Typography>
+              </Alert>
+            </Box>
+          )}
           <Grid item container justifyContent="center">
             <Button variant="contained" color="primary" type="submit">
-              Submit
+              {isLoading ? "Submitting..." : "Submit"}
             </Button>
           </Grid>
         </Grid>

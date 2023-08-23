@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rs/cors" // <-- Add this import for CORS
+	"github.com/rs/cors"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -18,6 +18,18 @@ type DataFile struct {
 	Filename      string `gorm:"type:varchar(255);not null"`
 }
 
+type User struct {
+	ID            uint   `gorm:"primaryKey" json:"id"`
+	Username      string `gorm:"type:varchar(255);unique;not null" json:"username"`
+	WalletAddress string `gorm:"type:varchar(42);not null" json:"walletAddress"`
+}
+
+func sendJSONError(w http.ResponseWriter, message string, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"message": message})
+}
+
 func main() {
 	// Setup database connection
 	dsn := "gorm.db"
@@ -27,7 +39,7 @@ func main() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&DataFile{})
+	db.AutoMigrate(&DataFile{}, &User{})
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
@@ -40,6 +52,44 @@ func main() {
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "Healthy")
+	})
+
+	http.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			sendJSONError(w, "Only POST method is supported", http.StatusBadRequest)
+			fmt.Println("Received non-POST request for /user endpoint.")
+			return
+		}
+
+		var requestData struct {
+			Username      string `json:"username"`
+			WalletAddress string `json:"walletAddress"`
+		}
+
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&requestData); err != nil {
+			sendJSONError(w, "Error parsing request body", http.StatusBadRequest)
+			fmt.Println("Error decoding request body:", err)
+			return
+		}
+
+		fmt.Printf("Received request to create user: Username: %s, WalletAddress: %s\n", requestData.Username, requestData.WalletAddress)
+
+		newUser := User{
+			Username:      requestData.Username,
+			WalletAddress: requestData.WalletAddress,
+		}
+		if result := db.Create(&newUser); result.Error != nil {
+			sendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
+			fmt.Println("Error creating user in database:", result.Error)
+			return
+		}
+
+		fmt.Printf("Successfully created user with ID: %d, Username: %s\n", newUser.ID, newUser.Username)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(newUser)
 	})
 
 	http.HandleFunc("/create-datafile", func(w http.ResponseWriter, r *http.Request) {
@@ -75,5 +125,6 @@ func main() {
 	})
 
 	// Start the server with CORS middleware
+	fmt.Println("Server started on http://localhost:8080")
 	http.ListenAndServe(":8080", corsMiddleware.Handler(http.DefaultServeMux))
 }
