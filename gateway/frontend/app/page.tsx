@@ -1,7 +1,9 @@
 import React from 'react'
 
+import { HomeMenu } from './components/HomeMenu/HomeMenu'
+
 export default function IndexPage() {
-  return <div>home</div>
+  return <HomeMenu />
 }
 
 export const metadata = {

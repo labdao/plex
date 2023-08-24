@@ -38,6 +38,10 @@ export const TopNav = () => {
     setAnchorEl(null)
   }
 
+  const handleNavigation = (path) => {
+    router.push(path)
+  }
+
   const handleLogout = () => {
     // Clear data from localStorage
     localStorage.removeItem('username')
@@ -52,7 +56,9 @@ export const TopNav = () => {
 
   return (
     <nav className={styles.navbar}>
-      <span className={styles.link}>Plex</span>
+      <span className={styles.link} onClick={() => handleNavigation('/')}>
+        plex
+      </span>
       {isLoggedIn && (
         <div className={styles.userContainer}>
           <span className={styles.username}>{username}</span>
