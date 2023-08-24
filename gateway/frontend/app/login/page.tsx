@@ -11,6 +11,7 @@ import {
    startLoading,
    endLoading,
    selectUsername,
+   selectIsLoggedIn,
    selectWalletAddress,
    selectUserFormError,
    selectUserFormIsLoading,
@@ -27,17 +28,14 @@ import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
 
 export default function LoginPage() {
-  const isUserLoggedIn = useSelector((state) => state.user.username)
+  const isUserLoggedIn = useSelector(selectIsLoggedIn)
   const router = useRouter()
 
   useEffect(() => {
-    const usernameFromLocalStorage = localStorage.getItem('username')
-    const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
-
-    if (usernameFromLocalStorage && walletAddressFromLocalStorage) {
+    if (isUserLoggedIn) {
       router.push('/')
     }
-  }, [router])
+  }, [router, isUserLoggedIn])
 
   const dispatch = useDispatch()
 
@@ -60,7 +58,6 @@ export default function LoginPage() {
     dispatch(setError(null))
     await dispatch(saveUserAsync({ username, walletAddress }))
     dispatch(endLoading())
-    router.push('/')
   }
 
   return (

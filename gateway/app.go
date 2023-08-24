@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/rs/cors"
 
@@ -74,6 +75,15 @@ func main() {
 		}
 
 		fmt.Printf("Received request to create user: Username: %s, WalletAddress: %s\n", requestData.Username, requestData.WalletAddress)
+
+		// Regular expression to match Ethereum addresses
+		re := regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+		isValdAddress := re.MatchString(requestData.WalletAddress)
+		if !isValdAddress {
+			fmt.Println("%s is not a valid Ethereum address", requestData.WalletAddress)
+			sendJSONError(w, "Invalid Ethereum address", http.StatusBadRequest)
+			return
+		}
 
 		newUser := User{
 			Username:      requestData.Username,
