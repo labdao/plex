@@ -21,9 +21,9 @@ In these docs, you can find:
 
 ## What to do next
 
-- [Install plex here with 1 line of code.](quickstart/installation)
+- [Install plex](quickstart/installation)
 
-- Run a tool - check out our [Small Molecule Binding](../tutorials/small-molecule-binding) or [Protein Folding](../tutorials/protein-folding) toolsets. For example, our small molecule binding toolset includes a workflow for docking small molecules & proteins, and for visualizing the results. **You can install plex, run an example model, and visualize the results in less than 5 mins!**
+- Check out our [Small Molecule Binding](https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing) or [Protein Folding](https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing) tutorials
 
 - Find out more about our tools on our [website](https://labdao.xyz/tools).
 
