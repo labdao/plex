@@ -78,28 +78,42 @@ func main() {
 
 		// Regular expression to match Ethereum addresses
 		re := regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
-		isValdAddress := re.MatchString(requestData.WalletAddress)
-		if !isValdAddress {
-			fmt.Println("%s is not a valid Ethereum address", requestData.WalletAddress)
+		isValidAddress := re.MatchString(requestData.WalletAddress)
+		if !isValidAddress {
+			fmt.Printf("%s is not a valid Ethereum address\n", requestData.WalletAddress)
 			sendJSONError(w, "Invalid Ethereum address", http.StatusBadRequest)
 			return
 		}
 
-		newUser := User{
-			Username:      requestData.Username,
-			WalletAddress: requestData.WalletAddress,
+		var existingUser User
+		if err := db.Where("username = ? AND wallet_address = ?", requestData.Username, requestData.WalletAddress).First(&existingUser).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				// User does not exist, create new user
+				newUser := User{
+					Username:      requestData.Username,
+					WalletAddress: requestData.WalletAddress,
+				}
+				if result := db.Create(&newUser); result.Error != nil {
+					sendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
+					fmt.Println("Error creating user in database:", result.Error)
+					return
+				}
+				fmt.Printf("Successfully created user with ID: %d, Username: %s\n", newUser.ID, newUser.Username)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				json.NewEncoder(w).Encode(newUser)
+			} else {
+				// Some other error occurred during the query
+				sendJSONError(w, "Database error", http.StatusInternalServerError)
+				fmt.Println("Database error:", err)
+			}
+		} else {
+			// User with given username and wallet address already exists, return that user
+			fmt.Printf("User already exists with ID: %d, Username: %s\n", existingUser.ID, existingUser.Username)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(existingUser)
 		}
-		if result := db.Create(&newUser); result.Error != nil {
-			sendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
-			fmt.Println("Error creating user in database:", result.Error)
-			return
-		}
-
-		fmt.Printf("Successfully created user with ID: %d, Username: %s\n", newUser.ID, newUser.Username)
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(newUser)
 	})
 
 	http.HandleFunc("/create-datafile", func(w http.ResponseWriter, r *http.Request) {
