@@ -1,23 +1,29 @@
 'use client'
+
 import React from 'react'
 
-import Link from 'next/link'
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 
+import { useRouter } from 'next/navigation'
+
 import styles from './topnav.module.css'
 import {
-  useSelector,
   useDispatch,
-  selectUsername,
+  useSelector,
   selectWalletAddress,
+  selectIsLoggedIn,
+  selectUsername,
   setUsername,
   setWalletAddress,
+  setIsLoggedIn,
 } from '@/lib/redux'
 
 export const TopNav = () => {
   const dispatch = useDispatch()
+  const router = useRouter()
+  const isLoggedIn = useSelector(selectIsLoggedIn)
   const username = useSelector(selectUsername)
   const walletAddress = useSelector(selectWalletAddress)
 
@@ -38,14 +44,16 @@ export const TopNav = () => {
     localStorage.removeItem('walletAddress')
     dispatch(setUsername(''))
     dispatch(setWalletAddress(''))
+    dispatch(setIsLoggedIn(false))
     handleClose()
-  };
+    router.push('/login')
+  }
 
 
   return (
     <nav className={styles.navbar}>
       <span className={styles.link}>Plex</span>
-      {username && (
+      {isLoggedIn && (
         <div className={styles.userContainer}>
           <span className={styles.username}>{username}</span>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={handleClick} />

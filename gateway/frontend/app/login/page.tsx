@@ -30,12 +30,14 @@ export default function LoginPage() {
   const isUserLoggedIn = useSelector((state) => state.user.username)
   const router = useRouter()
 
-  // Check if user is logged in.
   useEffect(() => {
-    if (isUserLoggedIn) {
-      router.replace('/');
+    const usernameFromLocalStorage = localStorage.getItem('username')
+    const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
+
+    if (usernameFromLocalStorage && walletAddressFromLocalStorage) {
+      router.push('/')
     }
-  }, [isUserLoggedIn, router])
+  }, [router])
 
   const dispatch = useDispatch()
 
@@ -58,6 +60,7 @@ export default function LoginPage() {
     dispatch(setError(null))
     await dispatch(saveUserAsync({ username, walletAddress }))
     dispatch(endLoading())
+    router.push('/')
   }
 
   return (

@@ -1,4 +1,3 @@
-/* Components */
 import { Providers } from '@/lib/providers'
 import { TopNav } from './components/TopNav/TopNav'
 import { FootBar } from './components/Footbar/FootBar'
@@ -6,9 +5,6 @@ import { UserLoader } from './components/UserLoader/UserLoader'
 
 import { Container, Grid, Box } from '@mui/material'
 
-
-
-/* Instruments */
 import './styles/globals.css'
 
 export default function RootLayout(props: React.PropsWithChildren) {
