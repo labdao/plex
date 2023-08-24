@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+
 import {
    useSelector,
    useDispatch,
@@ -15,14 +17,26 @@ import {
    saveUserAsync,
 } from '@/lib/redux'
 
+import { useRouter } from 'next/navigation'
+
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
-import Alert from '@mui/material/Alert';
-import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert'
+import Typography from '@mui/material/Typography'
 
-export const UserForm = () => {
+export default function LoginPage() {
+  const isUserLoggedIn = useSelector((state) => state.user.username)
+  const router = useRouter()
+
+  // Check if user is logged in.
+  useEffect(() => {
+    if (isUserLoggedIn) {
+      router.replace('/');
+    }
+  }, [isUserLoggedIn, router])
+
   const dispatch = useDispatch()
 
   const username = useSelector(selectUsername)

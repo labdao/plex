@@ -1,11 +1,9 @@
-/* Components */
-import { Counter } from './components/Counter/Counter'
-import { UserForm } from './components/UserForm/UserForm'
+import React from 'react'
 
 export default function IndexPage() {
-  return <UserForm />
+  return <div>home</div>
 }
 
 export const metadata = {
-  title: 'Redux Toolkit',
+  title: 'Plex',
 }

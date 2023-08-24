@@ -6,6 +6,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@mui/icons-material": "^5.14.3",
     "@reduxjs/toolkit": "1.9.5",
     "next": "latest",
     "react": "18.2.0",
