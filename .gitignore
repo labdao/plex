@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+./python/lib/
 lib64/
 parts/
 sdist/
@@ -299,3 +299,15 @@ contracts/coverage
 contracts/coverage.json
 contracts/typechain
 contracts/typechain-types
+
+# Next.js
+.next/
+out/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log
+yarn-debug.log*
+.pnpm-debug.log*
+!./gateway/frontend/lib/
