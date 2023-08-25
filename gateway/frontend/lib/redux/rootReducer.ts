@@ -1,7 +1,7 @@
 /* Instruments */
-import { counterSlice, userSlice } from './slices'
+import { dataFileAddSlice, userSlice } from './slices'
 
 export const reducer = {
   user: userSlice.reducer,
-  counter: counterSlice.reducer,
+  dataFileAdd: dataFileAddSlice.reducer,
 }
