@@ -39,8 +39,12 @@
       ipfs config Pinning.Recursive true
     mode: "0755"
 
+- name: debug private_ipfs
+  ansible.builtin.debug:
+    msg: "Got private_ipfs={{ private_ipfs }}"
+
 - name: Private IPFS
-  when: private_ipfs is defined and private_ipfs
+  when: private_ipfs is defined and private_ipfs | bool
   block:
     - name: Remove bootstrap when private mode
       become: true
