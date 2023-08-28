@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/rs/cors"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type DataFile struct {
@@ -57,67 +59,103 @@ type Tool struct {
 	Outputs     map[string]ToolOutput `json:"outputs"`
 }
 
+type ToolEntity struct {
+	CID      string `gorm:"primaryKey;type:varchar(255);not null"`
+	ToolJSON string `gorm:"type:varchar(255);not null"`
+}
+
 func sendJSONError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"message": message})
 }
 
-func addToolHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received request at /add-tool")
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
-		return
+func addToolHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Received request at /add-tool")
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		var tool Tool
+		err = json.Unmarshal(body, &tool)
+		if err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// TODO: Validate Tool
+
+		tempFile, err := ioutil.TempFile("", "*.json")
+		if err != nil {
+			http.Error(w, "Error creating temp file", http.StatusInternalServerError)
+			return
+		}
+		defer os.Remove(tempFile.Name())
+
+		_, err = tempFile.Write(body)
+		if err != nil {
+			http.Error(w, "Error writing temp file", http.StatusInternalServerError)
+			return
+		}
+		tempFile.Close()
+
+		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+		if err != nil {
+			http.Error(w, "Error adding to IPFS", http.StatusInternalServerError)
+			return
+		}
+
+		// Serialize Tool to JSON
+		toolJSON, err := json.Marshal(tool)
+		if err != nil {
+			http.Error(w, "Error serializing tool to JSON", http.StatusInternalServerError)
+			return
+		}
+
+		// Store serialized Tool in DB
+		toolEntity := ToolEntity{
+			CID:      cid,
+			ToolJSON: string(toolJSON),
+		}
+
+		if result := db.Create(&toolEntity); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]string{"cid": cid}
+		jsonResponse, _ := json.Marshal(response)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jsonResponse)
 	}
-
-	var tool Tool
-	err = json.Unmarshal(body, &tool)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	// TODO: Validate Tool
-
-	tempFile, err := ioutil.TempFile("", "*.json")
-	if err != nil {
-		http.Error(w, "Error creating temp file", http.StatusInternalServerError)
-		return
-	}
-	defer os.Remove(tempFile.Name())
-
-	_, err = tempFile.Write(body)
-	if err != nil {
-		http.Error(w, "Error writing temp file", http.StatusInternalServerError)
-		return
-	}
-	tempFile.Close()
-
-	cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-	if err != nil {
-		http.Error(w, "Error adding to IPFS", http.StatusInternalServerError)
-		return
-	}
-
-	defer os.Remove(tempFile.Name())
-
-	response := map[string]string{"cid": cid}
-	jsonResponse, _ := json.Marshal(response)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
 }
 
 func main() {
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,        // Enable color
+		},
+	)
+
 	// Setup database connection
 	dsn := "gorm.db"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		panic("failed to connect to database")
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&DataFile{}, &User{})
+	if err := db.AutoMigrate(&DataFile{}, &User{}, &ToolEntity{}); err != nil {
+		panic(fmt.Sprintf("failed to migrate database: %v", err))
+	}
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
@@ -225,7 +263,7 @@ func main() {
 		fmt.Fprint(w, "DataFile created successfully!")
 	})
 
-	http.HandleFunc("/add-tool", addToolHandler)
+	http.HandleFunc("/add-tool", addToolHandler(db))
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
