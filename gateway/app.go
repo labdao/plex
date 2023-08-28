@@ -244,6 +244,27 @@ func addToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+func getToolsHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			sendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		var tools []ToolEntity
+		if result := db.Find(&tools); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching tools: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(tools); err != nil {
+			http.Error(w, "Error encoding tools to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 func main() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
@@ -279,6 +300,7 @@ func main() {
 	http.HandleFunc("/user", createUserHandler(db))
 	http.HandleFunc("/create-datafile", createDataFileHandler(db))
 	http.HandleFunc("/add-tool", addToolHandler(db))
+	http.HandleFunc("/get-tools", getToolsHandler(db))
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
