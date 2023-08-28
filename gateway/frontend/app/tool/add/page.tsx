@@ -9,7 +9,7 @@ import {
   selectToolError,
   selectToolIsLoading,
   selectToolIsUploaded
-} from '@/lib/redux/selectors'
+} from '@/lib/redux/slices/toolAddSlice/selectors'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
