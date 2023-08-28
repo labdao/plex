@@ -3,9 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 
+	"github.com/labdao/plex/internal/ipfs"
 	"github.com/rs/cors"
 
 	"gorm.io/driver/sqlite"
@@ -25,10 +29,83 @@ type User struct {
 	WalletAddress string `gorm:"type:varchar(42);not null" json:"walletAddress"`
 }
 
+// TODO: Look into directly importing this from existing plex tool.go
+
+type ToolInput struct {
+	Type    string   `json:"type"`
+	Glob    []string `json:"glob"`
+	Default string   `json:"default"`
+}
+
+type ToolOutput struct {
+	Type string   `json:"type"`
+	Item string   `json:"item"`
+	Glob []string `json:"glob"`
+}
+
+type Tool struct {
+	Name        string                `json:"name"`
+	Description string                `json:"description"`
+	Author      string                `json:"author"`
+	BaseCommand []string              `json:"baseCommand"`
+	Arguments   []string              `json:"arguments"`
+	DockerPull  string                `json:"dockerPull"`
+	GpuBool     bool                  `json:"gpuBool"`
+	MemoryGB    *int                  `json:"memoryGB"`
+	NetworkBool bool                  `json:"networkBool"`
+	Inputs      map[string]ToolInput  `json:"inputs"`
+	Outputs     map[string]ToolOutput `json:"outputs"`
+}
+
 func sendJSONError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"message": message})
+}
+
+func addToolHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Received request at /add-tool")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	var tool Tool
+	err = json.Unmarshal(body, &tool)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Validate Tool
+
+	tempFile, err := ioutil.TempFile("", "*.json")
+	if err != nil {
+		http.Error(w, "Error creating temp file", http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(tempFile.Name())
+
+	_, err = tempFile.Write(body)
+	if err != nil {
+		http.Error(w, "Error writing temp file", http.StatusInternalServerError)
+		return
+	}
+	tempFile.Close()
+
+	cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+	if err != nil {
+		http.Error(w, "Error adding to IPFS", http.StatusInternalServerError)
+		return
+	}
+
+	defer os.Remove(tempFile.Name())
+
+	response := map[string]string{"cid": cid}
+	jsonResponse, _ := json.Marshal(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func main() {
@@ -44,7 +121,7 @@ func main() {
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // Allow requests from your React frontend
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST"},
 	})
@@ -147,6 +224,8 @@ func main() {
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprint(w, "DataFile created successfully!")
 	})
+
+	http.HandleFunc("/add-tool", addToolHandler)
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
