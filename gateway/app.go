@@ -165,12 +165,12 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
 
-		tempFile, err := ioutil.TempFile("", filename)
+		tempFile, err := os.Create(filename)
 		if err != nil {
 			sendJSONError(w, "Error creating temp file", http.StatusInternalServerError)
 			return
 		}
-		defer os.Remove(tempFile.Name())
+		defer os.Remove(filename)
 
 		_, err = io.Copy(tempFile, file)
 		if err != nil {

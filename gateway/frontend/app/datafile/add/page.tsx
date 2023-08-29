@@ -78,9 +78,6 @@ export default function DataFileForm() {
               {isLoading ? "Submitting..." : "Submit"}
             </Button>
           </Grid>
-          <Grid item container justifyContent="center">
-            ToDo: Write Go App Gateway Endpoint
-          </Grid>
         </Grid>
       </Box>
     </form>
