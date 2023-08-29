@@ -1,9 +1,6 @@
 package main
 
 import (
-	"archive/tar"
-	"bytes"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,12 +20,11 @@ import (
 )
 
 type DataFile struct {
-	ID             uint      `gorm:"primaryKey"`
-	CID            string    `gorm:"column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
-	WalletAddress  string    `gorm:"type:varchar(42);not null"`
-	Filename       string    `gorm:"type:varchar(255);not null"`
-	CompressedFile []byte    `gorm:"type:blob"`
-	Timestamp      time.Time `gorm:""`
+	ID            uint      `gorm:"primaryKey"`
+	CID           string    `gorm:"column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
+	WalletAddress string    `gorm:"type:varchar(42);not null"`
+	Filename      string    `gorm:"type:varchar(255);not null"`
+	Timestamp     time.Time `gorm:""`
 }
 
 type User struct {
@@ -81,50 +77,6 @@ func healthCheckHandler() http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "Healthy")
 	}
-}
-
-func compressFileToTarGZ(filename string) ([]byte, error) {
-	var buf bytes.Buffer
-	gzipWriter := gzip.NewWriter(&buf)
-	tarWriter := tar.NewWriter(gzipWriter)
-
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	header := &tar.Header{
-		Name: fileInfo.Name(),
-		Size: fileInfo.Size(),
-	}
-
-	err = tarWriter.WriteHeader(header)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = io.Copy(tarWriter, file)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tarWriter.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	err = gzipWriter.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
 }
 
 func createUserHandler(db *gorm.DB) http.HandlerFunc {
@@ -233,18 +185,11 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		compressedFile, err := compressFileToTarGZ(tempFile.Name())
-		if err != nil {
-			sendJSONError(w, "Error compressing file", http.StatusInternalServerError)
-			return
-		}
-
 		dataFile := DataFile{
-			CID:            cid,
-			WalletAddress:  walletAddress,
-			Filename:       filename,
-			CompressedFile: compressedFile,
-			Timestamp:      time.Now(),
+			CID:           cid,
+			WalletAddress: walletAddress,
+			Filename:      filename,
+			Timestamp:     time.Now(),
 		}
 
 		if result := db.Create(&dataFile); result.Error != nil {
