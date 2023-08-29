@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { saveDataFileAsync } from './thunks'
 
 interface DataFileSliceState {
   filename: string
@@ -38,6 +39,25 @@ export const dataFileAddSlice = createSlice({
     setIsUploaded: (state, action: PayloadAction<boolean>) => {
       state.isUploaded = action.payload
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(saveDataFileAsync.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(saveDataFileAsync.fulfilled, (state, action) => {
+        state.isLoading = false
+        if (action.payload) {
+          state.cid = action.payload.cid
+          state.filename = action.payload.filename
+        }
+        state.isUploaded = true
+      })
+      .addCase(saveDataFileAsync.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.error.message || 'An error occurred while saving data file.'
+      })
   }
 })
 

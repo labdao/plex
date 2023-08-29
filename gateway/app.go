@@ -21,7 +21,7 @@ import (
 
 type DataFile struct {
 	ID            uint      `gorm:"primaryKey"`
-	CID           string    `gorm:"type:varchar(255);not null"`
+	CID           string    `gorm:"column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
 	WalletAddress string    `gorm:"type:varchar(42);not null"`
 	Filename      string    `gorm:"type:varchar(255);not null"`
 	Timestamp     time.Time `gorm:""`
@@ -62,7 +62,7 @@ type Tool struct {
 }
 
 type ToolEntity struct {
-	CID      string `gorm:"primaryKey;type:varchar(255);not null"`
+	CID      string `gorm:"primaryKey;column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
 	ToolJSON string `gorm:"type:varchar(255);not null"`
 }
 
@@ -165,7 +165,7 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
 
-		tempFile, err := ioutil.TempFile("", "*-"+filename)
+		tempFile, err := ioutil.TempFile("", filename)
 		if err != nil {
 			sendJSONError(w, "Error creating temp file", http.StatusInternalServerError)
 			return

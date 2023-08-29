@@ -12,7 +12,8 @@ import {
    selectCID,
    selectDataFileError,
    selectDataFileIsLoading,
-   saveDataFileAsync,  // assuming you have this thunk action for saving data file
+   saveDataFileAsync,
+   selectWalletAddress
 } from '@/lib/redux'
 
 import { useRouter } from 'next/router'  // changed 'next/navigation' to 'next/router'
@@ -29,6 +30,7 @@ export default function DataFileForm() {
   const cid = useSelector(selectCID)
   const errorMessage = useSelector(selectDataFileError)
   const isLoading = useSelector(selectDataFileIsLoading)
+  const walletAddress = useSelector(selectWalletAddress)
 
   const [file, setFile] = useState<File | null>(null)
 
@@ -43,7 +45,7 @@ export default function DataFileForm() {
     e.preventDefault()
     dispatch(startLoading())
     dispatch(setError(null))
-    await dispatch(saveDataFileAsync({ filename: file?.name, file })) // filename is now derived directly from the file object
+    await dispatch(saveDataFileAsync({ file, metadata: { walletAddress }}))
     dispatch(endLoading())
   }
 
