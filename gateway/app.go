@@ -25,6 +25,8 @@ type DataFile struct {
 	WalletAddress string    `gorm:"type:varchar(42);not null"`
 	Filename      string    `gorm:"type:varchar(255);not null"`
 	Timestamp     time.Time `gorm:""`
+	Public        bool      `gorm:"default:true"`
+	Visible       bool      `gorm:"default:true"`
 }
 
 type User struct {
@@ -143,6 +145,8 @@ func createUserHandler(db *gorm.DB) http.HandlerFunc {
 
 func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Received request at /create-datafile")
+
 		if r.Method != http.MethodPost {
 			sendJSONError(w, "Only POST method is supported", http.StatusBadRequest)
 			fmt.Println("Received non-POST request for /create-datafile endpoint.")
@@ -154,6 +158,7 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			sendJSONError(w, "Error parsing multipart form", http.StatusBadRequest)
 			return
 		}
+		fmt.Println("Parsed multipart form")
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
@@ -164,6 +169,10 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 
 		walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
+		publicBool := r.FormValue("public")
+		visibleBool := r.FormValue("visible")
+
+		fmt.Printf("Received file upload request for file: %s, walletAddress: %s, public: %s, visible: %s\n", filename, walletAddress, publicBool, visibleBool)
 
 		tempFile, err := os.Create(filename)
 		if err != nil {
@@ -200,6 +209,27 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(dataFile)
+	}
+}
+
+func getDataFilesHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			sendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		var dataFiles []DataFile
+		if result := db.Find(&dataFiles); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(dataFiles); err != nil {
+			http.Error(w, "Error encoding datafiles to JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -321,6 +351,7 @@ func main() {
 	http.HandleFunc("/healthcheck", healthCheckHandler())
 	http.HandleFunc("/user", createUserHandler(db))
 	http.HandleFunc("/create-datafile", createDataFileHandler(db))
+	http.HandleFunc("/get-datafiles", getDataFilesHandler(db))
 	http.HandleFunc("/add-tool", addToolHandler(db))
 	http.HandleFunc("/get-tools", getToolsHandler(db))
 

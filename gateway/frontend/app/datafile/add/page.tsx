@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
+import React, { useState } from 'react'
 import {
    useSelector,
    useDispatch,
-   setCid,  // assuming you have an action to set cid
    setError,
    startLoading,
    endLoading,
@@ -15,17 +13,16 @@ import {
    saveDataFileAsync,
    selectWalletAddress
 } from '@/lib/redux'
-
-import { useRouter } from 'next/router'  // changed 'next/navigation' to 'next/router'
-
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
+// import { useRouter } from 'next/router'
 
 export default function DataFileForm() {
   const dispatch = useDispatch()
+  // const router = useRouter()
 
   const cid = useSelector(selectCID)
   const errorMessage = useSelector(selectDataFileError)
@@ -33,6 +30,8 @@ export default function DataFileForm() {
   const walletAddress = useSelector(selectWalletAddress)
 
   const [file, setFile] = useState<File | null>(null)
+  const [isPublic, setIsPublic] = useState<boolean>(true)
+  const [isVisible, setIsVisible] = useState<boolean>(true)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files && e.target.files[0]
@@ -41,12 +40,34 @@ export default function DataFileForm() {
     }
   }
 
+  const handlePublicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsPublic(!e.target.checked)
+  }
+
+  const handleVisibleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsVisible(!e.target.checked)
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (file === null) {
+      dispatch(setError("Please select a file"))
+      return
+    }
+    
     dispatch(startLoading())
     dispatch(setError(null))
-    await dispatch(saveDataFileAsync({ file, metadata: { walletAddress }}))
-    dispatch(endLoading())
+    const metadata = { walletAddress, isPublic, isVisible };
+
+    try {
+      await dispatch(saveDataFileAsync({ file, metadata }))
+      dispatch(endLoading())
+
+      // router.push('/data/list')
+    } catch (error) {
+      dispatch(setError("Error uploading file"))
+      dispatch(endLoading())
+    }
   }
 
   return (
@@ -65,6 +86,24 @@ export default function DataFileForm() {
                 onChange={handleFileChange}
               />
             </Button>
+          </Grid>
+          <Grid item container justifyContent="center">
+            <label>
+              <input
+                type="checkbox"
+                checked={!isPublic}
+                onChange={handlePublicChange}
+              />
+              File should be private
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={!isVisible}
+                onChange={handleVisibleChange}
+              />
+              File should be hidden
+            </label>
           </Grid>
           {errorMessage && (
             <Box my={2}>

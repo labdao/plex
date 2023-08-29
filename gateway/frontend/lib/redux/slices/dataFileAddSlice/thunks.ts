@@ -13,8 +13,7 @@ export const saveDataFileAsync = createAppAsyncThunk(
     try {
       const response = await saveDataFileToServer(file, metadata);
       console.log("Response:", response)
-      if (response.filename && response.cid) {
-        dispatch(setCid(response.cid));
+      if (response.filename) {
         dispatch(setFilename(response.filename));
       } else {
         dispatch(setError('Failed to save data file.'))

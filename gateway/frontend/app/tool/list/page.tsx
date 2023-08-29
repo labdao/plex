@@ -8,7 +8,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
-export default function ListDataFiles() {
+export default function ListToolFiles() {
   interface Tool {
     CID: string;
     ToolJSON: string;
@@ -17,7 +17,6 @@ export default function ListDataFiles() {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    // Fetch data from the API when component mounts
     fetch('http://localhost:8080/get-tools')
       .then(response => {
         if (!response.ok) {

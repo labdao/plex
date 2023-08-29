@@ -1,6 +1,62 @@
-import React from 'react'
+'use client'
 
+import React, { useEffect, useState } from 'react'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 
 export default function ListDataFiles() {
-  return <div>ToDo: List Data Files</div>
+  interface DataFile {
+    CID: string;
+    WalletAddress: string;
+    Filename: string;
+    IsPublic: boolean;
+    IsVisible: boolean;
+  }
+
+  const [datafiles, setDataFiles] = useState<DataFile[]>([]);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/get-datafiles')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Fetched datafiles:', data);
+        setDataFiles(data);
+      })
+  }, [])
+
+  return (
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>CID</TableCell>
+            <TableCell>Uploader Wallet</TableCell>
+            <TableCell>Filename</TableCell>
+            <TableCell>Is Public</TableCell>
+            <TableCell>Is Visible</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {datafiles.map((datafile, index) => ( 
+            <TableRow key={index}>
+              <TableCell>{datafile.CID}</TableCell>
+              <TableCell>{datafile.WalletAddress}</TableCell>
+              <TableCell>{datafile.Filename}</TableCell>
+              <TableCell>{datafile.IsPublic ? 'Yes' : 'No'}</TableCell>
+              <TableCell>{datafile.IsVisible ? 'Yes' : 'No'}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )
 }

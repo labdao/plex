@@ -4,8 +4,6 @@ import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addToolAsync, setError, startFileUpload, endFileUpload  } from '@/lib/redux'
 import {
-  selectFileName,
-  selectCID,
   selectToolError,
   selectToolIsLoading,
   selectToolIsUploaded
@@ -14,9 +12,11 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
+// import { useRouter } from 'next/router'
 
 export default function AddTool() {
   const dispatch = useDispatch()
+  // const router = useRouter()
 
   const isLoading = useSelector(selectToolIsLoading);
   const error = useSelector(selectToolError);
@@ -63,6 +63,7 @@ export default function AddTool() {
     };
 
     dispatch(addToolAsync({ toolData: toolConfig }));
+    // router.push('/tool/list');
   };
 
   return (

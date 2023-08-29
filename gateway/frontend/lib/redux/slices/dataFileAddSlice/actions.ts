@@ -4,8 +4,9 @@ export const saveDataFileToServer = async (
   ): Promise<{ filename: string, cid: string }> => {
     const formData = new FormData();
     formData.append('file', file, file.name);
-  
     formData.append('filename', file.name)
+    formData.append('isPublic', String(metadata.isPublic))
+    formData.append('isVisible', String(metadata.isVisible))
 
     for (const key in metadata) {
       formData.append(key, metadata[key]);
