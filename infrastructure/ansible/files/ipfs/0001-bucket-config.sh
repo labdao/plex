@@ -18,7 +18,8 @@ jq ".Datastore.Spec = {
             bucket: \"labdao-ipfs-bucket-{{ ansible_ec2_tags_instance_Env | lower }}\",
             rootDirectory: \"${CLUSTER_PEERNAME}\",
             accessKey: \"${CLUSTER_AWS_KEY}\",
-            secretKey: \"${CLUSTER_AWS_SECRET}\"
+            secretKey: \"${CLUSTER_AWS_SECRET}\",
+            keyTransform: \"next-to-last/2\"
           },
           mountpoint: \"/blocks\",
           prefix: \"s3.datastore\",
