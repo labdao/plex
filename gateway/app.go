@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,10 +20,11 @@ import (
 )
 
 type DataFile struct {
-	ID            uint   `gorm:"primaryKey"`
-	CID           string `gorm:"type:varchar(255);not null"`
-	WalletAddress string `gorm:"type:varchar(42);not null"`
-	Filename      string `gorm:"type:varchar(255);not null"`
+	ID            uint      `gorm:"primaryKey"`
+	CID           string    `gorm:"type:varchar(255);not null"`
+	WalletAddress string    `gorm:"type:varchar(42);not null"`
+	Filename      string    `gorm:"type:varchar(255);not null"`
+	Timestamp     time.Time `gorm:""`
 }
 
 type User struct {
@@ -147,37 +149,57 @@ func createDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var requestData struct {
-			CID           string `json:"cid"`
-			WalletAddress string `json:"wallet_address"`
-			Filename      string `json:"filename"`
-		}
-
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&requestData); err != nil {
-			sendJSONError(w, "Error parsing request body", http.StatusBadRequest)
-			fmt.Println("Error decoding request body:", err)
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			sendJSONError(w, "Error parsing multipart form", http.StatusBadRequest)
 			return
 		}
 
-		fmt.Printf("Received request to create datafile: CID: %s, WalletAddress: %s, Filename: %s\n", requestData.CID, requestData.WalletAddress, requestData.Filename)
-
-		newFile := DataFile{
-			CID:           requestData.CID,
-			WalletAddress: requestData.WalletAddress,
-			Filename:      requestData.Filename,
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			sendJSONError(w, "Error retrieving file from multipart form", http.StatusBadRequest)
+			return
 		}
+		defer file.Close()
 
-		if result := db.Create(&newFile); result.Error != nil {
-			sendJSONError(w, fmt.Sprintf("Error creating datafile: %v", result.Error), http.StatusInternalServerError)
-			fmt.Println("Error creating datafile in database:", result.Error)
+		walletAddress := r.FormValue("walletAddress")
+		filename := r.FormValue("filename")
+
+		tempFile, err := ioutil.TempFile("", "*-"+filename)
+		if err != nil {
+			sendJSONError(w, "Error creating temp file", http.StatusInternalServerError)
+			return
+		}
+		defer os.Remove(tempFile.Name())
+
+		_, err = io.Copy(tempFile, file)
+		if err != nil {
+			sendJSONError(w, "Error writing temp file", http.StatusInternalServerError)
+			return
+		}
+		tempFile.Close()
+
+		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+		if err != nil {
+			sendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Printf("Successfully created datafile with ID: %d, CID: %s\n", newFile.ID, newFile.CID)
+		dataFile := DataFile{
+			CID:           cid,
+			WalletAddress: walletAddress,
+			Filename:      filename,
+			Timestamp:     time.Now(),
+		}
+
+		if result := db.Create(&dataFile); result.Error != nil {
+			sendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(dataFile)
 	}
 }
 
