@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 export const HomeMenu = () => {
   const router = useRouter()
 
-  const handleNavigation = (path) => {
+  const handleNavigation = (path: string) => {
     router.push(path)
   }
 
@@ -35,6 +35,16 @@ export const HomeMenu = () => {
         <ListItem disablePadding>
           <ListItemButton onClick={() => handleNavigation('tool/list')}>
             <ListItemText primary="View Tools" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigation('/job/init')}>
+            <ListItemText primary="Initialize a Job" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigation('/job/view')}>
+            <ListItemText primary="Submit a Job" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
