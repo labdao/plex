@@ -327,7 +327,7 @@ func getToolsHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func initilizeIo(toolPath string, scatteringMethod string, inputVectors map[string][]string) ([]ipwl.IO, error) {
+func initializeIo(toolPath string, scatteringMethod string, inputVectors map[string][]string) ([]ipwl.IO, error) {
 	// Open the file and load its content
 	tool, toolInfo, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
@@ -475,20 +475,27 @@ func initJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			ToolCID          string `json:"toolCID"`
-			Inputs           string `json:"inputs"`
-			ScatteringMethod string `json:"scatteringMethod"`
+			Tool             string   `json:"tool"`
+			Inputs           []string `json:"inputs"`
+			ScatteringMethod string   `json:"scatteringMethod"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
 			sendJSONError(w, "Error parsing request body", http.StatusBadRequest)
 			return
 		}
 
+		log.Printf("Received request to initialize job: Tool: %s, Inputs: %s, ScatteringMethod: %s\n", requestData.Tool, requestData.Inputs, requestData.ScatteringMethod)
+
 		if requestData.ScatteringMethod == "" {
 			requestData.ScatteringMethod = "dotProduct"
 		}
 
-		ioJson, err := initilizeIo(requestData.ToolCID, requestData.ScatteringMethod, map[string][]string{"input": []string{requestData.Inputs}})
+		inputsMap := make(map[string][]string)
+		for i, input := range requestData.Inputs {
+			inputsMap[fmt.Sprintf("input%d", i+1)] = []string{input}
+		}
+
+		ioJson, err := initializeIo(requestData.Tool, requestData.ScatteringMethod, inputsMap)
 		if err != nil {
 			sendJSONError(w, fmt.Sprintf("Error initializing IO: %v", err), http.StatusInternalServerError)
 			return

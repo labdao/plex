@@ -44,7 +44,7 @@ export default function InitJob() {
 
         const data = {
             tool: selectedTool,
-            inputs: selectedDataFiles.join(','),
+            inputs: selectedDataFiles,
             // scatteringMethod: "dotProduct"
         };
 
@@ -82,7 +82,7 @@ export default function InitJob() {
                     Select data files:
                     <select multiple onChange={e => setSelectedDataFiles(Array.from(e.target.selectedOptions, option => option.value))}>
                         {dataFiles.map((file, index) => (
-                            <option key={index} value={file.CID}>{file.Filename}</option>
+                            <option key={index} value={file.Filename}>{file.Filename}</option>
                         ))}
                     </select>
                 </label>
