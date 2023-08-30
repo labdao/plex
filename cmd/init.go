@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
@@ -65,6 +66,14 @@ var initCmd = &cobra.Command{
 		if err := tempFile.Close(); err != nil {
 			log.Fatalf("Failed to close the temporary file: %v", err)
 		}
+
+		if autoRun {
+			_, _, err := PlexRun(cid, outputDir, verbose, showAnimation, concurrency, *annotationsForAutoRun)
+			if err != nil {
+				fmt.Println("Error:", err)
+				os.Exit(1)
+			}
+		}
 	},
 }
 
@@ -72,6 +81,8 @@ func init() {
 	initCmd.Flags().StringVarP(&toolPath, "toolPath", "t", "", "Path of the Tool config (can be a local path or an IPFS CID)")
 	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format")
 	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format")
+	initCmd.Flags().BoolVarP(&autoRun, "autoRun", "", false, "Auto run the job after initilization")
+	annotationsForAutoRun = createCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(initCmd)
 }
