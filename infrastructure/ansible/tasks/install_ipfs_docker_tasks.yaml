@@ -39,7 +39,7 @@
       ipfs config Pinning.Recursive true
     mode: "0755"
 
-- name: debug private_ipfs
+- name: Debug private_ipfs
   ansible.builtin.debug:
     msg: "Got private_ipfs={{ private_ipfs }}"
 
@@ -101,7 +101,8 @@
     name: "ipfs"
     hostname: "ipfs"
     image: "quay.io/labdao/ipfs:{{ ipfs_version }}-ds-s3-3box"
-      # env:
+    env:
+      LIBP2P_FORCE_PNET: "{% if private_ipfs is defined and private_ipfs | bool %}1{% else %}0{% endif %}"
       # All this is now in template
       # AWS_REGION: "us-east-2"
       # CLUSTER_S3_BUCKET: "labdao-ipfs-bucket-{{ ansible_ec2_tags_instance_Env | lower }}"
