@@ -12,15 +12,29 @@ print(f"Using plex_path, {plex_path}, if this looks incorrect then make sure you
 small_molecules = [f"{test_data_dir}/binding/abl/ZINC000003986735.sdf", f"{test_data_dir}/binding/abl/ZINC000019632618.sdf"]
 proteins = [f"{test_data_dir}/binding/abl/7n9g.pdb"]
 
+# Custom annotations for testing
+custom_annotations = ["python_example", "test"]
+
+print(f"Testing plex_init with auto_run flag set to True")
+
+test_io_cid = plex_init(
+    CoreTools.EQUIBIND.value,
+    ScatteringMethod.CROSS_PRODUCT.value,
+    auto_run=True,
+    plex_path=plex_path,
+    small_molecule=small_molecules,
+    protein=proteins,
+)
+
+print(f"Testing plex_init with auto_run flag set to False")
+
 initial_io_cid = plex_init(
     CoreTools.EQUIBIND.value,
     ScatteringMethod.CROSS_PRODUCT.value,
     plex_path=plex_path,
     small_molecule=small_molecules,
-    protein=proteins)
-
-# Custom annotations for testing
-custom_annotations = ["python_example", "test"]
+    protein=proteins
+)
 
 # check that environmental variable for recipient wallet is set
 if not os.environ.get('RECIPIENT_WALLET'):

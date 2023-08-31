@@ -36,7 +36,7 @@ class PlexError(Exception):
         super().__init__(f"{self.message}\n{self.github_issue_message}")
 
 
-def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.value, plex_path="plex", **kwargs):
+def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.value, plex_path="plex", auto_run=False, **kwargs):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
 
@@ -55,7 +55,7 @@ def plex_init(tool_path: str, scattering_method=ScatteringMethod.DOT_PRODUCT.val
     # Convert kwargs dictionary to a JSON string
     inputs = json.dumps(kwargs)
 
-    cmd = [plex_path, "init", "-t", tool_path, "-i", inputs, f"--scatteringMethod={scattering_method}"]
+    cmd = [plex_path, "init", "-t", tool_path, "-i", inputs, f"--scatteringMethod={scattering_method}", f"--autoRun={str(auto_run).lower()}"]
 
     print(' '.join(cmd))
 
