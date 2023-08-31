@@ -67,7 +67,7 @@ Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lab
 
 2. Submit an example plex job
 ```
-./plex create -t tools/equibind.json -i testdata/binding/abl --autoRun=True
+./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true 
 ```
 
 ![Getting Started](./readme-getting-started-2x.gif)

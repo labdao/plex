@@ -3,19 +3,17 @@ export const saveDataFileToServer = async (
     metadata: { [key: string]: any }
   ): Promise<{ filename: string, cid: string }> => {
     const formData = new FormData();
-    
-    // Append file to form data
-    formData.append('dataFile', file);
-  
-    // Append additional metadata if required
+    formData.append('file', file, file.name);
+    formData.append('filename', file.name)
+    formData.append('isPublic', String(metadata.isPublic))
+    formData.append('isVisible', String(metadata.isVisible))
+
     for (const key in metadata) {
       formData.append(key, metadata[key]);
     }
   
-    const response = await fetch('http://localhost:8080/datafile', {
+    const response = await fetch('http://localhost:8080/create-datafile', {
       method: 'POST',
-      // Notice we are not setting the Content-Type header.
-      // The browser will set it to `multipart/form-data` and append the appropriate boundary for FormData.
       body: formData,
     })
   
