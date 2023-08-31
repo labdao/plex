@@ -8,6 +8,7 @@ POSTGRES_USER=labdao
 POSTGRES_DB=labdao
 POSTGRES_HOST=localhost
 ```
+* Recommended: Install [direnv](https://direnv.net/). With it installed you can create `.env` file with the above environment variables and have them automagically set when you descend into the folder. 
 
 # Start the database
 
