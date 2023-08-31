@@ -3,9 +3,12 @@
   become: true
   ansible.builtin.pip:
     name:
-      - pip
-      - pyopenssl
       - github3.py
+
+- name: Print plex_version if provided
+  ansible.builtin.debug:
+    msg: "{{ plex_version }}"
+  when: plex_version is defined
 
 - name: Get the latest plex release
   community.general.github_release:
@@ -17,8 +20,9 @@
 - name: Download the latest plex binary
   ansible.builtin.get_url:
     #https://github.com/labdao/plex/releases/download/v0.7.0/plex_0.7.0_linux_amd64.tar.gz
-    url: https://github.com/labdao/plex/releases/download/{{ latest_release.tag }}/plex_{{ latest_release.tag | regex_replace('^v([0-9]\.[0-9]\.[0-9])$', '\1') }}_linux_amd64.tar.gz
+    url: https://github.com/labdao/plex/releases/download/{{ latest_release.tag }}/plex_{{ latest_release.tag | regex_replace('^v([0-9]\.[0-9][0-9]\.[0-9])$', '\1') }}_linux_amd64.tar.gz
     dest: /tmp/plex_release.tar.gz
+    force: true
 
 - name: Unzip the plex release
   ansible.builtin.unarchive:
