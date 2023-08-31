@@ -13,8 +13,10 @@ import (
 )
 
 var (
-	inputs           string
-	scatteringMethod string
+	inputs                string
+	scatteringMethod      string
+	autoRun               bool
+	annotationsForAutoRun *[]string
 )
 
 var initCmd = &cobra.Command{
@@ -81,8 +83,8 @@ func init() {
 	initCmd.Flags().StringVarP(&toolPath, "toolPath", "t", "", "Path of the Tool config (can be a local path or an IPFS CID)")
 	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format")
 	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format")
-	initCmd.Flags().BoolVarP(&autoRun, "autoRun", "", false, "Auto run the job after initilization")
-	annotationsForAutoRun = createCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
+	initCmd.Flags().BoolVarP(&autoRun, "autoRun", "", false, "Auto submit the IO to plex run")
+	annotationsForAutoRun = initCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(initCmd)
 }

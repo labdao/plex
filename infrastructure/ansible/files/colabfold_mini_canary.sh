@@ -6,7 +6,7 @@ set -e
 # plex must run from the same place as tools directory
 cd {{ repo_dir }}
 
-plex create -t {{ repo_dir }}/tools/colabfold-mini.json -i {{ repo_dir}}/testdata/folding --autoRun=True -a test -a cron | tee plex_colabfold_out.log
+plex init -t {{ repo_dir }}/tools/colabfold-mini.json -i '{"sequence": ["{{ repo_dir }}/testdata/folding/test.fasta"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a cron | tee plex_colabfold_out.log
 # capture the exit status of the plex call
 plex_result_code=${PIPESTATUS[0]}
 # exit immediately if plex exited with an error

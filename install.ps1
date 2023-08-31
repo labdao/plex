@@ -102,4 +102,4 @@ Write-Host "Installation complete. Welcome to LabDAO! Documentation at https://g
 Write-Host "To get started, please run the following steps:"
 Write-Host "1. To request access to the Jupyter Hub please visit: https://try.labdao.xyz"
 Write-Host "2. Run the following command to run Equibind on test data:"
-Write-Host "./plex create -t tools/equibind.json -i testdata/binding/abl/ --autoRun=true"
+Write-Host "./plex init -t tools/equibind.json -i '{"protein": "testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true"

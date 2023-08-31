@@ -121,42 +121,6 @@ def plex_upload(file_path: str, wrap_file=True, plex_path="plex"):
     return file_cid
 
 
-def plex_create(tool_path: str, input_dir: str, layers=2, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=[], plex_path="plex"):
-    cwd = os.getcwd()
-    plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(os.path.dirname(cwd)))
-    cmd = [plex_path, "create", "-t", tool_path, "-i", input_dir, f"--layers={layers}"]
-
-    if output_dir:
-        cmd.append(f"-o={output_dir}")
-
-    if verbose:
-        cmd.append("-v=true")
-
-    if concurrency:
-        cmd.append(f"--concurrency={concurrency}")
-
-    if annotations:
-        cmd.append(f"--annotations={annotations.join(',')}")
-
-    if not show_animation: # default is true in the CLI
-        cmd.append("--showAnimation=false")
-
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=1, universal_newlines=True, cwd=plex_work_dir) as p:
-        io_json_cid = ""
-        for line in p.stdout:
-            if "Initial IO JSON file CID:" in line:
-                parts = line.split()
-                io_json_cid = parts[-1]
-            print(line, end='')
-        for line in p.stderr:
-            print(line, end='')
-
-    if io_json_cid == "":
-        raise PlexError("Failed to create IO JSON CID")
-
-    return io_json_cid
-
-
 def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=None, plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(cwd))
