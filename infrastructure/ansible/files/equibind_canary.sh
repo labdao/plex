@@ -9,9 +9,11 @@ export BACALHAU_SERVE_IPFS_PATH=${IPFS_PATH}
 
 # Ensure there is no port conflict with other canaries
 ipfs init -e
+ipfs bootstrap rm --all
 ipfs config Addresses.API /ip4/127.0.0.1/tcp/7001
 ipfs config Addresses.Gateway /ip4/127.0.0.1/tcp/7002
 ipfs config Addresses.Swarm --json '["/ip4/0.0.0.0/tcp/7000"]'
+export BACALHAU_IPFS_SWARM_ADDRESSES="/dns4/bacalhau.labdao.xyz/tcp/4001/p2p/$(curl -s -X POST bacalhau.labdao.xyz:5001/api/v0/id | jq -r '.ID')"
 
 # plex must run from the same place as tools directory
 cd {{ repo_dir }}
