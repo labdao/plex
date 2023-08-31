@@ -17,7 +17,8 @@ The following functions are considered core when using the plex [pip package](ht
 def plex_init(
     tool_path: str, 
     scattering_method=ScatteringMethod.DOT_PRODUCT.value, 
-    plex_path="plex", 
+    plex_path="plex",
+    auto_run=False,
     **kwargs
 )
 ```
@@ -42,6 +43,7 @@ initial_io_cid = plex_init(
     * **dotProduct:** Pairs corresponding elements from each input vector into subarrays. Requires all input vectors to have the same length. 
     * **crossProduct:** Generates all combinations of elements across input vectors, forming the Cartesian product. Input vector lengths can vary.
 * `plex_path` *str*, *optional* - path pointing to plex binary
+* `auto_run` *bool*, *optional* - automatically submits the job for computation based on the IO JSON
 * `**kwargs` *keyword arguments*, *optional* - additional parameters in the form of a list, where keys are input names and values are input values; see each tool config for specific arguments accepted
 
 ---
