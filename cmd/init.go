@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	toolPath              string
 	inputs                string
 	scatteringMethod      string
 	autoRun               bool
