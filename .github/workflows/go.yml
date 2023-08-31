@@ -46,5 +46,5 @@ jobs:
             exit 1
           else
             echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked
+            find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
