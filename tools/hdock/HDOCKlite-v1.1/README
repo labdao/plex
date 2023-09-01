@@ -1,0 +1,41 @@
+HDOCKlite v1.0 -- The ab initio docking engine of the HDOCK server (http://hdock.phys.hust.edu.cn/)
+	     
+This program performs the ab initio protein-protein and protein-RNA/DNA docking using
+the intrinsic scoring functions for protein-protein and protein-RNA interactions based
+on a hierarchical algorithm.
+
+Here is an example to use HDOCKlite
+
+	hdock 1CGI_r_b.pdb 1CGI_l_b.pdb -out Hdock.out
+	creapl Hdock.out top100.pdb -nmax 100 -complex -models
+
+where the first command does the ab initio docking and the second command creates the docked
+complex models from the solutions in Hdock.out.
+
+For more information about HDOCKlite, please type the programs or visit the help page of HDOCK server.
+
+
+Sheng-You Huang, PhD
+---------------------
+The Huang Lab
+Biophysics and Molecular Modeling Group
+School of Physics
+Huazhong University of Science and Technology
+Email: huangsy@hust.edu.cn
+Web: http://huanglab.phys.hust.edu.cn/
+
+
+References:
+
+1. Yan Y, Tao H, He J, Huang S-Y. The HDOCK server for integrated protein-protein docking. Nature Proctocols, 2020; doi: https://doi.org/10.1038/s41596-020-0312-x.
+
+2. Yan Y, Zhang D, Zhou P, Li B, Huang S-Y. HDOCK: a web server for protein-protein and protein-DNA/RNA docking based on a hybrid strategy. Nucleic Acids Res. 2017;45(W1):W365-W373.
+
+3. Yan Y, Huang SY. Pushing the accuracy limit of shape complementarity for protein-protein docking. BMC Bioinformatics. 2019 Dec 24;20(Suppl 25):696.
+
+4. Yan Y, Wen Z, Wang X, Huang S-Y. Addressing recent docking challenges: A hybrid strategy to integrate template-based and free protein-protein docking. Proteins 2017;85:497-512.
+
+5. Huang SY, Zou X. A knowledge-based scoring function for protein-RNA interactions derived from a statistical mechanics-based iterative method. Nucleic Acids Res. 2014;42:e55.
+
+6. Huang S-Y, Zou X. An iterative knowledge-based scoring function for protein-protein recognition. Proteins 2008;72:557-579.
+
