@@ -317,3 +317,8 @@ gateway/gorm.db
 
 # dev script debugging
 *.csv
+
+# Ignore vim files
+*~
+*.swp
+*.swo
