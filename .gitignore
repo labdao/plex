@@ -314,3 +314,6 @@ yarn-debug.log*
 
 # gorm
 gateway/gorm.db
+
+# dev script debugging
+*.csv
