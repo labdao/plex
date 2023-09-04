@@ -12,6 +12,7 @@ export default function ListToolFiles() {
   interface Tool {
     CID: string;
     ToolJSON: string;
+    WalletAddress: string;
   }
 
   const [tools, setTools] = useState<Tool[]>([]);
@@ -40,6 +41,7 @@ export default function ListToolFiles() {
           <TableRow>
             <TableCell>CID</TableCell>
             <TableCell>Serialized Tool Config</TableCell>
+            <TableCell>Uploader Wallet Address</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -47,6 +49,7 @@ export default function ListToolFiles() {
             <TableRow key={index}>
               <TableCell>{tool.CID}</TableCell>
               <TableCell>{JSON.stringify(tool.ToolJSON)}</TableCell>
+              <TableCell>{tool.WalletAddress}</TableCell>
             </TableRow>
           ))}
         </TableBody>
