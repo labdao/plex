@@ -1,35 +1,34 @@
 {
-    "class": "CommandLineTool",
-    "name": "colabdesign",
-    "description": "one-pot design of protein backbones and sequences",
-    "author": "",
-    "baseCommand": ["/bin/bash", "-c"],
-    "arguments": [
-        "mv /inputs/*.pdb /inputs/target_protein.pdb;",
-        "python main.py;",
-        "mv *.zip /outputs;"
-      ],
-    "dockerPull": "docker.io/niklastr/colabdesign@sha256:e52e0cd4829b768f4f885453e6e07f508c44c4265e1659b898d5622a52c97250",
-    "gpuBool": true,
-    "networkBool": true,
-    "inputs": {
-      "protein": {
-        "type": "File",
-        "item": "",
-        "glob": ["*.pdb"]
-      },
-      "config": {
-        "type": "File",
-        "item": "",
-        "glob": ["*.yaml"]
-      }
+  "class": "CommandLineTool",
+  "name": "colabdesign-dev",
+  "description": "one-pot design of protein backbones and sequences",
+  "author": "",
+  "baseCommand": ["/bin/bash", "-c"],
+  "arguments": [
+      "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
+      "python main.py;",
+      "mv *.zip /outputs;"
+    ],
+  "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
+  "gpuBool": true,
+  "networkBool": true,
+  "inputs": {
+    "protein": {
+      "type": "File",
+      "item": "",
+      "glob": ["*.pdb"]
     },
-    "outputs": {
-      "compressed_results": {
-        "type": "File",
-        "item": "",
-        "glob": ["*.zip"]
-      }
+    "config": {
+      "type": "File",
+      "item": "",
+      "glob": ["*.yaml"]
+    }
+  },
+  "outputs": {
+    "compressed_results": {
+      "type": "File",
+      "item": "",
+      "glob": ["*.zip"]
     }
   }
-  
+}
