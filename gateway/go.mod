@@ -308,3 +308,5 @@ require (
 )
 
 replace plex/internal/ipfs => ../internal/ipfs
+replace plex/internal/ipwl => ../internal/ipwl
+replace plex/internal/web3 => ../internal/web3
