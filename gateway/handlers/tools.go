@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -87,6 +88,31 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		utils.SendJSONResponseWithCID(w, toolEntity.CID)
+	}
+}
+
+func GetToolHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		// Get the ID from the URL
+		params := mux.Vars(r)
+		id := params["id"]
+
+		var tool models.ToolEntity
+		if result := db.First(&tool, id); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(tool); err != nil {
+			http.Error(w, "Error encoding tool to JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

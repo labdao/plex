@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -73,6 +74,33 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+// get a single datafile
+func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		// Get the ID from the URL
+		params := mux.Vars(r)
+		id := params["id"]
+
+		var dataFile models.DataFile
+		if result := db.First(&dataFile, id); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(dataFile); err != nil {
+			http.Error(w, "Error encoding datafile to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// gets all datafiles
 func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

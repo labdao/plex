@@ -45,9 +45,13 @@ export default function ListToolFiles() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {tools.map((tool, index) => ( 
+          {tools.map((tool, index) => (
             <TableRow key={index}>
-              <TableCell>{tool.CID}</TableCell>
+              <TableCell>
+                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${tool.CID}/`}>
+                  {tool.CID}
+                </a>
+              </TableCell>
               <TableCell>{JSON.stringify(tool.ToolJSON)}</TableCell>
               <TableCell>{tool.WalletAddress}</TableCell>
             </TableRow>
