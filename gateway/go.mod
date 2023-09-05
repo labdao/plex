@@ -306,15 +306,3 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/labdao/plex/internal/ipfs => ../internal/ipfs
-
-replace github.com/labdao/plex/internal/ipwl => ../internal/ipwl
-
-replace github.com/labdao/plex/internal/web3 => ../internal/web3
-
-replace github.com/labdao/plex/gateway/handlers => ../handlers
-
-replace github.com/labdao/plex/gateway/models => ../models
-
-replace github.com/labdao/plex/gateway/server => ../server
