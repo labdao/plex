@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/handlers"
+
 	"gorm.io/gorm"
 )
 
@@ -19,8 +20,11 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/add-datafile", handlers.AddDataFileHandler(db)).Methods("POST")
 	router.HandleFunc("/get-datafiles", handlers.GetDataFilesHandler(db)).Methods("GET")
 	router.HandleFunc("/get-datafiles/{id}", handlers.GetDataFileHandler(db)).Methods("GET")
-	// mux.HandleFunc("/init-job", handlers.InitJobHandler(db))
-	// mux.HandleFunc("/run-job", handlers.RunJobHandler(db))
+
+	router.HandleFunc("/init-job", handlers.InitJobHandler(db)).Methods("POST")
+	// router.HandleFunc("/get-jobs", handlers.GetJobsHandler(db)).Methods("GET")
+	// router.HandleFunc("/get-jobs/{id}", handlers.GetJobHandler(db)).Methods("GET")
+	// router.HandleFunc("/run-job", handlers.RunJobHandler(db)).Methods("POST")
 
 	return router
 }
