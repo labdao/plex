@@ -7,7 +7,7 @@
   "arguments": [
       "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
       "python main.py;",
-      "mv *.zip /outputs;"
+      "mv *.zip /outputs && mv */best.pdb /outputs && mv */mpnn_results.csv /outputs;"
     ],
   "dockerPull": "docker.io/niklastr/colabdesign@sha256:536e94a52110eed668416da465178f6a3f97c6a69072b259f00bcd0bde41103b",
   "gpuBool": true,
@@ -25,7 +25,22 @@
     }
   },
   "outputs": {
-    "compressed_results": {
+    "best_design": {
+      "type": "File",
+      "item": "",
+      "glob": ["best.pdb"]
+    },
+    "design_scores": {
+      "type": "File",
+      "item": "",
+      "glob": ["*.csv"]
+    },
+    "design_sequences": {
+      "type": "File",
+      "item": "",
+      "glob": ["*.fasta"]
+    },
+    "compressed_designs": {
       "type": "Array",
       "item": "File",
       "glob": ["*.zip"]

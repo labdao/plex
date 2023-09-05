@@ -28,7 +28,7 @@
       }
     },
     "outputs": {
-      "compressed_results": {
+      "compressed_designs": {
         "type": "Array",
         "item": "File",
         "glob": ["*.zip"]
