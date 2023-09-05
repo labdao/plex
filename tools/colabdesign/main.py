@@ -436,8 +436,10 @@ os.system(command_design)
 
 command_mv = f"mkdir outputs/{path}/traj && mv outputs/traj/{path}* outputs/{path}/traj && mv outputs/{path}_* outputs/{path}"
 command_zip = f"zip -r {path}.result.zip outputs/{path}*"
+command_collect = f"mv {path}.result.zip /outputs && mv outputs/{path}/best.pdb /outputs && mv outputs/{path}/mpnn_results.csv /outputs && mv outputs/{path}/design.fasta /outputs"
 os.system(command_mv)
 os.system(command_zip)
+os.system(command_collect)
 
 print("design complete...")
 end_time = time.time()
