@@ -200,7 +200,9 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	if verbose {
 		fmt.Println("Cleaning Bacalhau job")
 	}
+	fmt.Println("Starting cleanBacalhauOutputDir")
 	err = cleanBacalhauOutputDir(outputsDirPath, verbose)
+	fmt.Println("Finished cleanBacalhauOutputDir")
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
@@ -261,7 +263,7 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 	// Move files from /outputs to outputsDirPath
 	files, err := ioutil.ReadDir(bacalOutputsDirPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Bacalhau output directory: %w", err)
 	}
 
 	for _, file := range files {
@@ -269,18 +271,22 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 		dst := filepath.Join(outputsDirPath, file.Name())
 
 		if verbose {
-			fmt.Printf("Moving %s to %s", src, dst)
+			fmt.Printf("Moving %s to %s\n", src, dst)
 		}
+		fmt.Printf("Starting to move file from %s to %s\n", src, dst)
 		if err := os.Rename(src, dst); err != nil {
-			return err
+			return fmt.Errorf("error moving file from %s to %s: %w", src, dst, err)
 		}
+		fmt.Printf("Finished moving file from %s to %s\n", src, dst)
 	}
 
 	// remove empty outputs folder now that files have been moved
+	fmt.Printf("Starting to remove directory %s\n", bacalOutputsDirPath)
 	err = os.Remove(bacalOutputsDirPath)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("error removing Bacalhau output directory: %w", err)
 	}
+	fmt.Printf("Finished removing directory %s\n", bacalOutputsDirPath)
 
 	return nil
 }
