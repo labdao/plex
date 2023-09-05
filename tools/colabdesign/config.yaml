@@ -1,9 +1,9 @@
 basic_settings:
-  experiment_name: input_32_16
+  experiment_name: default
   binder_length: 50
   pdb: /inputs/target_protein.pdb
   pdb_chain: D
-  num_designs: 32
+  num_designs: 8
 advanced_settings:
   pdb_start_residue: 50
   pdb_end_residue: 100
