@@ -9,7 +9,7 @@
       "python main.py;",
       "mv *.zip /outputs;"
     ],
-  "dockerPull": "docker.io/niklastr/colabdesign@sha256:e86906d110c7797e984c4e4155c546e650561ab128674018a71e82c",
+  "dockerPull": "docker.io/niklastr/colabdesign@sha256:sha256:536e94a52110eed668416da465178f6a3f97c6a69072b259f00bcd0bde41103b",
   "gpuBool": true,
   "networkBool": true,
   "inputs": {
