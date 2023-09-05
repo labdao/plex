@@ -1,14 +1,26 @@
 package server
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/handlers"
 
 	"gorm.io/gorm"
 )
 
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, r.URL)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func NewServer(db *gorm.DB) *mux.Router {
 	router := mux.NewRouter()
+
+	router.Use(loggingMiddleware)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 	router.HandleFunc("/user", handlers.AddUserHandler(db))
@@ -22,8 +34,8 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/get-datafiles/{id}", handlers.GetDataFileHandler(db)).Methods("GET")
 
 	router.HandleFunc("/init-job", handlers.InitJobHandler(db)).Methods("POST")
-	// router.HandleFunc("/get-jobs", handlers.GetJobsHandler(db)).Methods("GET")
-	// router.HandleFunc("/get-jobs/{id}", handlers.GetJobHandler(db)).Methods("GET")
+	router.HandleFunc("/get-jobs", handlers.GetJobsHandler(db)).Methods("GET")
+	router.HandleFunc("/get-jobs/{cid}", handlers.GetJobHandler(db)).Methods("GET")
 	// router.HandleFunc("/run-job", handlers.RunJobHandler(db)).Methods("POST")
 
 	return router

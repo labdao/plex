@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -81,12 +82,47 @@ func RunJobHandler() {
 	fmt.Print("RunJobHandler hit")
 }
 
-func GetJobHandler() {
-	// log that this function is being hit
-	fmt.Print("GetJobHandler hit")
+func GetJobHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := utils.CheckRequestMethod(r, http.MethodGet); err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		params := mux.Vars(r)
+		cid := params["cid"]
+
+		var job models.Job
+		if result := db.Where("initial_io_cid = ?", cid).First(&job); result.Error != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error fetching job: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(job); err != nil {
+			utils.SendJSONError(w, "Error encoding job to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
-// func GetJobsHandler() {
-// 	// log that this function is being hit
-// 	fmt.Print("GetJobsHandler hit")
-// }
+func GetJobsHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := utils.CheckRequestMethod(r, http.MethodGet); err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		var jobs []models.Job
+		if result := db.Find(&jobs); result.Error != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error fetching jobs: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(jobs); err != nil {
+			utils.SendJSONError(w, "Error encoding jobs to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
