@@ -29,8 +29,8 @@
     },
     "outputs": {
       "compressed_results": {
-        "type": "File",
-        "item": "",
+        "type": "Array",
+        "item": "File",
         "glob": ["*.zip"]
       }
     }

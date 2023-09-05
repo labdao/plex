@@ -9,7 +9,7 @@
       "python main.py;",
       "mv *.zip /outputs;"
     ],
-  "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
+  "dockerPull": "docker.io/niklastr/colabdesign@sha256:e86906d110c7797e984c4e4155c546e650561ab128674018a71e82c",
   "gpuBool": true,
   "networkBool": true,
   "inputs": {
@@ -26,8 +26,8 @@
   },
   "outputs": {
     "compressed_results": {
-      "type": "File",
-      "item": "",
+      "type": "Array",
+      "item": "File",
       "glob": ["*.zip"]
     }
   }
