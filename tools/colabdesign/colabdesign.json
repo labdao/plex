@@ -32,12 +32,12 @@
     "design_scores": {
       "type": "File",
       "item": "",
-      "glob": ["*.csv"]
+      "glob": ["mpnn_results.csv"]
     },
     "design_sequences": {
       "type": "File",
       "item": "",
-      "glob": ["*.fasta"]
+      "glob": ["design.fasta"]
     },
     "compressed_designs": {
       "type": "Array",
