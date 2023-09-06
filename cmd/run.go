@@ -17,6 +17,7 @@ var (
 	outputDir     string
 	verbose       bool
 	showAnimation bool
+	maxTime       int
 	concurrency   int
 	annotations   *[]string
 )
@@ -29,7 +30,7 @@ var runCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, concurrency, *annotations)
+		_, _, err := PlexRun(ioJsonCid, outputDir, verbose, showAnimation, maxTime, concurrency, *annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
@@ -37,7 +38,7 @@ var runCmd = &cobra.Command{
 	},
 }
 
-func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
+func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	// Create plex working directory
 	id := uuid.New()
 	var cwd string
@@ -77,9 +78,14 @@ func PlexRun(ioJsonCid, outputDir string, verbose, showAnimation bool, concurren
 		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
 	}
 
+	if maxTime > 60 {
+		fmt.Println("Error: maxTime cannot exceed 60 minutes")
+		os.Exit(1)
+	}
+
 	retry := false
 	fmt.Println("Processing IO Entries")
-	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, concurrency, annotations)
+	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, maxTime, concurrency, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
 	if err != nil {
@@ -96,6 +102,7 @@ func init() {
 	runCmd.Flags().StringVarP(&outputDir, "outputDir", "o", "", "Output directory")
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
+	runCmd.Flags().IntVarP(&maxTime, "maxTime", "m", 60, "Maximum time (min) to run a job")
 	runCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
 	annotations = runCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
