@@ -272,20 +272,16 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 		if verbose {
 			fmt.Printf("Moving %s to %s\n", src, dst)
 		}
-		// fmt.Printf("Starting to move file from %s to %s\n", src, dst)
 		if err := os.Rename(src, dst); err != nil {
 			return fmt.Errorf("error moving file from %s to %s: %w", src, dst, err)
 		}
-		// fmt.Printf("Finished moving file from %s to %s\n", src, dst)
 	}
 
 	// remove empty outputs folder now that files have been moved
-	// fmt.Printf("Starting to remove directory %s\n", bacalOutputsDirPath)
 	err = os.Remove(bacalOutputsDirPath)
 	if err != nil {
 		return fmt.Errorf("error removing Bacalhau output directory: %w", err)
 	}
-	// fmt.Printf("Finished removing directory %s\n", bacalOutputsDirPath)
 
 	return nil
 }
