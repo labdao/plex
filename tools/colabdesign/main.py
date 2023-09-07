@@ -1,14 +1,32 @@
+import os
+import time
+import signal
+import sys
+import random
+import string
+import re
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+import py3Dmol
+
+from google.colab import files
+from IPython.display import display, HTML
 from hydra import compose, initialize
 from omegaconf import DictConfig, OmegaConf
+from inference.utils import parse_pdb
+
+from colabdesign.rf.utils import get_ca
+from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
+from colabdesign.shared.protein import pdb_to_string
+from colabdesign.shared.plot import plot_pseudo_3D
 
 # Initialize Hydra
 initialize(config_path="../inputs")
 cfg = compose(config_name="config.yaml")
 print(OmegaConf.to_yaml(cfg))
 
-#@title setup **RFdiffusion** (~2m)
-import os, time, signal
-import sys, random, string, re
 start_time = time.time()
 
 if not os.path.isdir("params"):
@@ -51,20 +69,6 @@ if not os.path.isdir("RFdiffusion/models"):
 if 'RFdiffusion' not in sys.path:
   os.environ["DGLBACKEND"] = "pytorch"
   sys.path.append('RFdiffusion')
-
-from google.colab import files
-import json
-import numpy as np
-import matplotlib.pyplot as plt
-from IPython.display import display, HTML
-import ipywidgets as widgets
-import py3Dmol
-
-from inference.utils import parse_pdb
-from colabdesign.rf.utils import get_ca
-from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
-from colabdesign.shared.protein import pdb_to_string
-from colabdesign.shared.plot import plot_pseudo_3D
 
 def get_pdb(pdb_code=None):
   if pdb_code is None or pdb_code == "":
