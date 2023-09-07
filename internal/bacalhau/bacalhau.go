@@ -27,7 +27,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -37,6 +37,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
+	job.Spec.Timeout = float64(maxTime) * 60
 
 	// had problems getting selector to work in bacalhau v0.28
 	var selectorLabel string
