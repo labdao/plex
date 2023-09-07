@@ -1,6 +1,7 @@
 import os, time, signal
 import sys, random, string, re
 
+print("Starting install.py...")
 
 if not os.path.isdir("params"):
   os.system("apt-get install aria2")
@@ -42,3 +43,5 @@ if not os.path.isdir("RFdiffusion/models"):
 if 'RFdiffusion' not in sys.path:
   os.environ["DGLBACKEND"] = "pytorch"
   sys.path.append('RFdiffusion')
+
+print("Completed install.py...")

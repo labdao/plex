@@ -14,6 +14,8 @@ import py3Dmol
 from google.colab import files
 from IPython.display import display, HTML
 
+print("Starting main.py...")
+
 # setup
 if not os.path.isdir("params"):
   os.system("apt-get install aria2")
@@ -457,3 +459,5 @@ print("design complete...")
 end_time = time.time()
 duration = end_time - start_time
 print(f"executed in {duration:.2f} seconds.")
+
+print("Completed main.py...")
