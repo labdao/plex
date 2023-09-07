@@ -125,7 +125,7 @@ def run_ananas(pdb_str, path, sym=None):
     return None, pdb_str
 
 def run(command, steps, num_designs=1, visual="none"):
-
+  print("Running command:", command)
   def run_command_and_get_pid(command):
     pid_file = '/dev/shm/pid'
     os.system(f'nohup {command} & echo $! > {pid_file}')
@@ -213,6 +213,7 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
                   chains=None, add_potential=False,
                   num_designs=1, use_beta_model=False, visual="none"):
 
+  print("Running diffusion with contigs:", contigs, "and path:", path)
   full_path = f"outputs/{path}"
   os.makedirs(full_path, exist_ok=True)
   opts = [f"inference.output_prefix={full_path}",
