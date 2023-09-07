@@ -8,7 +8,7 @@
       "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
       "python main.py;"
     ],
-  "dockerPull": "docker.io/niklastr/colabdesign@sha256:004591a88e6e94ddb5532debf6c32069653b58d45e20217a58fb95a5ebd4db36",
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:800f4532138afa9664278d6af4769a6f2c3e30fa554cb53e4a0e9491c10bb48a",
   "gpuBool": true,
   "networkBool": true,
   "inputs": {
