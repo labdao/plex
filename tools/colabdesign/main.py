@@ -66,6 +66,7 @@ from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
 
 def get_pdb(pdb_code=None):
+  print("Getting PDB...", pdb_code)
   if pdb_code is None or pdb_code == "":
     upload_dict = files.upload()
     pdb_string = upload_dict[list(upload_dict.keys())[0]]
@@ -338,6 +339,7 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
 
 
 # Initialize Hydra
+print("Initializing Hydra...")
 initialize(config_path="../inputs")
 cfg = compose(config_name="config.yaml")
 print(OmegaConf.to_yaml(cfg))
