@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCreateBalhauJob(t *testing.T) {
+func TestCreateBacalhauJob(t *testing.T) {
 	cid := "bafybeibuivbwkakim3hkgphffaipknuhw4epjfu3bstvsuv577spjhbvju"
 	container := "ubuntu"
 	cmd := "echo DeSci"
