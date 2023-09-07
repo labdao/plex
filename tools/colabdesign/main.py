@@ -83,6 +83,7 @@ def get_pdb(pdb_code=None):
     return f"AF-{pdb_code}-F1-model_v3.pdb"
 
 def run_ananas(pdb_str, path, sym=None):
+  print("Running AnAnaS...")
   pdb_filename = f"outputs/{path}/ananas_input.pdb"
   out_filename = f"outputs/{path}/ananas.json"
   with open(pdb_filename,"w") as handle:
@@ -126,6 +127,7 @@ def run_ananas(pdb_str, path, sym=None):
 
 def run(command, steps, num_designs=1, visual="none"):
   print("Running command:", command)
+
   def run_command_and_get_pid(command):
     pid_file = '/dev/shm/pid'
     os.system(f'nohup {command} & echo $! > {pid_file}')
