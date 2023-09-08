@@ -56,7 +56,7 @@ with open("pip-description.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="PlexLabExchange",
-    version="0.9.2",
+    version="0.9.3",
     packages=find_packages(where='src'),  # tell setuptools to look in the 'src' directory for packages
     package_dir={'': 'src'},  # tell setuptools that the packages are under the 'src' directory
     cmdclass={

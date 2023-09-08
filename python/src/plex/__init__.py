@@ -26,7 +26,7 @@ class CoreTools(Enum):
     BATCH_DLKCAT = "QmQTjvP2utNb1JTtUHeQ8mQPvNkCTg5VRc4LVdptWkUcJ7"
     OPENBABEL_PDB_TO_SDF = "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3"
     OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
-    COLABDESIGN = "QmXvptBDQDbWCYMYz4YZBu3Dtzqf36TRb7XUo1ejeSiUHC"
+    COLABDESIGN = "QmQ9iqbgDNSpNheSVCze8UKBebg8ScZvLmbAkuPZB6Yraa"
 
 class PlexError(Exception):
     def __init__(self, message):
