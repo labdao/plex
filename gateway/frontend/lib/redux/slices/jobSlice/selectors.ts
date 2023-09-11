@@ -1,5 +1,3 @@
-// gateway/frontend/lib/redux/slices/jobSlice/selectors.ts
-
 import type { ReduxState } from '@/lib/redux'
 
 export const selectSelectedTool = (state: ReduxState) => state.job.selectedTool

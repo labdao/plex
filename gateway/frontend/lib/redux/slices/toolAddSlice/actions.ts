@@ -1,12 +1,12 @@
 export const addToolToServer = async (
-    toolData: { [key: string]: any }
+    payload: { toolData: { [key: string]: any }, walletAddress: string }
 ): Promise<any> => {
     const response = await fetch('http://localhost:8080/add-tool', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(toolData),
+        body: JSON.stringify(payload),
     })
 
     if (!response.ok) {

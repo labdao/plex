@@ -3,7 +3,8 @@ module github.com/labdao/plex/gateway
 go 1.20
 
 require (
-	github.com/labdao/plex v0.9.1
+	github.com/gorilla/mux v1.8.0
+	github.com/labdao/plex v0.10.1
 	github.com/rs/cors v1.9.0
 	gorm.io/driver/sqlite v1.5.3
 	gorm.io/gorm v1.25.4
@@ -76,7 +77,6 @@ require (
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20221203041831-ce31453925ec // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/hannahhoward/go-pubsub v0.0.0-20200423002714-8d62886cc36e // indirect
@@ -306,5 +306,3 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace plex/internal/ipfs => ../internal/ipfs

@@ -12,7 +12,7 @@ export const saveDataFileToServer = async (
       formData.append(key, metadata[key]);
     }
   
-    const response = await fetch('http://localhost:8080/create-datafile', {
+    const response = await fetch('http://localhost:8080/add-datafile', {
       method: 'POST',
       body: formData,
     })

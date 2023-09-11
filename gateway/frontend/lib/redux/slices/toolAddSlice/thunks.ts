@@ -4,14 +4,15 @@ import { addToolToServer } from './actions'
 
 interface ToolPayload {
   toolData: { [key: string]: any }
+  walletAddress: string
 }
 
 export const addToolAsync = createAppAsyncThunk(
   'tool/addTool',
-  async ({ toolData }: ToolPayload, { dispatch }) => {
+  async ({ toolData, walletAddress }: ToolPayload, { dispatch }) => {
     try {
       dispatch(startFileUpload());
-      const response = await addToolToServer(toolData);
+      const response = await addToolToServer({ toolData, walletAddress });
 
       if (response && response.filename && response.cid) {
         // Optionally, you could store something in localStorage or perform other operations.

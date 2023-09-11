@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToolAsync, setError, startFileUpload, endFileUpload  } from '@/lib/redux'
+import { addToolAsync, selectWalletAddress, setError, startFileUpload, endFileUpload  } from '@/lib/redux'
 import {
   selectToolError,
   selectToolIsLoading,
@@ -21,6 +21,7 @@ export default function AddTool() {
   const isLoading = useSelector(selectToolIsLoading);
   const error = useSelector(selectToolError);
   const isUploaded = useSelector(selectToolIsUploaded);
+  const walletAddress = useSelector(selectWalletAddress)
 
   const sampleToolConfig = {
     "class": "CommandLineTool",
@@ -78,52 +79,65 @@ export default function AddTool() {
   const [inputs, setInputs] = useState(sampleToolConfig.inputs);
   const [outputs, setOutputs] = useState(sampleToolConfig.outputs);
     
-  const handleToolClassChange = (e: any) => {
+  const handleToolClassChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setToolClass(e.target.value);
   };
 
-  const handleNameChange = (e: any) => {
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
   };
 
-  const handleDescriptionChange = (e: any) => {
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
   };
 
-  const handleAuthorChange = (e: any) => {
+  const handleAuthorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAuthor(e.target.value);
   };
 
-  const handleBaseCommandChange = (e: any) => {
-    setBaseCommand(e.target.value);
+  const handleBaseCommandChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBaseCommand(e.target.value.split(','));
   };
 
-  const handleToolArgumentsChange = (e: any) => {
-    setToolArguments(e.target.value);
+  const handleToolArgumentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setToolArguments(e.target.value.split(','));
   };
 
-  const handleDockerPullChange = (e: any) => {
+  const handleDockerPullChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDockerPull(e.target.value);
   };
 
-  const handleGpuBoolChange = (e: any) => {
-    setGpuBool(e.target.value);
+  const handleGpuBoolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setGpuBool(e.target.checked);
   };
 
-  const handleNetworkBoolChange = (e: any) => {
-    setNetworkBool(e.target.value);
+  const handleNetworkBoolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNetworkBool(e.target.checked);
   };
 
-  const handleInputsChange = (e: any) => {
-    setInputs(e.target.value);
+  const handleInputsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = JSON.parse(e.target.value);
+      setInputs(value);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleOutputsChange = (e: any) => {
-    setOutputs(e.target.value);
+  const handleOutputsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = JSON.parse(e.target.value);
+      setOutputs(value);
+    } catch (error) {
+      console.error(error);
+    }
   };
   
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    console.log("Submitting tool config")
+    console.log("Wallet address: ", walletAddress)
     
     const toolConfig = {
       "name": name,
@@ -138,7 +152,7 @@ export default function AddTool() {
       "outputs": outputs
     };
 
-    dispatch(addToolAsync({ toolData: toolConfig }));
+    dispatch(addToolAsync({ toolData: toolConfig, walletAddress }));
     // router.push('/tool/list');
   };
 
