@@ -1,13 +1,13 @@
 basic_settings:
-  experiment_name: default
-  binder_length: 50
+  experiment_name: large
+  binder_length: 100
   pdb: /inputs/target_protein.pdb
   pdb_chain: D
-  num_designs: 16
+  num_designs: 32
 advanced_settings:
   pdb_start_residue: 50
   pdb_end_residue: 200
-  hotspot: ''
+  hotspot: 'D170,D171,D172,D173,D174,D76,D161'
   min_binder_length: null
   max_binder_length: null
   use_beta_model: false
@@ -23,7 +23,7 @@ expert_settings:
     chains: ''
     add_potential: true
   ProteinMPNN:
-    num_seqs: 16
+    num_seqs: 32
     rm_aa: C
     mpnn_sampling_temp: 0.1
     use_solubleMPNN: true

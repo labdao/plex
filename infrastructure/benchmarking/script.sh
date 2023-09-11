@@ -23,6 +23,14 @@ proteins_to_fold["testdata/folding/dna_helicase.fasta"]="3011"
 proteins_to_fold["testdata/folding/hect-type_e3_ubiquitin_transferase.fasta"]="4374"
 
 for protein in "${!proteins_to_fold[@]}"; do
-    echo "Folding $protein with AA length ${proteins_to_fold[$protein]}..."
+    echo "Folding $protein with increasing AA length ${proteins_to_fold[$protein]}..."
     ./plex init -t tools/colabfold-mini.json -i "{\"sequence\": [\"$protein\"]}" --scatteringMethod=dotProduct --autoRun=true -a test -a benchmarking
 done
+
+echo "Running RFDiffusion-colabdesign..."
+echo "Run: small"
+./plex init -t tools/colabdesign/_colabdesign-dev.json -i '{"protein": ["tools/colabdesign/6vja_stripped.pdb"], "config": ["tools/colabdesign/small-config.yaml"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a benchmarking
+echo "Run: medium"
+./plex init -t tools/colabdesign/_colabdesign-dev.json -i '{"protein": ["tools/colabdesign/6vja_stripped.pdb"], "config": ["tools/colabdesign/config.yaml"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a benchmarking
+echo "Run: large"
+./plex init -t tools/colabdesign/_colabdesign-dev.json -i '{"protein": ["tools/colabdesign/6vja_stripped.pdb"], "config": ["tools/colabdesign/large-config.yaml"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a benchmarking

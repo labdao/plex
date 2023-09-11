@@ -3,7 +3,7 @@ basic_settings:
   binder_length: 50
   pdb: /inputs/target_protein.pdb
   pdb_chain: D
-  num_designs: 16
+  num_designs: 8
 advanced_settings:
   pdb_start_residue: 50
   pdb_end_residue: 200
@@ -23,7 +23,7 @@ expert_settings:
     chains: ''
     add_potential: true
   ProteinMPNN:
-    num_seqs: 16
+    num_seqs: 8
     rm_aa: C
     mpnn_sampling_temp: 0.1
     use_solubleMPNN: true
