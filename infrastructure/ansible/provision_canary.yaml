@@ -6,6 +6,12 @@
     repo_dir: "{{ canary_dir }}/repo"
     binary_dir: "{{ canary_dir }}/binary"
   tasks:
+    # Must provide limit flag to ensure running against current environment
+    - fail:
+        msg: "you must use -l or --limit"
+      when: ansible_limit is not defined
+      run_once: true
+
     - name: Run common tasks
       ansible.builtin.include_tasks: tasks/common_tasks.yaml
 

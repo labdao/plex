@@ -2,6 +2,8 @@
 Description=Bacalhau Requester
 
 [Service]
+Restart=on-failure
+RestartSec=5s
 User=ubuntu
 Group=ubuntu
 ExecStart=bacalhau serve \

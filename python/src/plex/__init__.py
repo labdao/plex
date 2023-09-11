@@ -26,7 +26,7 @@ class CoreTools(Enum):
     BATCH_DLKCAT = "QmQTjvP2utNb1JTtUHeQ8mQPvNkCTg5VRc4LVdptWkUcJ7"
     OPENBABEL_PDB_TO_SDF = "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3"
     OPENBABEL_RMSD = "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA"
-
+    COLABDESIGN = "QmQ9iqbgDNSpNheSVCze8UKBebg8ScZvLmbAkuPZB6Yraa"
 
 class PlexError(Exception):
     def __init__(self, message):
@@ -121,7 +121,7 @@ def plex_upload(file_path: str, wrap_file=True, plex_path="plex"):
     return file_cid
 
 
-def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, concurrency="1", annotations=None, plex_path="plex"):
+def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=False, max_time="60" ,concurrency="1", annotations=None, plex_path="plex"):
     cwd = os.getcwd()
     plex_work_dir = os.environ.get("PLEX_WORK_DIR", os.path.dirname(cwd))
     cmd = [plex_path, "run", "-i", io_json_cid]
@@ -131,6 +131,9 @@ def plex_run(io_json_cid: str, output_dir="", verbose=False, show_animation=Fals
 
     if verbose:
         cmd.append("-v=true")
+
+    if max_time:
+        cmd.append(f"-m={max_time}")
 
     if concurrency:
         cmd.append(f"--concurrency={concurrency}")

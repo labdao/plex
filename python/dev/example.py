@@ -15,6 +15,28 @@ proteins = [f"{test_data_dir}/binding/abl/7n9g.pdb"]
 # Custom annotations for testing
 custom_annotations = ["python_example", "test"]
 
+print(f"Testing plex_run with max_time set to 60 seconds...")
+print(f"Expected behavior is failure with diffdock timeout...")
+
+test_io_cid = plex_init(
+    CoreTools.DIFFDOCK.value,
+    ScatteringMethod.CROSS_PRODUCT.value,
+    plex_path=plex_path,
+    small_molecule=small_molecules,
+    protein=proteins,
+)
+
+print(f"Test IO CID: {test_io_cid}")
+
+# max_time set to 1 min to test timeout
+completed_io_cid, io_file_path = plex_run(
+    test_io_cid, 
+    output_dir=jobs_dir,
+    max_time="1",
+    annotations=custom_annotations, 
+    plex_path=plex_path, 
+)
+
 print(f"Testing plex_init with auto_run flag set to True")
 
 test_io_cid = plex_init(
@@ -23,7 +45,7 @@ test_io_cid = plex_init(
     auto_run=True,
     plex_path=plex_path,
     small_molecule=small_molecules,
-    protein=proteins,
+    protein=proteins
 )
 
 print(f"Testing plex_init with auto_run flag set to False")

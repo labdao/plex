@@ -27,7 +27,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -37,6 +37,7 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
+	job.Spec.Timeout = float64(maxTime) * 60
 
 	// had problems getting selector to work in bacalhau v0.28
 	var selectorLabel string
@@ -77,9 +78,12 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	return submittedJob, err
 }
 
-func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results []model.PublishedResult, err error) {
+func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime int) (results []model.PublishedResult, err error) {
 	client := CreateBacalhauClient()
-	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
+
+	sleepConstant := 2
+	maxTrys := maxTime * 60 / sleepConstant
+
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
 
@@ -89,6 +93,9 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 		updatedJob, _, err := client.Get(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
+		}
+		if i == maxTrys-1 {
+			return results, fmt.Errorf("bacalhau job did not finish within the expected time (~%d min); please check the job status manually with `bacalhau describe %s`", maxTime, submittedJob.Metadata.ID)
 		}
 		if updatedJob.State.State == model.JobStateCancelled {
 			return results, fmt.Errorf("bacalhau cancelled job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
@@ -111,7 +118,7 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 			fmt.Printf("////%s////\r", strings.Join(animation, ""))
 			animation[saplingIndex] = "_"
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(sleepConstant) * time.Second)
 	}
 	return results, err
 }

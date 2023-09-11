@@ -20,45 +20,6 @@
 - name: Only do this if bacalhau isnt installed or upgrade is needed
   when: bacalhau_installed_version is undefined or bacalhau_installed_version != bacalhau_version
   block:
-    - name: Fetch AWS EC2 Metadata facts
-      amazon.aws.ec2_metadata_facts:
-
-    - name: Print environment info
-      ansible.builtin.debug:
-        msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
-      when: ansible_ec2_tags_instance_Env is defined
-
-    - name: Set fact when its prod node
-      ansible.builtin.set_fact:
-        requester_hostname: "requester.labdao.xyz"
-        ipfs_hostname: "ipfs.labdao.xyz"
-      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
-
-    - name: Set fact when its non-prod node
-      ansible.builtin.set_fact:
-        requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-        ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-      when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
-
-    # Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
-    - name: Determine requester bacalhau peer id
-      ansible.builtin.uri:
-        url: "http://{{ requester_hostname }}:1234/node_info"
-        return_content: true
-      register: requester_output
-      when: requester_hostname is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
-
-    - name: Set requester_peer url
-      ansible.builtin.set_fact:
-        # requester_peer: /dns4/requester.staging.labdao.xyz/tcp/1235/p2p/QmeLa2fx2FMNDWbeY3UqjELc1MbKwNxggcmdBmLZepY6VK
-        requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ requester_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
-      when: requester_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
-
-    - name: Set ipfs connect url
-      ansible.builtin.set_fact:
-        ipfs_connect: "/dns4/{{ ipfs_hostname }}/tcp/5001"
-      when: ipfs_hostname is defined
-
     - name: Download Bacalhau binary
       become: true
       ansible.builtin.unarchive:
@@ -72,17 +33,56 @@
       delay: 3
       until: bacalhau_unarchive is succeeded
 
-    - name: Install the Bacalhau systemd unit
-      become: true
-      ansible.builtin.template:
-        src: "files/{{ bacalhau_node_type }}.service"
-        dest: /etc/systemd/system
-      notify:
-        - Restart Bacalhau
+- name: Fetch AWS EC2 Metadata facts
+  amazon.aws.ec2_metadata_facts:
 
-    - name: Ensure Bacalhau is running
-      become: true
-      ansible.builtin.service:
-        name: "{{ bacalhau_node_type }}"
-        state: started
-        enabled: true
+- name: Print environment info
+  ansible.builtin.debug:
+    msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
+  when: ansible_ec2_tags_instance_Env is defined
+
+- name: Set fact when its prod node
+  ansible.builtin.set_fact:
+    requester_hostname: "requester.labdao.xyz"
+    ipfs_hostname: "ipfs.labdao.xyz"
+  when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
+
+- name: Set fact when its non-prod node
+  ansible.builtin.set_fact:
+    requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+    ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+  when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
+
+# Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
+- name: Determine requester bacalhau peer id
+  ansible.builtin.uri:
+    url: "http://{{ requester_hostname }}:1234/node_info"
+    return_content: true
+  register: requester_output
+  when: requester_hostname is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+
+- name: Set requester_peer url
+  ansible.builtin.set_fact:
+    # requester_peer: /dns4/requester.staging.labdao.xyz/tcp/1235/p2p/QmeLa2fx2FMNDWbeY3UqjELc1MbKwNxggcmdBmLZepY6VK
+    requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ requester_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
+  when: requester_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+
+- name: Set ipfs connect url
+  ansible.builtin.set_fact:
+    ipfs_connect: "/dns4/{{ ipfs_hostname }}/tcp/5001"
+  when: ipfs_hostname is defined
+
+- name: Install the Bacalhau systemd unit
+  become: true
+  ansible.builtin.template:
+    src: "files/{{ bacalhau_node_type }}.service"
+    dest: /etc/systemd/system
+  notify:
+    - Restart Bacalhau
+
+- name: Ensure Bacalhau is running
+  become: true
+  ansible.builtin.service:
+    name: "{{ bacalhau_node_type }}"
+    state: started
+    enabled: true
