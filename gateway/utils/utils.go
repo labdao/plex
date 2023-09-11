@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func SendJSONError(w http.ResponseWriter, message string, status int) {
@@ -34,6 +35,14 @@ func ReadRequestBody(r *http.Request, v interface{}) error {
 		return fmt.Errorf("error parsing request body: %v", err)
 	}
 	return nil
+}
+
+func IsDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(err.Error(), "duplicate key value violates unique constraint") ||
+		strings.Contains(err.Error(), "Duplicate entry")
 }
 
 func CreateAndWriteTempFile(r io.Reader, filename string) (*os.File, error) {

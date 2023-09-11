@@ -82,8 +82,13 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			WalletAddress: walletAddress,
 		}
 
-		if result := db.Create(&toolEntity); result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
+		result := db.Create(&toolEntity)
+		if result.Error != nil {
+			if utils.IsDuplicateKeyError(result.Error) {
+				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
+			} else {
+				http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -100,10 +105,10 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Get the ID from the URL
 		params := mux.Vars(r)
-		id := params["id"]
+		cid := params["cid"]
 
 		var tool models.ToolEntity
-		if result := db.First(&tool, id); result.Error != nil {
+		if result := db.First(&tool, "cid = ?", cid); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
 			return
 		}

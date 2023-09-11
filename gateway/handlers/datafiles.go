@@ -65,8 +65,18 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			Timestamp:     time.Now(),
 		}
 
-		if result := db.Create(&dataFile); result.Error != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+		// if result := db.Create(&dataFile); result.Error != nil {
+		// 	utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+		// 	return
+		// }
+
+		result := db.Create(&dataFile)
+		if result.Error != nil {
+			if utils.IsDuplicateKeyError(result.Error) {
+				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
+			} else {
+				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+			}
 			return
 		}
 

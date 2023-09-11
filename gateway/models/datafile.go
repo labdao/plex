@@ -5,8 +5,8 @@ import (
 )
 
 type DataFile struct {
-	ID            uint      `gorm:"primaryKey"`
-	CID           string    `gorm:"column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
+	// ID            uint      `gorm:"primaryKey"`
+	CID           string    `gorm:"primaryKey;column:cid;type:varchar(255);not null"` // column name specified to avoid GORM default snake case
 	WalletAddress string    `gorm:"type:varchar(42);not null"`
 	Filename      string    `gorm:"type:varchar(255);not null"`
 	Timestamp     time.Time `gorm:""`
