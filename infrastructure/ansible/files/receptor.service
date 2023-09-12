@@ -2,6 +2,8 @@
 Description=Receptor Web Service
 
 [Service]
+Restart=on-failure
+RestartSec=5s
 User=ubuntu
 Group=ubuntu
 WorkingDirectory={{ plex_dir }}/receptor

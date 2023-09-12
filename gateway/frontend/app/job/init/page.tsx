@@ -42,6 +42,14 @@ export default function InitJob() {
     const handleSubmit = (event: any) => {
         event.preventDefault();
 
+        const toolJson = JSON.parse(selectedTool);
+
+        const inputs = {};
+
+        for (const inputName in toolJson.inputs) {
+            // const expectedExtensions = 
+        }
+
         const data = {
             tool: selectedTool,
             inputs: selectedDataFiles,

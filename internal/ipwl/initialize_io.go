@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/labdao/plex/internal/ipfs"
@@ -92,10 +93,16 @@ func dotProductScattering(inputVectors map[string][]string) ([][]string, error) 
 	}
 
 	var inputsList [][]string
+	keys := make([]string, 0, len(inputVectors))
+	for k := range inputVectors {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	for i := 0; i < vectorLength; i++ {
 		tmp := []string{}
-		for _, v := range inputVectors {
-			tmp = append(tmp, v[i])
+		for _, k := range keys {
+			tmp = append(tmp, inputVectors[k][i])
 		}
 		inputsList = append(inputsList, tmp)
 	}
@@ -124,6 +131,8 @@ func crossProductScattering(inputVectors map[string][]string) ([][]string, error
 	for k := range inputVectors {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
+
 	arrays := make([][]string, len(inputVectors))
 	for i, k := range keys {
 		arrays[i] = inputVectors[k]
@@ -147,6 +156,9 @@ func createSingleIo(inputs []string, tool Tool, toolInfo ToolInfo, userId string
 	for k := range inputVectors {
 		inputKeys = append(inputKeys, k)
 	}
+
+	// Sort the inputKeys slice to ensure a consistent order
+	sort.Strings(inputKeys)
 
 	for i, inputValue := range inputs {
 		inputKey := inputKeys[i]

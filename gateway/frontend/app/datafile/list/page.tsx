@@ -46,9 +46,13 @@ export default function ListDataFiles() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {datafiles.map((datafile, index) => ( 
+          {datafiles.map((datafile, index) => (
             <TableRow key={index}>
-              <TableCell>{datafile.CID}</TableCell>
+              <TableCell>
+                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${datafile.CID}/`}>
+                  {datafile.CID}
+                </a>
+              </TableCell>
               <TableCell>{datafile.WalletAddress}</TableCell>
               <TableCell>{datafile.Filename}</TableCell>
               <TableCell>{datafile.IsPublic ? 'Yes' : 'No'}</TableCell>

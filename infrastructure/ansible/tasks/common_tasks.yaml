@@ -1,7 +1,9 @@
 - name: "Gather service facts"
+  become: true
   ansible.builtin.service_facts:
 
 - name: "Disable unattended upgrades service"
+  become: true
   ansible.builtin.systemd:
     name: "unattended-upgrades.service"
     enabled: false
@@ -31,4 +33,6 @@
   become: true
   ansible.builtin.pip:
     name:
+      - pip
       - boto3
+      - pyopenssl
