@@ -14,12 +14,13 @@ func TestCreateBacalhauJob(t *testing.T) {
 	memory := "12gb"
 	gpu := "1"
 	networkFlag := true
-	job, err := CreateBacalhauJob(cid, container, cmd, 60, 12, true, networkFlag, []string{})
+	selector := ""
+	job, err := CreateBacalhauJob(cid, container, cmd, selector, 60, 12, true, networkFlag, []string{})
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
-	if job.Spec.Timeout != float64(timeOut) {
-		t.Errorf("got = %f; wanted %d", job.Spec.Timeout, timeOut)
+	if job.Spec.Timeout != int64(timeOut) {
+		t.Errorf("got = %d; wanted %d", job.Spec.Timeout, timeOut)
 	}
 	if job.Spec.Resources.Memory != memory {
 		t.Errorf("got = %s; wanted %s", job.Spec.Resources.Memory, memory)

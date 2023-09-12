@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -78,6 +77,7 @@ func InitJobHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+/*
 func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
@@ -116,6 +116,7 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		utils.SendJSONResponse(w, responseData)
 	}
 }
+*/
 
 func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

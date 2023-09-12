@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
-	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
+	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 func GetBacalhauApiHost() string {
@@ -27,7 +27,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -37,18 +37,25 @@ func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, net
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = float64(maxTime) * 60
+	job.Spec.Timeout = int64(maxTime * 60)
 
-	// had problems getting selector to work in bacalhau v0.28
-	var selectorLabel string
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
 	if plexEnv == "stage" {
-		selectorLabel = "labdaostage"
+		if selector != "" {
+			selector += ","
+		}
+		selector += "owner=labdaostage"
 	} else {
-		selectorLabel = "labdao"
+		if selector != "" {
+			selector += ","
+		}
+		selector += "owner=labdao"
 	}
-	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{selectorLabel}}
-	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+	nodeSelectorRequirements, err := parse.NodeSelector(selector)
+	if err != nil {
+		return nil, err
+	}
+	job.Spec.NodeSelectors = nodeSelectorRequirements
 
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
@@ -64,11 +71,11 @@ func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, net
 	return job, err
 }
 
-func CreateBacalhauClient() *publicapi.RequesterAPIClient {
-	system.InitConfig()
-	apiPort := uint16(1234)
+func CreateBacalhauClient() *client.APIClient {
+	config.initConfig()
 	apiHost := GetBacalhauApiHost()
-	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
+	apiPort := uint16(1234)
+	client := client.NewAPIClient(apiHost, apiPort)
 	return client
 }
 
@@ -124,9 +131,12 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime 
 }
 
 func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
-	downloadSettings := util.NewDownloadSettings()
-	downloadSettings.OutputDir = dir
 	cm := system.NewCleanupManager()
+	downloadSettings := &model.DownloaderSettings{
+		Timeout:   50 * time.Second,
+		OutputDir: dir,
+	}
+	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err
