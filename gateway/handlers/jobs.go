@@ -77,10 +77,38 @@ func InitJobHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func RunJobHandler() {
-	// log that this function is being hit
-	fmt.Print("RunJobHandler hit")
-}
+// func RunJobHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
+// 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		var requestData struct {
+// 			IoJsonCid   string   `json:"ioJsonCid"`
+// 			OutputDir   string   `json:"outputDir"`
+// 			Annotations []string `json:"annotations"`
+// 		}
+
+// 		if err := utils.ReadRequestBody(r, &requestData); err != nil {
+// 			http.Error(w, "Error parsing request body", http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		completedIoJsonCid, ioJsonPath, err := PlexRun(requestData.IoJsonCid, requestData.OutputDir, requestData.Annotations)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		responseData := map[string]string{
+// 			"completedIoJsonCid": completedIoJsonCid,
+// 			"ioJsonPath":         ioJsonPath,
+// 		}
+
+// 		utils.SendJSONResponse(w, responseData)
+// 	}
+// }
 
 func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
