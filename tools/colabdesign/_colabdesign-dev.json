@@ -5,8 +5,8 @@
     "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-        "wget https://raw.githubusercontent.com/labdao/plex/add_colabdesign_frfr/tools/colabdesign/install.py;",
-        "wget https://raw.githubusercontent.com/labdao/plex/add_colabdesign_frfr/tools/colabdesign/main.py;",
+        "wget https://raw.githubusercontent.com/labdao/plex/main/tools/colabdesign/install.py;",
+        "wget https://raw.githubusercontent.com/labdao/plex/main/tools/colabdesign/main.py;",
         "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
         "python install.py;",
         "echo 'Install complete!';",
