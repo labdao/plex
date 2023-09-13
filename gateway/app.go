@@ -43,7 +43,7 @@ func main() {
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL")},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST"},
 	})
