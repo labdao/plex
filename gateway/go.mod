@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/gorilla/mux v1.8.0
-	github.com/labdao/plex v0.10.1
+	github.com/labdao/plex v0.10.4
 	github.com/rs/cors v1.9.0
 	gorm.io/driver/postgres v1.5.2
 	gorm.io/gorm v1.25.4
