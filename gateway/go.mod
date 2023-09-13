@@ -308,3 +308,5 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/labdao/plex => ../

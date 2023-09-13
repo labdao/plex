@@ -102,6 +102,11 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer os.RemoveAll(tempDir)
 
+		fmt.Printf("RunIO arguments:\n")
+		fmt.Printf("ioJsonCid: (%T) %v\n", requestData.IoJsonCid, requestData.IoJsonCid)
+		fmt.Printf("tempDir: (%T) %v\n", tempDir, tempDir)
+		fmt.Printf("annotations: (%T) %v\n", requestData.Annotations, requestData.Annotations)
+
 		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, tempDir, false, false, 60, 1, requestData.Annotations)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)

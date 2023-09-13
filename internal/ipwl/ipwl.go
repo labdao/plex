@@ -48,6 +48,7 @@ func RunIO(ioJsonCid, outputDir string, verbose, showAnimation bool, maxTime, co
 	}
 	fmt.Println("Initialized IO file at:", ioJsonPath)
 
+	fmt.Println("Extracting user ID from IO JSON...")
 	userID, err := ExtractUserIDFromIOJson(ioJsonPath)
 	if err != nil {
 		return completedIoJsonCid, ioJsonPath, err
