@@ -102,18 +102,18 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer os.RemoveAll(tempDir)
 
-		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, requestData.OutputDir, false, false, 60, 1, requestData.Annotations)
+		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, tempDir, false, false, 60, 1, requestData.Annotations)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		responseData := map[string]string{
-			"completedIoJsonCid": completedIoJsonCid,
-			"ioJsonPath":         ioJsonPath,
+			"cid":        completedIoJsonCid,
+			"ioJsonPath": ioJsonPath,
 		}
 
-		utils.SendJSONResponse(w, responseData)
+		utils.SendJSONResponseWithCID(w, responseData["cid"])
 	}
 }
 
