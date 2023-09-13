@@ -8,6 +8,8 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
+import backendUrl from 'lib/backendUrl'
+
 export default function ListDataFiles() {
   interface DataFile {
     CID: string;
@@ -20,7 +22,7 @@ export default function ListDataFiles() {
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/get-datafiles')
+    fetch(`${backendUrl()}/get-datafiles`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);

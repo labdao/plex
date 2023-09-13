@@ -3,6 +3,7 @@
 * Install [docker](https://docs.docker.com/engine/install/)
 * Define necessary env variables
 ```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
 POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 POSTGRES_USER=labdao
 POSTGRES_DB=labdao

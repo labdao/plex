@@ -1,8 +1,10 @@
+import backendUrl from "lib/backendUrl"
+
 export const saveUserDataToServer = async (
   username: string,
   walletAddress: string
 ): Promise<{ username: string, walletAddress: string }> => {
-  const response = await fetch('http://localhost:8080/user', {
+  const response = await fetch(`${backendUrl()}/user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, walletAddress }),
