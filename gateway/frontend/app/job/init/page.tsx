@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import backendUrl from 'lib/backendUrl';
+
 
 export default function InitJob() {
     const dispatch = useDispatch();
@@ -28,12 +30,12 @@ export default function InitJob() {
     const [selectedDataFiles, setSelectedDataFiles] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/get-tools')
+        fetch(`${backendUrl()}/get-tools`)
             .then(response => response.json())
             .then(data => setTools(data))
             .catch(error => console.error('Error fetching tools:', error));
 
-        fetch('http://localhost:8080/get-datafiles')
+        fetch(`${backendUrl()}/get-datafiles`)
             .then(response => response.json())
             .then(data => setDataFiles(data))
             .catch(error => console.error('Error fetching data files:', error));
@@ -58,7 +60,7 @@ export default function InitJob() {
 
         console.log('Sending request with data:', data)
 
-        fetch('http://localhost:8080/init-job', {
+        fetch(`${backendUrl()}/init-job`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
