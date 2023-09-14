@@ -8,6 +8,8 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
+import backendUrl from 'lib/backendUrl'
+
 export default function ListToolFiles() {
   interface Tool {
     CID: string;
@@ -18,7 +20,7 @@ export default function ListToolFiles() {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/get-tools')
+    fetch(`${backendUrl()}/get-tools`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);

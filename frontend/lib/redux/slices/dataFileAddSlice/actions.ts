@@ -1,3 +1,5 @@
+import backendUrl from "lib/backendUrl";
+
 export const saveDataFileToServer = async (
     file: File,
     metadata: { [key: string]: any }
@@ -12,7 +14,7 @@ export const saveDataFileToServer = async (
       formData.append(key, metadata[key]);
     }
   
-    const response = await fetch('http://localhost:8080/add-datafile', {
+    const response = await fetch(`${backendUrl()}/add-datafile`, {
       method: 'POST',
       body: formData,
     })
