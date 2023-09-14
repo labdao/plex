@@ -157,10 +157,7 @@ To download large bacalhau results the below command may need ran
 sudo sysctl -w net.core.rmem_max=2500000
 ```
 
-## 🔌 Contributing
+## 💁 Contributing
 PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining. 
 
 From time to time, we also post ```help-wanted``` bounty issues - please consider our [Bounty Policy](https://docs.labdao.xyz/about-us/bounty_policy) when engaging with LabDAO.
-
-## 🔧 Dev
-
