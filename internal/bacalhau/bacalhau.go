@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
+	node "github.com/bacalhau-project/bacalhau/pkg/job"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
-	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
+	"github.com/bacalhau-project/bacalhau/pkg/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
 )
 
@@ -51,7 +51,7 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 		}
 		selector += "owner=labdao"
 	}
-	nodeSelectorRequirements, err := parse.NodeSelector(selector)
+	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +71,11 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	return job, err
 }
 
-func CreateBacalhauClient() *client.APIClient {
-	config.initConfig()
+func CreateBacalhauClient() *publicapi.APIClient {
+	system.InitConfig()
 	apiHost := GetBacalhauApiHost()
 	apiPort := uint16(1234)
-	client := client.NewAPIClient(apiHost, apiPort)
+	client := publicapi.NewAPIClient(apiHost, apiPort)
 	return client
 }
 
