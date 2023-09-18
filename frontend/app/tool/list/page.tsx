@@ -8,19 +8,19 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
-export default function ListDataFiles() {
-  interface DataFile {
+import backendUrl from 'lib/backendUrl'
+
+export default function ListToolFiles() {
+  interface Tool {
     CID: string;
+    ToolJSON: string;
     WalletAddress: string;
-    Filename: string;
-    IsPublic: boolean;
-    IsVisible: boolean;
   }
 
-  const [datafiles, setDataFiles] = useState<DataFile[]>([]);
+  const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/get-datafiles')
+    fetch(`${backendUrl()}/get-tools`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
@@ -28,10 +28,13 @@ export default function ListDataFiles() {
         return response.json();
       })
       .then(data => {
-        console.log('Fetched datafiles:', data);
-        setDataFiles(data);
+        console.log('Fetched tools:', data);
+        setTools(data);
       })
-  }, [])
+      .catch(error => {
+        console.error('Error fetching tools:', error);
+      });
+  }, []);
 
   return (
     <TableContainer>
@@ -39,24 +42,20 @@ export default function ListDataFiles() {
         <TableHead>
           <TableRow>
             <TableCell>CID</TableCell>
-            <TableCell>Uploader Wallet</TableCell>
-            <TableCell>Filename</TableCell>
-            <TableCell>Is Public</TableCell>
-            <TableCell>Is Visible</TableCell>
+            <TableCell>Serialized Tool Config</TableCell>
+            <TableCell>Uploader Wallet Address</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {datafiles.map((datafile, index) => (
+          {tools.map((tool, index) => (
             <TableRow key={index}>
               <TableCell>
-                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${datafile.CID}/`}>
-                  {datafile.CID}
+                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${tool.CID}/`}>
+                  {tool.CID}
                 </a>
               </TableCell>
-              <TableCell>{datafile.WalletAddress}</TableCell>
-              <TableCell>{datafile.Filename}</TableCell>
-              <TableCell>{datafile.IsPublic ? 'Yes' : 'No'}</TableCell>
-              <TableCell>{datafile.IsVisible ? 'Yes' : 'No'}</TableCell>
+              <TableCell>{JSON.stringify(tool.ToolJSON)}</TableCell>
+              <TableCell>{tool.WalletAddress}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,4 +1,4 @@
-package main
+package gateway
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 
 	"github.com/rs/cors"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func main() {
+func ServeWebApp() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -27,8 +27,9 @@ func main() {
 		},
 	)
 
-	dsn := "gorm.db"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+	// Setup database connection
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB"))
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
@@ -42,7 +43,7 @@ func main() {
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL")},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST"},
 	})

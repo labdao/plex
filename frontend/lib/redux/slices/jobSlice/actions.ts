@@ -1,7 +1,9 @@
+import backendUrl from "lib/backendUrl"
+
 export const initJobOnServer = async (
     jobData: { [key: string]: any }
 ): Promise<any> => {
-    const response = await fetch('http://localhost:8080/init-job', {
+    const response = await fetch(`${backendUrl()}/init-job`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
