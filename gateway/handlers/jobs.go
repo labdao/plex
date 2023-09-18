@@ -77,46 +77,44 @@ func InitJobHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-/*
-func RunJobHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
-			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+// func RunJobHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
+// 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
 
-		var requestData struct {
-			IoJsonCid   string   `json:"ioJsonCid"`
-			Annotations []string `json:"annotations"`
-		}
+// 		var requestData struct {
+// 			IoJsonCid   string   `json:"ioJsonCid"`
+// 			Annotations []string `json:"annotations"`
+// 		}
 
-		if err := utils.ReadRequestBody(r, &requestData); err != nil {
-			http.Error(w, "Error parsing request body", http.StatusBadRequest)
-			return
-		}
+// 		if err := utils.ReadRequestBody(r, &requestData); err != nil {
+// 			http.Error(w, "Error parsing request body", http.StatusBadRequest)
+// 			return
+// 		}
 
-		tempDir, err := ioutil.TempDir("", "job")
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error creating temporary directory: %v", err), http.StatusInternalServerError)
-			return
-		}
-		defer os.RemoveAll(tempDir)
+// 		tempDir, err := ioutil.TempDir("", "job")
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error creating temporary directory: %v", err), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		defer os.RemoveAll(tempDir)
 
-		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, requestData.OutputDir, false, false, 60, 1, requestData.Annotations)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)
-			return
-		}
+// 		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, requestData.OutputDir, false, false, 60, 1, requestData.Annotations)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)
+// 			return
+// 		}
 
-		responseData := map[string]string{
-			"completedIoJsonCid": completedIoJsonCid,
-			"ioJsonPath":         ioJsonPath,
-		}
+// 		responseData := map[string]string{
+// 			"completedIoJsonCid": completedIoJsonCid,
+// 			"ioJsonPath":         ioJsonPath,
+// 		}
 
-		utils.SendJSONResponse(w, responseData)
-	}
-}
-*/
+// 		utils.SendJSONResponse(w, responseData)
+// 	}
+// }
 
 func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
