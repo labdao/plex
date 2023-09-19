@@ -18,7 +18,7 @@ import (
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func RunIO(ioJsonCid, outputDir string, verbose, showAnimation bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
+func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	id := uuid.New()
 	var cwd string
 	if outputDir != "" {
@@ -64,7 +64,7 @@ func RunIO(ioJsonCid, outputDir string, verbose, showAnimation bool, maxTime, co
 
 	retry := false
 	fmt.Println("Processing IO Entries")
-	ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, maxTime, concurrency, annotations)
+	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, concurrency, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
 	if err != nil {
@@ -75,7 +75,7 @@ func RunIO(ioJsonCid, outputDir string, verbose, showAnimation bool, maxTime, co
 	return completedIoJsonCid, ioJsonPath, nil
 }
 
-func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool, maxTime, maxConcurrency int, annotations []string) {
+func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime, maxConcurrency int, annotations []string) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 
@@ -117,7 +117,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
-				err := processIOTask(entry, index, maxTime, jobDir, ioJsonPath, retry, verbose, showAnimation, annotations, &fileMutex)
+				err := processIOTask(entry, index, maxTime, jobDir, ioJsonPath, selector, retry, verbose, showAnimation, annotations, &fileMutex)
 				if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Waiting to process IO entry %d \n", index)
 				} else if err != nil {
@@ -140,7 +140,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 	}
 }
 
-func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -216,7 +216,7 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath string, re
 		memory = *toolConfig.MemoryGB
 	}
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating Bacalhau job: %w", err)

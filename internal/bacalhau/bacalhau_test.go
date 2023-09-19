@@ -14,7 +14,8 @@ func TestCreateBacalhauJob(t *testing.T) {
 	memory := "12gb"
 	gpu := "1"
 	networkFlag := true
-	job, err := CreateBacalhauJob(cid, container, cmd, 60, 12, true, networkFlag, []string{})
+	selector := ""
+	job, err := CreateBacalhauJob(cid, container, cmd, selector, 60, 12, true, networkFlag, []string{})
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}

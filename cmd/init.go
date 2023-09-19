@@ -71,7 +71,7 @@ var initCmd = &cobra.Command{
 		}
 
 		if autoRun {
-			_, _, err := ipwl.RunIO(cid, outputDir, verbose, showAnimation, maxTime, concurrency, *annotationsForAutoRun)
+			_, _, err := ipwl.RunIO(cid, outputDir, selector, verbose, showAnimation, maxTime, concurrency, *annotationsForAutoRun)
 			if err != nil {
 				fmt.Println("Error:", err)
 				os.Exit(1)
@@ -85,6 +85,7 @@ func init() {
 	initCmd.Flags().StringVarP(&inputs, "inputs", "i", "{}", "Inputs in JSON format")
 	initCmd.Flags().StringVarP(&scatteringMethod, "scatteringMethod", "", "{}", "Inputs in JSON format")
 	initCmd.Flags().BoolVarP(&autoRun, "autoRun", "", false, "Auto submit the IO to plex run")
+	initCmd.Flags().StringVarP(&selector, "selector", "s", "", "Bacalhau Selector (label query) to filter nodes on which this job can be executed, supports '=', '==', and '!='.(e.g. -s key1=value1,key2=value2). Matching objects must satisfy all of the specified label constraints")
 	annotationsForAutoRun = initCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(initCmd)
