@@ -1,7 +1,7 @@
 // gateway/frontend/lib/redux/slices/jobSlice/thunks.ts
 
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setError, startJobInitialization, endJobInitialization, setIsInitialized } from './jobSlice' // Importing actions from jobSlice.ts
+import { setErrorJobSlice, startJobInitialization, endJobInitialization, setIsInitialized } from './jobSlice' // Importing actions from jobSlice.ts
 import { initJobOnServer } from './actions'
 
 interface JobPayload {
@@ -19,7 +19,7 @@ export const initJobAsync = createAppAsyncThunk(
         // Optionally, you could store something in localStorage or perform other operations.
         dispatch(setIsInitialized(true));
       } else {
-        dispatch(setError('Failed to initialize job.'));
+        dispatch(setErrorJobSlice('Failed to initialize job.'));
       }
       dispatch(endJobInitialization());
       return response;
@@ -29,7 +29,7 @@ export const initJobAsync = createAppAsyncThunk(
         ? (error as { message?: string }).message 
         : undefined;
 
-      dispatch(setError(errorMessage || 'An error occurred while initializing the job.'));
+      dispatch(setErrorJobSlice(errorMessage || 'An error occurred while initializing the job.'));
       return false;
     }
   }

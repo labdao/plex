@@ -21,22 +21,22 @@ export const dataFileAddSlice = createSlice({
   name: 'dataFile',
   initialState,
   reducers: {
-    setFilename: (state, action: PayloadAction<string>) => {
+    setFilenameDataSlice: (state, action: PayloadAction<string>) => {
       state.filename = action.payload
     },
-    setCid: (state, action: PayloadAction<string>) => {
+    setCidDataSlice: (state, action: PayloadAction<string>) => {
       state.cid = action.payload
     },
-    setError: (state, action: PayloadAction<string | null>) => {
+    setDataFileError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload
     },
-    startFileUpload: (state) => {
+    startFileUploadDataSlice: (state) => {
       state.isLoading = true
     },
-    endFileUpload: (state) => {
+    endFileUploadDataSlice: (state) => {
       state.isLoading = false
     },
-    setIsUploaded: (state, action: PayloadAction<boolean>) => {
+    setIsUploadedDataSlice: (state, action: PayloadAction<boolean>) => {
       state.isUploaded = action.payload
     },
   },
@@ -62,12 +62,12 @@ export const dataFileAddSlice = createSlice({
 })
 
 export const {
-  setFilename,
-  setCid,
-  setError,
-  startFileUpload,
-  endFileUpload,
-  setIsUploaded,
+  setFilenameDataSlice,
+  setCidDataSlice,
+  setDataFileError,
+  startFileUploadDataSlice,
+  endFileUploadDataSlice,
+  setIsUploadedDataSlice,
 } = dataFileAddSlice.actions
 
 export default dataFileAddSlice.reducer

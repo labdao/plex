@@ -26,7 +26,7 @@ export const jobSlice = createSlice({
         setSelectedDataFiles: (state, action: PayloadAction<string[]>) => {
             state.selectedDataFiles = action.payload
         },
-        setError: (state, action: PayloadAction<string | null>) => {
+        setErrorJobSlice: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload
         },
         startJobInitialization: (state) => {
@@ -44,7 +44,7 @@ export const jobSlice = createSlice({
 export const {
     setSelectedTool,
     setSelectedDataFiles,
-    setError,
+    setErrorJobSlice,
     startJobInitialization,
     endJobInitialization,
     setIsInitialized,
