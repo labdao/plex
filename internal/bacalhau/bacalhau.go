@@ -127,7 +127,7 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime 
 func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
 	cm := system.NewCleanupManager()
 	downloadSettings := &model.DownloaderSettings{
-		Timeout:   50 * time.Second,
+		Timeout:   model.DefaultIPFSTimeout,
 		OutputDir: dir,
 	}
 	downloadSettings.OutputDir = dir
