@@ -11,7 +11,7 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
 	node "github.com/bacalhau-project/bacalhau/pkg/job"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
-	"github.com/bacalhau-project/bacalhau/pkg/publicapi"
+	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
 )
 
@@ -37,7 +37,7 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = int64(maxTime * 60)
+	job.Spec.Timeout = float64(maxTime * 60)
 
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
 	if plexEnv == "stage" {
@@ -71,11 +71,11 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	return job, err
 }
 
-func CreateBacalhauClient() *publicapi.APIClient {
+func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
 	apiHost := GetBacalhauApiHost()
 	apiPort := uint16(1234)
-	client := publicapi.NewAPIClient(apiHost, apiPort)
+	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
 	return client
 }
 
