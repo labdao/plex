@@ -19,7 +19,7 @@ func TestCreateBacalhauJob(t *testing.T) {
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
-	if job.Spec.Timeout != int64(timeOut) {
+	if job.Spec.Timeout != float64(timeOut) {
 		t.Errorf("got = %d; wanted %d", job.Spec.Timeout, timeOut)
 	}
 	if job.Spec.Resources.Memory != memory {
