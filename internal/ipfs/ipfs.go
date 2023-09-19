@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
 	"github.com/labdao/plex/internal/bacalhau"
 )
@@ -276,8 +277,8 @@ func DownloadFileToTemp(cid, fileName string) (string, error) {
 }
 
 func IsValidCID(cidStr string) bool {
-	// implement
-	return true
+	_, err := cid.Decode(cidStr)
+	return err == nil
 }
 
 func IsDirectory(cidStr string) (bool, error) {

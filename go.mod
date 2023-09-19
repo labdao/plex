@@ -7,6 +7,7 @@ require (
 	github.com/bacalhau-project/bacalhau v1.0.3
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-ipfs-api v0.3.0
 	github.com/rs/cors v1.8.2
 	github.com/spf13/cobra v1.7.0
@@ -103,7 +104,6 @@ require (
 	github.com/ipfs/go-bitfield v1.1.0 // indirect
 	github.com/ipfs/go-block-format v0.1.1 // indirect
 	github.com/ipfs/go-blockservice v0.5.0 // indirect
-	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/ipfs/go-cidutil v0.1.0 // indirect
 	github.com/ipfs/go-datastore v0.6.0 // indirect
 	github.com/ipfs/go-delegated-routing v0.7.0 // indirect
