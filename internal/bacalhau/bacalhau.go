@@ -40,16 +40,10 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	job.Spec.Timeout = float64(maxTime * 60)
 
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if plexEnv == "stage" {
-		if selector != "" {
-			selector += ","
-		}
-		selector += "owner=labdaostage"
-	} else {
-		if selector != "" {
-			selector += ","
-		}
-		selector += "owner=labdao"
+	if selector == "" && plexEnv == "stage" {
+		selector = "owner=labdaostage"
+	} else if selector == "" && plexEnv == "prod" {
+		selector = "owner=labdao"
 	}
 	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
 	if err != nil {
