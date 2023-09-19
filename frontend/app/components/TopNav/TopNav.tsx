@@ -28,9 +28,9 @@ export const TopNav = () => {
   const walletAddress = useSelector(selectWalletAddress)
 
   // State and handlers for the dropdown menu
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
+  const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
     setAnchorEl(event.currentTarget)
   }
 
@@ -38,7 +38,7 @@ export const TopNav = () => {
     setAnchorEl(null)
   }
 
-  const handleNavigation = (path) => {
+  const handleNavigation = (path: string) => {
     router.push(path)
   }
 
@@ -62,7 +62,7 @@ export const TopNav = () => {
       {isLoggedIn && (
         <div className={styles.userContainer}>
           <span className={styles.username}>{username}</span>
-          <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={handleClick} />
+          <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
             anchorEl={anchorEl}
             keepMounted
