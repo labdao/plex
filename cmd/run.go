@@ -11,6 +11,7 @@ import (
 var (
 	ioJsonCid     string
 	outputDir     string
+	selector      string
 	verbose       bool
 	showAnimation bool
 	maxTime       int
@@ -26,7 +27,7 @@ var runCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, _, err := ipwl.RunIO(ioJsonCid, outputDir, verbose, showAnimation, maxTime, concurrency, *annotations)
+		_, _, err := ipwl.RunIO(ioJsonCid, outputDir, selector, verbose, showAnimation, maxTime, concurrency, *annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
@@ -37,6 +38,7 @@ var runCmd = &cobra.Command{
 func init() {
 	runCmd.Flags().StringVarP(&ioJsonCid, "ioJsonCid", "i", "", "IPFS CID of IO JSON")
 	runCmd.Flags().StringVarP(&outputDir, "outputDir", "o", "", "Output directory")
+	runCmd.Flags().StringVarP(&selector, "selector", "s", "", "Bacalhau Selector (label query) to filter nodes on which this job can be executed, supports '=', '==', and '!='.(e.g. -s key1=value1,key2=value2). Matching objects must satisfy all of the specified label constraints")
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	runCmd.Flags().IntVarP(&maxTime, "maxTime", "m", 60, "Maximum time (min) to run a job")

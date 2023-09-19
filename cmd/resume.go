@@ -23,18 +23,18 @@ var resumeCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, err := Resume(ioJsonPath, outputDir, verbose, showAnimation, retry, maxTime, concurrency, *annotationsForResume)
+		_, err := Resume(ioJsonPath, outputDir, selector, verbose, showAnimation, retry, maxTime, concurrency, *annotationsForResume)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
 	},
 }
 
-func Resume(ioJsonFilePath, outputDir string, verbose, showAnimation, retry bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid string, err error) {
+func Resume(ioJsonFilePath, outputDir, selector string, verbose, showAnimation, retry bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid string, err error) {
 	fmt.Println("Continuing to process IO JSON file at: ", ioJsonPath)
 	fmt.Println("Processing IO Entries")
 	workDirPath := filepath.Dir(ioJsonFilePath)
-	ipwl.ProcessIOList(workDirPath, ioJsonPath, retry, verbose, showAnimation, maxTime, concurrency, annotations)
+	ipwl.ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, concurrency, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
 	if err != nil {

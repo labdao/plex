@@ -9,10 +9,10 @@ import (
 
 	"github.com/bacalhau-project/bacalhau/pkg/downloader"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
+	node "github.com/bacalhau-project/bacalhau/pkg/job"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 func GetBacalhauApiHost() string {
@@ -27,7 +27,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -37,18 +37,19 @@ func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, net
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = float64(maxTime) * 60
+	job.Spec.Timeout = float64(maxTime * 60)
 
-	// had problems getting selector to work in bacalhau v0.28
-	var selectorLabel string
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if plexEnv == "stage" {
-		selectorLabel = "labdaostage"
-	} else {
-		selectorLabel = "labdao"
+	if selector == "" && plexEnv == "stage" {
+		selector = "owner=labdaostage"
+	} else if selector == "" && plexEnv == "prod" {
+		selector = "owner=labdao"
 	}
-	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{selectorLabel}}
-	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
+	if err != nil {
+		return nil, err
+	}
+	job.Spec.NodeSelectors = nodeSelectorRequirements
 
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
@@ -66,8 +67,8 @@ func CreateBacalhauJob(cid, container, cmd string, maxTime, memory int, gpu, net
 
 func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
-	apiPort := uint16(1234)
 	apiHost := GetBacalhauApiHost()
+	apiPort := uint16(1234)
 	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
 	return client
 }
@@ -124,9 +125,12 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime 
 }
 
 func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
-	downloadSettings := util.NewDownloadSettings()
-	downloadSettings.OutputDir = dir
 	cm := system.NewCleanupManager()
+	downloadSettings := &model.DownloaderSettings{
+		Timeout:   model.DefaultIPFSTimeout,
+		OutputDir: dir,
+	}
+	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err
