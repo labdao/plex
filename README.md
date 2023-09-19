@@ -93,6 +93,40 @@ cd plex
 go build
 ```
 
+### Running web app locally
+
+# Setup
+
+* Install [docker](https://docs.docker.com/engine/install/)
+* Define necessary env variables
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:3000
+POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
+POSTGRES_USER=labdao
+POSTGRES_DB=labdao
+POSTGRES_HOST=localhost
+```
+* Recommended: Install [direnv](https://direnv.net/). With it installed you can create `.env` file with the above environment variables and have them automagically set when you descend into the folder. 
+
+# Start the database
+```
+docker compose up -d
+```
+
+Note: New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
+
+# Start the Frontend React App
+
+```
+npm --prefix ./frontend run dev
+```
+
+# Start the Backend Go App
+```
+go run main.go web
+```
+
 ### Running a compute node
 This is a script for setting up a compute instance to run LabDAO jobs. Requires linux OS with Nvidia GPU.
 
@@ -125,7 +159,7 @@ To download large bacalhau results the below command may need ran
 sudo sysctl -w net.core.rmem_max=2500000
 ```
 
-## 💁 Contributing 
+## 💁 Contributing
 PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining. 
 
 From time to time, we also post ```help-wanted``` bounty issues - please consider our [Bounty Policy](https://docs.labdao.xyz/about-us/bounty_policy) when engaging with LabDAO.
