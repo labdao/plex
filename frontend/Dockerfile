@@ -18,6 +18,10 @@ RUN \
 
 # Rebuild the source code only when needed
 FROM base AS builder
+
+# Include NEXT_PUBLIC_BACKEND_URL
+ARG NEXT_PUBLIC_BACKEND_URL http://localhost:8080
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -71,8 +75,5 @@ ENV HOSTNAME "0.0.0.0"
 
 # Default NODE_ENV
 ENV NODE_ENV production
-
-# Setting BACKEND URL 
-ENV NEXT_PUBLIC_BACKEND_URL http://localhost:8080
 
 CMD /app/run.sh
