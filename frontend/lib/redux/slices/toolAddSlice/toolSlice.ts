@@ -26,7 +26,7 @@ export const toolAddSlice = createSlice({
         setCid: (state, action: PayloadAction<string>) => {
             state.cid = action.payload
         },
-        setError: (state, action: PayloadAction<string | null>) => {
+        setErrorToolAddSlice: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload
         },
         startFileUpload: (state) => {
@@ -44,7 +44,7 @@ export const toolAddSlice = createSlice({
 export const {
     setFilename,
     setCid,
-    setError,
+    setErrorToolAddSlice,
     startFileUpload,
     endFileUpload,
     setIsUploaded,

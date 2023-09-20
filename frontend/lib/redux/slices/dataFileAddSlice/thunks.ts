@@ -1,6 +1,6 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
 import { saveDataFileToServer } from './actions'
-import { setCid, setFilename, setError } from './dataSlice'
+import { setCidDataSlice, setFilenameDataSlice, setDataFileError } from './dataSlice'
 
 interface DataFilePayload {
   file: File,
@@ -14,9 +14,9 @@ export const saveDataFileAsync = createAppAsyncThunk(
       const response = await saveDataFileToServer(file, metadata);
       console.log("Response:", response)
       if (response.filename) {
-        dispatch(setFilename(response.filename));
+        dispatch(setFilenameDataSlice(response.filename));
       } else {
-        dispatch(setError('Failed to save data file.'))
+        dispatch(setDataFileError('Failed to save data file.'))
       }
       return response;
     } catch (error: unknown) {
@@ -24,7 +24,7 @@ export const saveDataFileAsync = createAppAsyncThunk(
         ? (error as { message?: string }).message
         : 'An error occurred while saving data file.';
 
-      dispatch(setError(errorMessage || 'An error occurred while saving data file.'));
+      dispatch(setDataFileError(errorMessage || 'An error occurred while saving data file.'));
     }
   }
 )

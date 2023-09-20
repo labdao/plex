@@ -152,6 +152,7 @@ export default function AddTool() {
       "outputs": outputs
     };
 
+    // @ts-ignore
     dispatch(addToolAsync({ toolData: toolConfig, walletAddress }));
     // router.push('/tool/list');
   };

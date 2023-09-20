@@ -24,10 +24,10 @@ export default function InitJob() {
         Visible: boolean;
     }
 
-    const [tools, setTools] = useState([]);
+    const [tools, setTools] = useState<Tool[]>([]);
     const [selectedTool, setSelectedTool] = useState('');
-    const [dataFiles, setDataFiles] = useState([]);
-    const [selectedDataFiles, setSelectedDataFiles] = useState([]);
+    const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
+    const [selectedDataFiles, setSelectedDataFiles] = useState<string[]>([]);
 
     useEffect(() => {
         fetch(`${backendUrl()}/get-tools`)

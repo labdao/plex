@@ -1,5 +1,5 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setError, startFileUpload, endFileUpload, setIsUploaded } from './toolSlice' // Importing actions from toolSlice.ts
+import { setErrorToolAddSlice, startFileUpload, endFileUpload, setIsUploaded } from './toolSlice' // Importing actions from toolSlice.ts
 import { addToolToServer } from './actions'
 
 interface ToolPayload {
@@ -18,7 +18,7 @@ export const addToolAsync = createAppAsyncThunk(
         // Optionally, you could store something in localStorage or perform other operations.
         dispatch(setIsUploaded(true));
       } else {
-        dispatch(setError('Failed to add tool.'));
+        dispatch(setErrorToolAddSlice('Failed to add tool.'));
       }
       dispatch(endFileUpload());
       return response;
@@ -28,7 +28,7 @@ export const addToolAsync = createAppAsyncThunk(
         ? (error as { message?: string }).message 
         : undefined;
 
-      dispatch(setError(errorMessage || 'An error occurred while adding the tool.'));
+      dispatch(setErrorToolAddSlice(errorMessage || 'An error occurred while adding the tool.'));
       return false;
     }
   }
