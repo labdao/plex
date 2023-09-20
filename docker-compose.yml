@@ -91,6 +91,7 @@ services:
       POSTGRES_DB: gateway
       POSTGRES_HOST: dbgateway
       BACALHAU_API_HOST: requester
+      IPFS_API_HOST: ipfs
       FRONTEND_URL: http://localhost:3000
     depends_on:
       dbgateway:
