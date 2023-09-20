@@ -102,20 +102,23 @@ func RunJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer os.RemoveAll(tempDir)
 
-		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, tempDir, false, false, 60, 1, requestData.Annotations)
+		// TODO: optional value for selector label
+		completedIoJsonCid, ioJsonPath, err := ipwl.RunIO(requestData.IoJsonCid, tempDir, "labdao", false, false, 60, 1, requestData.Annotations)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error running job: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		responseData := map[string]string{
-			"cid":        completedIoJsonCid,
-			"ioJsonPath": ioJsonPath,
-		}
+		// responseData := map[string]string{
+		// 	"cid":        completedIoJsonCid,
+		// 	"ioJsonPath": ioJsonPath,
+		// }
 
-		utils.SendJSONResponse(w, responseData)
+		utils.SendJSONResponseWithCID(w, completedIoJsonCid)
+		fmt.Println("IO JSON Path saved at:", ioJsonPath)
 	}
 }
+
 func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := utils.CheckRequestMethod(r, http.MethodGet); err != nil {
