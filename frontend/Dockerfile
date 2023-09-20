@@ -54,6 +54,13 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy custom run script
+COPY --from=builder --chown=nextjs:nodejs /app/run.sh /app/run.sh
+RUN chmod +x /app/run.sh
+
+# Set permission for the /app directory
+RUN chown -R nextjs:nodejs /app/
+
 USER nextjs
 
 EXPOSE 3000
@@ -62,7 +69,10 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-# Setting BACKEND URL 
-ENV NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+# Default NODE_ENV
+ENV NODE_ENV production
 
-CMD ["node", "server.js"]
+# Setting BACKEND URL 
+ENV NEXT_PUBLIC_BACKEND_URL http://localhost:8080
+
+CMD /app/run.sh
