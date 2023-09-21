@@ -14,24 +14,25 @@ import (
 	"github.com/labdao/plex/internal/bacalhau"
 )
 
-func DeriveIpfsNodeUrl() (string, error) {
-	bacalApiHost := bacalhau.GetBacalhauApiHost()
+func DeriveIpfsNodeUrl() string {
+	ipfsApiHost, exists := os.LookupEnv("IPFS_API_HOST")
 
-	// If bacalApiHost already starts with http:// or https://, don't prepend it.
-	if strings.HasPrefix(bacalApiHost, "http://") || strings.HasPrefix(bacalApiHost, "https://") {
-		ipfsUrl := fmt.Sprintf("%s:5001", bacalApiHost)
-		return ipfsUrl, nil
+	// If IPFS_API_HOST is not set, use BACALHAU_API_HOST
+	if !exists {
+		ipfsApiHost = bacalhau.GetBacalhauApiHost()
 	}
 
-	ipfsUrl := fmt.Sprintf("http://%s:5001", bacalApiHost)
-	return ipfsUrl, nil
+	// If ipfsApiHost already starts with http:// or https://, don't prepend it.
+	if strings.HasPrefix(ipfsApiHost, "http://") || strings.HasPrefix(ipfsApiHost, "https://") {
+		ipfsUrl := fmt.Sprintf("%s:5001", ipfsApiHost)
+		return ipfsUrl
+	}
+	ipfsUrl := fmt.Sprintf("http://%s:5001", ipfsApiHost)
+	return ipfsUrl
 }
 
 func PinDir(dirPath string) (cid string, err error) {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return "", err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 	cid, err = sh.AddDir(dirPath)
 	if err != nil {
@@ -42,10 +43,7 @@ func PinDir(dirPath string) (cid string, err error) {
 }
 
 func PinFile(filePath string) (cid string, err error) {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return "", err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Open the file and ensure it gets closed
@@ -68,10 +66,7 @@ func PinFile(filePath string) (cid string, err error) {
 
 // wraps a file in a directory and adds it to IPFS
 func WrapAndPinFile(filePath string) (cid string, err error) {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return "", err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	absPath, err := filepath.Abs(filePath)
@@ -115,17 +110,14 @@ func WrapAndPinFile(filePath string) (cid string, err error) {
 }
 
 func DownloadToDirectory(cid, directory string) error {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Construct the full directory path where the CID content will be downloaded
 	downloadPath := path.Join(directory, cid)
 
 	// Use the Get method to download the file or directory with the specified CID
-	err = sh.Get(cid, downloadPath)
+	err := sh.Get(cid, downloadPath)
 	if err != nil {
 		return err
 	}
@@ -134,10 +126,7 @@ func DownloadToDirectory(cid, directory string) error {
 }
 
 func DownloadToTempDir(cid string) (string, error) {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return "", err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Get the system's temporary directory
@@ -147,7 +136,7 @@ func DownloadToTempDir(cid string) (string, error) {
 	downloadPath := path.Join(tempDir, cid)
 
 	// Use the Get method to download the file or directory with the specified CID
-	err = sh.Get(cid, downloadPath)
+	err := sh.Get(cid, downloadPath)
 	if err != nil {
 		return "", err
 	}
@@ -227,10 +216,7 @@ func onlyOneFile(dirPath string) (bool, string, error) {
 }
 
 func DownloadFileContents(cid, filepath string) error {
-	ipfsNodeUrl, err := DeriveIpfsNodeUrl()
-	if err != nil {
-		return err
-	}
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
 	// Use the cat method to get the file with the specified CID

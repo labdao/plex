@@ -6,17 +6,76 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 )
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool, maxTime, maxConcurrency int, annotations []string) {
+func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
+	id := uuid.New()
+	var cwd string
+	if outputDir != "" {
+		absPath, err := filepath.Abs(outputDir)
+		if err != nil {
+			return completedIoJsonCid, ioJsonPath, err
+		}
+		cwd = absPath
+	} else {
+		cwd, err = os.Getwd()
+		if err != nil {
+			return completedIoJsonCid, ioJsonPath, err
+		}
+		cwd = path.Join(cwd, "jobs")
+	}
+	workDirPath := path.Join(cwd, id.String())
+	err = os.MkdirAll(workDirPath, 0755)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+	fmt.Println("Created working directory:", workDirPath)
+
+	ioJsonPath = path.Join(workDirPath, "io.json")
+	err = ipfs.DownloadFileContents(ioJsonCid, ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+	fmt.Println("Initialized IO file at:", ioJsonPath)
+
+	userID, err := ExtractUserIDFromIOJson(ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+
+	if userID != "" && !ContainsUserIdAnnotation(annotations) {
+		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
+	}
+
+	if maxTime > 60 {
+		fmt.Println("Error: maxTime cannot exceed 60 minutes")
+		os.Exit(1)
+	}
+
+	retry := false
+	fmt.Println("Processing IO Entries")
+	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, concurrency, annotations)
+	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
+	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+
+	fmt.Println("Completed IO JSON CID:", completedIoJsonCid)
+	return completedIoJsonCid, ioJsonPath, nil
+}
+
+func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime, maxConcurrency int, annotations []string) {
 	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
 	semaphore := make(chan struct{}, maxConcurrency)
 
@@ -58,7 +117,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
-				err := processIOTask(entry, index, maxTime, jobDir, ioJsonPath, retry, verbose, showAnimation, annotations, &fileMutex)
+				err := processIOTask(entry, index, maxTime, jobDir, ioJsonPath, selector, retry, verbose, showAnimation, annotations, &fileMutex)
 				if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Waiting to process IO entry %d \n", index)
 				} else if err != nil {
@@ -81,7 +140,7 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 	}
 }
 
-func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -157,7 +216,7 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath string, re
 		memory = *toolConfig.MemoryGB
 	}
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating Bacalhau job: %w", err)

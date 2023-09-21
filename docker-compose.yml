@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  db:
+    image: "postgres:15.4"
+    environment:
+      POSTGRES_PASSWORD:
+      POSTGRES_USER:
+      POSTGRES_DB:
+      POSTGRES_HOST:
+    ports:
+      - 5432:5432
+    volumes:
+      - type: volume
+        source: dbdata
+        target: /var/lib/postgresql/data
+
+volumes:
+  dbdata:
