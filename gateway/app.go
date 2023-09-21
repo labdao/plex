@@ -37,7 +37,7 @@ func ServeWebApp() {
 	}
 
 	// Migrate the schema
-	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.ToolEntity{}, &models.Job{}); err != nil {
+	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 
