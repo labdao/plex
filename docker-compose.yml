@@ -66,14 +66,16 @@ services:
       requester_health:
         condition: service_healthy
 
-  dbgateway:
+  dbbackend:
     image: "postgres:15.4"
     environment:
       POSTGRES_PASSWORD: labdao
       POSTGRES_USER: labdao
-      POSTGRES_DB: gateway
+      POSTGRES_DB: backend
+    ports:
+      - 5432:5432
     volumes:
-      - dbdata-gateway:/var/lib/postgresql/data
+      - dbdata-backend:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres  || exit 1
       interval: 30s
@@ -81,20 +83,20 @@ services:
       retries: 3
       start_period: 10s
 
-  gateway:
+  backend:
     build: .
     ports:
       - 8080:8080
     environment:
       POSTGRES_PASSWORD: labdao
       POSTGRES_USER: labdao
-      POSTGRES_DB: gateway
-      POSTGRES_HOST: dbgateway
+      POSTGRES_DB: backend
+      POSTGRES_HOST: dbbackend
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
       FRONTEND_URL: http://localhost:3000
     depends_on:
-      dbgateway:
+      dbbackend:
         condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
@@ -155,5 +157,5 @@ services:
 volumes:
   requestervolume:
   ipfs:
-  dbdata-gateway:
+  dbdata-backend:
   dbdata-receptor:
