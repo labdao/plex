@@ -15,8 +15,6 @@ export default function ListDataFiles() {
     CID: string;
     WalletAddress: string;
     Filename: string;
-    IsPublic: boolean;
-    IsVisible: boolean;
   }
 
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
@@ -43,8 +41,6 @@ export default function ListDataFiles() {
             <TableCell>CID</TableCell>
             <TableCell>Uploader Wallet</TableCell>
             <TableCell>Filename</TableCell>
-            <TableCell>Is Public</TableCell>
-            <TableCell>Is Visible</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -57,8 +53,6 @@ export default function ListDataFiles() {
               </TableCell>
               <TableCell>{datafile.WalletAddress}</TableCell>
               <TableCell>{datafile.Filename}</TableCell>
-              <TableCell>{datafile.IsPublic ? 'Yes' : 'No'}</TableCell>
-              <TableCell>{datafile.IsVisible ? 'Yes' : 'No'}</TableCell>
             </TableRow>
           ))}
         </TableBody>
