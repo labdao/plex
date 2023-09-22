@@ -17,7 +17,11 @@ func SendJSONError(w http.ResponseWriter, message string, status int) {
 
 func SendJSONResponseWithCID(w http.ResponseWriter, cid string) {
 	response := map[string]string{"cid": cid}
-	jsonResponse, _ := json.Marshal(response)
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		SendJSONError(w, fmt.Sprintf("Error encoding response to JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }
