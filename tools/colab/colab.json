@@ -9,7 +9,7 @@
         "wget https://raw.githubusercontent.com/labdao/plex/colab-base-notebook/tools/colab/parameterise_colab.sh -O parameterise_colab.sh && chmod +x parameterise_colab.sh;",
         "pip3 install papermill && pip3 install nbconvert;",
         "./parameterise_colab.sh $(inputs.notebook.filepath) tmp.ipynb;",
-        "papermill tmp.ipynb /outputs/output_$(inputs.notebook.basename).ipynb -f $(inputs.config.filepath);",
+        "papermill tmp.ipynb /outputs/output_$(inputs.notebook.basename).ipynb;",
         "jupyter nbconvert --to html /outputs/output_$(inputs.notebook.basename).ipynb --output-dir /outputs;",
         "mv /inputs/* /outputs;"
       ],
@@ -21,11 +21,6 @@
         "type": "File",
         "item": "",
         "glob": ["*.ipynb"]
-      },
-      "config": {
-        "type": "File",
-        "item": "",
-        "glob": ["*.yaml"]
       },
       "generic_input": {
           "type": "Array",
