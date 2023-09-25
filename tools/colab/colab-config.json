@@ -1,0 +1,50 @@
+{
+    "class": "CommandLineTool",
+    "name": "colab-config",
+    "description": "the simplest tool, runs any google colab notebook",
+    "author": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "pip3 install papermill && pip3 install nbconvert;",
+        "papermill $(inputs.notebook.filepath) outputs/output_$(inputs.notebook.basename).ipynb -f $(inputs.config.filepath);",
+        "jupyter nbconvert --to html outputs/output_$(inputs.notebook.basename).ipynb --output-dir /outputs;",
+        "mv /inputs/* /outputs;"
+      ],
+    "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
+    "gpuBool": true,
+    "networkBool": true,
+    "inputs": {
+      "notebook": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.ipynb"]
+      },
+      "config": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.yaml"]
+      },
+      "generic_input": {
+          "type": "Array",
+          "item": "File",
+          "glob": ["*"]
+      }
+    },
+    "outputs": {
+      "executed_notebook": {
+        "type": "File",
+        "item": "",
+        "glob": ["output_*.ipynb"]
+      },
+      "rendered_notebook": {
+          "type": "File",
+          "item": "",
+          "glob": ["output_*.html"]
+      },
+      "generic_outputs": {
+        "type": "Array",
+        "item": "File",
+        "glob": ["*.txt"]
+      }
+    }
+  }
