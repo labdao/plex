@@ -161,6 +161,7 @@ func ExtractUserIDFromIOJson(ioJsonPath string) (string, error) {
 		return "", fmt.Errorf("failed to read file: %w", err)
 	}
 
+	// TODO: this is where we were previously failing on the gateway side
 	var ioEntries []IO
 	err = json.Unmarshal(data, &ioEntries)
 	if err != nil {

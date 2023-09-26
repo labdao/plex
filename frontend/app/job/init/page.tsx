@@ -20,8 +20,6 @@ export default function InitJob() {
         WalletAddress: string;
         Filename: string;
         Timestamp: Date;
-        Public: boolean;
-        Visible: boolean;
     }
 
     const [tools, setTools] = useState<Tool[]>([]);
