@@ -21,8 +21,8 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			Username      string `json:"username"`
 			WalletAddress string `json:"walletAddress"`
+			Email         string `json:"email"`
 		}
 
 		if err := utils.ReadRequestBody(r, &requestData); err != nil {
@@ -31,7 +31,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("Received request to create user: Username: %s, WalletAddress: %s\n", requestData.Username, requestData.WalletAddress)
+		fmt.Printf("Received request to create user: WalletAddress: %s, Email: %s,\n", requestData.WalletAddress, requestData.Email)
 
 		isValidAddress := web3.IsValidEthereumAddress(requestData.WalletAddress)
 		if !isValidAddress {
@@ -41,19 +41,19 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var existingUser models.User
-		if err := db.Where("username = ? AND wallet_address = ?", requestData.Username, requestData.WalletAddress).First(&existingUser).Error; err != nil {
+		if err := db.Where("wallet_address = ? AND email = ?", requestData.WalletAddress, requestData.Email).First(&existingUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User does not exist, create new user
 				newUser := models.User{
-					Username:      requestData.Username,
 					WalletAddress: requestData.WalletAddress,
+					Email:         requestData.Email,
 				}
 				if result := db.Create(&newUser); result.Error != nil {
 					utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
 					fmt.Println("Error creating user in database:", result.Error)
 					return
 				}
-				fmt.Printf("Successfully created user with ID: %d, Username: %s\n", newUser.ID, newUser.Username)
+				fmt.Printf("Successfully created user with WalletAddress: %s, Email: %s\n", newUser.WalletAddress, newUser.Email)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
 				json.NewEncoder(w).Encode(newUser)
@@ -63,8 +63,8 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 				fmt.Println("Database error:", err)
 			}
 		} else {
-			// User with given username and wallet address already exists, return that user
-			fmt.Printf("User already exists with ID: %d, Username: %s\n", existingUser.ID, existingUser.Username)
+			// User with given wallet address and email already exists, return that user
+			fmt.Printf("User already exists with WalletAddress: %s, Email: %s\n", existingUser.WalletAddress, existingUser.Email)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(existingUser)
