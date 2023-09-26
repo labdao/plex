@@ -9,6 +9,4 @@ type DataFile struct {
 	WalletAddress string    `gorm:"type:varchar(42);not null"`
 	Filename      string    `gorm:"type:varchar(255);not null"`
 	Timestamp     time.Time `gorm:""`
-	Domain        string    `gorm:"default:public"`
-	Visible       bool      `gorm:"default:true"`
 }
