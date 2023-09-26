@@ -76,13 +76,13 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Store serialized Tool in DB
-		toolEntity := models.ToolEntity{
+		toolEntry := models.Tool{
 			CID:           cid,
 			ToolJSON:      string(toolJSON),
 			WalletAddress: walletAddress,
 		}
 
-		result := db.Create(&toolEntity)
+		result := db.Create(&toolEntry)
 		if result.Error != nil {
 			if utils.IsDuplicateKeyError(result.Error) {
 				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
@@ -92,7 +92,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		utils.SendJSONResponseWithCID(w, toolEntity.CID)
+		utils.SendJSONResponseWithCID(w, toolEntry.CID)
 	}
 }
 
@@ -107,7 +107,7 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 		params := mux.Vars(r)
 		cid := params["cid"]
 
-		var tool models.ToolEntity
+		var tool models.Tool
 		if result := db.First(&tool, "cid = ?", cid); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -128,7 +128,7 @@ func GetToolsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var tools []models.ToolEntity
+		var tools []models.Tool
 		if result := db.Find(&tools); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tools: %v", result.Error), http.StatusInternalServerError)
 			return
