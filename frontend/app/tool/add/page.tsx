@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { addToolAsync, selectWalletAddress } from '@/lib/redux'
+import Link from '@mui/material/Link';
 import {
   selectToolError,
   selectToolIsLoading,
@@ -40,8 +41,8 @@ export default function AddTool() {
     setDescription(e.target.value);
   };
 
-  const handleAuthorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAuthor(e.target.value);
+  const handleColabNotebookChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColabNotebook(e.target.value);
   };
 
   const handleGpuBoolChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,31 +109,21 @@ export default function AddTool() {
             />
           </Grid>
           <Grid item>
-            <TextField
-              fullWidth
-              label="Author"
-              variant="outlined"
-              value={author}
-              onChange={handleAuthorChange}
-            />
-          </Grid>
-          <Grid item>
-            <TextField
-              fullWidth
-              label="Inputs"
-              variant="outlined"
-              value={inputs}
-              onChange={handleInputsChange}
-            />
-          </Grid>
-          <Grid item>
-            <TextField
-              fullWidth
-              label="Outputs"
-              variant="outlined"
-              value={outputs}
-              onChange={handleOutputsChange}
-            />
+          <TextField
+    fullWidth
+    label="Colab Notebook"
+    variant="outlined"
+    value={colabNotebook}
+    onChange={handleColabNotebookChange}
+    helperText={
+      <span>
+        Link to a Google Colab Notebook that follows the plex schema. See the{' '}
+        <Link href="https://your-link.com" target="_blank" rel="noopener">
+          Template Tool Notebook
+        </Link> for more details.
+      </span>
+    }
+  />
           </Grid>
           <Grid item>
             <FormControlLabel
