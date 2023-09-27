@@ -1,0 +1,28 @@
+# This workflow is for plex jobs against locally running environment
+
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+
+jobs:
+
+  test:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Commands
+        run: |
+          docker run ubuntu echo hello world
