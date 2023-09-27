@@ -84,7 +84,10 @@ services:
       start_period: 10s
 
   backend:
-    build: .
+    build:
+      context: .
+      cache_from:
+        - quay.io/labdao/backend:latest
     ports:
       - 8080:8080
     environment:
@@ -109,6 +112,8 @@ services:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
     environment:
@@ -135,6 +140,8 @@ services:
     build:
       context: ./receptor
       dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/receptor:latest
     environment:
       PGHOST: dbreceptor
       PGUSER: labdao
