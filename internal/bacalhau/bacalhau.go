@@ -130,6 +130,9 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 		Timeout:   model.DefaultIPFSTimeout,
 		OutputDir: dir,
 	}
+	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
+		downloadSettings.IPFSSwarmAddrs = os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")
+	}
 	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
