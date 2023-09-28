@@ -24,10 +24,10 @@ ENV SRC_DIR /kubo
 WORKDIR $SRC_DIR
 
 # Install the plugin and build ipfs
-RUN if [ ${IPFS_S3_ENABLED} == "true" ];then echo "Building with S3 PLUGIN Enabled";go get -v github.com/3box/go-ds-s3/plugin@${IPFS_DS_S3_PLUGIN_VERSION};fi
-RUN if [ ${IPFS_S3_ENABLED} == "true" ];then echo "Building with S3 PLUGIN Enabled";echo "\ns3ds github.com/3box/go-ds-s3/plugin 0" >> plugin/loader/preload_list;fi
 RUN go get -v github.com/ceramicnetwork/go-ipfs-healthcheck/plugin@${IPFS_HEALTHCHECK_PLUGIN_VERSION}
 RUN echo "\nhealthcheck github.com/ceramicnetwork/go-ipfs-healthcheck/plugin 0" >> plugin/loader/preload_list
+RUN if [ ${IPFS_S3_ENABLED} == "true" ];then echo "Building with S3 PLUGIN Enabled";go get -v github.com/3box/go-ds-s3/plugin@${IPFS_DS_S3_PLUGIN_VERSION};fi
+RUN if [ ${IPFS_S3_ENABLED} == "true" ];then echo "Building with S3 PLUGIN Enabled";echo "\ns3ds github.com/3box/go-ds-s3/plugin 0" >> plugin/loader/preload_list;fi
 RUN make build
 RUN go mod tidy
 RUN CGO_ENABLED=0 make build
