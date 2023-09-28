@@ -1,6 +1,6 @@
-# This workflow is for plex jobs against locally running environment
+# This workflow will build a golang project and runs CI tests
 
-name: CI
+name: Go
 
 on:
   push:
@@ -13,16 +13,13 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
-  ci-public:
+  go:
     runs-on: ubuntu-22.04
     environment: ci
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -35,12 +32,55 @@ jobs:
       - name: Build
         run: go build
 
+      - name: upload plex binary to be used by other jobs
+        uses: actions/upload-artifact@v3
+        with:
+          name: plex-binary
+          path: ./plex
+
+      - name: Test
+        run: go test ./... -v
+
+  ci-setup:
+    runs-on: ubuntu-22.04
+    environment: ci
       - name: Download docker compose
+        run: |
+          # Download docker-compose plugin
+          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+
+      - name: upload docker-compose plugin to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-compose-plugin
+          path: ./docker-compose
+
+  ci-public:
+    needs:
+      - go
+      - ci-setup
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: download plex binary
+        uses: actions/download-artifact@v3
+        with:
+          name: plex-binary
+
+      - name: download docker compose plugin artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin
+
+      - name: Setup docker compose plugin
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
           mkdir -p $DOCKER_CONFIG/cli-plugins
-          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
           chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
           # Output version info
@@ -57,32 +97,44 @@ jobs:
 
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
+
+          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
+          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+            echo "No docked files found"
+            exit 1
+          else
+            echo "Docked files found:"
+            find . -name '*docked.sdf' | grep 'docked.sdf'
+          fi
           ./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci
 
   ci-private:
+    needs:
+      - go
+      - ci-setup
     runs-on: ubuntu-22.04
     environment: ci
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: download plex binary
+        uses: actions/download-artifact@v3
         with:
-          go-version: 1.20.3
+          name: plex-binary
 
-      - name: Install dependencies
-        run: go mod download
+      - name: download docker compose plugin artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin
 
-      - name: Build
-        run: go build
-
-      - name: Download docker compose
+      - name: Setup docker compose plugin
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
           mkdir -p $DOCKER_CONFIG/cli-plugins
-          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
           chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
           # Output version info
@@ -102,4 +154,13 @@ jobs:
           export IPFS_PATH="$(pwd)/docker/ipfs_data/"
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-          ./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci
+
+          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
+          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+            echo "No docked files found"
+            exit 1
+          else
+            echo "Docked files found:"
+            find . -name '*docked.sdf' | grep 'docked.sdf'
+          fi
