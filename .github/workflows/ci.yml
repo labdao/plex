@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci:
+  ci-public:
     runs-on: ubuntu-22.04
     environment: ci
     steps:
@@ -35,7 +35,7 @@ jobs:
       - name: Build
         run: go build
 
-      - name: Run Commands
+      - name: Download docker compose
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -47,6 +47,8 @@ jobs:
           docker version
           docker compose version
 
+      - name: Run Commands
+        run: |
           # Build in parallel
           docker compose build --parallel
 
@@ -57,8 +59,44 @@ jobs:
           export BACALHAU_API_HOST=127.0.0.1
           ./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci
 
+  ci-private:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.3
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build
+
+      - name: Download docker compose
+        run: |
+          # Install docker-compose
+          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+          # Output version info
+          docker version
+          docker compose version
+
+      - name: Run Commands
+        run: |
+          # Build in parallel
+          docker compose build --parallel
+
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+ 
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
           export IPFS_PATH="$(pwd)/docker/ipfs_data/"
