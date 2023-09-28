@@ -119,7 +119,7 @@ Note: New docker installation include docker compose, older installations requir
 docker compose up -d
 ```
 
-To run `plex` cli against local environment simple set `BACALHAU_API_HOST=127.0.0.1`
+To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
 
 
 ## Running with private IPFS
