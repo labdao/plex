@@ -53,6 +53,7 @@ services:
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1235/p2p/Qmd2oBsjjvtUYRmb7zhDEPhSf9YbxA1a7ZLZ6hyCwMqpnh"
     environment:
       LOG_LEVEL: trace
+      DOCKER_DEFAULT_PLATFORM: linux/amd64
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
