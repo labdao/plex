@@ -31,9 +31,9 @@
 
 
 Plex is a simple client for distributed computation.
-* 🌎 **Build once, run anywhere:** Plex is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.  
+* 🌎 **Build once, run anywhere:** Plex is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.
 * 🔍 **Content-addressed by default:** Every file processed by plex has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
-* 🪙 **Ownernship tracking built-in** Every compute event on plex is mintable as an on-chain token that grants the holder rights over the newly generated data. 
+* 🪙 **Ownernship tracking built-in** Every compute event on plex is mintable as an on-chain token that grants the holder rights over the newly generated data.
 * 🔗 **Strictly composable:** Every tool in plex has declared inputs and outputs. Plugging together tools by other authors should be easy.
 
 Plex is based on [Bacalhau](https://www.bacalhau.org/), [IPFS](https://ipfs.tech/), and inspired by the [Common Workflow Language](https://www.commonwl.org/user_guide/introduction/quick-start.html).
@@ -67,7 +67,7 @@ Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lab
 
 2. Submit an example plex job
 ```
-./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true 
+./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true
 ```
 
 ![Getting Started](./readme-getting-started-2x.gif)
@@ -107,14 +107,43 @@ POSTGRES_USER=labdao
 POSTGRES_DB=labdao
 POSTGRES_HOST=localhost
 ```
-* Recommended: Install [direnv](https://direnv.net/). With it installed you can create `.env` file with the above environment variables and have them automagically set when you descend into the folder. 
+* Recommended: Install [direnv](https://direnv.net/). With it installed you can create `.env` file with the above environment variables and have them automagically set when you descend into the folder.
 
-# Start the database
+# Running complete stack locally
+We have `docker-compose` files available to bring up the stack locally.
+
+Note:
+* Only `amd64` architecture is currently supported.
+* New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
+
+## Running
 ```
+# Optionally, build in parallel before running
+docker compose build --parallel
+
+# Build and bring up stack
 docker compose up -d
 ```
 
-Note: New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
+To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
+
+
+## Running with private IPFS
+```
+docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+```
+To run `plex` cli against local private environment `export` the following params to your shell before executing `plex` commands:
+```
+export IPFS_PATH="$(pwd)/docker/ipfs_data/"
+export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
+export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
+```
+
+## Running backend database only
+```
+docker compose up -d dbbackend
+```
+
 
 # Start the Frontend React App
 
@@ -154,12 +183,12 @@ export IPFS_CONNECT=/ip4/127.0.0.1/tcp/5001/p2p/<your id goes here>
 LOG_LEVEL=debug bacalhau serve --job-selection-accept-networked --limit-total-gpu 1 --limit-total-memory 12gb --ipfs-connect $IPFS_CONNECT
 ```
 
-To download large bacalhau results the below command may need ran 
+To download large bacalhau results the below command may need ran
 ```
 sudo sysctl -w net.core.rmem_max=2500000
 ```
 
 ## 💁 Contributing
-PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining. 
+PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining.
 
 From time to time, we also post ```help-wanted``` bounty issues - please consider our [Bounty Policy](https://docs.labdao.xyz/about-us/bounty_policy) when engaging with LabDAO.

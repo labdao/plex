@@ -327,3 +327,9 @@ gateway/gorm.db
 *zinc*
 *AF-*
 tools/tmp*
+
+# Ignore ipfs data directory
+docker/ipfs_data/*
+!docker/ipfs_data/swarm.key
+!docker/ipfs_data/datastore_spec
+!docker/ipfs_data/config
