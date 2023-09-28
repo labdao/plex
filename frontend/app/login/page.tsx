@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import LoginComponent from '../components/Web3AuthLogin/LoginComponent'
 
 import {
    useSelector,
@@ -37,66 +38,9 @@ export default function LoginPage() {
     }
   }, [router, isUserLoggedIn])
 
-  const dispatch = useDispatch()
-
-  const username = useSelector(selectUsername)
-  const walletAddress = useSelector(selectWalletAddress)
-  const errorMessage = useSelector(selectUserFormError)
-  const isLoading = useSelector(selectUserFormIsLoading)
-
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setUsername(e.target.value))
-  }
-
-  const handleWalletAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setWalletAddress(e.target.value))
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    dispatch(startLoading())
-    dispatch(setError(null))
-    await dispatch(saveUserAsync({ username, walletAddress }))
-    dispatch(endLoading())
-  }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <Box maxWidth={500} margin="auto"> {/* Constrain max width and center */}
-        <Grid container direction="column" spacing={2}>
-          <Grid item>
-            <TextField
-              fullWidth
-              label="Username"
-              variant="outlined"
-              value={username}
-              onChange={handleUsernameChange}
-            />
-          </Grid>
-          <Grid item>
-          <TextField
-            fullWidth
-            label="Eth Wallet Address"
-            type="text"
-            variant="outlined"
-            value={walletAddress}
-            onChange={handleWalletAddressChange}
-          />
-          </Grid>
-          {errorMessage && (
-            <Box my={2}>
-              <Alert severity="error" variant="filled">
-                <Typography align="center">{errorMessage}</Typography>
-              </Alert>
-            </Box>
-          )}
-          <Grid item container justifyContent="center">
-            <Button variant="contained" color="primary" type="submit">
-              {isLoading ? "Submitting..." : "Submit"}
-            </Button>
-          </Grid>
-        </Grid>
-      </Box>
-    </form>
+    <div>
+      <LoginComponent />
+    </div>
   )
 }

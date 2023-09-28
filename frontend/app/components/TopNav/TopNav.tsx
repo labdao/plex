@@ -1,6 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useContext } from 'react'
+import { Web3Auth } from '@web3auth/modal'
+import { Web3AuthContext } from '../Web3AuthLogin/Web3AuthContext'
 
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
@@ -30,6 +32,8 @@ export const TopNav = () => {
   // State and handlers for the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
 
+  const web3Auth = useContext(Web3AuthContext)
+
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
     setAnchorEl(event.currentTarget)
   }
@@ -42,17 +46,16 @@ export const TopNav = () => {
     router.push(path)
   }
 
-  const handleLogout = () => {
-    // Clear data from localStorage
-    localStorage.removeItem('username')
-    localStorage.removeItem('walletAddress')
-    dispatch(setUsername(''))
-    dispatch(setWalletAddress(''))
-    dispatch(setIsLoggedIn(false))
-    handleClose()
-    router.push('/login')
+  const handleLogout = async () => {
+    if (web3Auth) {
+      await web3Auth.logout();
+      dispatch(setUsername(''));
+      dispatch(setWalletAddress(''));
+      dispatch(setIsLoggedIn(false));
+      handleClose();
+      router.push('/login');
+    }
   }
-
 
   return (
     <nav className={styles.navbar}>
