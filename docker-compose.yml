@@ -36,8 +36,6 @@ services:
   requester_health:
     image: "alpine"
     command: sh -c 'apk add curl && sleep infinity'
-    volumes:
-      - requestervolume:/home/nonroot/
     depends_on:
       requester:
         condition: service_started
