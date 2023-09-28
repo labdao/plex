@@ -112,7 +112,9 @@ POSTGRES_HOST=localhost
 # Running complete stack locally
 We have `docker-compose` files available to bring up the stack locally.
 
-Note: New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
+Note:
+* Only `amd64` architecture is currently supported.
+* New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
 
 ## Running
 ```
