@@ -2,7 +2,14 @@
 ALTER TABLE tools ADD COLUMN name VARCHAR(255);
 
 -- Extract and set the 'name' value from 'ToolJSON' for all rows
-UPDATE tools SET name = (SELECT value FROM json_each_text(tool_json) WHERE key = 'name');
+UPDATE tools
+SET name = sub.name
+FROM (
+    SELECT tool_id, value as name
+    FROM tools, json_each_text(tools.tool_json)
+    WHERE key = 'name'
+) sub
+WHERE tools.tool_id = sub.tool_id;
 
 -- Set the NOT NULL constraint on 'name'
 ALTER TABLE tools ALTER COLUMN name SET NOT NULL;
