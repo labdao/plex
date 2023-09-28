@@ -118,6 +118,10 @@ Note:
 
 ## Running
 ```
+# Optionally, build in parallel before running
+docker compose build --parallel
+
+# Build and bring up stack
 docker compose up -d
 ```
 
