@@ -13,7 +13,7 @@ import backendUrl from 'lib/backendUrl'
 export default function ListToolFiles() {
   interface Tool {
     CID: string;
-    ToolJSON: string;
+    Name: string;
     WalletAddress: string;
   }
 
@@ -41,20 +41,20 @@ export default function ListToolFiles() {
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell>Name</TableCell>
             <TableCell>CID</TableCell>
-            <TableCell>Serialized Tool Config</TableCell>
             <TableCell>Uploader Wallet Address</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {tools.map((tool, index) => (
             <TableRow key={index}>
+              <TableCell>{tool.Name}</TableCell>
               <TableCell>
                 <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${tool.CID}/`}>
                   {tool.CID}
                 </a>
               </TableCell>
-              <TableCell>{JSON.stringify(tool.ToolJSON)}</TableCell>
               <TableCell>{tool.WalletAddress}</TableCell>
             </TableRow>
           ))}

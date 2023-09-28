@@ -1,39 +1,66 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { addToolAsync, selectWalletAddress } from '@/lib/redux'
+import { useRouter } from 'next/navigation'
 import {
-  selectToolIsLoading,
-} from '@/lib/redux/slices/toolAddSlice/selectors'
+  AppDispatch,
+  setAddToolError,
+  setAddToolLoading,
+  setAddToolJson,
+  setAddToolSuccess,
+  selectWalletAddress,
+  selectAddToolLoading,
+  selectAddToolError,
+  selectAddToolJson,
+  selectAddToolSuccess,
+  createToolThunk,
+} from '@/lib/redux'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
+import Alert from '@mui/material/Alert'
+import Typography from '@mui/material/Typography'
 import { JsonInput } from '@mantine/core'
 import { MantineProvider } from '@mantine/core';
 
 
 export default function AddTool() {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
+  const router = useRouter()
 
-  const isLoading = useSelector(selectToolIsLoading);
   const walletAddress = useSelector(selectWalletAddress)
+  const loading = useSelector(selectAddToolLoading)
+  const error = useSelector(selectAddToolError)
+  const toolJson = useSelector(selectAddToolJson)
+  const toolSuccess = useSelector(selectAddToolSuccess)
 
-  const [toolJson, setToolJson] = useState("")
+  useEffect(() => {
+    if (toolSuccess) {
+      setAddToolSuccess(false)
+      dispatch(setAddToolJson(""))
+      router.push('/tool/list')
+    }
+  }, [toolSuccess, dispatch])
+
+  const handleToolJsonChange = (toolJsonInput: string) => {
+    dispatch(setAddToolJson(toolJsonInput))
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Submitting tool.json: ", toolJson);
-
+    dispatch(setAddToolLoading(true))
+    dispatch(setAddToolError(""))
     try {
-      const toolConfig = JSON.parse(toolJson)
-
-      // @ts-ignore
-      dispatch(addToolAsync({ toolData: toolConfig, walletAddress }))
+      const toolJsonParsed = JSON.parse(toolJson)
+      await dispatch(createToolThunk({ walletAddress, toolJson: toolJsonParsed }))
     } catch (error) {
-      console.error("Invalid JSON format", error);
+      console.error("Error creating tool", error)
+      dispatch(setAddToolError("Error creating tool"))
     }
-  };
+    dispatch(setAddToolLoading(false))
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -43,22 +70,28 @@ export default function AddTool() {
             <MantineProvider>
               <JsonInput
                 label="Tool Definition"
-                placeholder="Paster your tool's JSON definition here."
+                placeholder="Paste your tool's JSON definition here."
                 validationError="Invalid JSON"
-                formatOnBlur
                 autosize
                 minRows={10}
                 value={toolJson}
-                onChange={setToolJson}
+                onChange={handleToolJsonChange}
                 styles={{
                   input: { 'width': '100%' },
                 }}
               />
             </MantineProvider>
           </Grid>
+          {error && (
+            <Box my={2}>
+              <Alert severity="error" variant="filled">
+                <Typography align="center">{error}</Typography>
+              </Alert>
+            </Box>
+          )}
           <Grid item container justifyContent="center">
             <Button variant="contained" color="primary" type="submit">
-              {isLoading ? "Submitting..." : "Submit"}
+              {loading ? "Submitting..." : "Submit"}
             </Button>
           </Grid>
         </Grid>
