@@ -47,7 +47,7 @@ export default function DataFileForm() {
       dispatch(setError("Please select a file"))
       return
     }
-    
+
     dispatch(startLoading())
     dispatch(setError(null))
     const metadata = { walletAddress };

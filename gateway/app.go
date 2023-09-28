@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
 
@@ -28,7 +32,31 @@ func ServeWebApp() {
 	)
 
 	// Setup database connection
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_DB"))
+	// Get environment variables
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DB")
+
+	// DSN for gorm.Open
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", host, user, password, dbname)
+
+	// URL-encoded DSN for migrate.New
+	encodedPassword := url.QueryEscape(password)
+	migrateDSN := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", user, encodedPassword, host, dbname)
+
+	// Run Raw SQL Migrations First using golang-migrate
+	m, err := migrate.New(
+		"file://gateway/migrations",
+		migrateDSN,
+	)
+	if err != nil {
+		log.Fatalf("Could not create migration: %v", err)
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("An error occurred while migrating the database: %v", err)
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: newLogger,
 	})

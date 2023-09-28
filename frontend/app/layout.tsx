@@ -15,7 +15,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
         <Box display="flex" flexDirection="column" height="100vh"> {/* Fill entire view height and set up for flex */}
           <TopNav />
 
-          <Container maxWidth="lg">
+          <Container maxWidth="lg" style={{paddingBottom: "40px"}}>
             <Box mt={5} mb={5} flexGrow={1} display="flex" alignItems="center" justifyContent="center"> {/* Center content */}
               <Grid container direction="column" spacing={3}>
                 <Grid item xs={12}>
