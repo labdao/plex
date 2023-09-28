@@ -1,6 +1,6 @@
 import backendUrl from "lib/backendUrl"
 
-export const createTool = async (
+export const initJobOnServer = async (
     jobData: { [key: string]: any }
 ): Promise<any> => {
     const response = await fetch(`${backendUrl()}/init-job`, {
