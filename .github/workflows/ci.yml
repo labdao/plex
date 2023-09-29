@@ -137,6 +137,14 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: upload outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-public-output
+          path: |
+            job-*
+            jobs/
+
   ci-private:
     needs:
       - go
@@ -216,3 +224,11 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: upload outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-private-output
+          path: |
+            job-*
+            jobs/
