@@ -1,53 +1,43 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-interface ToolSliceState {
-    filename: string
-    cid: string
-    isLoading: boolean
+interface ToolAddSliceState {
+    toolJson: string
+    loading: boolean
     error: string | null
-    isUploaded: boolean
+    success: boolean
 }
 
-const initialState: ToolSliceState = {
-    filename: '',
-    cid: '',
-    isLoading: false,
+const initialState: ToolAddSliceState = {
+    toolJson: '',
+    loading: false,
     error: null,
-    isUploaded: false,
+    success: false,
 }
 
 export const toolAddSlice = createSlice({
-    name: 'tool',
+    name: 'toolAdd',
     initialState,
     reducers: {
-        setFilename: (state, action: PayloadAction<string>) => {
-            state.filename = action.payload
+        setAddToolJson: (state, action: PayloadAction<string>) => {
+            state.toolJson = action.payload
         },
-        setCid: (state, action: PayloadAction<string>) => {
-            state.cid = action.payload
-        },
-        setErrorToolAddSlice: (state, action: PayloadAction<string | null>) => {
+        setAddToolError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload
         },
-        startFileUpload: (state) => {
-            state.isLoading = true
+        setAddToolLoading: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload
         },
-        endFileUpload: (state) => {
-            state.isLoading = false
-        },
-        setIsUploaded: (state, action: PayloadAction<boolean>) => {
-            state.isUploaded = action.payload
-        },
+        setAddToolSuccess: (state, action: PayloadAction<boolean>) => {
+            state.success = action.payload
+        }
     }
 })
 
 export const {
-    setFilename,
-    setCid,
-    setErrorToolAddSlice,
-    startFileUpload,
-    endFileUpload,
-    setIsUploaded,
+    setAddToolJson,
+    setAddToolError,
+    setAddToolLoading,
+    setAddToolSuccess,
 } = toolAddSlice.actions
 
 export default toolAddSlice.reducer
