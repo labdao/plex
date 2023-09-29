@@ -134,8 +134,6 @@ jobs:
 
           result_dir=$(echo ${run_output} | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
-          cp -rav "${result_dir}" results
-
           cd "$result_dir/entry-0/outputs"
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
@@ -150,12 +148,6 @@ jobs:
         with:
           name: ci-public-output
           path: output.log
-
-      - name: upload results directory
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-public-result-dir
-          path: results
 
   ci-private:
     needs:
@@ -232,8 +224,6 @@ jobs:
 
           result_dir=$(echo ${run_output} | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
-          cp -rav "${result_dir}" results
-
           cd "$result_dir/entry-0/outputs"
           ls -ltraR
           cat exitCode stderr stderr log.txt || true
@@ -250,9 +240,3 @@ jobs:
         with:
           name: ci-private-output
           path: output.log
-
-      - name: upload results directory
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-private-result-dir
-          path: results
