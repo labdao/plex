@@ -14,10 +14,10 @@ import {
   useSelector,
   selectWalletAddress,
   selectIsLoggedIn,
-  selectUsername,
-  setUsername,
   setWalletAddress,
+  setEmailAddress,
   setIsLoggedIn,
+  selectEmailAddress,
 } from '@/lib/redux'
 import { Web3AuthContext } from '../../../lib/Web3AuthContext';
 
@@ -25,8 +25,8 @@ export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
   const isLoggedIn = useSelector(selectIsLoggedIn)
-  const username = useSelector(selectUsername)
   const walletAddress = useSelector(selectWalletAddress)
+  const emailAddress = useSelector(selectEmailAddress)
   const web3AuthInstance = useContext(Web3AuthContext);
 
   // State and handlers for the dropdown menu
@@ -47,8 +47,8 @@ export const TopNav = () => {
   const handleLogout = async () => {
     if (web3AuthInstance) {
       await web3AuthInstance.logout();
-      dispatch(setUsername(''));
       dispatch(setWalletAddress(''));
+      dispatch(setEmailAddress(''));
       dispatch(setIsLoggedIn(false));
       handleClose();
       router.push('/login');
@@ -62,7 +62,7 @@ export const TopNav = () => {
       </span>
       {isLoggedIn && (
         <div className={styles.userContainer}>
-          <span className={styles.username}>{username}</span>
+          <span className={styles.username}>{emailAddress}</span>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
             anchorEl={anchorEl}

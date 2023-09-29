@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setIsLoggedIn, selectIsLoggedIn, setUsername, setWalletAddress } from '@/lib/redux';
+import { setIsLoggedIn, selectIsLoggedIn, setWalletAddress, setEmailAddress } from '@/lib/redux';
 import { AppDispatch, ReduxState } from '@/lib/redux/store'; // Import the RootState from your store
 
 import Button from '@mui/material/Button';
@@ -17,9 +17,7 @@ const LoginComponent: React.FC = () => {
   const handleLogin = async () => {
     if (web3AuthInstance) {
       try {
-        console.log(web3AuthInstance)
         const result = await web3AuthInstance.connect();
-        console.log(result)
         if (result) {
           dispatch(setIsLoggedIn(true));
         }
@@ -37,7 +35,7 @@ const LoginComponent: React.FC = () => {
         const response = await web3AuthInstance.getUserInfo();
         console.log(response);
         const email = response.email as string;
-        dispatch(setUsername(email))
+        dispatch(setEmailAddress(email))
       }
     } catch (error) {
       console.error("Failed to get user info:", error);
