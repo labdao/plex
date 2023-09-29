@@ -61,6 +61,18 @@ jobs:
           name: docker-compose-plugin
           path: ./docker-compose
 
+      - name: Download and extract ipfs binary tarball
+        run: |
+          # Download ipfs binary
+          curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          tar -zxvf kubo.tgz
+
+      - name: upload ipfs binary to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: ipfs-binary
+          path: ./kubo/ipfs
+
   ci-public:
     needs:
       - go
@@ -141,6 +153,11 @@ jobs:
         with:
           name: docker-compose-plugin
 
+      - name: download ipfs binary
+        uses: actions/download-artifact@v3
+        with:
+          name: ipfs-binary
+
       - name: Setup docker compose plugin
         run: |
           # Install docker-compose
@@ -174,7 +191,7 @@ jobs:
           IPFS_PATH=$(mktemp -d)
           
           # Initialize IPFS repo
-          ipfs init -e
+          ./ipfs init -e
           
           # Copy over swarm key and config
           cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
