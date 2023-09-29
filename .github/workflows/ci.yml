@@ -98,6 +98,9 @@ jobs:
 
       - name: Run Equibind
         run: |
+          # Add execute permission
+          chmod +x plex
+
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
 
@@ -110,7 +113,6 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
-          ./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci
 
   ci-private:
     needs:
@@ -154,6 +156,9 @@ jobs:
 
       - name: Run Equibind
         run: |
+          # Add execute permission
+          chmod +x plex
+
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
           export IPFS_PATH="$(pwd)/docker/ipfs_data/"
