@@ -91,10 +91,10 @@ jobs:
       - name: Bring up the stack
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --parallel --progress plain
 
           # Setup docker compose
-          docker compose up -d
+          docker compose up -d --progress plain
 
       - name: Run Equibind
         run: |
@@ -149,10 +149,10 @@ jobs:
       - name: Bring up the stack
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --parallel --progress plain
 
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d --progress plain
 
       - name: Run Equibind
         run: |
