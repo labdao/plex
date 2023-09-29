@@ -36,7 +36,11 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
                         },
                         google: {
                             name: "google",
-                            showOnModal: false,
+                            showOnModal: true,
+                        },
+                        github: {
+                            name: "github",
+                            showOnModal: true,
                         },
                         facebook: {
                             name: "facebook",
@@ -60,10 +64,6 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
                         },
                         line: {
                             name: "line",
-                            showOnModal: false,
-                        },
-                        github: {
-                            name: "github",
                             showOnModal: false,
                         },
                         wechat: {

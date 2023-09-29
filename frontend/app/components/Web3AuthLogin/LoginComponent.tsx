@@ -15,7 +15,6 @@ const LoginComponent: React.FC = () => {
   const web3AuthInstance = useContext(Web3AuthContext);
 
   const handleLogin = async () => {
-    console.log("handling login")
     if (web3AuthInstance) {
       try {
         console.log(web3AuthInstance)
@@ -56,16 +55,13 @@ const LoginComponent: React.FC = () => {
       if (web3AuthInstance) {
         // response outputs JWT token
         const response = await web3AuthInstance.authenticateUser() as any;
-        console.log(response);
         // decode JWT token
         const decoded: DecodedJwtPayload = jwt_decode(response["idToken"]);
-        console.log(decoded);
         // access public_key from wallets object
         const wallet = decoded.wallets[0];
         // convert to address
         const addressBuffer = publicToAddress(Buffer.from(wallet.public_key, "hex"), true);
         const address = `0x${addressBuffer.toString("hex")}`;
-        console.log("Wallet address:", address);
         dispatch(setWalletAddress(address));
       }
     } catch (error) {
