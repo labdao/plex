@@ -38,13 +38,23 @@ export const HomeMenu = () => {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/graph/add')}>
-            <ListItemText primary="Add a Graph" />
+          <ListItemButton onClick={() => handleNavigation('/job/init')}>
+            <ListItemText primary="Initialize a Job" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/graph/list')}>
-            <ListItemText primary="View Graphs" />
+          <ListItemButton onClick={() => handleNavigation('/job/view')}>
+            <ListItemText primary="Submit a Job" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigation('/iograph/draw')}>
+            <ListItemText primary="Draw an IO Graph" />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNavigation('/iograph/list')}>
+            <ListItemText primary="View IO Graphs" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
