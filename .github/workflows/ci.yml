@@ -88,12 +88,14 @@ jobs:
           docker version
           docker compose version
 
-      - name: Bring up the stack
+      - name: docker compose build
         run: |
           # Build in parallel
           docker compose build --parallel --progress plain
 
-          # Setup docker compose
+      - name: Bring up the stack
+        run: |
+          # Setup docker compose private
           docker compose up -d --progress plain
 
       - name: Run Equibind
@@ -146,11 +148,13 @@ jobs:
           docker version
           docker compose version
 
-      - name: Bring up the stack
+      - name: docker compose build
         run: |
           # Build in parallel
           docker compose build --parallel --progress plain
 
+      - name: Bring up the stack
+        run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d --progress plain
 
