@@ -193,7 +193,7 @@ jobs:
 
           # Run tests against it
           # using temp directory for ipfs stuff
-          IPFS_PATH=$(mktemp -d)
+          export IPFS_PATH=$(mktemp -d)
           
           # Initialize IPFS repo
           ./ipfs init -e
