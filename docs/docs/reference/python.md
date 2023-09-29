@@ -56,7 +56,6 @@ def plex_run(
     output_dir="", 
     verbose=False, 
     show_animation=False, 
-    concurrency="1", 
     annotations=[], 
     plex_path="plex"
 )
@@ -78,7 +77,6 @@ io_json_cid, io_json_local_filepath = plex_run(
 * `output_dir` *str*, *optional* - output directory; plex default creates a jobs directory
 * `verbose` *bool*, *optional* - verbose mode with more detailed logs
 * `show_animation` *bool*, *optional* - emote animation during job runs
-* `concurrency` *str*, *optional* - concurrency for processing jobs
 * `annotations` *List[str]*, *optional* - list of annotations for jobs; mostly used for usage metrics
 * `plex_path` *str*, *optional* - path pointing to plex binary
 
