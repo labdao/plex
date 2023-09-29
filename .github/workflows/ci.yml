@@ -46,7 +46,7 @@ jobs:
       - name: Test
         run: go test ./... -v
 
-  ci-setup:
+  ci-setup-compose:
     runs-on: ubuntu-22.04
     environment: ci
     steps:
@@ -61,6 +61,10 @@ jobs:
           name: docker-compose-plugin
           path: ./docker-compose
 
+  ci-setup-ipfs:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
       - name: Download and extract ipfs binary tarball
         run: |
           # Download ipfs binary
@@ -76,7 +80,7 @@ jobs:
   ci-public:
     needs:
       - go
-      - ci-setup
+      - ci-setup-compose
     runs-on: ubuntu-22.04
     environment: ci
     steps:
@@ -136,7 +140,8 @@ jobs:
   ci-private:
     needs:
       - go
-      - ci-setup
+      - ci-setup-compose
+      - ci-setup-ipfs
     runs-on: ubuntu-22.04
     environment: ci
     steps:
