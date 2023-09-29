@@ -15,7 +15,6 @@ var (
 	verbose       bool
 	showAnimation bool
 	maxTime       int
-	concurrency   int
 	annotations   *[]string
 )
 
@@ -42,7 +41,6 @@ func init() {
 	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 	runCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	runCmd.Flags().IntVarP(&maxTime, "maxTime", "m", 60, "Maximum time (min) to run a job")
-	runCmd.Flags().IntVarP(&concurrency, "concurrency", "c", 1, "Number of concurrent operations")
 	annotations = runCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(runCmd)

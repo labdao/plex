@@ -76,6 +76,31 @@ func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, m
 	return completedIoJsonCid, ioJsonPath, nil
 }
 
+func SubmitIOList(ioList []IO, selector string, annotations []string) []IO {
+	submittedIOList := make([]IO, len(ioList))
+	for i, ioEntry := range ioList {
+		submittedIOList[i] = ioEntry
+		toolConfig, _, err := ReadToolConfig(ioEntry.Tool.IPFS)
+		if err != nil {
+			submittedIOList[i].State = "failed"
+			submittedIOList[i].ErrMsg = fmt.Sprintf("error reading tool config: %v", err)
+			continue
+		}
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		if err != nil {
+			submittedIOList[i].State = "failed"
+			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)
+			continue
+		}
+
+		submittedJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
+		if err != nil {
+			updateIOWithError(ioJsonPath, index, err, fileMutex)
+			return fmt.Errorf("error submitting Bacalhau job: %w", err)
+		}
+	}
+}
+
 func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime int, annotations []string) {
 	// Mutex to synchronize file access
 	var fileMutex sync.Mutex
