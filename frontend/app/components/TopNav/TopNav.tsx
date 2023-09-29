@@ -20,6 +20,7 @@ import {
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
+import { Web3AuthContext } from '../../../lib/Web3AuthContext'; // Replace with the actual path
 
 export const TopNav = () => {
   const dispatch = useDispatch()
@@ -27,13 +28,14 @@ export const TopNav = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn)
   // const username = useSelector(selectUsername)
   const walletAddress = useSelector(selectWalletAddress)
+  const web3AuthInstance = useContext(Web3AuthContext);
 
   // State and handlers for the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
 
-  // const web3Auth = useContext(Web3AuthContext)
-
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+    console.log("handling click")
+    console.log(web3AuthInstance)
     setAnchorEl(event.currentTarget)
   }
 
@@ -45,16 +47,16 @@ export const TopNav = () => {
     router.push(path)
   }
 
-  // const handleLogout = async () => {
-  //   if (web3Auth) {
-  //     await web3Auth.logout();
-  //     dispatch(setUsername(''));
-  //     dispatch(setWalletAddress(''));
-  //     dispatch(setIsLoggedIn(false));
-  //     handleClose();
-  //     router.push('/login');
-  //   }
-  // }
+  const handleLogout = async () => {
+    if (web3AuthInstance) {
+      await web3AuthInstance.logout();
+      dispatch(setUsername(''));
+      dispatch(setWalletAddress(''));
+      dispatch(setIsLoggedIn(false));
+      handleClose();
+      router.push('/login');
+    }
+  }
 
   return (
     <nav className={styles.navbar}>
@@ -72,7 +74,7 @@ export const TopNav = () => {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose}>Wallet: { walletAddress }</MenuItem>
-            {/* <MenuItem onClick={handleLogout}>Logout</MenuItem> */}
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
       )}
