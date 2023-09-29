@@ -165,19 +165,24 @@ jobs:
 
       - name: Run Equibind
         run: |
-          set -e
           set -x
           # Add execute permission
           chmod +x plex
 
           # Run tests against it
+          # using temp directory for ipfs stuff
+          IPFS_PATH=$(mktemp -d)
+          
+          # Initialize IPFS repo
+          ipfs init -e
+          
+          # Copy over swarm key and config
+          cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
+          
           export BACALHAU_API_HOST=127.0.0.1
-          export IPFS_PATH="$(pwd)/docker/ipfs_data/"
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
 
-          touch "${IPFS_PATH}/testfile"
-          ./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci 
           result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           cd "$result_dir/entry-0/outputs"
           ls -ltraR
