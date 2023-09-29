@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useContext } from 'react'
-import { Web3Auth } from '@web3auth/modal'
+import React, { useContext, useEffect } from 'react'
 
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
@@ -15,18 +14,18 @@ import {
   useSelector,
   selectWalletAddress,
   selectIsLoggedIn,
-  // selectUsername,
+  selectUsername,
   setUsername,
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
-import { Web3AuthContext } from '../../../lib/Web3AuthContext'; // Replace with the actual path
+import { Web3AuthContext } from '../../../lib/Web3AuthContext';
 
 export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
   const isLoggedIn = useSelector(selectIsLoggedIn)
-  // const username = useSelector(selectUsername)
+  const username = useSelector(selectUsername)
   const walletAddress = useSelector(selectWalletAddress)
   const web3AuthInstance = useContext(Web3AuthContext);
 
@@ -34,8 +33,6 @@ export const TopNav = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
 
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
-    console.log("handling click")
-    console.log(web3AuthInstance)
     setAnchorEl(event.currentTarget)
   }
 
@@ -65,7 +62,7 @@ export const TopNav = () => {
       </span>
       {isLoggedIn && (
         <div className={styles.userContainer}>
-          {/* <span className={styles.username}>{username}</span> */}
+          <span className={styles.username}>{username}</span>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
             anchorEl={anchorEl}
