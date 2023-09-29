@@ -329,7 +329,7 @@ gateway/gorm.db
 tools/tmp*
 
 # Ignore ipfs data directory
-# docker/ipfs_data/*
-# !docker/ipfs_data/swarm.key
-# !docker/ipfs_data/datastore_spec
-# !docker/ipfs_data/config
+docker/ipfs_data/*
+!docker/ipfs_data/swarm.key
+!docker/ipfs_data/datastore_spec
+!docker/ipfs_data/config
