@@ -189,7 +189,7 @@ jobs:
         run: |
           set -x
           # Add execute permission
-          chmod +x plex
+          chmod +x plex ipfs
 
           # Run tests against it
           # using temp directory for ipfs stuff
