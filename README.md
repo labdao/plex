@@ -138,7 +138,7 @@ To run `plex` cli against local private environment `export` the following param
 ```
 
 # using temp directory for ipfs stuff
-IPFS_PATH=$(mktemp -d)
+export IPFS_PATH=$(mktemp -d)
 
 # Initialize IPFS repo
 ipfs init -e
