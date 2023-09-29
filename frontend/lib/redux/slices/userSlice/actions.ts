@@ -1,4 +1,8 @@
 import backendUrl from "lib/backendUrl"
+import { createAction } from "@reduxjs/toolkit"
+
+// export const setWeb3Auth = createAction<Web3Auth>('user/setWeb3Auth')
+export const setError = createAction<string | null>('user/setError')
 
 export const saveUserDataToServer = async (
   username: string,
