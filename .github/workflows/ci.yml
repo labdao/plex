@@ -88,7 +88,7 @@ jobs:
           docker version
           docker compose version
 
-      - name: Run Commands
+      - name: Bring up the stack
         run: |
           # Build in parallel
           docker compose build --parallel
@@ -96,6 +96,8 @@ jobs:
           # Setup docker compose
           docker compose up -d
 
+      - name: Run Equibind
+        run: |
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
 
@@ -142,14 +144,16 @@ jobs:
           docker version
           docker compose version
 
-      - name: Run Commands
+      - name: Bring up the stack
         run: |
           # Build in parallel
           docker compose build --parallel
 
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
- 
+
+      - name: Run Equibind
+        run: |
           # Run tests against it
           export BACALHAU_API_HOST=127.0.0.1
           export IPFS_PATH="$(pwd)/docker/ipfs_data/"
