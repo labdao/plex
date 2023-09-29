@@ -5,7 +5,8 @@ import { AppDispatch, ReduxState } from '@/lib/redux/store'; // Import the RootS
 
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import { Web3AuthContext } from '../../../lib/Web3AuthContext'
+import { Web3AuthContext } from '../../../lib/Web3AuthContext';
+import jwt_decode from 'jwt-decode';
 import { publicToAddress } from 'ethereumjs-util';
 
 const LoginComponent: React.FC = () => {
@@ -44,12 +45,24 @@ const LoginComponent: React.FC = () => {
     }
   }
 
+  interface DecodedJwtPayload {
+    wallets: {
+      public_key: string;
+    }[];
+  }
+
   const getWalletAddress = async () => {
     try {
       if (web3AuthInstance) {
+        // response outputs JWT token
         const response = await web3AuthInstance.authenticateUser() as any;
         console.log(response);
-        const wallet = response.wallets[0];
+        // decode JWT token
+        const decoded: DecodedJwtPayload = jwt_decode(response["idToken"]);
+        console.log(decoded);
+        // access public_key from wallets object
+        const wallet = decoded.wallets[0];
+        // convert to address
         const addressBuffer = publicToAddress(Buffer.from(wallet.public_key, "hex"), true);
         const address = `0x${addressBuffer.toString("hex")}`;
         console.log("Wallet address:", address);

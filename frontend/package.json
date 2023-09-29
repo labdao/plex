@@ -12,6 +12,7 @@
     "@reduxjs/toolkit": "1.9.5",
     "@web3auth/modal": "^7.0.3",
     "ethereumjs-util": "^7.1.5",
+    "jwt-decode": "^3.1.2",
     "next": "latest",
     "react": "18.2.0",
     "react-dom": "18.2.0",
