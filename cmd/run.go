@@ -27,7 +27,7 @@ var runCmd = &cobra.Command{
 		dry := true
 		upgradePlexVersion(dry)
 
-		_, _, err := ipwl.RunIO(ioJsonCid, outputDir, selector, verbose, showAnimation, maxTime, concurrency, *annotations)
+		_, _, err := ipwl.RunIO(ioJsonCid, outputDir, selector, verbose, showAnimation, maxTime, *annotations)
 		if err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)

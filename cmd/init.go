@@ -71,7 +71,7 @@ var initCmd = &cobra.Command{
 		}
 
 		if autoRun {
-			_, _, err := ipwl.RunIO(cid, outputDir, selector, verbose, showAnimation, maxTime, concurrency, *annotationsForAutoRun)
+			_, _, err := ipwl.RunIO(cid, outputDir, selector, verbose, showAnimation, maxTime, *annotationsForAutoRun)
 			if err != nil {
 				fmt.Println("Error:", err)
 				os.Exit(1)

@@ -18,7 +18,7 @@ import (
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, maxTime, concurrency int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
+func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, maxTime int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
 	id := uuid.New()
 	var cwd string
 	if outputDir != "" {
@@ -65,7 +65,7 @@ func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, m
 
 	retry := false
 	fmt.Println("Processing IO Entries")
-	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, concurrency, annotations)
+	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, annotations)
 	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
 	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
 	if err != nil {
@@ -76,10 +76,7 @@ func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, m
 	return completedIoJsonCid, ioJsonPath, nil
 }
 
-func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime, maxConcurrency int, annotations []string) {
-	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
-	semaphore := make(chan struct{}, maxConcurrency)
-
+func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime int, annotations []string) {
 	// Mutex to synchronize file access
 	var fileMutex sync.Mutex
 
@@ -112,9 +109,6 @@ func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnim
 			go func(index int, entry IO) {
 				defer wg.Done()
 
-				// Acquire the semaphore
-				semaphore <- struct{}{}
-
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
@@ -127,16 +121,15 @@ func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnim
 				} else {
 					fmt.Printf("Success processing IO entry %d \n", index)
 				}
-
-				// Release the semaphore
-				<-semaphore
 			}(i, ioEntry)
 		}
 
 		// Wait for all goroutines to finish
 		wg.Wait()
 
-		// Wait before re-checking chain dependecies
+		// Wait before re-checking chain dependencies
+		// Todo: switch to event driven checking so go-routine
+		// can stop once bacalhau job is created instead of completed
 		time.Sleep(500 * time.Millisecond)
 	}
 }
