@@ -165,6 +165,8 @@ jobs:
 
       - name: Run Equibind
         run: |
+          set -e
+          set -x
           # Add execute permission
           chmod +x plex
 
