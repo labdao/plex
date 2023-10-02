@@ -171,7 +171,7 @@ jobs:
       - name: upload outputs
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output
+          name: ci-public-output-${{matrix.os}}
           path: |
             job-*
             jobs/
@@ -272,7 +272,7 @@ jobs:
       - name: upload outputs
         uses: actions/upload-artifact@v3
         with:
-          name: ci-private-output
+          name: ci-private-output-${{matrix.os}}
           path: |
             job-*
             jobs/
