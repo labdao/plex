@@ -146,6 +146,7 @@ ipfs init -e
 # Copy over swarm key and config
 cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
 
+export BACALHAU_API_HOST="127.0.0.1"
 export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
 export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
 ```
