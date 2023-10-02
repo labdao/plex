@@ -121,7 +121,7 @@ jobs:
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
-          brew install docker
+          brew install colima docker
           colima start
           
           # For testcontainers to find the Colima socket
@@ -208,7 +208,7 @@ jobs:
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
-          brew install docker
+          brew install colima docker
           colima start
  
           # For testcontainers to find the Colima socket
