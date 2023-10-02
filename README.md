@@ -137,7 +137,7 @@ docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
 To run `plex` cli against local private environment `export` the following params to your shell before executing `plex` commands:
 ```
 
-# using temp directory for ipfs stuff
+# using temp directory for ipfs repo
 export IPFS_PATH=$(mktemp -d)
 
 # Initialize IPFS repo
