@@ -90,12 +90,13 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 			continue
 		}
 		log.Println("Creating cmd")
-		cmd, err := toolToCmd(toolConfig, ioEntry, ioList)
+		cmd, err := toolToCmd2(toolConfig, ioEntry, ioList)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error reading tool config: %v", err)
 			continue
 		}
+		log.Printf("cmd: %s \n", cmd)
 		log.Println("mapping inputs")
 		bacalhauInputs := make(map[string]string)
 		for key, input := range ioEntry.Inputs {
