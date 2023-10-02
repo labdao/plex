@@ -5,9 +5,8 @@ import { useState, useEffect } from 'react';
 import {
   useDispatch,
   useSelector,
-  selectUsername,
   selectWalletAddress,
-  setUsername,
+  selectEmailAddress,
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
@@ -18,14 +17,15 @@ export const UserLoader = ({ children }) => {
   const dispatch = useDispatch()
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const userNameFromRedux = useSelector(selectUsername)
+
   const walletAddressFromRedux = useSelector(selectWalletAddress)
+  const emailAddressFromRedux = useSelector(selectEmailAddress)
 
   useEffect(() => {
     const usernameFromLocalStorage = localStorage.getItem('username')
     const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
 
-    if (!userNameFromRedux && usernameFromLocalStorage) {
+    if (!emailAddressFromRedux && usernameFromLocalStorage) {
       dispatch(setUsername(usernameFromLocalStorage));
     }
 

@@ -1,17 +1,16 @@
 import backendUrl from "lib/backendUrl"
 import { createAction } from "@reduxjs/toolkit"
 
-// export const setWeb3Auth = createAction<Web3Auth>('user/setWeb3Auth')
 export const setError = createAction<string | null>('user/setError')
 
 export const saveUserDataToServer = async (
-  username: string,
-  walletAddress: string
-): Promise<{ username: string, walletAddress: string }> => {
+  walletAddress: string,
+  emailAddress: string,
+): Promise<{ walletAddress: string, emailAddress: string }> => {
   const response = await fetch(`${backendUrl()}/user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, walletAddress }),
+    body: JSON.stringify({ walletAddress, emailAddress }),
   })
 
   if (!response.ok) {

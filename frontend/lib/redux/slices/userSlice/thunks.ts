@@ -1,36 +1,15 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { Web3Auth } from '@web3auth/modal';
-import { setError } from './actions'
-
-import { setIsLoggedIn } from '@/lib/redux'
 import { saveUserDataToServer } from './actions'
 
 interface UserPayload {
-  username: string
-  walletAddress: string
+  walletAddress: string,
+  emailAddress: string
 }
 
 export const saveUserAsync = createAppAsyncThunk(
-  'user/saveUserData',
-  async ({username, walletAddress}: UserPayload, { dispatch }) => {
-    try {
-      const response = await saveUserDataToServer(username, walletAddress)
-
-      if (response.username && response.walletAddress) {
-        localStorage.setItem('username', username)
-        localStorage.setItem('walletAddress', walletAddress)
-        dispatch(setIsLoggedIn(true))
-      } else {
-        dispatch(setError('Failed to save user data.'))
-      }
-      return response
-    } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' && error !== null && 'message' in error 
-        ? (error as { message?: string }).message 
-        : undefined;
-
-      dispatch(setError(errorMessage || 'An error occurred.'));
-      return false;
-    }
+  'user/saveUserDataToServer',
+  async ({walletAddress, emailAddress}: {walletAddress: string, emailAddress: string}) => {
+    const result = await saveUserDataToServer(walletAddress, emailAddress);
+    return result;
   }
 )

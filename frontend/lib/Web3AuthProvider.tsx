@@ -22,9 +22,10 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
             },
             uiConfig: {
               loginMethodsOrder: ["email_passwordless"],
+              loginGridCol: 2,
               primaryButton: "emailLogin",
             },
-          });
+        });
         instance.initModal({
             modalConfig: {
                 [WALLET_ADAPTERS.OPENLOGIN]: {
@@ -91,20 +92,13 @@ export const Web3AuthProvider: React.FC<Web3AuthProviderProps> = ({ children }) 
                             showOnModal: false,
                         },
                     },
-                    [WALLET_ADAPTERS.METAMASK]: {
-                        label: "metamask",
-                        loginMethods: {
-                            metamask: {
-                                name: "metamask",
-                                showOnModal: true,
-                            },
-                        }
-                    }
+                },
+                [WALLET_ADAPTERS.METAMASK]: {
+                    label: "metamask",
+                    showOnModal: true,
                 }
             }
-        }
-        ).then(() => {
-          console.log("modal initialized")
+        }).then(() => {
           setWeb3AuthInstance(instance);
         });
       }

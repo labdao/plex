@@ -2,6 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setIsLoggedIn, selectIsLoggedIn, setWalletAddress, setEmailAddress } from '@/lib/redux';
 import { AppDispatch, ReduxState } from '@/lib/redux/store'; // Import the RootState from your store
+import { saveUserAsync } from '@/lib/redux/slices/userSlice/thunks';
 
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -21,8 +22,12 @@ const LoginComponent: React.FC = () => {
         if (result) {
           dispatch(setIsLoggedIn(true));
         }
-        getUserInfo();
-        getWalletAddress();
+        const walletAddress = await getWalletAddress();
+        const emailAddress = await getUserInfo();
+
+        if (walletAddress && emailAddress) {
+          dispatch(saveUserAsync({walletAddress, emailAddress}));
+        }
       } catch (error) {
         console.error(error);
       }
@@ -33,9 +38,9 @@ const LoginComponent: React.FC = () => {
     try {
       if (web3AuthInstance) {
         const response = await web3AuthInstance.getUserInfo();
-        console.log(response);
         const email = response.email as string;
-        dispatch(setEmailAddress(email))
+        dispatch(setEmailAddress(email));
+        return email;
       }
     } catch (error) {
       console.error("Failed to get user info:", error);
@@ -61,6 +66,7 @@ const LoginComponent: React.FC = () => {
         const addressBuffer = publicToAddress(Buffer.from(wallet.public_key, "hex"), true);
         const address = `0x${addressBuffer.toString("hex")}`;
         dispatch(setWalletAddress(address));
+        return address;
       }
     } catch (error) {
       console.error("Failed to get wallet address:", error);

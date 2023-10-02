@@ -6,5 +6,5 @@ package models
 
 type User struct {
 	WalletAddress string `gorm:"primaryKey;type:varchar(42);not null" json:"walletAddress"`
-	Email         string `gorm:"primaryKey;not null" json:"email"`
+	EmailAddress  string `gorm:"type:text" json:"emailAddress"`
 }
