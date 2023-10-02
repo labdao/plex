@@ -118,6 +118,16 @@ jobs:
         with:
           name: docker-compose-plugin-${{matrix.os}}
 
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker
+          colima start
+          
+          # For testcontainers to find the Colima socket
+          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
+
       - name: Setup docker compose plugin
         run: |
           # Install docker-compose
@@ -194,6 +204,16 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ipfs-binary-${{matrix.os}}
+
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker
+          colima start
+ 
+          # For testcontainers to find the Colima socket
+          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
 
       - name: Setup docker compose plugin
         run: |
