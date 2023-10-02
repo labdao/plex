@@ -12,8 +12,7 @@ services:
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/ipfs:latest
-      args:
-        IPFS_S3_ENABLED: "false"
+      target: ipfs-with-utils
     environment:
       IPFS_S3_ENABLED: "false"
       IPFS_SWARM_KEY_BASE64: "L2tleS9zd2FybS9wc2svMS4wLjAvCi9iYXNlMTYvCjk0Y2Y4ODFiMDZmZDI5YTgxNDVlMmY2MjNiMmRjNGMwNTU2Y2QxNTIwNWM4YjhjMzg0YWEzOThkY2U4YWFhMzYK"

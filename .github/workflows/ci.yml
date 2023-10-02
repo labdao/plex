@@ -1,4 +1,4 @@
-# This workflow is for plex jobs against locally running environment
+# This workflow will build a golang project and runs CI tests
 
 name: CI
 
@@ -14,15 +14,221 @@ on:
       - 'docs/**'
       - 'infrastructure/**'
 
-jobs:
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
-  test:
+jobs:
+  go:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.20.3
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build
+
+      - name: upload plex binary to be used by other jobs
+        uses: actions/upload-artifact@v3
+        with:
+          name: plex-binary
+          path: ./plex
+
+      - name: Test
+        run: go test ./... -v
+
+  ci-setup-compose:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Download docker compose
+        run: |
+          # Download docker-compose plugin
+          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+
+      - name: upload docker-compose plugin to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-compose-plugin
+          path: ./docker-compose
+
+  ci-setup-ipfs:
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Download and extract ipfs binary tarball
+        run: |
+          # Download ipfs binary
+          curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          tar -zxvf kubo.tgz
+
+      - name: upload ipfs binary to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: ipfs-binary
+          path: ./kubo/ipfs
+
+  ci-public:
+    needs:
+      - go
+      - ci-setup-compose
     runs-on: ubuntu-22.04
     environment: ci
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Commands
+      - name: download plex binary
+        uses: actions/download-artifact@v3
+        with:
+          name: plex-binary
+
+      - name: download docker compose plugin artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin
+
+      - name: Setup docker compose plugin
         run: |
-          docker run ubuntu echo hello world
+          # Install docker-compose
+          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
+          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+          # Output version info
+          docker version
+          docker compose version
+
+      - name: docker compose build
+        run: |
+          # Build in parallel
+          docker compose build --parallel
+
+      - name: Bring up the stack
+        run: |
+          # Setup docker compose private
+          docker compose up -d
+
+      - name: Run Equibind
+        run: |
+          # Add execute permission
+          chmod +x plex
+
+          # Run tests against it
+          export BACALHAU_API_HOST=127.0.0.1
+
+          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
+          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+            echo "No docked files found"
+            exit 1
+          else
+            echo "Docked files found:"
+            find . -name '*docked.sdf' | grep 'docked.sdf'
+          fi
+
+      - name: upload outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-public-output
+          path: |
+            job-*
+            jobs/
+
+  ci-private:
+    needs:
+      - go
+      - ci-setup-compose
+      - ci-setup-ipfs
+    runs-on: ubuntu-22.04
+    environment: ci
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: download plex binary
+        uses: actions/download-artifact@v3
+        with:
+          name: plex-binary
+
+      - name: download docker compose plugin artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin
+
+      - name: download ipfs binary
+        uses: actions/download-artifact@v3
+        with:
+          name: ipfs-binary
+
+      - name: Setup docker compose plugin
+        run: |
+          # Install docker-compose
+          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
+          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+          # Output version info
+          docker version
+          docker compose version
+
+      - name: docker compose build
+        run: |
+          # Build in parallel
+          docker compose build --parallel
+
+      - name: Bring up the stack
+        run: |
+          # Setup docker compose private
+          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+
+      - name: Run Equibind
+        run: |
+          set -x
+          # Add execute permission
+          chmod +x plex ipfs
+
+          # Run tests against it
+          # using temp directory for ipfs stuff
+          export IPFS_PATH=$(mktemp -d)
+          
+          # Initialize IPFS repo
+          ./ipfs init -e
+          
+          # Copy over swarm key and config
+          cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
+          
+          export BACALHAU_API_HOST=127.0.0.1
+          export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
+          export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
+
+          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          cd "$result_dir/entry-0/outputs"
+          ls -ltraR
+          cat exitCode stderr stderr log.txt || true
+          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+            echo "No docked files found"
+            exit 1
+          else
+            echo "Docked files found:"
+            find . -name '*docked.sdf' | grep 'docked.sdf'
+          fi
+
+      - name: upload outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-private-output
+          path: |
+            job-*
+            jobs/
