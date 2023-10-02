@@ -2,13 +2,48 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/labdao/plex/gateway/utils"
+	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	"gorm.io/gorm"
 )
+
+func pinIoList(ios []ipwl.IO) (string, error) {
+	// Convert IO slice to JSON
+	data, err := json.Marshal(ios)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal IO slice: %v", err)
+	}
+
+	// Create a temporary file
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
+	if err != nil {
+		return "", fmt.Errorf("cannot create temporary file: %v", err)
+	}
+
+	// Write JSON data to the temporary file
+	if _, err = tmpFile.Write(data); err != nil {
+		return "", fmt.Errorf("failed to write to temporary file: %v", err)
+	}
+
+	cid, err := ipfs.PinFile(tmpFile.Name())
+	if err != nil {
+		return "", fmt.Errorf("failed to pin file: %v", err)
+	}
+
+	// Close the file
+	if err := tmpFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close the file: %v", err)
+	}
+
+	return cid, nil
+}
 
 func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -57,15 +92,19 @@ func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// add wallet
-		ioJson, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
+		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println("ioJson: ", ioJson)
+		log.Println("Initialized IO List")
 
-		// ./plex init -t QmZWYpZXsrbtzvBCHngh4YEgME5djnV5EedyTpc8DrK7k2 -i
-		//  '{"protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
-		// "small_molecule": ["QmViB4EnKX6PXd77WYSgMDMq9ZMX14peu3ZNoVV1LHUZwS/ZINC000019632618.sdf"]}'
-		// --scatteringMethod=dotProduct --autoRun=true -a test
+		log.Println("Submitting IO List")
+		submittedIoList := ipwl.SubmitIoList(ioList, "", 60, []string{})
+		log.Println("pinning submitted IO List")
+		submittedIoListCid, err := pinIoList(submittedIoList)
+		if err != nil {
+			log.Fatal(err)
+		}
+		utils.SendJSONResponseWithCID(w, submittedIoListCid)
 	}
 }
