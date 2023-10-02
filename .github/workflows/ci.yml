@@ -21,7 +21,10 @@ concurrency:
 
 jobs:
   go:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - uses: actions/checkout@v3
@@ -40,48 +43,68 @@ jobs:
       - name: upload plex binary to be used by other jobs
         uses: actions/upload-artifact@v3
         with:
-          name: plex-binary
+          name: plex-binary-${{matrix.os}}
           path: ./plex
 
       - name: Test
         run: go test ./... -v
 
   ci-setup-compose:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Download docker compose
         run: |
           # Download docker-compose plugin
-          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
+          fi
 
       - name: upload docker-compose plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: docker-compose-plugin
+          name: docker-compose-plugin-${{matrix.os}}
           path: ./docker-compose
 
   ci-setup-ipfs:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
+
     runs-on: ubuntu-22.04
     environment: ci
     steps:
       - name: Download and extract ipfs binary tarball
         run: |
           # Download ipfs binary
-          curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          # Download docker-compose plugin
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_darwin-arm64.tar.gz -o kubo.tgz
+          fi
           tar -zxvf kubo.tgz
 
       - name: upload ipfs binary to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: ipfs-binary
+          name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
 
   ci-public:
     needs:
       - go
       - ci-setup-compose
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Checkout code
@@ -90,12 +113,12 @@ jobs:
       - name: download plex binary
         uses: actions/download-artifact@v3
         with:
-          name: plex-binary
+          name: plex-binary-${{matrix.os}}
 
       - name: download docker compose plugin artifact
         uses: actions/download-artifact@v3
         with:
-          name: docker-compose-plugin
+          name: docker-compose-plugin-${{matrix.os}}
 
       - name: Setup docker compose plugin
         run: |
@@ -150,7 +173,10 @@ jobs:
       - go
       - ci-setup-compose
       - ci-setup-ipfs
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Checkout code
@@ -159,17 +185,17 @@ jobs:
       - name: download plex binary
         uses: actions/download-artifact@v3
         with:
-          name: plex-binary
+          name: plex-binary-${{matrix.os}}
 
       - name: download docker compose plugin artifact
         uses: actions/download-artifact@v3
         with:
-          name: docker-compose-plugin
+          name: docker-compose-plugin-${{matrix.os}}
 
       - name: download ipfs binary
         uses: actions/download-artifact@v3
         with:
-          name: ipfs-binary
+          name: ipfs-binary-${{matrix.os}}
 
       - name: Setup docker compose plugin
         run: |
