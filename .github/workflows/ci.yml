@@ -49,10 +49,11 @@ jobs:
       - name: Test
         run: go test ./... -v
 
+  # Only downloading cli for linux
   ci-setup-compose:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -114,6 +115,7 @@ jobs:
           name: plex-binary-${{matrix.os}}
 
       - name: download docker compose plugin artifact
+        if: runner.os != 'macos'
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-plugin-${{matrix.os}}
@@ -123,15 +125,18 @@ jobs:
         run: |
           brew install colima docker docker-compose
           colima start
-          
+
           # For testcontainers to find the Colima socket
           # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
           sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
 
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
           docker version
           docker compose version
 
       - name: Setup docker compose plugin
+        if: runner.os != 'macos'
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -198,30 +203,34 @@ jobs:
         with:
           name: plex-binary-${{matrix.os}}
 
-      - name: download docker compose plugin artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
-
       - name: download ipfs binary
         uses: actions/download-artifact@v3
         with:
           name: ipfs-binary-${{matrix.os}}
+
+      - name: download docker compose plugin artifact
+        if: runner.os != 'macos'
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin-${{matrix.os}}
 
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
           brew install colima docker docker-compose
           colima start
- 
+
           # For testcontainers to find the Colima socket
           # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
           sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
 
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
           docker version
           docker compose version
 
       - name: Setup docker compose plugin
+        if: runner.os != 'macos'
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -252,13 +261,13 @@ jobs:
           # Run tests against it
           # using temp directory for ipfs stuff
           export IPFS_PATH=$(mktemp -d)
-          
+
           # Initialize IPFS repo
           ./ipfs init -e
-          
+
           # Copy over swarm key and config
           cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-          
+
           export BACALHAU_API_HOST=127.0.0.1
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
