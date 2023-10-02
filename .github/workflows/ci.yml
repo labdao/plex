@@ -76,8 +76,6 @@ jobs:
       matrix:
         os: [ubuntu-22.04, macos-13]
     runs-on: ${{ matrix.os }}
-
-    runs-on: ubuntu-22.04
     environment: ci
     steps:
       - name: Download and extract ipfs binary tarball
