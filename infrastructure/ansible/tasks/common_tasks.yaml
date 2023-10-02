@@ -1,15 +1,8 @@
-- name: "Gather service facts"
+- name: "Remove unattended upgrades"
   become: true
-  ansible.builtin.service_facts:
-
-- name: "Disable unattended upgrades service"
-  become: true
-  ansible.builtin.systemd:
-    name: "unattended-upgrades.service"
-    enabled: false
-    masked: true
-    state: "stopped"
-  when: ansible_facts.services["unattended-upgrades.service"] is defined
+  ansible.builtin.package:
+    name: "unattended-upgrades"
+    state: absent
 
 - name: Install required system packages
   become: true
