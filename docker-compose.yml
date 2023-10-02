@@ -36,8 +36,6 @@ services:
   requester_health:
     image: "alpine"
     command: sh -c 'apk add curl && sleep infinity'
-    volumes:
-      - requestervolume:/home/nonroot/
     depends_on:
       requester:
         condition: service_started
@@ -55,12 +53,13 @@ services:
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1235/p2p/Qmd2oBsjjvtUYRmb7zhDEPhSf9YbxA1a7ZLZ6hyCwMqpnh"
     environment:
       LOG_LEVEL: trace
+      DOCKER_DEFAULT_PLATFORM: linux/amd64
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
     depends_on:
-      # ipfs:
-      #   condition: service_healthy
+      ipfs:
+        condition: service_healthy
       requester:
         condition: service_started
       requester_health:
@@ -84,7 +83,10 @@ services:
       start_period: 10s
 
   backend:
-    build: .
+    build:
+      context: .
+      cache_from:
+        - quay.io/labdao/backend:latest
     ports:
       - 8080:8080
     environment:
@@ -109,6 +111,8 @@ services:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
     environment:
@@ -135,6 +139,8 @@ services:
     build:
       context: ./receptor
       dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/receptor:latest
     environment:
       PGHOST: dbreceptor
       PGUSER: labdao
