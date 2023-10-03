@@ -8,8 +8,8 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@mantine/core": "^7.1.2",
-    "@mantine/hooks": "^7.1.2",
+    "@mantine/core": "^7.0.2",
+    "@mantine/hooks": "^7.0.2",
     "@mui/icons-material": "^5.14.3",
     "@reduxjs/toolkit": "1.9.5",
     "@web3auth/modal": "^7.0.3",
