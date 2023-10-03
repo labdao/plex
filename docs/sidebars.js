@@ -13,21 +13,9 @@ const sidebars = {
       label: 'Welcome',
     },
     {
-      type: 'category',
+      type: 'doc',
+      id: 'quickstart/installation',
       label: 'Quickstart',
-      collapsed: false,
-      items: [
-        {
-          type: 'doc',
-          id: 'quickstart/installation',
-          label: 'Installation',
-        },
-        {
-          type: 'doc',
-          id: 'quickstart/available-tools',
-          label: 'Available Tools',
-        }
-      ],
     },
     {
       type: 'category',

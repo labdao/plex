@@ -10,7 +10,7 @@ You shouldn't have to spend days researching and setting up BioML tools.
 ## Introducing plex
 Plex is a library that allows you to run BioML tools direct from your command line, without having to worry about failing dependencies or managing compute.
 
-[Install PLEX here with 1 line of code](quickstart/installation)
+[Install plex with 1 line of code](quickstart/installation)
 
 ## In the docs:
 In these docs, you can find:
@@ -21,9 +21,9 @@ In these docs, you can find:
 
 ## What to do next
 
-- [Install plex](quickstart/installation)
+- [Install plex here with 1 line of code](quickstart/installation).
 
-- Check out our [Small Molecule Binding](https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing) or [Protein Folding](https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing) tutorials
+- Check out one of our [tutorials](tutorials/tutorials.md).
 
 - Find out more about our tools on our [website](https://labdao.xyz/tools).
 

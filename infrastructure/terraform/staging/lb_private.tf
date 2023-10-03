@@ -1,10 +1,25 @@
 # Setting up private LB for compute nodes be able to reach requester and everything to reach IPFS nodes
 resource "aws_lb" "labdao_requester_private" {
-  name               = "labdao-requester-${var.environment}"
-  internal           = true
-  load_balancer_type = "network"
-  ip_address_type    = "ipv4"
-  subnets            = data.aws_subnets.default_filtered.ids
+  name                             = "labdao-requester-${var.environment}"
+  internal                         = true
+  load_balancer_type               = "network"
+  ip_address_type                  = "ipv4"
+  subnets                          = data.aws_subnets.default_filtered.ids
+  enable_cross_zone_load_balancing = true
+
+}
+
+# Listener for Baclhau API Swarm port for Requester
+resource "aws_lb_listener" "labdao_requester_bacalhau_swarm_private_1234" {
+  load_balancer_arn = aws_lb.labdao_requester_private.arn
+  port              = "1234"
+  protocol          = "TCP_UDP"
+
+  # default forward to Bacalhau Swarm TG
+  default_action {
+    target_group_arn = aws_lb_target_group.labdao_requester_bacalhau_swarm_tg.arn
+    type             = "forward"
+  }
 }
 
 # Listener for Swarm Baclhau Swarm port for Requester
@@ -43,6 +58,25 @@ resource "aws_lb_listener" "labdao_requester_private_5001" {
   default_action {
     target_group_arn = aws_lb_target_group.labdao_ipfs_api_tg.arn
     type             = "forward"
+  }
+}
+
+# TG for Bacalhau API port
+resource "aws_lb_target_group" "labdao_requester_bacalhau_api_tg" {
+  name     = "labdao-${var.environment}-rqstr-bcl-api"
+  port     = 1234
+  protocol = "TCP_UDP"
+
+  # PUT in default VPC for now
+  vpc_id = data.aws_vpc.default.id
+
+  health_check {
+    interval            = 5
+    port                = "traffic-port"
+    protocol            = "TCP"
+    timeout             = 2
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
   }
 }
 

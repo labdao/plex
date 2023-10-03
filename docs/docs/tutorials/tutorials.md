@@ -15,3 +15,4 @@ For tutorial requests, please [open an issue](https://github.com/labdao/plex/iss
 |----------|-------------------------------------------|------------------|
 | **Small molecule docking** | Interactive small molecule docking with [Equibind](https://hannes-stark.com/assets/EquiBind.pdf)  | <OpenInColab link="https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing"></OpenInColab> |
 | **Protein folding** | Interactive protein folding with [ColabFold](https://www.nature.com/articles/s41592-022-01488-1)  | <OpenInColab link="https://colab.research.google.com/drive/14yfxUAZ_ch8co77_1OfuvN3OPPhM1Xe6?usp=sharing"></OpenInColab> |
+| **Protein binder design** | Designing proteins with [ColabDesign](https://github.com/sokrypton/ColabDesign) | <OpenInColab link="https://colab.research.google.com/drive/1P2girLxbX5W0f2cXBYXluj_WvOMivHpw?usp=sharing"></OpenInColab> |

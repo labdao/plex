@@ -6,20 +6,77 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 )
 
 var errOutputPathEmpty = errors.New("output file path is empty, still waiting")
 
-func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool, maxConcurrency int, annotations []string) {
-	// Use a buffered channel as a semaphore to limit the number of concurrent tasks
-	semaphore := make(chan struct{}, maxConcurrency)
+func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, maxTime int, annotations []string) (completedIoJsonCid, ioJsonPath string, err error) {
+	id := uuid.New()
+	var cwd string
+	if outputDir != "" {
+		absPath, err := filepath.Abs(outputDir)
+		if err != nil {
+			return completedIoJsonCid, ioJsonPath, err
+		}
+		cwd = absPath
+	} else {
+		cwd, err = os.Getwd()
+		if err != nil {
+			return completedIoJsonCid, ioJsonPath, err
+		}
+		cwd = path.Join(cwd, "jobs")
+	}
+	workDirPath := path.Join(cwd, id.String())
+	err = os.MkdirAll(workDirPath, 0755)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+	fmt.Println("Created working directory:", workDirPath)
 
+	ioJsonPath = path.Join(workDirPath, "io.json")
+	err = ipfs.DownloadFileContents(ioJsonCid, ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+	fmt.Println("Initialized IO file at:", ioJsonPath)
+
+	fmt.Println("Extracting user ID from IO JSON...")
+	userID, err := ExtractUserIDFromIOJson(ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+
+	if userID != "" && !ContainsUserIdAnnotation(annotations) {
+		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
+	}
+
+	if maxTime > 60 {
+		fmt.Println("Error: maxTime cannot exceed 60 minutes")
+		os.Exit(1)
+	}
+
+	retry := false
+	fmt.Println("Processing IO Entries")
+	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, annotations)
+	fmt.Printf("Finished processing, results written to %s\n", ioJsonPath)
+	completedIoJsonCid, err = ipfs.PinFile(ioJsonPath)
+	if err != nil {
+		return completedIoJsonCid, ioJsonPath, err
+	}
+
+	fmt.Println("Completed IO JSON CID:", completedIoJsonCid)
+	return completedIoJsonCid, ioJsonPath, nil
+}
+
+func ProcessIOList(jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, maxTime int, annotations []string) {
 	// Mutex to synchronize file access
 	var fileMutex sync.Mutex
 
@@ -52,13 +109,10 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 			go func(index int, entry IO) {
 				defer wg.Done()
 
-				// Acquire the semaphore
-				semaphore <- struct{}{}
-
 				fmt.Printf("Starting to process IO entry %d \n", index)
 
 				// add retry and resume check
-				err := processIOTask(entry, index, jobDir, ioJsonPath, retry, verbose, showAnimation, annotations, &fileMutex)
+				err := processIOTask(entry, index, maxTime, jobDir, ioJsonPath, selector, retry, verbose, showAnimation, annotations, &fileMutex)
 				if errors.Is(err, errOutputPathEmpty) {
 					fmt.Printf("Waiting to process IO entry %d \n", index)
 				} else if err != nil {
@@ -67,21 +121,20 @@ func ProcessIOList(jobDir, ioJsonPath string, retry, verbose, showAnimation bool
 				} else {
 					fmt.Printf("Success processing IO entry %d \n", index)
 				}
-
-				// Release the semaphore
-				<-semaphore
 			}(i, ioEntry)
 		}
 
 		// Wait for all goroutines to finish
 		wg.Wait()
 
-		// Wait before re-checking chain dependecies
+		// Wait before re-checking chain dependencies
+		// Todo: switch to event driven checking so go-routine
+		// can stop once bacalhau job is created instead of completed
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
+func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector string, retry, verbose, showAnimation bool, annotations []string, fileMutex *sync.Mutex) error {
 	fileMutex.Lock()
 	ioGraph, err := ReadIOList(ioJsonPath)
 	fileMutex.Unlock()
@@ -157,7 +210,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		memory = *toolConfig.MemoryGB
 	}
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating Bacalhau job: %w", err)
@@ -181,7 +234,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 	if verbose {
 		fmt.Println("Getting Bacalhau job")
 	}
-	results, err := bacalhau.GetBacalhauJobResults(submittedJob, showAnimation)
+	results, err := bacalhau.GetBacalhauJobResults(submittedJob, showAnimation, maxTime)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error getting Bacalhau job results: %w", err)
@@ -201,6 +254,7 @@ func processIOTask(ioEntry IO, index int, jobDir, ioJsonPath string, retry, verb
 		fmt.Println("Cleaning Bacalhau job")
 	}
 	err = cleanBacalhauOutputDir(outputsDirPath, verbose)
+
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error cleaning Bacalhau output directory: %w", err)
@@ -261,7 +315,7 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 	// Move files from /outputs to outputsDirPath
 	files, err := ioutil.ReadDir(bacalOutputsDirPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Bacalhau output directory: %w", err)
 	}
 
 	for _, file := range files {
@@ -269,17 +323,17 @@ func cleanBacalhauOutputDir(outputsDirPath string, verbose bool) error {
 		dst := filepath.Join(outputsDirPath, file.Name())
 
 		if verbose {
-			fmt.Printf("Moving %s to %s", src, dst)
+			fmt.Printf("Moving %s to %s\n", src, dst)
 		}
 		if err := os.Rename(src, dst); err != nil {
-			return err
+			return fmt.Errorf("error moving file from %s to %s: %w", src, dst, err)
 		}
 	}
 
 	// remove empty outputs folder now that files have been moved
 	err = os.Remove(bacalOutputsDirPath)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("error removing Bacalhau output directory: %w", err)
 	}
 
 	return nil

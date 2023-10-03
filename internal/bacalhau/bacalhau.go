@@ -9,10 +9,10 @@ import (
 
 	"github.com/bacalhau-project/bacalhau/pkg/downloader"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
+	node "github.com/bacalhau-project/bacalhau/pkg/job"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"k8s.io/apimachinery/pkg/selection"
 )
 
 func GetBacalhauApiHost() string {
@@ -27,7 +27,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -37,17 +37,19 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 	job.Spec.Publisher = model.PublisherIpfs
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
+	job.Spec.Timeout = float64(maxTime * 60)
 
-	// had problems getting selector to work in bacalhau v0.28
-	var selectorLabel string
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if plexEnv == "stage" {
-		selectorLabel = "labdaostage"
-	} else {
-		selectorLabel = "labdao"
+	if selector == "" && plexEnv == "stage" {
+		selector = "owner=labdaostage"
+	} else if selector == "" && plexEnv == "prod" {
+		selector = "owner=labdao"
 	}
-	selector := model.LabelSelectorRequirement{Key: "owner", Operator: selection.Equals, Values: []string{selectorLabel}}
-	job.Spec.NodeSelectors = []model.LabelSelectorRequirement{selector}
+	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
+	if err != nil {
+		return nil, err
+	}
+	job.Spec.NodeSelectors = nodeSelectorRequirements
 
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
@@ -65,8 +67,8 @@ func CreateBacalhauJob(cid, container, cmd string, memory int, gpu, network bool
 
 func CreateBacalhauClient() *publicapi.RequesterAPIClient {
 	system.InitConfig()
-	apiPort := uint16(1234)
 	apiHost := GetBacalhauApiHost()
+	apiPort := uint16(1234)
 	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
 	return client
 }
@@ -77,9 +79,12 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	return submittedJob, err
 }
 
-func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results []model.PublishedResult, err error) {
+func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime int) (results []model.PublishedResult, err error) {
 	client := CreateBacalhauClient()
-	maxTrys := 360 // 30 minutes divided by 5 seconds is 360 iterations
+
+	sleepConstant := 2
+	maxTrys := maxTime * 60 / sleepConstant
+
 	animation := []string{"\U0001F331", "_", "_", "_", "_"}
 	fmt.Println("Job running...")
 
@@ -89,6 +94,9 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 		updatedJob, _, err := client.Get(context.Background(), submittedJob.Metadata.ID)
 		if err != nil {
 			return results, err
+		}
+		if i == maxTrys-1 {
+			return results, fmt.Errorf("bacalhau job did not finish within the expected time (~%d min); please check the job status manually with `bacalhau describe %s`", maxTime, submittedJob.Metadata.ID)
 		}
 		if updatedJob.State.State == model.JobStateCancelled {
 			return results, fmt.Errorf("bacalhau cancelled job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
@@ -111,15 +119,21 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool) (results
 			fmt.Printf("////%s////\r", strings.Join(animation, ""))
 			animation[saplingIndex] = "_"
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(sleepConstant) * time.Second)
 	}
 	return results, err
 }
 
 func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
-	downloadSettings := util.NewDownloadSettings()
-	downloadSettings.OutputDir = dir
 	cm := system.NewCleanupManager()
+	downloadSettings := &model.DownloaderSettings{
+		Timeout:   model.DefaultIPFSTimeout,
+		OutputDir: dir,
+	}
+	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
+		downloadSettings.IPFSSwarmAddrs = os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")
+	}
+	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
 	return err

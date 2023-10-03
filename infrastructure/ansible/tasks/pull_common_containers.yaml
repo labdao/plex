@@ -1,0 +1,21 @@
+- name: Pull commonly used containers
+  community.docker.docker_image:
+    name: "{{ item }}"
+    source: pull
+  loop:
+    - "dfam/tetools:1.85"
+    - "docker.io/mcmenemy/plex-dlkcat@sha256:92cfec2676bc5b8d75ee37c0fc31eb9c2e43c73a2acce2e4aaa60066b7a56f38"
+    - "ghcr.io/labdao/diffdock:main@sha256:b00432de73478d3da578e4a16ee669178828109f3c7bf9c58d44bb7514f68629"
+    - "ghcr.io/labdao/equibind:main@sha256:21a381d9ab1ff047565685044569c8536a55e489c9531326498b28d6b3cc244f"
+    - "ghcr.io/labdao/equibind@sha256:ae2cec63b3924774727ed1c6c8af95cf4aaea2d3f0c5acbec56478505ccb2b07"
+    - "ghcr.io/labdao/oddt:main"
+    - "gnina/gnina:v1.0.1"
+    - "public.ecr.aws/p7l9w5o7/colabfold:latest"
+    - "public.ecr.aws/p7l9w5o7/protbert:latest"
+    - "public.ecr.aws/p7l9w5o7/rfdiffusion:latest@sha256:0a6ff53004958ee5e770b0b25cd7f270eaf9fc285f6e91f17ad4024d2cc4ea91"
+    - "quay.io/biocontainers/samtools@sha256:6f88956b747a67b2a39a3ff72c4de30e665239ee11db610624dd4298e30db1bf"
+    - "quay.io/labdao/blender@sha256:1ee7bdc2e100bc3a8c968025579be950f50e685b440bd610971248b168f2bb74"
+    - "quay.io/labdao/openbabel@sha256:1087315d7eda6d0632c9f9df72500ab9f6fef612c79bae7410473a2336f7be34"
+    - "staphb/fastqc:0.12.1@sha256:f5d8f72753269e0cee071fe198c89a59a1f8071445739b3398f7818f7cb039ae"
+  async: 86400
+  poll: 0

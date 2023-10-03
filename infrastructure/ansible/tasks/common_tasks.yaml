@@ -1,12 +1,8 @@
-- name: "Gather service facts"
-  ansible.builtin.service_facts:
-
-- name: "Disable unattended upgrades service"
-  ansible.builtin.systemd:
-    name: "unattended-upgrades.service"
-    enabled: false
-    masked: true
-  when: ansible_facts.services["unattended-upgrades.service"] is defined
+- name: "Remove unattended upgrades"
+  become: true
+  ansible.builtin.package:
+    name: "unattended-upgrades"
+    state: absent
 
 - name: Install required system packages
   become: true
@@ -22,3 +18,14 @@
       - pip
       - tar
       - unzip
+      - jq
+      - tree
+      - net-tools
+
+- name: Install required pip packages
+  become: true
+  ansible.builtin.pip:
+    name:
+      - pip
+      - boto3
+      - pyopenssl

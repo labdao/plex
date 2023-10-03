@@ -1,7 +1,7 @@
 ---
 title: Install plex
 description: How to install plex
-sidebar_label: Install Plex
+sidebar_label: Installation
 sidebar_position: 1
 ---
 
@@ -40,3 +40,4 @@ After installation, try one of our tutorials in a Google Colab notebook
 
 - [Small Molecule Binding](https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing)
 - [Protein Folding](https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing)
+- [Protein Binder Design](https://colab.research.google.com/drive/1P2girLxbX5W0f2cXBYXluj_WvOMivHpw?usp=sharing)
