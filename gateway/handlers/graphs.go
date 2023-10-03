@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
@@ -105,6 +106,62 @@ func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		graphEntry := models.Graph{
+			CID:           submittedIoListCid,
+			WalletAddress: walletAddress,
+		}
+
+		log.Println("Creating graph entry")
+		result := db.Create(&graphEntry)
+		if result.Error != nil {
+			if utils.IsDuplicateKeyError(result.Error) {
+				http.Error(w, "A Graph with the same CID already exists", http.StatusConflict)
+			} else {
+				http.Error(w, fmt.Sprintf("Error creating Graph entity: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		for _, job := range submittedIoList {
+			log.Println("Creating job entry")
+			jobEntry := models.Job{
+				BacalhauJobID: job.BacalhauJobId,
+				State:         job.State,
+				Error:         job.ErrMsg,
+				ToolID:        job.Tool.IPFS,
+				GraphID:       graphEntry.CID,
+			}
+			result := db.Create(&jobEntry)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+		}
+
 		utils.SendJSONResponseWithCID(w, submittedIoListCid)
+	}
+}
+
+func ListGraphsHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		var graphs []models.Graph
+		if result := db.Find(&graphs); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Graphs: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		log.Println("Fetching tools from DB: ", graphs)
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(graphs); err != nil {
+			http.Error(w, "Error encoding Graphs to JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }

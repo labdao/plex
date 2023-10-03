@@ -86,7 +86,7 @@ export default function AddGraph() {
       };
       console.log('data:', data)
 
-      fetch(`${backendUrl()}/graph`, {
+      fetch(`${backendUrl()}/graphs`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',

@@ -9,3 +9,4 @@ DROP TABLE IF EXISTS jobs_id_seq;
 DROP TABLE IF EXISTS tool_entities;
 DROP TABLE IF EXISTS users_id_seq;
 DROP TABLE IF EXISTS data_files;
+DROP TABLE IF EXISTS graphs;
