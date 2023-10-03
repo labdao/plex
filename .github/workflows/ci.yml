@@ -177,6 +177,8 @@ jobs:
           fi
 
       - name: upload outputs
+        # run always even when
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ci-public-output-${{matrix.os}}
@@ -285,6 +287,8 @@ jobs:
           fi
 
       - name: upload outputs
+        # run always even when
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ci-private-output-${{matrix.os}}
