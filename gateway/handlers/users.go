@@ -41,7 +41,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var existingUser models.User
-		if err := db.Where("wallet_address = ? AND email = ?", requestData.WalletAddress, requestData.EmailAddress).First(&existingUser).Error; err != nil {
+		if err := db.Where("wallet_address = ? AND email_address = ?", requestData.WalletAddress, requestData.EmailAddress).First(&existingUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User does not exist, create new user
 				newUser := models.User{
