@@ -208,6 +208,12 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
+
       - name: Run bacalhau describe
         # run always even when
         if: always()
@@ -334,6 +340,12 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
 
       - name: Run bacalhau describe
         # run always even when
