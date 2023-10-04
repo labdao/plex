@@ -13,15 +13,8 @@ export const createFlow = async (
         body: JSON.stringify(payload),
     })
 
-    if (!response.ok) {
-        let errorText = "Failed to create Flow"
-        try {
-            errorText = await response.text()
-            console.log(errorText)
-        } catch (e) {
-            // Parsing JSON failed, retain the default error message.
-        }
-        throw new Error(errorText)
+    if (!response) {
+        throw new Error("Failed to create Flow")
     }
 
     const result = await response.json()
