@@ -9,6 +9,7 @@ import {
   selectEmailAddress,
   setWalletAddress,
   setIsLoggedIn,
+  setEmailAddress,
 } from '@/lib/redux'
 
 import { useRouter } from 'next/navigation'
@@ -22,18 +23,18 @@ export const UserLoader = ({ children }) => {
   const emailAddressFromRedux = useSelector(selectEmailAddress)
 
   useEffect(() => {
-    const usernameFromLocalStorage = localStorage.getItem('username')
     const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
-
-    if (!emailAddressFromRedux && usernameFromLocalStorage) {
-      dispatch(setUsername(usernameFromLocalStorage));
-    }
+    const emailAddressFromLocalStorage = localStorage.getItem('emailAddress')
 
     if (!walletAddressFromRedux && walletAddressFromLocalStorage) {
       dispatch(setWalletAddress(walletAddressFromLocalStorage))
     }
 
-    if (!usernameFromLocalStorage || !walletAddressFromLocalStorage) {
+    if (!emailAddressFromRedux && emailAddressFromLocalStorage) {
+      dispatch(setEmailAddress(emailAddressFromLocalStorage));
+    }
+
+    if (!walletAddressFromLocalStorage || !emailAddressFromLocalStorage) {
       router.push('/login')
     } else {
       dispatch(setIsLoggedIn(true))

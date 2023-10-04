@@ -47,8 +47,13 @@ export const TopNav = () => {
   const handleLogout = async () => {
     if (web3AuthInstance) {
       await web3AuthInstance.logout();
+
+      localStorage.removeItem('walletAddress');
       dispatch(setWalletAddress(''));
+
+      localStorage.removeItem('emailAddress');
       dispatch(setEmailAddress(''));
+      
       dispatch(setIsLoggedIn(false));
       handleClose();
       router.push('/login');

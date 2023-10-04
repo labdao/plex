@@ -39,6 +39,7 @@ const LoginComponent: React.FC = () => {
       if (web3AuthInstance) {
         const response = await web3AuthInstance.getUserInfo();
         const email = response.email as string;
+        localStorage.setItem("emailAddress", email);
         dispatch(setEmailAddress(email));
         return email;
       }
@@ -65,6 +66,7 @@ const LoginComponent: React.FC = () => {
         // convert to address
         const addressBuffer = publicToAddress(Buffer.from(wallet.public_key, "hex"), true);
         const address = `0x${addressBuffer.toString("hex")}`;
+        localStorage.setItem("walletAddress", address);
         dispatch(setWalletAddress(address));
         return address;
       }
