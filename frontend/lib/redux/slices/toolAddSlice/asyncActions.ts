@@ -3,7 +3,7 @@ import backendUrl from "lib/backendUrl"
 export const createTool = async (
     payload: { toolJson: { [key: string]: any }, walletAddress: string }
 ): Promise<any> => {
-    const response = await fetch(`${backendUrl()}/tool`, {
+    const response = await fetch(`${backendUrl()}/tools`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
