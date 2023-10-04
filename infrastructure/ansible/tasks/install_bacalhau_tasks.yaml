@@ -45,6 +45,7 @@
   ansible.builtin.set_fact:
     requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
     ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+    receptor_hostname: "receptor.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
   when: ansible_ec2_tags_instance_Env is defined
 
 # Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
@@ -65,6 +66,11 @@
   ansible.builtin.set_fact:
     ipfs_connect: "/dns4/{{ ipfs_hostname }}/tcp/5001"
   when: ipfs_hostname is defined
+
+- name: Set receptor url
+  ansible.builtin.set_fact:
+    receptor_url: "http://{{ receptor_hostname }}:8080/judge"
+  when: receptor_hostname is defined
 
 - name: Install the Bacalhau systemd unit
   become: true
