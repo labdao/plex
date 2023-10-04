@@ -16,10 +16,6 @@ on:
       - 'docs/**'
       - 'infrastructure/**'
 
-env:
-  # Setting it at workflow level to be used by all the steps
-  BACALHAU_API_HOST: "127.0.0.1"
-
 # Only run one at a time
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -130,11 +126,15 @@ jobs:
     needs:
       - go
       - ci-setup-compose
+      - ci-setup-bacalhau
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      # Setting it at workflow level to be used by all the steps
+      BACALHAU_API_HOST: "127.0.0.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -232,11 +232,15 @@ jobs:
       - go
       - ci-setup-compose
       - ci-setup-ipfs
+      - ci-setup-bacalhau
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      # Setting it at workflow level to be used by all the steps
+      BACALHAU_API_HOST: "127.0.0.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
