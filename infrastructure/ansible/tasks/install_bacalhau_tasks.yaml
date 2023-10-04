@@ -81,17 +81,6 @@
     owner: ubuntu
     group: ubuntu
 
-- name: Deploy config file
-  become: true
-  ansible.builtin.template:
-    src: "files/{{ bacalhau_node_type }}.yaml"
-    dest: /home/ubuntu/.bacalhau/config.yaml
-    owner: ubuntu
-    group: ubuntu
-    mode: "0644"
-  notify:
-    - Restart Bacalhau
-
 - name: Install the Bacalhau systemd unit
   become: true
   ansible.builtin.template:
@@ -107,3 +96,17 @@
     name: "{{ bacalhau_node_type }}"
     state: started
     enabled: true
+
+- name: Flush handler to ensure Bacalhau is running
+  ansible.builtin.meta: flush_handlers
+
+- name: Deploy config file
+  become: true
+  ansible.builtin.template:
+    src: "files/{{ bacalhau_node_type }}.yaml"
+    dest: /home/ubuntu/.bacalhau/config.yaml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+  notify:
+    - Restart Bacalhau
