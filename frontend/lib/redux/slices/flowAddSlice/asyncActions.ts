@@ -3,7 +3,7 @@ import backendUrl from "lib/backendUrl"
 import { Kwargs } from "./slice"
 
 export const createFlow = async (
-    payload: { walletAddress: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }
+    payload: { name: string, walletAddress: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }
 ): Promise<any> => {
     const response = await fetch(`${backendUrl()}/flows`, {
         method: 'POST',

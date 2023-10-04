@@ -8,7 +8,7 @@ export const listTools = async (): Promise<any> => {
     },
   })
 
-  if (!response.ok) {
+  if (!response) {
     let errorText = "Failed to list Tools"
     try {
       errorText = await response.text()

@@ -73,15 +73,22 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 		var toolCid string
 		err = json.Unmarshal(requestData["toolCid"], &toolCid)
-		if err != nil || walletAddress == "" {
+		if err != nil || toolCid == "" {
 			http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
 			return
 		}
 
 		var scatteringMethod string
 		err = json.Unmarshal(requestData["scatteringMethod"], &scatteringMethod)
-		if err != nil || walletAddress == "" {
+		if err != nil || scatteringMethod == "" {
 			http.Error(w, "Invalid or missing Scattering Method", http.StatusBadRequest)
+			return
+		}
+
+		var name string
+		err = json.Unmarshal(requestData["name"], &name)
+		if err != nil || name == "" {
+			http.Error(w, "Invalid or missing Name", http.StatusBadRequest)
 			return
 		}
 
@@ -110,6 +117,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		flowEntry := models.Flow{
 			CID:           submittedIoListCid,
 			WalletAddress: walletAddress,
+			Name:          name,
 		}
 
 		log.Println("Creating Flow entry")

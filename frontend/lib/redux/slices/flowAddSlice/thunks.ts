@@ -3,6 +3,7 @@ import { setFlowAddError, setFlowAddSuccess, Kwargs } from './slice'
 import { createFlow } from './asyncActions'
 
 interface FlowPayload {
+  name: string,
   walletAddress: string,
   toolCid: string,
   scatteringMethod: string,
@@ -11,9 +12,9 @@ interface FlowPayload {
 
 export const addFlowThunk = createAppAsyncThunk(
   'flow/addFlow',
-  async ({ walletAddress, toolCid, scatteringMethod, kwargs }: FlowPayload, { dispatch }) => {
+  async ({ name, walletAddress, toolCid, scatteringMethod, kwargs }: FlowPayload, { dispatch }) => {
     try {
-      const response = await createFlow({ walletAddress, toolCid, scatteringMethod, kwargs })
+      const response = await createFlow({ name, walletAddress, toolCid, scatteringMethod, kwargs })
       if (response && response.cid) {
         dispatch(setFlowAddSuccess(true))
       } else {

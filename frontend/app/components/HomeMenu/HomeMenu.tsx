@@ -33,23 +33,18 @@ export const HomeMenu = () => {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('tool/list')}>
+          <ListItemButton onClick={() => handleNavigation('/tool/list')}>
             <ListItemText primary="View Tools" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/graph/add')}>
-            <ListItemText primary="Add a Graph" />
+          <ListItemButton onClick={() => handleNavigation('/flow/add')}>
+            <ListItemText primary="Add a Flow" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/graph/list')}>
-            <ListItemText primary="View Graphs" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/infrastructure')}>
-            <ListItemText primary="Public Infrastructure" />
+          <ListItemButton onClick={() => handleNavigation('/flow/list')}>
+            <ListItemText primary="View Flows" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>

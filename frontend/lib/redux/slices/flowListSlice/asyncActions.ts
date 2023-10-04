@@ -8,10 +8,9 @@ export const listFlows = async (): Promise<any> => {
     },
   })
 
-  if (!response.ok) {
+  if (!response) {
     let errorText = "Failed to list Flows"
     try {
-      errorText = await response.text()
       console.log(errorText)
     } catch (e) {
       // Parsing JSON failed, retain the default error message.

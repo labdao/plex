@@ -1,18 +1,19 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setFlowListError, setFlowListSuccess } from './slice'
+import { setFlowListError, setFlowListSuccess, setFlowList } from './slice'
 import { listFlows } from './asyncActions'
 
 
-export const FlowListThunk = createAppAsyncThunk(
+export const flowListThunk = createAppAsyncThunk(
   'flow/flowList',
-  async ({}, { dispatch }) => {
+  async (_, { dispatch }) => {
     try {
       const response = await listFlows()
-      if (response && response.ok) {
+      if (response) {
         dispatch(setFlowListSuccess(true))
+        dispatch(setFlowList(response))
       } else {
         console.log('Failed to list Flows.', response)
-        dispatch(setFlowListError('Failed to list DataFiles.'))
+        dispatch(setFlowListError('Failed to list Flows.'))
       }
       return response
     } catch (error: unknown) {
@@ -20,7 +21,7 @@ export const FlowListThunk = createAppAsyncThunk(
       if (error instanceof Error) {
         dispatch(setFlowListError(error.message))
       } else {
-        dispatch(setFlowListError('Failed to add tool.'))
+        dispatch(setFlowListError('Failed to list Flows.'))
       }
       return false
     }
