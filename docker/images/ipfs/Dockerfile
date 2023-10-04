@@ -16,14 +16,14 @@ COPY container-init.d container-init.d
 RUN chown ipfs: /container-init.d/*.sh
 RUN chown ipfs: /data/ipfs
 
-# Copy custom IPFS binary with s3ds and healthcheck plugin
-COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
-
 USER ipfs
 
 FROM scratch
 
 COPY --from=ipfs-with-utils / /
+
+# Copy custom IPFS binary version v0.18.0 with s3ds and healthcheck plugin
+COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
 
 # Swarm TCP; should be exposed to the public
 EXPOSE 4001
