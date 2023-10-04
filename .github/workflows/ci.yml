@@ -16,6 +16,10 @@ on:
       - 'docs/**'
       - 'infrastructure/**'
 
+env:
+  # Setting it at workflow level to be used by all the steps
+  BACALHAU_API_HOST: "127.0.0.1"
+
 # Only run one at a time
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -194,9 +198,6 @@ jobs:
           # Add execute permission
           chmod +x plex
 
-          # Run tests against it
-          export BACALHAU_API_HOST=127.0.0.1
-
           result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           cd "$result_dir/entry-0/outputs"
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
@@ -213,7 +214,6 @@ jobs:
         run: |
           # Execute permission
           chmod +x ./bacalhau
-          export BACALHAU_API_HOST=127.0.0.1
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
 
@@ -316,7 +316,6 @@ jobs:
           # Copy over swarm key and config
           cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
 
-          export BACALHAU_API_HOST=127.0.0.1
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
 
@@ -338,7 +337,6 @@ jobs:
         run: |
           # Execute permission
           chmod +x ./bacalhau
-          export BACALHAU_API_HOST=127.0.0.1
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
 
