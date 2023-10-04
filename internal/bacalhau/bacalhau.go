@@ -21,9 +21,9 @@ func GetBacalhauApiHost() string {
 	if exists {
 		return bacalApiHost
 	} else if plexEnv == "stage" {
-		return "44.198.42.30"
+		return "bacalhau.staging.labdao.xyz"
 	} else {
-		return "54.210.19.52"
+		return "bacalhau.labdao.xyz"
 	}
 }
 
