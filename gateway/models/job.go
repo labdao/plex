@@ -7,6 +7,6 @@ type Job struct {
 	WalletAddress string `gorm:"type:varchar(255)"`
 	ToolID        string `gorm:"type:varchar(255);not null;index"`
 	Tool          Tool   `gorm:"foreignKey:ToolID"`
-	GraphID       string `gorm:"type:varchar(255);not null;index"`
-	Graph         Graph  `gorm:"foreignKey:GraphID"`
+	FlowID        string `gorm:"type:varchar(255);not null;index"`
+	Flow          Flow   `gorm:"foreignKey:FlowID"`
 }

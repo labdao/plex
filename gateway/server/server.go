@@ -29,12 +29,12 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tools", handlers.GetToolsHandler(db)).Methods("GET")
 	router.HandleFunc("/tools/{cid}", handlers.GetToolHandler(db)).Methods("GET")
 
-	router.HandleFunc("/add-datafile", handlers.AddDataFileHandler(db)).Methods("POST")
-	router.HandleFunc("/get-datafiles", handlers.GetDataFilesHandler(db)).Methods("GET")
-	router.HandleFunc("/get-datafiles/{cid}", handlers.GetDataFileHandler(db)).Methods("GET")
+	router.HandleFunc("/datafiles", handlers.AddDataFileHandler(db)).Methods("POST")
+	router.HandleFunc("/datafiles", handlers.GetDataFilesHandler(db)).Methods("GET")
+	router.HandleFunc("/datafiles/{cid}", handlers.GetDataFileHandler(db)).Methods("GET")
 
-	router.HandleFunc("/graphs", handlers.AddGraphHandler(db)).Methods("POST")
-	router.HandleFunc("/graphs", handlers.ListGraphsHandler(db)).Methods("GET")
+	router.HandleFunc("/flows", handlers.AddFlowHandler(db)).Methods("POST")
+	router.HandleFunc("/flows", handlers.ListFlowsHandler(db)).Methods("GET")
 
 	// router.HandleFunc("/init-job", handlers.InitJobHandler(db)).Methods("POST")
 	// router.HandleFunc("/get-jobs", handlers.GetJobsHandler(db)).Methods("GET")

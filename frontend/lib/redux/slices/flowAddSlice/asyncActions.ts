@@ -5,7 +5,7 @@ import { Kwargs } from "./slice"
 export const createFlow = async (
     payload: { walletAddress: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }
 ): Promise<any> => {
-    const response = await fetch(`${backendUrl()}/flow`, {
+    const response = await fetch(`${backendUrl()}/flows`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

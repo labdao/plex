@@ -27,14 +27,15 @@ import {
   selectToolList,
   } from '@/lib/redux'
 
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
-import Alert from '@mui/material/Alert'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
+import Typography from '@mui/material/Typography'
 
 import backendUrl from 'lib/backendUrl';
 
@@ -53,7 +54,8 @@ export default function AddGraph() {
   const dataFileListError = useSelector(selectDataFileListError)
   const dataFiles = useSelector(selectDataFileList)
   const tools = useSelector(selectToolList)
-  console.log(selectedTool)
+
+  const [selectedToolIndex, setSelectedToolIndex] = useState('')
 
   useEffect(() => {
     if (success) {
@@ -70,21 +72,18 @@ export default function AddGraph() {
 
   const handleToolChange = (event: any) => {
     dispatch(setFlowAddTool(tools[parseInt(event.target.value)]))
+    setSelectedToolIndex(event.target.value)
   }
 
-  const handleKwargsChange = (event: any) => {
-    console.log(event)
-    dispatch(setFlowAddSelectedDataFiles({
-      ...selectedDataFiles,
-      [event.target.name]: event.target.value
-    }))
+  const handleKwargsChange = (event: any, key: string) => {
+    console.log(event.target.value)
+    console.log(key)
+    const updatedKwargs = { ...kwargs, [key]: [event.target.value] }
+    dispatch(setFlowAddKwargs(updatedKwargs))
   }
 
   const isValidForm = (): boolean => {
     if (selectedTool.CID === '') return false;
-    for (const key in selectedTool.ToolJson.inputs) {
-      if (!selectedDataFiles[key]) return false;
-    }
     return true;
   };
 
@@ -96,8 +95,8 @@ export default function AddGraph() {
     await dispatch(addFlowThunk({
       walletAddress,
       toolCid: selectedTool.CID,
-      scatteringMethod: "dotproduct",
-      kwargs: selectedDataFiles,
+      scatteringMethod: "dotProduct",
+      kwargs,
     }))
     dispatch(setFlowAddLoading(false))
   }
@@ -109,7 +108,7 @@ export default function AddGraph() {
           <Grid item>
             <InputLabel>Tool</InputLabel>
             <Select
-              value={selectedTool}
+              value={selectedToolIndex}
               label="Tool"
               onChange={e => handleToolChange(e)}
             >
@@ -125,16 +124,37 @@ export default function AddGraph() {
               <Grid item key={key}>
                 <InputLabel>{key}</InputLabel>
                 <Select
-                  value={key}
-                  onChange={e => handleKwargsChange(e)}
+                  value={kwargs[key] || ''}
+                  onChange={e => handleKwargsChange(e, key)}
                 >
                   {dataFiles.map(dataFile => (
-                    <MenuItem key={dataFile.cid} value={dataFile.cid + "/" + dataFile.filename}>{dataFile.filename}</MenuItem>
+                    <MenuItem key={dataFile.CID} value={dataFile.CID + "/" + dataFile.Filename}>{dataFile.Filename}</MenuItem>
                   ))}
                 </Select>
               </Grid>
             )
           })}
+         {error && (
+            <Box my={2}>
+              <Alert severity="error" variant="filled">
+                <Typography align="center">{error}</Typography>
+              </Alert>
+            </Box>
+          )}
+         {toolListError && (
+            <Box my={2}>
+              <Alert severity="error" variant="filled">
+                <Typography align="center">{toolListError}</Typography>
+              </Alert>
+            </Box>
+          )}
+         {dataFileListError && (
+            <Box my={2}>
+              <Alert severity="error" variant="filled">
+                <Typography align="center">{dataFileListError}</Typography>
+              </Alert>
+            </Box>
+          )}
           <Grid item container justifyContent="center">
             <Button
               variant="contained"

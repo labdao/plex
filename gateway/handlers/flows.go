@@ -46,9 +46,9 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	return cid, nil
 }
 
-func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
+func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Post request at /graph")
+		log.Println("Received Post request at /flows")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
@@ -107,18 +107,18 @@ func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 			log.Fatal(err)
 		}
 
-		graphEntry := models.Graph{
+		flowEntry := models.Flow{
 			CID:           submittedIoListCid,
 			WalletAddress: walletAddress,
 		}
 
-		log.Println("Creating graph entry")
-		result := db.Create(&graphEntry)
+		log.Println("Creating Flow entry")
+		result := db.Create(&flowEntry)
 		if result.Error != nil {
 			if utils.IsDuplicateKeyError(result.Error) {
-				http.Error(w, "A Graph with the same CID already exists", http.StatusConflict)
+				http.Error(w, "A Flow with the same CID already exists", http.StatusConflict)
 			} else {
-				http.Error(w, fmt.Sprintf("Error creating Graph entity: %v", result.Error), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
 			}
 			return
 		}
@@ -130,7 +130,7 @@ func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 				State:         job.State,
 				Error:         job.ErrMsg,
 				ToolID:        job.Tool.IPFS,
-				GraphID:       graphEntry.CID,
+				FlowID:        flowEntry.CID,
 			}
 			result := db.Create(&jobEntry)
 			if result.Error != nil {
@@ -143,24 +143,24 @@ func AddGraphHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func ListGraphsHandler(db *gorm.DB) http.HandlerFunc {
+func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
 			return
 		}
 
-		var graphs []models.Graph
-		if result := db.Find(&graphs); result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error fetching Graphs: %v", result.Error), http.StatusInternalServerError)
+		var flows []models.Flow
+		if result := db.Find(&flows); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Flows: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		log.Println("Fetching tools from DB: ", graphs)
+		log.Println("Fetching flows from DB: ", flows)
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(graphs); err != nil {
-			http.Error(w, "Error encoding Graphs to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(flows); err != nil {
+			http.Error(w, "Error encoding Flows to JSON", http.StatusInternalServerError)
 			return
 		}
 	}

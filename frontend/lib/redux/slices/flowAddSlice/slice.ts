@@ -28,9 +28,6 @@ export const flowAddSlice = createSlice({
     setFlowAddTool: (state, action: PayloadAction<Tool>) => {
       state.tool = action.payload
     },
-    setFlowAddDataFiles: (state, action: PayloadAction<DataFile[]>) => {
-      state.dataFiles = action.payload
-    },
     setFlowAddKwargs: (state, action: PayloadAction<Kwargs>) => {
       state.kwargs = action.payload
     },

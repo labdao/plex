@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export interface DataFile {
-  filename: string
-  cid: string // Content Identifier in IPFS
+  Filename: string
+  CID: string // Content Identifier in IPFS
 }
 
 interface DataFileListSliceState {
