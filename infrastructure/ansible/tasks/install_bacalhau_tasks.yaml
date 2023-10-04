@@ -41,17 +41,11 @@
     msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
   when: ansible_ec2_tags_instance_Env is defined
 
-- name: Set fact when its prod node
-  ansible.builtin.set_fact:
-    requester_hostname: "requester.labdao.xyz"
-    ipfs_hostname: "ipfs.labdao.xyz"
-  when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower == "prod"
-
-- name: Set fact when its non-prod node
+- name: Set fact
   ansible.builtin.set_fact:
     requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
     ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-  when: ansible_ec2_tags_instance_Env is defined and ansible_ec2_tags_instance_Env | lower != "prod"
+  when: ansible_ec2_tags_instance_Env is defined
 
 # Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
 - name: Determine requester bacalhau peer id
