@@ -8,7 +8,7 @@
     ipfs_path: "/opt/ipfs"
     gpu: true
     go_version: 1.20.3
-    bacalhau_version: "v1.0.3"
+    bacalhau_version: "v1.1.0"
     bacalhau_node_type: "compute"
     ipfs_connect: /ip4/127.0.0.1/tcp/5001
     owner: labdao
