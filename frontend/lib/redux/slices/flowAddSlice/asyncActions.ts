@@ -1,9 +1,11 @@
 import backendUrl from "lib/backendUrl"
 
-export const createTool = async (
-    payload: { toolJson: { [key: string]: any }, walletAddress: string }
+import { Kwargs } from "./slice"
+
+export const createFlow = async (
+    payload: { name: string, walletAddress: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }
 ): Promise<any> => {
-    const response = await fetch(`${backendUrl()}/tools`, {
+    const response = await fetch(`${backendUrl()}/flows`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -12,7 +14,7 @@ export const createTool = async (
     })
 
     if (!response) {
-        throw new Error("Failed to create Tool")
+        throw new Error("Failed to create Flow")
     }
 
     const result = await response.json()

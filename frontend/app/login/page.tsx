@@ -3,19 +3,19 @@
 import { useEffect } from 'react'
 
 import {
-   useSelector,
-   useDispatch,
-   setUsername,
-   setWalletAddress,
-   setError,
-   startLoading,
-   endLoading,
-   selectUsername,
-   selectIsLoggedIn,
-   selectWalletAddress,
-   selectUserFormError,
-   selectUserFormIsLoading,
-   saveUserAsync,
+  useSelector,
+  useDispatch,
+  setUsername,
+  setWalletAddress,
+  setError,
+  startLoading,
+  endLoading,
+  selectUsername,
+  selectIsLoggedIn,
+  selectWalletAddress,
+  selectUserFormError,
+  selectUserFormIsLoading,
+  saveUserAsync,
 } from '@/lib/redux'
 
 import { useRouter } from 'next/navigation'
