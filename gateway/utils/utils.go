@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -12,12 +13,18 @@ import (
 func SendJSONError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]string{"message": message})
+	if err := json.NewEncoder(w).Encode(map[string]string{"message": message}); err != nil {
+		log.Printf("Could not encode JSON: %v", err)
+	}
 }
 
 func SendJSONResponseWithCID(w http.ResponseWriter, cid string) {
 	response := map[string]string{"cid": cid}
-	jsonResponse, _ := json.Marshal(response)
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		SendJSONError(w, fmt.Sprintf("Error encoding response to JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResponse)
 }

@@ -12,12 +12,14 @@ import (
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
 
+	"log"
+
 	"gorm.io/gorm"
 )
 
 func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Received request at /create-datafile")
+		log.Println("Received request at /create-datafile")
 
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
@@ -29,7 +31,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			utils.SendJSONError(w, "Error parsing multipart form", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("Parsed multipart form")
+		log.Println("Parsed multipart form")
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
@@ -40,10 +42,8 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 
 		walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
-		publicBool := r.FormValue("public")
-		visibleBool := r.FormValue("visible")
 
-		fmt.Printf("Received file upload request for file: %s, walletAddress: %s, public: %s, visible: %s\n", filename, walletAddress, publicBool, visibleBool)
+		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
 
 		tempFile, err := utils.CreateAndWriteTempFile(file, filename)
 		if err != nil {
@@ -65,13 +65,9 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			Timestamp:     time.Now(),
 		}
 
-		// if result := db.Create(&dataFile); result.Error != nil {
-		// 	utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
-		// 	return
-		// }
-
 		result := db.Create(&dataFile)
 		if result.Error != nil {
+			log.Println("error saving to DB")
 			if utils.IsDuplicateKeyError(result.Error) {
 				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
 			} else {

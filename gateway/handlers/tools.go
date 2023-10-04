@@ -13,6 +13,7 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/ipwl"
 
 	"gorm.io/gorm"
 )
@@ -28,58 +29,55 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 
 		log.Println("Request body: ", string(body))
 
-		var requestData map[string]interface{}
+		requestData := make(map[string]json.RawMessage)
 		err = json.Unmarshal(body, &requestData)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
-		tool, ok := requestData["toolData"].(map[string]interface{})
-		if !ok {
-			http.Error(w, "Invalid or missing tool", http.StatusBadRequest)
-			return
-		}
-
-		walletAddress, ok := requestData["walletAddress"].(string)
-		if !ok {
+		var walletAddress string
+		err = json.Unmarshal(requestData["walletAddress"], &walletAddress)
+		if err != nil || walletAddress == "" {
 			http.Error(w, "Invalid or missing walletAddress", http.StatusBadRequest)
 			return
 		}
 
-		// TODO: Validate Tool
+		// Make sure toolJson is a valid ipwl.Tool
+		var tool ipwl.Tool
+		err = json.Unmarshal(requestData["toolJson"], &tool)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
+			return
+		}
 
+		// Convert the 'tool' object back to JSON
 		toolJSON, err := json.Marshal(tool)
 		if err != nil {
-			http.Error(w, "Error serializing tool to JSON", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error re-marshalling tool data: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		toolName, ok := tool["name"].(string)
-		if !ok {
-			http.Error(w, "Invalid or missing tool name", http.StatusBadRequest)
-			return
-		}
-
+		// Create a reader from the JSON data
 		reader := bytes.NewReader(toolJSON)
-		tempFile, err := utils.CreateAndWriteTempFile(reader, toolName+".json")
+		tempFile, err := utils.CreateAndWriteTempFile(reader, tool.Name+".json")
 		if err != nil {
-			http.Error(w, "Error creating temp file", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
 			return
 		}
 		defer os.Remove(tempFile.Name())
 
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
-			http.Error(w, "Error adding to IPFS", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		// Store serialized Tool in DB
 		toolEntry := models.Tool{
 			CID:           cid,
-			ToolJSON:      string(toolJSON),
 			WalletAddress: walletAddress,
+			Name:          tool.Name,
 		}
 
 		result := db.Create(&toolEntry)

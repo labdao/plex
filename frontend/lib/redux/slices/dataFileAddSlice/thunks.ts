@@ -5,16 +5,17 @@ import { setCidDataSlice, setFilenameDataSlice, setDataFileError } from './dataS
 interface DataFilePayload {
   file: File,
   metadata: { [key: string]: any }
+  handleSuccess: () => void
 }
 
 export const saveDataFileAsync = createAppAsyncThunk(
   'dataFile/saveDataFile',
-  async ({ file, metadata }: DataFilePayload, { dispatch }) => {
+  async ({ file, metadata, handleSuccess }: DataFilePayload, { dispatch }) => {
     try {
       const response = await saveDataFileToServer(file, metadata);
       console.log("Response:", response)
-      if (response.filename) {
-        dispatch(setFilenameDataSlice(response.filename));
+      if (response.cid) {
+        handleSuccess()
       } else {
         dispatch(setDataFileError('Failed to save data file.'))
       }

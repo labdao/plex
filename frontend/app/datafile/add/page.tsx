@@ -18,20 +18,17 @@ import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
-// import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 
 export default function DataFileForm() {
   const dispatch = useDispatch()
-  // const router = useRouter()
 
-  const cid = useSelector(selectCID)
+  const router = useRouter()
   const errorMessage = useSelector(selectDataFileError)
   const isLoading = useSelector(selectDataFileIsLoading)
   const walletAddress = useSelector(selectWalletAddress)
 
   const [file, setFile] = useState<File | null>(null)
-  const [isPublic, setIsPublic] = useState<boolean>(true)
-  const [isVisible, setIsVisible] = useState<boolean>(true)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files && e.target.files[0]
@@ -40,12 +37,8 @@ export default function DataFileForm() {
     }
   }
 
-  const handlePublicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsPublic(!e.target.checked)
-  }
-
-  const handleVisibleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsVisible(!e.target.checked)
+  const handleSuccess = () => {
+    router.push('/datafile/list')
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -54,16 +47,14 @@ export default function DataFileForm() {
       dispatch(setError("Please select a file"))
       return
     }
-    
+
     dispatch(startLoading())
     dispatch(setError(null))
-    const metadata = { walletAddress, isPublic, isVisible };
+    const metadata = { walletAddress };
 
     try {
-      await dispatch(saveDataFileAsync({ file, metadata }))
+      await dispatch(saveDataFileAsync({ file, metadata, handleSuccess }))
       dispatch(endLoading())
-
-      // router.push('/data/list')
     } catch (error) {
       dispatch(setError("Error uploading file"))
       dispatch(endLoading())
@@ -86,24 +77,6 @@ export default function DataFileForm() {
                 onChange={handleFileChange}
               />
             </Button>
-          </Grid>
-          <Grid item container justifyContent="center">
-            <label>
-              <input
-                type="checkbox"
-                checked={!isPublic}
-                onChange={handlePublicChange}
-              />
-              File should be private
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={!isVisible}
-                onChange={handleVisibleChange}
-              />
-              File should be hidden
-            </label>
           </Grid>
           {errorMessage && (
             <Box my={2}>

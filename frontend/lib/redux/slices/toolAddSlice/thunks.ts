@@ -1,35 +1,32 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setErrorToolAddSlice, startFileUpload, endFileUpload, setIsUploaded } from './toolSlice' // Importing actions from toolSlice.ts
-import { addToolToServer } from './actions'
+import { setAddToolError, setAddToolSuccess } from './toolSlice'
+import { createTool } from './asyncActions'
 
 interface ToolPayload {
-  toolData: { [key: string]: any }
+  toolJson: { [key: string]: any }
   walletAddress: string
 }
 
-export const addToolAsync = createAppAsyncThunk(
+export const createToolThunk = createAppAsyncThunk(
   'tool/addTool',
-  async ({ toolData, walletAddress }: ToolPayload, { dispatch }) => {
+  async ({ toolJson, walletAddress }: ToolPayload, { dispatch }) => {
     try {
-      dispatch(startFileUpload());
-      const response = await addToolToServer({ toolData, walletAddress });
-
-      if (response && response.filename && response.cid) {
-        // Optionally, you could store something in localStorage or perform other operations.
-        dispatch(setIsUploaded(true));
+      const response = await createTool({ toolJson, walletAddress })
+      if (response && response.cid) {
+        dispatch(setAddToolSuccess(true))
       } else {
-        dispatch(setErrorToolAddSlice('Failed to add tool.'));
+        console.log('Failed to add tool.', response)
+        dispatch(setAddToolError('Failed to add tool.'))
       }
-      dispatch(endFileUpload());
-      return response;
+      return response
     } catch (error: unknown) {
-      dispatch(endFileUpload());
-      const errorMessage = typeof error === 'object' && error !== null && 'message' in error 
-        ? (error as { message?: string }).message 
-        : undefined;
-
-      dispatch(setErrorToolAddSlice(errorMessage || 'An error occurred while adding the tool.'));
-      return false;
+      console.log('Failed to add tool.', error)
+      if (error instanceof Error) {
+        dispatch(setAddToolError(error.message))
+      } else {
+        dispatch(setAddToolError('Failed to add tool.'))
+      }
+      return false
     }
   }
-);
+)
