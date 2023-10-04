@@ -45,8 +45,8 @@
       ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
       tags: bacalhau
 
-    - name: Pull common containers
-      ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
+        # - name: Pull common containers
+        #   ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
 
   handlers:
     - name: Restart docker
