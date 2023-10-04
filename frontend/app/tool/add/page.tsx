@@ -15,6 +15,10 @@ import {
   selectAddToolJson,
   selectAddToolSuccess,
   createToolThunk,
+  toolListThunk,
+  selectToolListError,
+  dataFileListThunk,
+  selectDataFileListError,
 } from '@/lib/redux'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
@@ -23,6 +27,7 @@ import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
 import { JsonInput } from '@mantine/core'
 import { MantineProvider } from '@mantine/core';
+
 
 
 export default function AddTool() {
@@ -35,12 +40,18 @@ export default function AddTool() {
   const toolJson = useSelector(selectAddToolJson)
   const toolSuccess = useSelector(selectAddToolSuccess)
 
+  const toolListError = useSelector(selectToolListError)
+  const dataFileListError = useSelector(selectDataFileListError)
+
   useEffect(() => {
     if (toolSuccess) {
-      setAddToolSuccess(false)
+      dispatch(setAddToolSuccess(false))
       dispatch(setAddToolJson(""))
       router.push('/tool/list')
+      return
     }
+    dispatch(toolListThunk())
+    dispatch(dataFileListThunk())
   }, [toolSuccess, dispatch])
 
   const handleToolJsonChange = (toolJsonInput: string) => {

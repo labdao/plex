@@ -20,7 +20,7 @@ export default function ListToolFiles() {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    fetch(`${backendUrl()}/get-tools`)
+    fetch(`${backendUrl()}/tools`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
