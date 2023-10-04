@@ -191,7 +191,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose up -d
+          docker compose up -d --wait
 
       - name: Run Equibind
         run: |
@@ -302,7 +302,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
       - name: Run Equibind
         run: |
