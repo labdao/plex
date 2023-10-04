@@ -95,6 +95,30 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
+ 
+  # Download Bacalhau CLI for troubleshooting
+  ci-setup-bacalhau:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    environment: ci
+    steps:
+      - name: Download bacalhau
+        run: |
+          # Download bacalhau plugin
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz -o bacalhau.tgz
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_darwin_arm64.tar.gz -o bacalhau.tgz
+          fi
+          tar -zxvf bacalhau.tgz
+
+      - name: upload bacalhau plugin to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}
+          path: ./bacalhau
 
   ci-public:
     needs:
@@ -113,6 +137,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plex-binary-${{matrix.os}}
+
+      - name: download bacalhau binary
+        uses: actions/download-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -176,6 +205,23 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run bacalhau describe
+        # run always even when
+        if: always()
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          export BACALHAU_API_HOST=127.0.0.1
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
+
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-public-output-${{matrix.os}}
+          path: |
+            job-*
+            jobs/
+
       - name: upload outputs
         # run always even when
         if: always()
@@ -209,6 +255,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ipfs-binary-${{matrix.os}}
+
+      - name: download bacalhau binary
+        uses: actions/download-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -285,6 +336,16 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: Run bacalhau describe
+        # run always even when
+        if: always()
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          export BACALHAU_API_HOST=127.0.0.1
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
 
       - name: upload outputs
         # run always even when
