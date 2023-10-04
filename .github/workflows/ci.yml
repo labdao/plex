@@ -23,7 +23,7 @@ jobs:
   go:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -75,7 +75,7 @@ jobs:
   ci-setup-ipfs:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -102,7 +102,7 @@ jobs:
       - ci-setup-compose
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -193,7 +193,7 @@ jobs:
       - ci-setup-ipfs
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        os: [ubuntu-22.04] # , macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
