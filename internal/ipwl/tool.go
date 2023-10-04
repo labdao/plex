@@ -112,6 +112,53 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	return tool, toolInfo, nil
 }
 
+func toolToCmd2(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
+	arguments := strings.Join(toolConfig.Arguments, " ")
+
+	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
+	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
+
+	for _, match := range fileMatches {
+		placeholder := match[0]
+		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
+		key = strings.TrimSuffix(key, ".basename")
+		key = strings.TrimSuffix(key, ".ext")
+		key = strings.TrimSuffix(key, ".default")
+
+		var replacement string
+		input := ioEntry.Inputs[key]
+		switch match[2] {
+		case ".filepath":
+			replacement = fmt.Sprintf("/%s/%s", key, input.FilePath)
+		case ".basename":
+			replacement = strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))
+		case ".ext":
+			ext := filepath.Ext(input.FilePath)
+			replacement = strings.TrimPrefix(ext, ".")
+		case ".default":
+			replacement = toolConfig.Inputs[key].Default
+		}
+
+		arguments = strings.Replace(arguments, placeholder, replacement, -1)
+	}
+
+	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
+	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
+
+	for _, match := range nonFileMatches {
+		placeholder := match[0]
+		key := strings.TrimPrefix(match[1], "inputs.")
+
+		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
+			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
+		}
+	}
+
+	cmd := fmt.Sprintf("%s \"%s\"", strings.Join(toolConfig.BaseCommand, " "), arguments)
+
+	return cmd, nil
+}
+
 func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 

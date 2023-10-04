@@ -33,33 +33,18 @@ export const HomeMenu = () => {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('tool/list')}>
+          <ListItemButton onClick={() => handleNavigation('/tool/list')}>
             <ListItemText primary="View Tools" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/job/init')}>
-            <ListItemText primary="Initialize a Job" />
+          <ListItemButton onClick={() => handleNavigation('/flow/add')}>
+            <ListItemText primary="Add a Flow" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/job/view')}>
-            <ListItemText primary="Submit a Job" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/iograph/draw')}>
-            <ListItemText primary="Draw an IO Graph" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/iograph/list')}>
-            <ListItemText primary="View IO Graphs" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleNavigation('/infrastructure')}>
-            <ListItemText primary="Public Infrastructure" />
+          <ListItemButton onClick={() => handleNavigation('/flow/list')}>
+            <ListItemText primary="View Flows" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>

@@ -1,13 +1,12 @@
 package models
 
 type Job struct {
-	ID            uint          `gorm:"primaryKey"`
-	JobGroupID    uint          `gorm:"column:job_group_id;type:int; not null;foreignKey"`
-	Inputs        []InputOutput `gorm:"foreignKey:JobID"`
-	Outputs       []InputOutput `gorm:"foreignKey:JobID"`
-	State         string        `gorm:"type:varchar(255);default:'initialized'"`
-	ErrMsg        string        `gorm:"column:err_msg;type:text;default:''"`
-	WalletAddress string        `gorm:"column:wallet_address;type:varchar(255)"`
-	BacalhauJobID string        `gorm:"colun:bacalhau_job_id;type:varchar(255);not null"`
-	ToolID        uint          `gorm:"column:tool_id;type:int;not null;foreignKey"`
+	BacalhauJobID string `gorm:"primaryKey;type:varchar(255);not null"`
+	State         string `gorm:"type:varchar(255);default:'processing'"`
+	Error         string `gorm:"type:text;default:''"`
+	WalletAddress string `gorm:"type:varchar(255)"`
+	ToolID        string `gorm:"type:varchar(255);not null;index"`
+	Tool          Tool   `gorm:"foreignKey:ToolID"`
+	FlowID        string `gorm:"type:varchar(255);not null;index"`
+	Flow          Flow   `gorm:"foreignKey:FlowID"`
 }
