@@ -192,6 +192,8 @@ jobs:
         run: |
           # Setup docker compose private
           docker compose up -d
+          # Inspect number of running containers
+          docker compose ps
 
       - name: Run Equibind
         run: |
@@ -303,6 +305,8 @@ jobs:
         run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+          # Inspect number of running containers
+          docker compose ps
 
       - name: Run Equibind
         run: |
