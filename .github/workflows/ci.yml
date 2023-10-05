@@ -120,7 +120,7 @@ jobs:
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
           path: ./bacalhau
 
   ci-public:
@@ -149,7 +149,7 @@ jobs:
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -280,7 +280,7 @@ jobs:
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
