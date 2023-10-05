@@ -1,3 +1,5 @@
+---
+
 # This workflow will build a golang project and runs CI tests
 
 name: CI
@@ -21,7 +23,10 @@ concurrency:
 
 jobs:
   go:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04] # , macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - uses: actions/checkout@v3
@@ -40,49 +45,96 @@ jobs:
       - name: upload plex binary to be used by other jobs
         uses: actions/upload-artifact@v3
         with:
-          name: plex-binary
+          name: plex-binary-${{matrix.os}}
           path: ./plex
 
       - name: Test
         run: go test ./... -v
 
+  # Only downloading cli for linux
   ci-setup-compose:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Download docker compose
         run: |
           # Download docker-compose plugin
-          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
+          fi
 
       - name: upload docker-compose plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: docker-compose-plugin
+          name: docker-compose-plugin-${{matrix.os}}
           path: ./docker-compose
 
   ci-setup-ipfs:
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04] # , macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Download and extract ipfs binary tarball
         run: |
           # Download ipfs binary
-          curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          # Download docker-compose plugin
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_darwin-arm64.tar.gz -o kubo.tgz
+          fi
           tar -zxvf kubo.tgz
 
       - name: upload ipfs binary to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: ipfs-binary
+          name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
+ 
+  # Download Bacalhau CLI for troubleshooting
+  ci-setup-bacalhau:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    environment: ci
+    steps:
+      - name: Download bacalhau
+        run: |
+          # Download bacalhau plugin
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz -o bacalhau.tgz
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_darwin_arm64.tar.gz -o bacalhau.tgz
+          fi
+          tar -zxvf bacalhau.tgz
+
+      - name: upload bacalhau plugin to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}
+          path: ./bacalhau
 
   ci-public:
     needs:
       - go
       - ci-setup-compose
-    runs-on: ubuntu-22.04
+      - ci-setup-bacalhau
+    strategy:
+      matrix:
+        os: [ubuntu-22.04] # , macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      # Setting it at workflow level to be used by all the steps
+      BACALHAU_API_HOST: "127.0.0.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -90,14 +142,36 @@ jobs:
       - name: download plex binary
         uses: actions/download-artifact@v3
         with:
-          name: plex-binary
+          name: plex-binary-${{matrix.os}}
 
-      - name: download docker compose plugin artifact
+      - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: docker-compose-plugin
+          name: bacalhau-binary-${{matrix.os}}
+
+      - name: download docker compose plugin artifact
+        if: runner.os != 'macos'
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin-${{matrix.os}}
+
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install colima docker docker-compose
+          colima start
+
+          # For testcontainers to find the Colima socket
+          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
+
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+          docker version
+          docker compose version
 
       - name: Setup docker compose plugin
+        if: runner.os != 'macos'
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -117,15 +191,14 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose up -d
+          docker compose up -d --wait
+          # Inspect number of running containers
+          docker compose ps
 
       - name: Run Equibind
         run: |
           # Add execute permission
           chmod +x plex
-
-          # Run tests against it
-          export BACALHAU_API_HOST=127.0.0.1
 
           result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           cd "$result_dir/entry-0/outputs"
@@ -137,10 +210,27 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
+
+      - name: Run bacalhau describe
+        # run always even when
+        if: always()
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
+
       - name: upload outputs
+        # run always even when
+        if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output
+          name: ci-public-output-${{matrix.os}}
           path: |
             job-*
             jobs/
@@ -150,8 +240,15 @@ jobs:
       - go
       - ci-setup-compose
       - ci-setup-ipfs
-    runs-on: ubuntu-22.04
+      - ci-setup-bacalhau
+    strategy:
+      matrix:
+        os: [ubuntu-22.04] # , macos-13]
+    runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      # Setting it at workflow level to be used by all the steps
+      BACALHAU_API_HOST: "127.0.0.1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -159,19 +256,41 @@ jobs:
       - name: download plex binary
         uses: actions/download-artifact@v3
         with:
-          name: plex-binary
-
-      - name: download docker compose plugin artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-plugin
+          name: plex-binary-${{matrix.os}}
 
       - name: download ipfs binary
         uses: actions/download-artifact@v3
         with:
-          name: ipfs-binary
+          name: ipfs-binary-${{matrix.os}}
+
+      - name: download bacalhau binary
+        uses: actions/download-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}
+
+      - name: download docker compose plugin artifact
+        if: runner.os != 'macos'
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-plugin-${{matrix.os}}
+
+      - name: Setup docker (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install colima docker docker-compose
+          colima start
+
+          # For testcontainers to find the Colima socket
+          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
+          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
+
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+          docker version
+          docker compose version
 
       - name: Setup docker compose plugin
+        if: runner.os != 'macos'
         run: |
           # Install docker-compose
           DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -191,7 +310,9 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+          # Inspect number of running containers
+          docker compose ps
 
       - name: Run Equibind
         run: |
@@ -202,14 +323,13 @@ jobs:
           # Run tests against it
           # using temp directory for ipfs stuff
           export IPFS_PATH=$(mktemp -d)
-          
+
           # Initialize IPFS repo
           ./ipfs init -e
-          
+
           # Copy over swarm key and config
           cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-          
-          export BACALHAU_API_HOST=127.0.0.1
+
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
 
@@ -225,10 +345,27 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
+
+      - name: Run bacalhau describe
+        # run always even when
+        if: always()
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
+
       - name: upload outputs
+        # run always even when
+        if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-private-output
+          name: ci-private-output-${{matrix.os}}
           path: |
             job-*
             jobs/

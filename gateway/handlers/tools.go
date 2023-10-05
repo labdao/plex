@@ -78,6 +78,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			CID:           cid,
 			WalletAddress: walletAddress,
 			Name:          tool.Name,
+			ToolJson:      toolJSON,
 		}
 
 		result := db.Create(&toolEntry)

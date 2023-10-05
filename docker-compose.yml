@@ -65,6 +65,20 @@ services:
       requester_health:
         condition: service_healthy
 
+  # sidecar container for compute healthcheck
+  compute_health:
+    image: "alpine"
+    command: sh -c 'apk add curl && sleep infinity'
+    depends_on:
+      compute:
+        condition: service_started
+    healthcheck:
+      test: curl -f http://compute:1234/readyz
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
   dbbackend:
     image: "postgres:15.4"
     environment:
