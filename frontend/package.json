@@ -11,6 +11,7 @@
     "@mantine/core": "^7.0.2",
     "@mantine/hooks": "^7.0.2",
     "@mui/icons-material": "^5.14.3",
+    "@privy-io/react-auth": "^1.42.0",
     "@reduxjs/toolkit": "1.9.5",
     "@web3auth/modal": "^7.0.3",
     "ethereumjs-util": "^7.1.5",
