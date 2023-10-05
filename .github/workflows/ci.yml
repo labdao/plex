@@ -103,7 +103,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        bacalhau_version: [1.0.3, 1.1.0]
+        # Bacalhau versions
+        version: [1.0.3, 1.1.0]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -111,16 +112,16 @@ jobs:
         run: |
           # Download bacalhau plugin
           if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.bacalhau_version }}/bacalhau_${{ matrix.bacalhau_version }}_linux_amd64.tar.gz -o bacalhau.tgz
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.version }}/bacalhau_${{ matrix.version }}_linux_amd64.tar.gz -o bacalhau.tgz
           elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.bacalhau_version }}/bacalhau_${{ matrix.bacalhau_version }}_darwin_arm64.tar.gz -o bacalhau.tgz
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.version }}/bacalhau_${{ matrix.version }}_darwin_arm64.tar.gz -o bacalhau.tgz
           fi
           tar -zxvf bacalhau.tgz
 
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{version}}
           path: ./bacalhau
 
   ci-public:
@@ -131,7 +132,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
-        bacalhau_version: [1.0.3, 1.1.0]
+        # Bacalhau versions
+        version: [1.0.3, 1.1.0]
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
@@ -149,7 +151,7 @@ jobs:
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -191,13 +193,13 @@ jobs:
           docker compose build --parallel
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.0.3'
+        if: matrix.version == '1.0.3'
         run: |
           # Setup docker compose
           docker compose up -d --wait
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.1.0'
+        if: matrix.version == '1.1.0'
         run: |
           # Setup docker compose 1.1.0
           docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml up -d --wait
@@ -257,7 +259,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
-        bacalhau_version: [1.0.3, 1.1.0]
+        # Bacalhau versions
+        version: [1.0.3, 1.1.0]
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
@@ -280,7 +283,7 @@ jobs:
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{bacalhau_version}}
+          name: bacalhau-binary-${{matrix.os}}-${{version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -322,13 +325,13 @@ jobs:
           docker compose build --parallel
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.0.3'
+        if: matrix.version == '1.0.3'
         run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.1.0'
+        if: matrix.version == '1.1.0'
         run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.private.yml up -d --wait
