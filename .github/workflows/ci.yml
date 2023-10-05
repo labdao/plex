@@ -191,7 +191,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose up -d
+          docker compose up -d --wait
           # Inspect number of running containers
           docker compose ps
 
@@ -209,6 +209,12 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
 
       - name: Run bacalhau describe
         # run always even when
@@ -304,7 +310,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
           # Inspect number of running containers
           docker compose ps
 
@@ -338,6 +344,12 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
 
       - name: Run bacalhau describe
         # run always even when
