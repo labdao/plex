@@ -19,9 +19,9 @@ services:
   requester_health:
     healthcheck:
       test: curl -f http://requester:1234/api/v1/healthz
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   compute:
@@ -31,7 +31,7 @@ services:
   compute_health:
     healthcheck:
       test: curl -f http://requester:1234/api/v1/healthz
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
