@@ -14,7 +14,6 @@ services:
 
   requester:
     image: "ghcr.io/bacalhau-project/bacalhau:v1.1.0"
-    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --max-timeout 10s
 
   # sidecar container for requester healthcheck
   requester_health:
