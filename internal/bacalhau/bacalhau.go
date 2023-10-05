@@ -36,7 +36,9 @@ func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector stri
 	}
 	job.Spec.Engine = model.EngineDocker
 	job.Spec.Docker.Image = container
-	job.Spec.Publisher = model.PublisherIpfs
+	job.Spec.PublisherSpec = model.PublisherSpec{
+		Type: model.PublisherIpfs,
+	}
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
 	job.Spec.Timeout = float64(maxTime * 60)
@@ -86,7 +88,9 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	}
 	job.Spec.Engine = model.EngineDocker
 	job.Spec.Docker.Image = container
-	job.Spec.Publisher = model.PublisherIpfs
+	job.Spec.PublisherSpec = model.PublisherSpec{
+		Type: model.PublisherIpfs,
+	}
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
 	job.Spec.Timeout = float64(maxTime * 60)
