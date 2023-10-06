@@ -2,13 +2,17 @@
 
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import Router from 'next/router'
 import {
   AppDispatch,
   flowDetailThunk,
+  flowPatchDetailThunk,
+  selectFlowDetailLoading,
+  selectFlowDetailError,
   selectFlowDetail,
 } from '@/lib/redux'
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -22,6 +26,8 @@ export default function FlowDetail() {
   const dispatch = useDispatch<AppDispatch>()
 
   const flow = useSelector(selectFlowDetail)
+  const loading = useSelector(selectFlowDetailLoading)
+  const error = useSelector(selectFlowDetailError)
 
   useEffect(() => {
     const flowCid = window.location.href.split('/').pop()
@@ -45,6 +51,21 @@ export default function FlowDetail() {
       <Typography gutterBottom>
         Wallet Address: {flow.WalletAddress}
       </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => dispatch(flowPatchDetailThunk(flow.CID))}
+        disabled={loading}
+      >
+        {loading ? "Submitting..." : "Update"}
+      </Button>
+      {error && (
+        <Box my={2}>
+          <Alert severity="error" variant="filled">
+            <Typography align="center">{error}</Typography>
+          </Alert>
+        </Box>
+      )}
       <TableContainer>
         <Table>
           <TableHead>
@@ -53,7 +74,6 @@ export default function FlowDetail() {
               <TableCell>Tool Name</TableCell>
               <TableCell>Tool CID</TableCell>
               <TableCell>State</TableCell>
-              <TableCell>Error</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -67,7 +87,6 @@ export default function FlowDetail() {
                   </a>
                 </TableCell>
                 <TableCell>{job.State}</TableCell>
-                <TableCell>{job.Error}</TableCell>
               </TableRow>
             ))}
           </TableBody>

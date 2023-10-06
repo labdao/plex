@@ -135,6 +135,12 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 	return submittedJob, err
 }
 
+func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
+	client := CreateBacalhauClient()
+	updatedJob, _, err := client.Get(context.Background(), jobId)
+	return updatedJob, err
+}
+
 func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime int) (results []model.PublishedResult, err error) {
 	client := CreateBacalhauClient()
 
