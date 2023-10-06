@@ -4,11 +4,17 @@ export interface Tool {
   CID: string
   WalletAddress: string
   Name: string
+}
+
+export interface ToolDetail {
+  CID: string
+  WalletAddress: string
+  Name: string
   ToolJson: {inputs: {}}
 }
 
 interface ToolListSliceState {
-  tools: Tool[]
+  tools: ToolDetail[]
   loading: boolean
   error: string | null
   success: boolean

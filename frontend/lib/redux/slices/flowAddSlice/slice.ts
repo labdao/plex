@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { Tool } from '../toolListSlice/slice'
+import { ToolDetail } from '../toolListSlice/slice'
 
 export interface Kwargs {
   [key: string]: string[];
@@ -7,7 +7,7 @@ export interface Kwargs {
 
 interface FlowAddSliceState {
   name: string,
-  tool: Tool,
+  tool: ToolDetail,
   kwargs: Kwargs,
   loading: boolean
   error: string | null
