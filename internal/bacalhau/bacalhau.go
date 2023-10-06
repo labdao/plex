@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
+	"github.com/bacalhau-project/bacalhau/pkg/config"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader"
 	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
-	node "github.com/bacalhau-project/bacalhau/pkg/job"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
-	"github.com/bacalhau-project/bacalhau/pkg/requester/publicapi"
+	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
 )
 
@@ -34,14 +36,17 @@ func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector stri
 	if err != nil {
 		return nil, err
 	}
-	job.Spec.Engine = model.EngineDocker
-	job.Spec.Docker.Image = container
+	cmdJoined := strings.Join([]string{"/bin/bash", "-c", cmd}, " ")
+	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).
+		WithEntrypoint(cmdJoined).Build()
 	job.Spec.PublisherSpec = model.PublisherSpec{
 		Type: model.PublisherIpfs,
 	}
-	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = float64(maxTime * 60)
+	job.Spec.Timeout = int64(maxTime * 60)
+	job.Spec.Engine = model.EngineDocker
+	job.Spec.Docker.Image = container
+	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
 	if selector == "" && plexEnv == "stage" {
@@ -49,7 +54,7 @@ func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector stri
 	} else if selector == "" && plexEnv == "prod" {
 		selector = "owner=labdao"
 	}
-	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
+	nodeSelectorRequirements, err := parse.NodeSelector(selector)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +98,7 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	}
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = float64(maxTime * 60)
+	job.Spec.Timeout = int64(maxTime * 60)
 
 	plexEnv, _ := os.LookupEnv("PLEX_ENV")
 	if selector == "" && plexEnv == "stage" {
@@ -101,7 +106,7 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	} else if selector == "" && plexEnv == "prod" {
 		selector = "owner=labdao"
 	}
-	nodeSelectorRequirements, err := node.ParseNodeSelector(selector)
+	nodeSelectorRequirements, err := parse.NodeSelector(selector)
 	if err != nil {
 		return nil, err
 	}
@@ -121,11 +126,22 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	return job, err
 }
 
-func CreateBacalhauClient() *publicapi.RequesterAPIClient {
-	system.InitConfig()
+func CreateBacalhauClient() *client.APIClient {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	bacalhauConfigDirPath := filepath.Join(home, ".bacalhau")
+	config.SetUserKey(filepath.Join(bacalhauConfigDirPath, "user_id.pem"))
+	config.SetLibp2pKey(filepath.Join(bacalhauConfigDirPath, "libp2p_private_key"))
+	defaultConfig := config.ForEnvironment()
+	_, err = config.Init(defaultConfig, filepath.Join(home, ".bacalhau"), "config", "yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
 	apiHost := GetBacalhauApiHost()
 	apiPort := uint16(1234)
-	client := publicapi.NewRequesterAPIClient(apiHost, apiPort)
+	client := client.NewAPIClient(apiHost, apiPort)
 	return client
 }
 
@@ -189,12 +205,12 @@ func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime 
 func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
 	cm := system.NewCleanupManager()
 	downloadSettings := &model.DownloaderSettings{
-		Timeout:   model.DefaultIPFSTimeout,
+		Timeout:   model.DefaultDownloadTimeout,
 		OutputDir: dir,
 	}
-	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
-		downloadSettings.IPFSSwarmAddrs = os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")
-	}
+	// if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
+	// 	downloadSettings.IPFSSwarmAddrs = os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")
+	// }
 	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
