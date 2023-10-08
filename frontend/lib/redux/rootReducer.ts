@@ -8,6 +8,7 @@ import {
   flowAddSlice,
   flowListSlice,
   flowDetailSlice,
+  jobDetailSlice,
 } from './slices'
 
 
@@ -20,4 +21,5 @@ export const reducer = {
   flowAdd: flowAddSlice.reducer,
   flowList: flowListSlice.reducer,
   flowDetail: flowDetailSlice.reducer,
+  jobDetail: jobDetailSlice.reducer,
 }

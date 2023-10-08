@@ -10,6 +10,7 @@ import {
   selectFlowDetailError,
   selectFlowDetail,
 } from '@/lib/redux'
+import Link from 'next/link'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -59,6 +60,9 @@ export default function FlowDetail() {
       >
         {loading ? "Submitting..." : "Update"}
       </Button>
+      <Typography gutterBottom>
+        Jobs:
+      </Typography>
       {error && (
         <Box my={2}>
           <Alert severity="error" variant="filled">
@@ -79,7 +83,11 @@ export default function FlowDetail() {
           <TableBody>
             {flow.Jobs.map((job, index) => (
               <TableRow key={index}>
-                <TableCell>{job.BacalhauJobID}</TableCell>
+                <TableCell>
+                  <Link href={`/job/detail/${job.BacalhauJobID}`}>
+                    {job.BacalhauJobID}
+                  </Link>
+                </TableCell>
                 <TableCell>{job.Tool.Name}</TableCell>
                 <TableCell>
                   <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${job.Tool.CID}/`}>
