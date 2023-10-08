@@ -6,8 +6,8 @@ export interface JobDetail {
   BacalhauJobID: string
   State: string
   Error: string
-  ToolId: string
-  FlowId: string
+  ToolID: string
+  FlowID: string
   Inputs: DataFile[]
   Outputs: DataFile[]
 }

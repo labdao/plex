@@ -48,10 +48,10 @@ export default function JobDetail() {
         Error: {job.Error}
       </Typography>
       <Typography gutterBottom>
-        Tool CID: {job.ToolId}
+        Tool CID: {job.ToolID}
       </Typography>
       <Typography gutterBottom>
-        Flow Initial CID: {job.FlowId}
+        Flow Initial CID: {job.FlowID}
       </Typography>
       <Button
         variant="contained"
@@ -68,48 +68,6 @@ export default function JobDetail() {
           </Alert>
         </Box>
       )}
-      <Typography gutterBottom>
-        Inputs:
-      </Typography>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>CID</TableCell>
-              <TableCell>Filename</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {job.Inputs.map((input, index) => (
-              <TableRow key={index}>
-                <TableCell>{input.CID}</TableCell>
-                <TableCell>{input.Filename}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      <Typography gutterBottom>
-        Outputs:
-      </Typography>
-      <TableContainer>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>CID</TableCell>
-              <TableCell>Filename</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {job.Outputs.map((output, index) => (
-              <TableRow key={index}>
-                <TableCell>{output.CID}</TableCell>
-                <TableCell>{output.Filename}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
     </Box>
   )
 }
