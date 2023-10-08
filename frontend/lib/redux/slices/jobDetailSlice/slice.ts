@@ -20,7 +20,7 @@ export interface JobDetailSliceState {
 }
 
 const initialState: JobDetailSliceState = {
-  job: { BacalhauJobID: '', State: '', Error: '', ToolId: '', FlowId: '', Inputs: [], Outputs: [] },
+  job: { BacalhauJobID: '', State: '', Error: '', ToolID: '', FlowID: '', Inputs: [], Outputs: [] },
   loading: false,
   error: null,
   success: false,

@@ -31,7 +31,7 @@ export const toolListSlice = createSlice({
   name: 'toolList',
   initialState,
   reducers: {
-    setToolList: (state, action: PayloadAction<Tool[]>) => {
+    setToolList: (state, action: PayloadAction<ToolDetail[]>) => {
       state.tools = action.payload
     },
     setToolListLoading: (state, action: PayloadAction<boolean>) => {
