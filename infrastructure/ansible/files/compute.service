@@ -14,6 +14,9 @@ ExecStart=bacalhau serve \
 {% if ansible_ec2_instance_type is defined %}
   --labels instance-type={{ ansible_ec2_instance_type }} \
 {% endif %}
+{% if ansible_ec2_instance_id is defined %}
+  --labels instance-id={{ ansible_ec2_instance_id }} \
+{% endif %}
   --peer {{ requester_peer }} \
   --limit-job-memory 12gb \
 {% if gpu %}
