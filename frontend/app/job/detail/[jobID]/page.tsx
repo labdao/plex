@@ -68,6 +68,31 @@ export default function JobDetail() {
           </Alert>
         </Box>
       )}
+      <Typography gutterBottom>
+        Inputs:
+      </Typography>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>CID</TableCell>
+              <TableCell>Filename</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {job.Inputs.map((inputDatafile, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${job.Tool.CID}/`}>
+                    {inputDatafile.CID}
+                  </a>
+                </TableCell>
+                <TableCell>{inputDatafile.Filename}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   )
 }

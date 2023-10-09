@@ -115,7 +115,8 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("pinning submitted IO List")
 		submittedIoListCid, err := pinIoList(submittedIoList)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, fmt.Sprintf("Error pinning IO: %v", err), http.StatusInternalServerError)
+			return
 		}
 
 		flowEntry := models.Flow{
@@ -147,6 +148,32 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			result := db.Create(&jobEntry)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			for _, input := range job.Inputs {
+				var dataFile models.DataFile
+				// Lookup DataFile with CID corresponding to input.IPFS
+				result := db.First(&dataFile, "cid = ?", input.IPFS)
+				if result.Error != nil {
+					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+						// Handle the case where no matching DataFile is found if necessary
+						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", input.IPFS), http.StatusInternalServerError)
+						return
+					} else {
+						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+						return
+					}
+				}
+
+				// Append found DataFile to jobEntry's Inputs
+				jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+			}
+
+			// Save jobEntry with related inputs
+			result = db.Save(&jobEntry)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
