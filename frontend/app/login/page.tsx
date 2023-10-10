@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import LoginComponent from '../components/Web3AuthLogin/LoginComponent'
+import PrivyLoginComponent from '../components/PrivyLogin/PrivyLoginComponent'
 import { useSelector, selectIsLoggedIn} from '@/lib/redux'
 import { useRouter } from 'next/navigation'
 
@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <LoginComponent />
+      <PrivyLoginComponent />
     </div>
   )
 }
