@@ -40,6 +40,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/jobs/{bacalhauJobID}", handlers.GetJobHandler(db)).Methods("GET")
 	router.HandleFunc("/jobs/{bacalhauJobID}", handlers.UpdateJobHandler(db)).Methods("PATCH")
+	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
 
 	return router
 }

@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/bacalhau"
@@ -58,7 +61,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 		bacalhauJobID := params["bacalhauJobID"]
 
 		var job models.Job
-		if result := db.First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
@@ -99,4 +102,75 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// Check the origin of the request and return true if it's allowed
+			// Here's a simple example that allows any origin:
+			return true
+		},
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	params := mux.Vars(r)
+	bacalhauJobID := params["bacalhauJobID"]
+	cmd := exec.Command("bacalhau", "logs", "-f", bacalhauJobID)
+
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+
+	if err := cmd.Start(); err != nil {
+		log.Println("Error starting command:", err)
+		return
+	}
+
+	// Channel to gather output
+	outputChan := make(chan string)
+
+	// Read from stdout
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			outputChan <- scanner.Text()
+		}
+	}()
+
+	// Read from stderr
+	go func() {
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			outputChan <- scanner.Text()
+		}
+	}()
+
+	// Write to WebSocket
+	go func() {
+		for {
+			select {
+			case outputLine, ok := <-outputChan:
+				if !ok {
+					// Handle closed channel, if necessary
+					return
+				}
+				// Send to WebSocket
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(outputLine)); err != nil {
+					log.Println("Error sending message through WebSocket:", err)
+					return
+				}
+			}
+		}
+	}()
+
+	// If you need to wait for cmd to finish
+	cmd.Wait()
+
 }

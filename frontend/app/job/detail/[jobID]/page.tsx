@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux'
 import {
   AppDispatch,
   jobDetailThunk,
@@ -10,6 +10,7 @@ import {
   selectJobDetailError,
   selectJobDetail,
 } from '@/lib/redux'
+import LogViewer from './LogViewer'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -68,6 +69,10 @@ export default function JobDetail() {
           </Alert>
         </Box>
       )}
+      <Typography gutterBottom>
+        Logs:
+      </Typography>
+      <LogViewer />
       <Typography gutterBottom>
         Inputs:
       </Typography>
