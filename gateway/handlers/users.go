@@ -22,7 +22,6 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 
 		var requestData struct {
 			WalletAddress string `json:"walletAddress"`
-			EmailAddress  string `json:"emailAddress"`
 		}
 
 		if err := utils.ReadRequestBody(r, &requestData); err != nil {
@@ -31,7 +30,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("Received request to create user: WalletAddress: %s, Email: %s,\n", requestData.WalletAddress, requestData.EmailAddress)
+		fmt.Printf("Received request to create user: WalletAddress: %s\n", requestData.WalletAddress)
 
 		isValidAddress := web3.IsValidEthereumAddress(requestData.WalletAddress)
 		if !isValidAddress {
@@ -41,19 +40,18 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var existingUser models.User
-		if err := db.Where("wallet_address = ? AND email_address = ?", requestData.WalletAddress, requestData.EmailAddress).First(&existingUser).Error; err != nil {
+		if err := db.Where("wallet_address = ?", requestData.WalletAddress).First(&existingUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// User does not exist, create new user
 				newUser := models.User{
 					WalletAddress: requestData.WalletAddress,
-					EmailAddress:  requestData.EmailAddress,
 				}
 				if result := db.Create(&newUser); result.Error != nil {
 					utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
 					fmt.Println("Error creating user in database:", result.Error)
 					return
 				}
-				fmt.Printf("Successfully created user with WalletAddress: %s, Email: %s\n", newUser.WalletAddress, newUser.EmailAddress)
+				fmt.Printf("Successfully created user with WalletAddress: %s\n", newUser.WalletAddress)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
 				json.NewEncoder(w).Encode(newUser)
@@ -63,8 +61,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 				fmt.Println("Database error:", err)
 			}
 		} else {
-			// User with given wallet address and email already exists, return that user
-			fmt.Printf("User already exists with WalletAddress: %s, Email: %s\n", existingUser.WalletAddress, existingUser.EmailAddress)
+			fmt.Printf("User already exists with WalletAddress: %s\n", existingUser.WalletAddress)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(existingUser)
