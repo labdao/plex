@@ -16,7 +16,6 @@ export const reduxStore = configureStore({
     return getDefaultMiddleware().concat(middleware)
   },
 })
-export type AppDispatch = typeof reduxStore.dispatch
 export const useDispatch = () => useReduxDispatch<ReduxDispatch>()
 export const useSelector: TypedUseSelectorHook<ReduxState> = useReduxSelector
 
