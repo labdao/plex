@@ -119,6 +119,7 @@ jobs:
         with:
           name: plex-binary-${{matrix.os}}
 
+      - name: download bacalhau
         run: |
           curl -sL https://get.bacalhau.org/install.sh | bash
 
@@ -235,7 +236,7 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
 
-      - name: download bacalhau binary
+      - name: download bacalhau
         run: |
           curl -sL https://get.bacalhau.org/install.sh | bash
 
