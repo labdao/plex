@@ -1,7 +1,7 @@
 ---
 title: Install plex
 description: How to install plex
-sidebar_label: Install Plex
+sidebar_label: Installation
 sidebar_position: 1
 ---
 
@@ -36,7 +36,8 @@ If using a Jupyter notebook or Google Colab, you should prefix the command with 
 
 ## Verification
 
-After installation, ensure plex is working as expected by running one of the following tools:
+After installation, try one of our tutorials in a Google Colab notebook
 
-- [Small Molecule Binding Tool](../tutorials/small-molecule-binding): A quick-run algorithm; complete a job and visualize results within 5 minutes.
-- [Protein Folding Tool](../tutorials/protein-folding): Comprehensive guide provided for a step-by-step walkthrough.
+- [Small Molecule Binding](https://colab.research.google.com/drive/15nZrm5k9fMdAHfzpR1g_8TPIz9qgRoys?usp=sharing)
+- [Protein Folding](https://colab.research.google.com/drive/1312M2VOx_YpTFgy60ZYChgR9h3a7aorr?usp=sharing)
+- [Protein Binder Design](https://colab.research.google.com/drive/1P2girLxbX5W0f2cXBYXluj_WvOMivHpw?usp=sharing)
