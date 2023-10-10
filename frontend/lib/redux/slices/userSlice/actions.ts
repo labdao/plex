@@ -5,12 +5,11 @@ export const setError = createAction<string | null>('user/setError')
 
 export const saveUserDataToServer = async (
   walletAddress: string,
-  emailAddress: string,
-): Promise<{ walletAddress: string, emailAddress: string }> => {
+): Promise<{ walletAddress: string }> => {
   const response = await fetch(`${backendUrl()}/user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ walletAddress, emailAddress }),
+    body: JSON.stringify({ walletAddress }),
   })
 
   if (!response.ok) {

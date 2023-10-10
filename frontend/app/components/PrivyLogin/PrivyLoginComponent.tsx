@@ -1,20 +1,18 @@
 import React, { useContext } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setIsLoggedIn, selectIsLoggedIn, setWalletAddress } from '@/lib/redux';
+import { setIsLoggedIn, selectIsLoggedIn, setWalletAddress, AppDispatch } from '@/lib/redux';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { PrivyAuthContext } from '../../../lib/PrivyContext';
-
+import { saveUserAsync } from '@/lib/redux/slices/userSlice/thunks';
 import { useRouter } from 'next/navigation'
 
 const PrivyLoginComponent: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch: AppDispatch = useDispatch();
     const isLoggedIn = useSelector(selectIsLoggedIn);
     const user = useContext(PrivyAuthContext);
     const { wallets } = useWallets();
-
-    const router = useRouter()
 
     const { login } = usePrivy();
     const { authenticated } = usePrivy();
@@ -24,8 +22,8 @@ const PrivyLoginComponent: React.FC = () => {
             try {
                 await login();
                 const walletAddress = await getWalletAddress();
-                if (walletAddress) {
-                    // dispatch(saveUserAsync(walletAddress));
+                if (walletAddress && authenticated) {
+                    dispatch(saveUserAsync({ walletAddress }));
                 }
             } catch (error) {
                 console.log(error);

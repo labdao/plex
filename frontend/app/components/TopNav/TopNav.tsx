@@ -15,9 +15,7 @@ import {
   selectWalletAddress,
   selectIsLoggedIn,
   setWalletAddress,
-  setEmailAddress,
   setIsLoggedIn,
-  selectEmailAddress,
 } from '@/lib/redux'
 import { usePrivy } from '@privy-io/react-auth';
 import { PrivyAuthContext } from '../../../lib/PrivyContext';

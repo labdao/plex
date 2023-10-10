@@ -1,18 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
-  web3Auth: any;
   walletAddress: string;
-  emailAddress: string;
   isLoading: boolean;
   error: string | null;
   isLoggedIn: boolean;
 }
 
 const initialState: UserState = {
-  web3Auth: null,
   walletAddress: '',
-  emailAddress: '',
   isLoading: false,
   error: null,
   isLoggedIn: false,
@@ -24,9 +20,6 @@ export const userSlice = createSlice({
   reducers: {
     setWalletAddress: (state, action: PayloadAction<string>) => {
       state.walletAddress = action.payload;
-    },
-    setEmailAddress: (state, action: PayloadAction<string>) => {
-      state.emailAddress = action.payload;
     },
     startLoading: (state) => {
       state.isLoading = true;
@@ -45,7 +38,6 @@ export const userSlice = createSlice({
 
 export const {
   setWalletAddress,
-  setEmailAddress,
   setError,
   startLoading,
   endLoading,
