@@ -108,13 +108,7 @@ jobs:
     steps:
       - name: Download bacalhau
         run: |
-          # Download bacalhau plugin
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_linux_amd64.tar.gz -o bacalhau.tgz
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v1.0.3/bacalhau_v1.0.3_darwin_arm64.tar.gz -o bacalhau.tgz
-          fi
-          tar -zxvf bacalhau.tgz
+          curl -sL https://get.bacalhau.org/install.sh | bash
 
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
