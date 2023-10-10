@@ -25,8 +25,10 @@ const LogViewer = () => {
     }
 
     ws.onmessage = (event) => {
-      setLogs((prevLogs) => prevLogs + event.data)
-    }
+      // Handle incoming message
+      console.log(event.data);
+      setLogs((prevLogs) => `${prevLogs}\n${event.data}`);
+    };
 
     ws.onclose = () => {
       console.log('disconnected')

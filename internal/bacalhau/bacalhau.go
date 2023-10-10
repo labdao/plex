@@ -48,17 +48,17 @@ func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector stri
 	job.Spec.Docker.Image = container
 	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 
-	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if selector == "" && plexEnv == "stage" {
-		selector = "owner=labdaostage"
-	} else if selector == "" && plexEnv == "prod" {
-		selector = "owner=labdao"
-	}
-	nodeSelectorRequirements, err := parse.NodeSelector(selector)
-	if err != nil {
-		return nil, err
-	}
-	job.Spec.NodeSelectors = nodeSelectorRequirements
+	// plexEnv, _ := os.LookupEnv("PLEX_ENV")
+	// if selector == "" && plexEnv == "stage" {
+	// 	selector = "owner=labdaostage"
+	// } else if selector == "" && plexEnv == "prod" {
+	// 	selector = "owner=labdao"
+	// }
+	// nodeSelectorRequirements, err := parse.NodeSelector(selector)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// job.Spec.NodeSelectors = nodeSelectorRequirements
 
 	log.Println("Checking memory arg")
 	if memory > 0 {

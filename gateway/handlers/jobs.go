@@ -123,7 +123,7 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	bacalhauJobID := params["bacalhauJobID"]
-	cmd := exec.Command("bacalhau", "logs", "-f", bacalhauJobID)
+	cmd := exec.Command("bacalhau", "logs", "-f", "--api-host", "bacalhau.prod.labdao.xyz", bacalhauJobID)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
