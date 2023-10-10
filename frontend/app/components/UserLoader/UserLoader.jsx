@@ -20,21 +20,16 @@ export const UserLoader = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const walletAddressFromRedux = useSelector(selectWalletAddress)
-  const emailAddressFromRedux = useSelector(selectEmailAddress)
+  // const emailAddressFromRedux = useSelector(selectEmailAddress)
 
   useEffect(() => {
     const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
-    const emailAddressFromLocalStorage = localStorage.getItem('emailAddress')
 
     if (!walletAddressFromRedux && walletAddressFromLocalStorage) {
       dispatch(setWalletAddress(walletAddressFromLocalStorage))
     }
 
-    if (!emailAddressFromRedux && emailAddressFromLocalStorage) {
-      dispatch(setEmailAddress(emailAddressFromLocalStorage));
-    }
-
-    if (!walletAddressFromLocalStorage || !emailAddressFromLocalStorage) {
+    if (!walletAddressFromLocalStorage) {
       router.push('/login')
     } else {
       dispatch(setIsLoggedIn(true))
