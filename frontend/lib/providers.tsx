@@ -1,19 +1,15 @@
 'use client'
 
-/* Core */
 import { Provider } from 'react-redux'
-
-/* Instruments */
 import { reduxStore } from '@/lib/redux'
-
-import { Web3AuthProvider } from './Web3AuthProvider'
+import PrivyProviderWrapper from './PrivyProviderWrapper'
 
 export const Providers = (props: React.PropsWithChildren) => {
   return (
     <Provider store={reduxStore}>
-      <Web3AuthProvider>
+      <PrivyProviderWrapper>
         {props.children}
-      </Web3AuthProvider>
+      </PrivyProviderWrapper>
     </Provider>
   )
 }
