@@ -1,26 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 
 import {
   useDispatch,
   useSelector,
   selectWalletAddress,
-  selectEmailAddress,
   setWalletAddress,
   setIsLoggedIn,
-  setEmailAddress,
 } from '@/lib/redux'
-
+// import { PrivyAuthContext } from '@/lib/PrivyContext';y
+import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 
 export const UserLoader = ({ children }) => {
   const dispatch = useDispatch()
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
+  const { ready, authenticated } = usePrivy();
 
   const walletAddressFromRedux = useSelector(selectWalletAddress)
-  // const emailAddressFromRedux = useSelector(selectEmailAddress)
 
   useEffect(() => {
     const walletAddressFromLocalStorage = localStorage.getItem('walletAddress')
@@ -29,14 +28,17 @@ export const UserLoader = ({ children }) => {
       dispatch(setWalletAddress(walletAddressFromLocalStorage))
     }
 
-    if (!walletAddressFromLocalStorage) {
-      router.push('/login')
-    } else {
-      dispatch(setIsLoggedIn(true))
+    if (ready) {
+      if (!authenticated) {
+        console.log('User not authenticated')
+        router.push('/login')
+      } else {
+        console.log('User authenticated')
+        dispatch(setIsLoggedIn(true))
+      }
     }
-
     setIsLoaded(true)
-  }, [dispatch])
+  }, [dispatch, ready, authenticated])
 
   if (!isLoaded) return null
 

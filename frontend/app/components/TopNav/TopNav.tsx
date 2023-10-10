@@ -23,7 +23,7 @@ import { PrivyAuthContext } from '../../../lib/PrivyContext';
 export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
-  const isLoggedIn = useSelector(selectIsLoggedIn)
+  const { ready, authenticated, user, exportWallet } = usePrivy();
   const walletAddress = useSelector(selectWalletAddress)
 
   const { logout } = usePrivy();
@@ -43,6 +43,14 @@ export const TopNav = () => {
     router.push(path)
   }
 
+  const hasEmbeddedWallet = ready && authenticated && !!user?.linkedAccounts.find((account: any) => account.type === 'wallet' && account.walletClient === 'privy');
+
+  const handleExportWallet = async () => {
+    if (hasEmbeddedWallet) {
+      exportWallet();
+    }
+  }
+
   const handleLogout = async () => {
     logout();
     localStorage.removeItem('walletAddress');
@@ -57,7 +65,7 @@ export const TopNav = () => {
       <span className={styles.link} onClick={() => handleNavigation('/')}>
         plex
       </span>
-      {isLoggedIn && (
+      {ready && authenticated && (
         <div className={styles.userContainer}>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
@@ -67,6 +75,7 @@ export const TopNav = () => {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose}>Wallet: { walletAddress }</MenuItem>
+            <MenuItem onClick={handleExportWallet} disabled={!hasEmbeddedWallet}>Export Wallet</MenuItem>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>

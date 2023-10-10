@@ -11,18 +11,17 @@ import { useRouter } from 'next/navigation'
 const PrivyLoginComponent: React.FC = () => {
     const dispatch: AppDispatch = useDispatch();
     const isLoggedIn = useSelector(selectIsLoggedIn);
-    const user = useContext(PrivyAuthContext);
+    const { user, authenticated } = useContext(PrivyAuthContext);
     const { wallets } = useWallets();
 
     const { login } = usePrivy();
-    const { authenticated } = usePrivy();
 
     const handleLogin = async () => {
         if (!user) {
             try {
                 await login();
-                const walletAddress = await getWalletAddress();
-                if (walletAddress && authenticated) {
+                if (authenticated) {
+                    const walletAddress = await getWalletAddress();
                     dispatch(saveUserAsync({ walletAddress }));
                 }
             } catch (error) {
@@ -31,9 +30,7 @@ const PrivyLoginComponent: React.FC = () => {
         }
     };
 
-    // getting embedded wallet address
     const getWalletAddress = async () => {
-        // may need to be updated based on how we manage users adding multiple wallets
         const walletAddress = wallets[0].address;
         console.log(`walletAddress: ${walletAddress}`);
         localStorage.setItem('walletAddress', walletAddress);

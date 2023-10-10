@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { PrivyProvider, User } from '@privy-io/react-auth';
 import { PrivyAuthContext } from './PrivyContext';
-import { useRouter } from 'next/router';
 
 export default function PrivyProviderWrapper({
     children,   
@@ -11,13 +10,15 @@ export default function PrivyProviderWrapper({
     children: React.ReactNode;
 }) {
     const [user, setUser] = useState<User | null>(null);
+    const [authenticated, setAuthenticated] = useState<boolean>(false);
 
     const handleLogin = () => {
         setUser(user);
+        setAuthenticated(true);
     }
 
     return (
-        <PrivyAuthContext.Provider value={user}>
+        <PrivyAuthContext.Provider value={{ user, authenticated }}>
             <PrivyProvider
                 appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
                 onSuccess={handleLogin}
