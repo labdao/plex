@@ -15,6 +15,7 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/bacalhau"
+	"github.com/labdao/plex/internal/ipfs"
 	"gorm.io/gorm"
 )
 
@@ -30,7 +31,7 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		bacalhauJobID := params["bacalhauJobID"]
 
 		var job models.Job
-		if result := db.Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("Outputs").Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
@@ -61,7 +62,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 		bacalhauJobID := params["bacalhauJobID"]
 
 		var job models.Job
-		if result := db.Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("Outputs").Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
@@ -96,6 +97,57 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		if job.State == "completed" {
+			// we always only do one execution at the moment
+			fmt.Println("Job completed, getting output directory CID")
+			outputDirCID := updatedJob.State.Executions[0].PublishedResult.CID
+			outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error listing files in directory: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			// Create a map of existing output CIDs for quick lookup
+			existingOutputs := make(map[string]struct{})
+			for _, output := range job.Outputs {
+				existingOutputs[output.CID] = struct{}{}
+			}
+
+			for _, fileEntry := range outputFileEntries {
+				// Check if fileEntry is already in Job.Outputs
+				if _, exists := existingOutputs[fileEntry["CID"]]; exists {
+					// Skip if the file is already in the Job.Outputs
+					continue
+				}
+
+				// Else, check if file is in DataFile table
+				var dataFile models.DataFile
+				result := db.Where("cid = ?", fileEntry["CID"]).First(&dataFile)
+				if result.Error != nil {
+					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+						// If file is not in DataFile table then save it to the table
+						dataFile.CID = fileEntry["CID"]
+						dataFile.Filename = fileEntry["filename"]
+						if err := db.Create(&dataFile).Error; err != nil {
+							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
+							return
+						}
+					} else {
+						http.Error(w, fmt.Sprintf("Error querying DataFile table: %v", result.Error), http.StatusInternalServerError)
+						return
+					}
+				}
+
+				// Then add the DataFile to the Job.Outputs
+				job.Outputs = append(job.Outputs, dataFile)
+			}
+
+			// Update job in the database with new Outputs (this may need adjustment depending on your ORM)
+			if err := db.Save(&job).Error; err != nil {
+				http.Error(w, fmt.Sprintf("Error updating job: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {
 			http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
@@ -105,6 +157,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 }
 
 func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Streaming job logs")
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -123,11 +176,22 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	bacalhauJobID := params["bacalhauJobID"]
-	cmd := exec.Command("bacalhau", "logs", "-f", "--api-host", "bacalhau.prod.labdao.xyz", bacalhauJobID)
+	bacalhauApiHost := bacalhau.GetBacalhauApiHost()
+	cmd := exec.Command("bacalhau", "logs", "-f", "--api-host", bacalhauApiHost, bacalhauJobID)
 
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Println("Error creating stdout pipe:", err)
+		return
+	}
 
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Println("Error creating stderr pipe:", err)
+		return
+	}
+
+	fmt.Println("Starting command", cmd)
 	if err := cmd.Start(); err != nil {
 		log.Println("Error starting command:", err)
 		return
@@ -172,5 +236,4 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If you need to wait for cmd to finish
 	cmd.Wait()
-
 }

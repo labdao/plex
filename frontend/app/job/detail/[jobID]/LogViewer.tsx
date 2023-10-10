@@ -14,6 +14,7 @@ const LogViewer = () => {
   const job = useSelector(selectJobDetail)
 
   useEffect(() => {
+    setLogs('')
     // remove http:// or https:// from backendUrl for websocket
     let formattedBackendUrl = backendUrl().replace('http://', '')
     formattedBackendUrl = formattedBackendUrl.replace('https://', '')
