@@ -97,30 +97,11 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
- 
-  # Download Bacalhau CLI for troubleshooting
-  ci-setup-bacalhau:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - name: Download bacalhau
-        run: |
-          curl -sL https://get.bacalhau.org/install.sh | bash
-
-      - name: upload bacalhau plugin to be used later
-        uses: actions/upload-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}
-          path: ./bacalhau
 
   ci-public:
     needs:
       - go
       - ci-setup-compose
-      - ci-setup-bacalhau
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
@@ -138,10 +119,8 @@ jobs:
         with:
           name: plex-binary-${{matrix.os}}
 
-      - name: download bacalhau binary
-        uses: actions/download-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}
+        run: |
+          curl -sL https://get.bacalhau.org/install.sh | bash
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -234,7 +213,6 @@ jobs:
       - go
       - ci-setup-compose
       - ci-setup-ipfs
-      - ci-setup-bacalhau
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
@@ -258,9 +236,8 @@ jobs:
           name: ipfs-binary-${{matrix.os}}
 
       - name: download bacalhau binary
-        uses: actions/download-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}
+        run: |
+          curl -sL https://get.bacalhau.org/install.sh | bash
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
