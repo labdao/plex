@@ -75,7 +75,14 @@ export const TopNav = () => {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose}>Wallet: { walletAddress }</MenuItem>
-            <MenuItem onClick={handleExportWallet} disabled={!hasEmbeddedWallet}>Export Wallet</MenuItem>
+            <div title={!hasEmbeddedWallet ? 'Export wallet only available for embedded wallets.' : ''}>
+              <MenuItem 
+                onClick={handleExportWallet} 
+                disabled={!hasEmbeddedWallet}
+              >
+                Export Wallet
+              </MenuItem>
+            </div>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
