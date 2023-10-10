@@ -19,15 +19,16 @@ import {
   setIsLoggedIn,
   selectEmailAddress,
 } from '@/lib/redux'
-import { Web3AuthContext } from '../../../lib/Web3AuthContext';
+import { usePrivy } from '@privy-io/react-auth';
+import { PrivyAuthContext } from '../../../lib/PrivyContext';
 
 export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
   const isLoggedIn = useSelector(selectIsLoggedIn)
   const walletAddress = useSelector(selectWalletAddress)
-  const emailAddress = useSelector(selectEmailAddress)
-  const web3AuthInstance = useContext(Web3AuthContext);
+
+  const { logout } = usePrivy();
 
   // State and handlers for the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
@@ -45,19 +46,12 @@ export const TopNav = () => {
   }
 
   const handleLogout = async () => {
-    if (web3AuthInstance) {
-      await web3AuthInstance.logout();
-
-      localStorage.removeItem('walletAddress');
-      dispatch(setWalletAddress(''));
-
-      localStorage.removeItem('emailAddress');
-      dispatch(setEmailAddress(''));
-      
-      dispatch(setIsLoggedIn(false));
-      handleClose();
-      router.push('/login');
-    }
+    logout();
+    localStorage.removeItem('walletAddress');
+    dispatch(setWalletAddress(''));
+    dispatch(setIsLoggedIn(false));
+    handleClose();
+    router.push('/login');
   }
 
   return (
@@ -67,7 +61,6 @@ export const TopNav = () => {
       </span>
       {isLoggedIn && (
         <div className={styles.userContainer}>
-          <span className={styles.username}>{emailAddress}</span>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
             anchorEl={anchorEl}
@@ -80,7 +73,6 @@ export const TopNav = () => {
           </Menu>
         </div>
       )}
-      {/* Other links or elements can be added here if required */}
     </nav>
   )
 }
