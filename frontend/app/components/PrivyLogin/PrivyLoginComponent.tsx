@@ -37,6 +37,8 @@ const PrivyLoginComponent: React.FC = () => {
     const getWalletAddress = async () => {
         // may need to be updated based on how we manage users adding multiple wallets
         const walletAddress = wallets[0].address;
+        console.log(`walletAddress: ${walletAddress}`);
+        localStorage.setItem('walletAddress', walletAddress);
         dispatch(setWalletAddress(walletAddress));
         return walletAddress;
     }
