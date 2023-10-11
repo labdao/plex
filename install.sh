@@ -130,4 +130,4 @@ displayLogo
 
 echo "Installation complete. Welcome to LabDAO! Documentation at https://github.com/labdao/plex"
 echo "You're ready to generate computational biology data! Run the following command to run Equibind on test data:"
-echo './plex init -t tools/equibind.json -i '\''{"protein": "testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}'\'' --scatteringMethod=dotProduct --autoRun=true'
+echo './plex init -t tools/equibind.json -i '\''{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}'\'' --scatteringMethod=dotProduct --autoRun=true'
