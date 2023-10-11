@@ -102,6 +102,24 @@ func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("filename = ?", filename)
 		}
 
+		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
+			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
+				return
+			}
+			query = query.Where("timestamp <= ?", parsedTime)
+		}
+
+		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
+			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
+				return
+			}
+			query = query.Where("timestamp >= ?", parsedTime)
+		}
+
 		var dataFiles []models.DataFile
 		if result := query.Find(&dataFiles); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
