@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -80,33 +79,8 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// get a single datafile
-func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
-			return
-		}
-
-		// Get the ID from the URL
-		params := mux.Vars(r)
-		id := params["id"]
-
-		var dataFile models.DataFile
-		if result := db.First(&dataFile, id); result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dataFile); err != nil {
-			http.Error(w, "Error encoding datafile to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-// gets all datafiles
+// get datafile(s) based on multiple parameters
+// returns all datafiles if no parameters are specified
 func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -114,8 +88,22 @@ func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		query := db.Model(&models.DataFile{})
+
+		if cid := r.URL.Query().Get("cid"); cid != "" {
+			query = query.Where("cid = ?", cid)
+		}
+
+		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
+		if filename := r.URL.Query().Get("filename"); filename != "" {
+			query = query.Where("filename = ?", filename)
+		}
+
 		var dataFiles []models.DataFile
-		if result := db.Find(&dataFiles); result.Error != nil {
+		if result := query.Find(&dataFiles); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
