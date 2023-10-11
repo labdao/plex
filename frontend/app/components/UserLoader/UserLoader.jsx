@@ -30,10 +30,8 @@ export const UserLoader = ({ children }) => {
 
     if (ready) {
       if (!authenticated) {
-        console.log('User not authenticated')
         router.push('/login')
       } else {
-        console.log('User authenticated')
         dispatch(setIsLoggedIn(true))
       }
     }
