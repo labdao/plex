@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -95,31 +94,6 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func GetToolHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
-			return
-		}
-
-		// Get the ID from the URL
-		params := mux.Vars(r)
-		cid := params["cid"]
-
-		var tool models.Tool
-		if result := db.First(&tool, "cid = ?", cid); result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(tool); err != nil {
-			http.Error(w, "Error encoding tool to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
 func GetToolsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -127,13 +101,25 @@ func GetToolsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		query := db.Model(&models.Tool{})
+
+		if cid := r.URL.Query().Get("cid"); cid != "" {
+			query = query.Where("cid = ?", cid)
+		}
+
+		if name := r.URL.Query().Get("name"); name != "" {
+			query = query.Where("name = ?", name)
+		}
+
+		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
 		var tools []models.Tool
-		if result := db.Find(&tools); result.Error != nil {
+		if result := query.Find(&tools); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tools: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
-
-		log.Println("Fetching tools from DB: ", tools)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(tools); err != nil {
