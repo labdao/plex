@@ -9,7 +9,6 @@ import {
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
-// import { PrivyAuthContext } from '@/lib/PrivyContext';y
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 
