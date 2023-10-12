@@ -30,8 +30,7 @@ services:
       PRIVATE_IPFS: "true"
       LIBP2P_FORCE_PNET: "1"
       IPFS_DEBUG: "true"
-    volumes:
-      - ./docker/ipfs_data:/data/ipfs/
+      IPFS_LOGGING: "debug"
 
 volumes:
   privateipfs:

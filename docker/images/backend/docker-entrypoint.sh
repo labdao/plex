@@ -3,6 +3,8 @@ set -e
 
 repo="$IPFS_PATH"
 
+ipfs version
+
 if [ -e "$repo/config" ]; then
   echo "Found IPFS fs-repo at $repo"
 else
