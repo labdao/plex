@@ -382,14 +382,28 @@ jobs:
           ./bacalhau describe ${JOB_ID}
 
     -name: Run Gateway Integration Tests
-        if: matrix.bacalhau_version == '1.1.0'
+      if: matrix.bacalhau_version == '1.1.0'
         run |
+          # Test Health check
           response=$(curl --silent http://localhost:8080/healthcheck)
           if [[ "$response" != "Healthy" ]]; then
             echo "Test 1 failed: Expected 'Healthy' but got '$response'"
             exit 1
           else
             echo "Gateway Healthcheck passed"
+          fi
+
+          # Test for File Upload
+          response=$(curl --silent -X POST \
+                          -F "file=@testdata/binding/abl/7n9g.pdb;filename=7n9g.pdb" \
+                          -F "filename=7n9g.pdb" \
+                          -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+                          http://localhost:8080/datafiles)
+          if echo "$response" | jq -e '.cid' > /dev/null; then
+            echo "File upload test passed"
+          else
+            echo "File upload test failed: 'cid' key not found in the response"
+            exit 1
           fi
 
       - name: Run docker compose logs
