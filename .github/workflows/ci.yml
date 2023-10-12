@@ -135,6 +135,7 @@ jobs:
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      NEXT_PUBLIC_PRIVY_APP_ID: "{{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -186,7 +187,9 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
         run: |
@@ -249,6 +252,7 @@ jobs:
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      NEXT_PUBLIC_PRIVY_APP_ID: "{{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -305,7 +309,9 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
         run: |

@@ -9,7 +9,6 @@ import {
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
-// import { PrivyAuthContext } from '@/lib/PrivyContext';y
 import { usePrivy } from '@privy-io/react-auth'
 import { useRouter } from 'next/navigation'
 
@@ -18,6 +17,7 @@ export const UserLoader = ({ children }) => {
   const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
   const { ready, authenticated } = usePrivy();
+
 
   const walletAddressFromRedux = useSelector(selectWalletAddress)
 

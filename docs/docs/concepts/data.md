@@ -27,4 +27,4 @@ The CID, **QmeTreLhxMmBaRqHemJcStvdyHZThdzi4gTmvTyY1igeCk**, can be used to acce
 | ------ | ---- |
 | IPFS-enabled browser (ie, [Brave](https://brave.com/ipfs-support/)) | ipfs://QmeTreLhxMmBaRqHemJcStvdyHZThdzi4gTmvTyY1igeCk |
 | IPFS Desktop | QmeTreLhxMmBaRqHemJcStvdyHZThdzi4gTmvTyY1igeCk |
-| IPFS https gateway | https://ipfs.io/ipfs/QmeTreLhxMmBaRqHemJcStvdyHZThdzi4gTmvTyY1igeCk
+| IPFS http gateway | http://bacalhau.labdao.xyz:8080/ipfs/QmeTreLhxMmBaRqHemJcStvdyHZThdzi4gTmvTyY1igeCk
