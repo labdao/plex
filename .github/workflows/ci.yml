@@ -187,7 +187,9 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ env.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
         run: |
@@ -307,7 +309,9 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ env.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
         run: |
