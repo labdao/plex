@@ -62,6 +62,5 @@ jobs:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
           push: true
-          tags: quay.io/labdao/frontend:${{ env.BASEREF }}-${{ matrix.backends.env }}
           context: frontend/
           tags: ${{ steps.meta.outputs.tags }}
