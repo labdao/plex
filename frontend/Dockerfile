@@ -1,5 +1,12 @@
 FROM node:18-alpine AS base
 
+# Include NEXT_PUBLIC_BACKEND_URL and NEXT_PUBLIC_PRIVY_APP_ID
+ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+ARG NEXT_PUBLIC_PRIVY_APP_ID
+
+ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_PRIVY_APP_ID=$NEXT_PUBLIC_PRIVY_APP_ID
+
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
@@ -15,12 +22,8 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-
 # Rebuild the source code only when needed
 FROM base AS builder
-
-# Include NEXT_PUBLIC_BACKEND_URL
-ARG NEXT_PUBLIC_BACKEND_URL http://localhost:8080
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
