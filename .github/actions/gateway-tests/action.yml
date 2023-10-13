@@ -1,0 +1,117 @@
+name: 'Gateway Tests'
+description: 'Tests that gateway features work'
+runs:
+  using: 'composite'
+  steps:
+    - name: Test healthcheck endpoint
+      run: |
+        response=$(curl --silent http://localhost:8080/healthcheck)
+        if [[ "$response" != "Healthy" ]]; then
+          echo "Test 1 failed: Expected 'Healthy' but got '$response'"
+          exit 1
+        else
+          echo "Gateway Healthcheck passed"
+        fi
+      shell: bash
+
+    - name: Test add Datafile endpoint
+      run: |
+        # upload first file
+        response=$(curl --silent -X POST \
+                          -F "file=@testdata/binding/abl/7n9g.pdb;filename=7n9g.pdb" \
+                          -F "filename=7n9g.pdb" \
+                          -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+                          http://localhost:8080/datafiles)
+        if echo "$response" | jq -e '.cid' > /dev/null; then
+          echo "File upload test passed"
+        else
+          echo "File upload test failed: 'cid' key not found in the response"
+          exit 1
+        fi
+
+        # upload second file
+        response=$(curl --silent -X POST \
+                          -F "file=@testdata/binding/abl/ZINC000003986735.sdf;filename=ZINC000003986735.sdf" \
+                          -F "filename=ZINC000003986735.sdf" \
+                          -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+                          http://localhost:8080/datafiles)
+        if echo "$response" | jq -e '.cid' > /dev/null; then
+          echo "File upload test passed"
+        else
+          echo "File upload test failed: 'cid' key not found in the response"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Test List Datafiles Endpoint
+      run: |
+        response=$(curl --silent http://localhost:8080/datafiles)
+        length=$(echo "$response" | jq 'length')
+
+        if [ "$length" -eq 2 ]; then
+           echo "Datafiles test passed"
+        else
+           echo "Datafiles test failed: Expected length of 2 but got '$length'"
+           exit 1
+        fi
+      shell: bash
+
+    - name: Test add Tool Endpoint
+      run: |
+        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind.json)
+        json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+        response=$(curl -s -X POST "http://localhost:8080/tools" \
+               -H "Content-Type: application/json" \
+               -d "$json_payload")
+
+        cid_value=$(echo "$response" | jq -r '.cid')
+
+        if [ "$cid_value" == "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2" ]; then
+           echo "Add Tool upload test passed"
+        else
+           echo "Add Tool upload test failed: Expected 'QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2' but got '$cid_value'"
+           exit 1
+        fi
+      shell: bash
+
+    - name: Test list Tools Endpoint
+      run: |
+        response=$(curl --silent http://localhost:8080/tools)
+        length=$(echo "$response" | jq 'length')
+
+        if [ "$length" -eq 1 ]; then
+           echo "List Tools test passed"
+        else
+           echo "List Tools test failed: Expected length of 1 but got '$length'"
+           exit 1
+        fi
+      shell: bash
+
+    - name: Test Add Flow Endpoint
+      run: |
+        payload='{
+          "name": "testFlow",
+          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "toolCid": "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2",
+          "scatteringMethod": "dotProduct",
+          "kwargs": {
+            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
+            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf"]
+          }
+        }'
+
+        response=$(curl -s -X POST "http://localhost:8080/flows" \
+               -H "Content-Type: application/json" \
+               -d "$payload")
+
+        # Extract the CID from the response
+        cid_value=$(echo "$response" | jq -r '.cid')
+
+        # Check if the CID exists
+        if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
+           echo "Create Flow test passed"
+        else
+           echo "Create Flow test failed: CID not found in the response"
+           exit 1
+        fi
+      shell: bash
