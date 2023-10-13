@@ -48,7 +48,7 @@ runs:
         response=$(curl --silent http://localhost:8080/datafiles)
         length=$(echo "$response" | jq 'length')
 
-        if [ "$length" eq 2 ]; then
+        if [ "$length" -eq 2 ]; then
            echo "Datafiles test passed"
         else
            echo "Datafiles test failed: Expected length of 2 but got '$length'"
@@ -79,7 +79,7 @@ runs:
         response=$(curl --silent http://localhost:8080/tools)
         length=$(echo "$response" | jq 'length')
 
-        if [ "$length" eq 1 ]; then
+        if [ "$length" -eq 1 ]; then
            echo "List Tools test passed"
         else
            echo "List Tools test failed: Expected length of 1 but got '$length'"
