@@ -111,7 +111,7 @@ jobs:
           # - macos-13
         bacalhau_version:
           - 1.0.3
-          # - 1.1.0
+          - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -143,7 +143,7 @@ jobs:
           # - macos-13
         bacalhau_version:
           - 1.0.3
-          # - 1.1.0
+          - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
@@ -223,6 +223,7 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Add execute permission
           chmod +x plex
@@ -237,21 +238,24 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
-      - name: Run docker compose logs
-        # run always even when
-        if: always()
-        run: |
-          docker compose logs
-
       - name: Run bacalhau describe
+        if: matrix.bacalhau_version == '1.0.3'
         # run always even when
-        if: always()
         run: |
           # Execute permission
           chmod +x ./bacalhau
           ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
+
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
 
       - name: upload outputs
         # run always even when
@@ -276,13 +280,13 @@ jobs:
           # -  macos-13
         bacalhau_version:
           - 1.0.3
-          # - 1.1.0
+          - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
-      NEXT_PUBLIC_PRIVY_APP_ID: "{{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
+      NEXT_PUBLIC_PRIVY_APP_ID: "${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -361,6 +365,7 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           set -x
           # Add execute permission
@@ -391,21 +396,23 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
-      - name: Run docker compose logs
-        # run always even when
-        if: always()
-        run: |
-          docker compose logs
-
       - name: Run bacalhau describe
-        # run always even when
-        if: always()
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Execute permission
           chmod +x ./bacalhau
           ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
+
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
+      - name: Run docker compose logs
+        # run always even when
+        if: always()
+        run: |
+          docker compose logs
 
       - name: upload outputs
         # run always even when
