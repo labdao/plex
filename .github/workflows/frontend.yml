@@ -24,11 +24,16 @@ jobs:
   docker:
     strategy:
       matrix:
-        backends: [{ env: stg, url: 'https://api.stg.labdao.xyz'}, { env: prod, url: 'https://api.prod.labdao.xyz'}]
+        backends: [{ env: stg, url: 'https://api.stg.labdao.xyz'}, { env: prod, url: 'https://api.prod.labdao.xyz'}, { env: local, url: 'http://localhost:8080'}]
     runs-on: ubuntu-latest
     steps:
-      - name: setting branch name
-        run: echo "GITHUB_REF_NORMALIZED=${GITHUB_REF##*/}" >> "${GITHUB_ENV}"
+      - if: github.ref == 'refs/heads/main'
+        name: Conditional(Set tag as `latest`)
+        run: echo "tag=latest" >> $GITHUB_ENV
+
+      - if: startsWith(github.ref, 'refs/tags/')
+        name: Conditional(Set tag as `{version}`)
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -49,4 +54,4 @@ jobs:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
           push: true
-          tags: quay.io/labdao/frontend:${GITHUB_REF_NORMALIZED}-${{ matrix.backends.env }}
+          tags: quay.io/labdao/frontend:${{ env.tag }}-${{ matrix.backends.env }}
