@@ -97,6 +97,31 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
+ 
+  # Download Bacalhau CLI for troubleshooting
+  ci-setup-bacalhau:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        bacalhau_version: [1.0.3, 1.1.0]
+    runs-on: ${{ matrix.os }}
+    environment: ci
+    steps:
+      - name: Download bacalhau
+        run: |
+          # Download bacalhau plugin
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v${{ matrix.bacalhau_version }}/bacalhau_v${{ matrix.bacalhau_version }}_linux_amd64.tar.gz -o bacalhau.tgz
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v${{ matrix.bacalhau_version }}/bacalhau_v${{ matrix.bacalhau_version }}_darwin_arm64.tar.gz -o bacalhau.tgz
+          fi
+          tar -zxvf bacalhau.tgz
+
+      - name: upload bacalhau plugin to be used later
+        uses: actions/upload-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          path: ./bacalhau
 
   ci-public:
     needs:
@@ -105,11 +130,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
+        bacalhau_version: [1.0.3, 1.1.0]
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      NEXT_PUBLIC_PRIVY_APP_ID: "{{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -119,9 +146,10 @@ jobs:
         with:
           name: plex-binary-${{matrix.os}}
 
-      - name: download bacalhau
-        run: |
-          curl -sL https://get.bacalhau.org/install.sh | bash
+      - name: download bacalhau binary
+        uses: actions/download-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -160,16 +188,29 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
-          # Setup docker compose private
+          # Setup docker compose
           docker compose up -d --wait
+
+      - name: Bring up the stack
+        if: matrix.bacalhau_version == '1.1.0'
+        run: |
+          # Setup docker compose 1.1.0
+          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml up -d --wait
+
+      - name: Run docker compose ps
+        run: |
           # Inspect number of running containers
           docker compose ps
 
       - name: Run Equibind
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Add execute permission
           chmod +x plex
@@ -184,27 +225,31 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run bacalhau describe
+        if: matrix.bacalhau_version == '1.0.3'
+        # run always even when
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          ./bacalhau version
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
+
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
       - name: Run docker compose logs
         # run always even when
         if: always()
         run: |
           docker compose logs
 
-      - name: Run bacalhau describe
-        # run always even when
-        if: always()
-        run: |
-          # Execute permission
-          chmod +x ./bacalhau
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
-
       - name: upload outputs
         # run always even when
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output-${{matrix.os}}
+          name: ci-public-output-${{matrix.os}}-${{matrix.bacalhau_version}}
           path: |
             job-*
             jobs/
@@ -217,11 +262,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04] # , macos-13]
+        bacalhau_version: [1.0.3, 1.1.0]
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      NEXT_PUBLIC_PRIVY_APP_ID: "${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -236,9 +283,10 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
 
-      - name: download bacalhau
-        run: |
-          curl -sL https://get.bacalhau.org/install.sh | bash
+      - name: download bacalhau binary
+        uses: actions/download-artifact@v3
+        with:
+          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
       - name: download docker compose plugin artifact
         if: runner.os != 'macos'
@@ -277,16 +325,29 @@ jobs:
       - name: docker compose build
         run: |
           # Build in parallel
-          docker compose build --parallel
+          docker compose build --build-arg NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }} --parallel
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+
+      - name: Bring up the stack
+        if: matrix.bacalhau_version == '1.1.0'
+        run: |
+          # Setup docker compose private
+          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.private.yml up -d --wait
+
+      - name: Run docker compose ps
+        run: |
           # Inspect number of running containers
           docker compose ps
 
       - name: Run Equibind
+        if: matrix.bacalhau_version == '1.0.3'
         run: |
           set -x
           # Add execute permission
@@ -317,27 +378,30 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+      - name: Run bacalhau describe
+        if: matrix.bacalhau_version == '1.0.3'
+        run: |
+          # Execute permission
+          chmod +x ./bacalhau
+          ./bacalhau version
+          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
+          ./bacalhau describe ${JOB_ID}
+
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
       - name: Run docker compose logs
         # run always even when
         if: always()
         run: |
           docker compose logs
 
-      - name: Run bacalhau describe
-        # run always even when
-        if: always()
-        run: |
-          # Execute permission
-          chmod +x ./bacalhau
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
-
       - name: upload outputs
         # run always even when
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-private-output-${{matrix.os}}
+          name: ci-private-output-${{matrix.os}}-${{matrix.bacalhau_version}}
           path: |
             job-*
             jobs/

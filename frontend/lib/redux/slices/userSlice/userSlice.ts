@@ -1,41 +1,42 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-const initialState: UserSliceState = {
-  username: '',
+interface UserState {
+  walletAddress: string;
+  isLoading: boolean;
+  error: string | null;
+  isLoggedIn: boolean;
+}
+
+const initialState: UserState = {
   walletAddress: '',
   isLoading: false,
   error: null,
   isLoggedIn: false,
-}
+};
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUsername: (state, action: PayloadAction<string>) => {
-      state.username = action.payload
-    },
     setWalletAddress: (state, action: PayloadAction<string>) => {
-      state.walletAddress = action.payload
+      state.walletAddress = action.payload;
+    },
+    startLoading: (state) => {
+      state.isLoading = true;
+    },
+    endLoading: (state) => {
+      state.isLoading = false;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    startLoading: (state) => {
-      state.isLoading = true
-    },
-    endLoading: (state) => {
-      state.isLoading = false
-    },
     setIsLoggedIn: (state, action: PayloadAction<boolean>) => {
-      state.isLoggedIn = action.payload
+      state.isLoggedIn = action.payload;
     },
-  }
-})
-
+  },
+});
 
 export const {
-  setUsername,
   setWalletAddress,
   setError,
   startLoading,
@@ -43,11 +44,4 @@ export const {
   setIsLoggedIn,
 } = userSlice.actions;
 
-
-export interface UserSliceState {
-  username: string
-  walletAddress: string
-  isLoading: boolean
-  error: string | null
-  isLoggedIn: boolean
-}
+export default userSlice.reducer;

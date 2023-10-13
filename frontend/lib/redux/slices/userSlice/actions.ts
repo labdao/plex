@@ -1,13 +1,15 @@
 import backendUrl from "lib/backendUrl"
+import { createAction } from "@reduxjs/toolkit"
+
+export const setError = createAction<string | null>('user/setError')
 
 export const saveUserDataToServer = async (
-  username: string,
-  walletAddress: string
-): Promise<{ username: string, walletAddress: string }> => {
+  walletAddress: string,
+): Promise<{ walletAddress: string }> => {
   const response = await fetch(`${backendUrl()}/user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, walletAddress }),
+    body: JSON.stringify({ walletAddress }),
   })
 
   if (!response.ok) {

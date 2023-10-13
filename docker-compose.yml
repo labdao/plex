@@ -41,9 +41,9 @@ services:
         condition: service_started
     healthcheck:
       test: curl -f http://requester:1234/readyz
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   compute:
@@ -74,9 +74,9 @@ services:
         condition: service_started
     healthcheck:
       test: curl -f http://compute:1234/readyz
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   dbbackend:
@@ -91,9 +91,9 @@ services:
       - dbdata-backend:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres  || exit 1
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   backend:
@@ -116,9 +116,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   frontend:
@@ -129,6 +129,7 @@ services:
         - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+        NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
     environment:
       NODE_ENV: 'production'
     ports:
@@ -144,9 +145,9 @@ services:
       - dbdata-receptor:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres  || exit 1
-      interval: 30s
+      interval: 10s
       timeout: 10s
-      retries: 3
+      retries: 10
       start_period: 10s
 
   receptor:
