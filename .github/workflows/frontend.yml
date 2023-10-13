@@ -32,25 +32,23 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
-      - name: Base ref
-        run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then BASEREF="${{ github.event.base_ref }}"; BASEREF="${BASEREF#refs/heads/}"; elif [ "${{ github.ref_type }}" = "branch" ]; then BASEREF="${{ github.ref_name }}"; else BASEREF=""; fi
-          echo "BASEREF=${BASEREF}" >> $GITHUB_ENV
-
-          # - if: github.ref == 'refs/heads/main'
-          #   name: Conditional(Set tag as `latest`)
-          #   run: echo "tag=latest" >> $GITHUB_ENV
-
-          # - if: startsWith(github.ref, 'refs/tags/')
-          #   name: Conditional(Set tag as `{version}`)
-          #   run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: quay.io/labdao/frontend
+          tags: |
+            type=ref,suffix=-${{ matrix.backends.env }},event=branch
+            type=ref,suffix=-${{ matrix.backends.env }},event=pr
+            # tag event
+            type=ref,suffix=-${{ matrix.backends.env }},event=tag
+  
       - name: Login to quay.io
         uses: docker/login-action@v3
         with:
@@ -65,3 +63,5 @@ jobs:
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
           push: true
           tags: quay.io/labdao/frontend:${{ env.BASEREF }}-${{ matrix.backends.env }}
+          context: frontend/
+          tags: ${{ steps.meta.outputs.tags }}
