@@ -49,7 +49,6 @@ jobs:
           tags: |
             type=ref,suffix=-${{ matrix.backends.env }},event=branch
             type=ref,suffix=-${{ matrix.backends.env }},event=pr
-            # tag event
             type=ref,suffix=-${{ matrix.backends.env }},event=tag
   
       - name: Login to quay.io
