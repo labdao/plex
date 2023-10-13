@@ -45,17 +45,17 @@ runs:
 
     - name: Set Tool JSON content
       id: tooljson-setter
-      run: echo "TOOL_JSON=$(cat tools/equibind.json | jq -c .)" >> "$GITHUB_OUTPUT"
+      run: |
+        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind.json)
+        echo "TOOL_JSON=$TOOL_JSON_CONTENT" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: Test add Tool Endpoint
       run: |
+        json_payload="{\"toolJson\": \"$TOOL_JSON\", \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
-               -d "{
-                   \"toolJson\": \"${{ steps.tooljson-setter.outputs.TOOL_JSON }}\",
-                   \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"
-                 }")
+               -d "$json_payload")
 
         cid_value=$(echo "$response" | jq -r '.cid')
 
