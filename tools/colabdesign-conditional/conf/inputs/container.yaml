@@ -1,0 +1,4 @@
+target_protein_directory: '/inputs'
+binder_protein_template_directory: '/inputs'
+binder_protein_template_pattern: 'binder'
+target_protein_pattern: 'target'

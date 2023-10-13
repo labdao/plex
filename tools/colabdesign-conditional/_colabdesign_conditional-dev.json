@@ -5,14 +5,17 @@
     "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
+        "mkdir -p conf/params && mkdir -p conf/inputs && mkdir -p conf/outputs",
         "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/install.py;",
         "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/main.py;",
-        "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
+        "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/conf/inputs/container.yaml && mv container.yaml conf/inputs;",
+        "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/conf/outputs/container.yaml && mv container.yaml conf/outputs;",
+        "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/conf/config.yaml && mv config.yaml conf;",
+        "cp $(inputs.config.filepath) conf/params;", 
         "python install.py;",
         "echo 'Install complete!';",
-        "echo 'Attempting main.py...';",
-        "python main.py;",
-        "echo 'main.py complete!';"
+        "python3 main.py params=$(inputs.config.basename) inputs=container outputs=container;",
+        "echo 'run complete!';"
       ],
     "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
     "gpuBool": true,
