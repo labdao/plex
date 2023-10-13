@@ -1,4 +1,0 @@
-defaults:
-  - inputs: local_matching
-  - params: minimal
-  - outputs: local
