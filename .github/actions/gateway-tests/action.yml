@@ -28,3 +28,25 @@ runs:
           exit 1
         fi
       shell: bash
+
+    - name: Get Tool JSON content
+      id: get_tooljson
+      run: echo "::set-output name=tooljson::$(cat tools/equibind.json)"
+
+    - name: Test add Tool Endpoint
+      run: |
+        response=$(curl -s -X POST "http://localhost:8080/tools" \
+               -H "Content-Type: application/json" \
+               -d "{
+                   \"toolJson\": \"${{ steps.get_tooljson.outputs.tooljson }}\",
+                   \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"
+                 }")
+
+        cid_value=$(echo "$response" | jq -r '.cid')
+
+        if [ "$cid_value" == "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2" ]; then
+           echo "Add Tool upload test passed"
+        else
+           echo "Add Tool upload test failed: Expected 'QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2' but got '$cid_value'"
+           exit 1
+        fi
