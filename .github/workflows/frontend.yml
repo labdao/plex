@@ -27,13 +27,18 @@ jobs:
         backends: [{ env: stg, url: 'https://api.stg.labdao.xyz'}, { env: prod, url: 'https://api.prod.labdao.xyz'}, { env: local, url: 'http://localhost:8080'}]
     runs-on: ubuntu-latest
     steps:
-      - if: github.ref == 'refs/heads/main'
-        name: Conditional(Set tag as `latest`)
-        run: echo "tag=latest" >> $GITHUB_ENV
+      - name: Base ref
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then BASEREF="${{ github.event.base_ref }}"; BASEREF="${BASEREF#refs/heads/}"; elif [ "${{ github.ref_type }}" = "branch" ]; then BASEREF="${{ github.ref_name }}"; else BASEREF=""; fi
+          echo "BASEREF=${BASEREF}" >> $GITHUB_ENV
 
-      - if: startsWith(github.ref, 'refs/tags/')
-        name: Conditional(Set tag as `{version}`)
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          # - if: github.ref == 'refs/heads/main'
+          #   name: Conditional(Set tag as `latest`)
+          #   run: echo "tag=latest" >> $GITHUB_ENV
+
+          # - if: startsWith(github.ref, 'refs/tags/')
+          #   name: Conditional(Set tag as `{version}`)
+          #   run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -54,4 +59,4 @@ jobs:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
           push: true
-          tags: quay.io/labdao/frontend:${{ env.tag }}-${{ matrix.backends.env }}
+          tags: quay.io/labdao/frontend:${{ env.BASEREF }}-${{ matrix.backends.env }}
