@@ -45,7 +45,7 @@ runs:
 
     - name: Set Tool JSON content
       id: tooljson-setter
-      run: echo "TOOL_JSON=$(cat tools/equibind.json)" >> "$GITHUB_OUTPUT"
+      run: echo "TOOL_JSON=$(cat tools/equibind.json | jq -c .)" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: Test add Tool Endpoint
