@@ -109,6 +109,7 @@ runs:
 
         # Check if the CID exists
         if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
+           echo "$response" | jq -r '.cid'
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"
