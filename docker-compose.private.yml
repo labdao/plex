@@ -24,11 +24,13 @@ services:
 
   backend:
     environment:
-      IPFS_PATH: "/data/ipfs"
-      BACALHAU_SERVE_IPFS_PATH: "/data/ipfs"
       BACALHAU_IPFS_SWARM_ADDRESSES: "/dns4/ipfs/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-    volumes:
-      - ./docker/ipfs_data:/data/ipfs/
+      IPFS_S3_ENABLED: "false"
+      IPFS_SWARM_KEY_BASE64: "L2tleS9zd2FybS9wc2svMS4wLjAvCi9iYXNlMTYvCjk0Y2Y4ODFiMDZmZDI5YTgxNDVlMmY2MjNiMmRjNGMwNTU2Y2QxNTIwNWM4YjhjMzg0YWEzOThkY2U4YWFhMzYK"
+      PRIVATE_IPFS: "true"
+      LIBP2P_FORCE_PNET: "1"
+      IPFS_DEBUG: "true"
+      IPFS_LOGGING: "debug"
 
 volumes:
   privateipfs:
