@@ -237,7 +237,7 @@ jobs:
           ./bacalhau describe ${JOB_ID}
 
       - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-integration-tests
+        uses: ./.github/actions/gateway-tests
 
       - name: Run docker compose logs
         # run always even when
@@ -390,7 +390,7 @@ jobs:
           ./bacalhau describe ${JOB_ID}
 
       - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-integration-tests
+        uses: ./.github/actions/gateway-tests
 
       - name: Run docker compose logs
         # run always even when

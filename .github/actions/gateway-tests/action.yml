@@ -1,4 +1,4 @@
-name: 'Gateway Integration Tests'
+name: 'Gateway Tests'
 description: 'Tests that gateway features work'
 runs:
   using: 'composite'
