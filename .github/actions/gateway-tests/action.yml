@@ -43,9 +43,9 @@ runs:
         fi
       shell: bash
 
-    - name: Get Tool JSON content
-      id: get_tooljson
-      run: echo "::set-output name=tooljson::$(cat tools/equibind.json)"
+    - name: Set Tool JSON content
+      id: tooljson-setter
+      run: echo "TOOL_JSON=$(cat tools/equibind.json)" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: Test add Tool Endpoint
@@ -53,7 +53,7 @@ runs:
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
                -d "{
-                   \"toolJson\": \"${{ steps.get_tooljson.outputs.tooljson }}\",
+                   \"toolJson\": \"${{ steps.tooljson-setter.outputs.TOOL_JSON }}\",
                    \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"
                  }")
 
