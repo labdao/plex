@@ -378,8 +378,6 @@ jobs:
 
       - name: Run bacalhau describe
         if: matrix.bacalhau_version == '1.0.3'
-        # run always even when
-        if: always()
         run: |
           # Execute permission
           chmod +x ./bacalhau
@@ -387,9 +385,9 @@ jobs:
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
 
-      -name: Run Gateway Integration Tests
+      - name: Run Gateway Integration Tests
         if: matrix.bacalhau_version == '1.1.0'
-        run |
+        run: |
           # Test Health check
           response=$(curl --silent http://localhost:8080/healthcheck)
           if [[ "$response" != "Healthy" ]]; then
