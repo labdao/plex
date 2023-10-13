@@ -105,7 +105,9 @@ runs:
                -d "$payload")
 
         # Extract the CID from the response
+        echo "$response"
         cid_value=$(echo "$response" | jq -r '.cid')
+        echo "$response" | jq -r '.cid'
 
         # Check if the CID exists
         if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then

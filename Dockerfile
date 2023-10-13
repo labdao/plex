@@ -12,11 +12,16 @@ RUN cd /app/ \
 
 RUN apt-get update && apt-get -y install ca-certificates
 
+# Needed until we figure out a better way to set the bacalhau config file
+# and a better way to stream logs through the bacalhau Go pkg
+RUN curl -sL https://get.bacalhau.org/install.sh | bash
+
 FROM busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/gateway/migrations  /gateway/migrations
+COPY --from=builder /root/.bacalhau /root/.bacalhau
 
 # Copy custom IPFS binary with s3ds and healthcheck plugin
 COPY --from=quay.io/labdao/ipfs@sha256:461646b6ea97dffc86b1816380360be3d38d5a2c6c7c86352a2e3b0a5a4ccca5 /usr/local/bin/ipfs /usr/local/bin/ipfs
@@ -53,15 +58,6 @@ ENV BACALHAU_API_HOST=127.0.0.1
 ENV IPFS_PATH=/data/ipfs
 ENV IPFS_PROFILE=server
 ENV BACALHAU_SERVE_IPFS_PATH=/data/ipfs
-
-# Needed until we figure out a better way to set the bacalhau config file
-# and a better way to stream logs through the bacalhau Go pkg
-# Update the package list and install curl and bash
-RUN apt-get update && apt-get install -y \
-    curl \
-    bash \
-    && rm -rf /var/lib/apt/lists/*
-RUN curl -sL https://get.bacalhau.org/install.sh | bash
 
 EXPOSE 8080
 
