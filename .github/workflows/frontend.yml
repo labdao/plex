@@ -8,10 +8,12 @@ on:
     branches: ["main"]
     paths:
       - 'frontend/**'
+      - '.github/**'
   pull_request:
     branches: ["main"]
     paths:
       - 'frontend/**'
+      - '.github/**'
 
 # Only run one at a time
 concurrency:
