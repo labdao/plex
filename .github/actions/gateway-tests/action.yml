@@ -16,9 +16,23 @@ runs:
 
     - name: Test add datafile endpoint
       run: |
+        # upload first file
         response=$(curl --silent -X POST \
                           -F "file=@testdata/binding/abl/7n9g.pdb;filename=7n9g.pdb" \
                           -F "filename=7n9g.pdb" \
+                          -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+                          http://localhost:8080/datafiles)
+        if echo "$response" | jq -e '.cid' > /dev/null; then
+          echo "File upload test passed"
+        else
+          echo "File upload test failed: 'cid' key not found in the response"
+          exit 1
+        fi
+
+        # upload second file
+        response=$(curl --silent -X POST \
+                          -F "file=@testdata/binding/abl/ZINC000003986735.sdf;filename=ZINC000003986735.sdf" \
+                          -F "filename=ZINC000003986735.sdf" \
                           -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
                           http://localhost:8080/datafiles)
         if echo "$response" | jq -e '.cid' > /dev/null; then
@@ -32,6 +46,7 @@ runs:
     - name: Get Tool JSON content
       id: get_tooljson
       run: echo "::set-output name=tooljson::$(cat tools/equibind.json)"
+      shell: bash
 
     - name: Test add Tool Endpoint
       run: |
@@ -50,3 +65,4 @@ runs:
            echo "Add Tool upload test failed: Expected 'QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2' but got '$cid_value'"
            exit 1
         fi
+      shell: bash
