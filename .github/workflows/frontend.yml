@@ -27,6 +27,9 @@ jobs:
         backends: [{ env: stg, url: 'https://api.stg.labdao.xyz'}, { env: prod, url: 'https://api.prod.labdao.xyz'}]
     runs-on: ubuntu-latest
     steps:
+      - name: setting branch name
+        run: echo "GITHUB_REF_NORMALIZED=${GITHUB_REF##*/}" >> "${GITHUB_ENV}"
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -46,4 +49,4 @@ jobs:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
           push: true
-          tags: quay.io/labdao/frontend:${GITHUB_REF##*/}-${{ matrix.backends.env }}
+          tags: quay.io/labdao/frontend:${GITHUB_REF_NORMALIZED}-${{ matrix.backends.env }}
