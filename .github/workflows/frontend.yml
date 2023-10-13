@@ -6,14 +6,12 @@ name: frontend
 on:
   push:
     branches: ["main"]
-    paths-ignore:
-      - 'docs/**'
-      - 'infrastructure/**'
+    paths:
+      - 'frontend/**'
   pull_request:
     branches: ["main"]
-    paths-ignore:
-      - 'docs/**'
-      - 'infrastructure/**'
+    paths:
+      - 'frontend/**'
 
 # Only run one at a time
 concurrency:
