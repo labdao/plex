@@ -54,6 +54,7 @@ runs:
            echo "Datafiles test failed: Expected length of 2 but got '$length'"
            exit 1
         fi
+      shell: bash
 
     - name: Test add Tool Endpoint
       run: |
@@ -84,6 +85,7 @@ runs:
            echo "List Tools test failed: Expected length of 1 but got '$length'"
            exit 1
         fi
+      shell: bash
 
     - name: Test Add Flow Endpoint
       run: |
@@ -112,3 +114,4 @@ runs:
            echo "Create Flow test failed: CID not found in the response"
            exit 1
         fi
+      shell: bash
