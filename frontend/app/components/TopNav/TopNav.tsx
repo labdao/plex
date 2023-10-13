@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
@@ -14,18 +14,19 @@ import {
   useSelector,
   selectWalletAddress,
   selectIsLoggedIn,
-  selectUsername,
-  setUsername,
   setWalletAddress,
   setIsLoggedIn,
 } from '@/lib/redux'
+import { usePrivy } from '@privy-io/react-auth';
+import { PrivyAuthContext } from '../../../lib/PrivyContext';
 
 export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
-  const isLoggedIn = useSelector(selectIsLoggedIn)
-  const username = useSelector(selectUsername)
+  const { ready, authenticated, user, exportWallet } = usePrivy();
   const walletAddress = useSelector(selectWalletAddress)
+
+  const { logout } = usePrivy();
 
   // State and handlers for the dropdown menu
   const [anchorEl, setAnchorEl] = React.useState<null | SVGSVGElement>(null)
@@ -42,26 +43,30 @@ export const TopNav = () => {
     router.push(path)
   }
 
-  const handleLogout = () => {
-    // Clear data from localStorage
-    localStorage.removeItem('username')
-    localStorage.removeItem('walletAddress')
-    dispatch(setUsername(''))
-    dispatch(setWalletAddress(''))
-    dispatch(setIsLoggedIn(false))
-    handleClose()
-    router.push('/login')
+  const hasEmbeddedWallet = ready && authenticated && !!user?.linkedAccounts.find((account: any) => account.type === 'wallet' && account.walletClient === 'privy');
+
+  const handleExportWallet = async () => {
+    if (hasEmbeddedWallet) {
+      exportWallet();
+    }
   }
 
+  const handleLogout = async () => {
+    logout();
+    localStorage.removeItem('walletAddress');
+    dispatch(setWalletAddress(''));
+    dispatch(setIsLoggedIn(false));
+    handleClose();
+    router.push('/login');
+  }
 
   return (
     <nav className={styles.navbar}>
       <span className={styles.link} onClick={() => handleNavigation('/')}>
         plex
       </span>
-      {isLoggedIn && (
+      {ready && authenticated && (
         <div className={styles.userContainer}>
-          <span className={styles.username}>{username}</span>
           <MenuIcon style={{ color: 'white', marginLeft: '10px' }} onClick={(e: any) => handleClick(e)} />
           <Menu
             anchorEl={anchorEl}
@@ -70,11 +75,18 @@ export const TopNav = () => {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose}>Wallet: { walletAddress }</MenuItem>
+            <div title={!hasEmbeddedWallet ? 'Export wallet only available for embedded wallets.' : ''}>
+              <MenuItem 
+                onClick={handleExportWallet} 
+                disabled={!hasEmbeddedWallet}
+              >
+                Export Wallet
+              </MenuItem>
+            </div>
             <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
       )}
-      {/* Other links or elements can be added here if required */}
     </nav>
   )
 }

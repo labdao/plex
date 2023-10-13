@@ -6,6 +6,7 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import { useRouter } from 'next/navigation'
+import { usePrivy } from '@privy-io/react-auth';
 
 export const HomeMenu = () => {
   const router = useRouter()
