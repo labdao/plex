@@ -27,6 +27,11 @@ jobs:
         backends: [{ env: stg, url: 'https://api.stg.labdao.xyz'}, { env: prod, url: 'https://api.prod.labdao.xyz'}, { env: local, url: 'http://localhost:8080'}]
     runs-on: ubuntu-latest
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Base ref
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then BASEREF="${{ github.event.base_ref }}"; BASEREF="${BASEREF#refs/heads/}"; elif [ "${{ github.ref_type }}" = "branch" ]; then BASEREF="${{ github.ref_name }}"; else BASEREF=""; fi
