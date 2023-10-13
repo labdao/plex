@@ -12,6 +12,7 @@ runs:
         else
           echo "Gateway Healthcheck passed"
         fi
+      shell: bash
 
     - name: Test add datafile endpoint
       run: |
@@ -26,3 +27,4 @@ runs:
           echo "File upload test failed: 'cid' key not found in the response"
           exit 1
         fi
+      shell: bash
