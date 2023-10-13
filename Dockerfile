@@ -54,6 +54,10 @@ ENV IPFS_PATH=/data/ipfs
 ENV IPFS_PROFILE=server
 ENV BACALHAU_SERVE_IPFS_PATH=/data/ipfs
 
+# Needed until we figure out a better way to set the bacalhau config file
+# and a better way to stream logs through the bacalhau Go pkg
+RUN curl -sL https://get.bacalhau.org/install.sh | bash
+
 EXPOSE 8080
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

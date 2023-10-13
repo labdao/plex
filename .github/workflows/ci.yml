@@ -224,6 +224,9 @@ jobs:
       - name: Run Equibind
         if: matrix.bacalhau_version == '1.0.3'
         run: |
+          # add bacalhau config file, definitly a better way to do this
+          curl -sL https://get.bacalhau.org/install.sh | bash
+
           # Add execute permission
           chmod +x plex
 
@@ -365,6 +368,9 @@ jobs:
       - name: Run Equibind
         if: matrix.bacalhau_version == '1.0.3'
         run: |
+          # add bacalhau config file, definitly a better way to do this
+          curl -sL https://get.bacalhau.org/install.sh | bash
+
           set -x
           # Add execute permission
           chmod +x plex ipfs
