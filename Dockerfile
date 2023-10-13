@@ -56,6 +56,11 @@ ENV BACALHAU_SERVE_IPFS_PATH=/data/ipfs
 
 # Needed until we figure out a better way to set the bacalhau config file
 # and a better way to stream logs through the bacalhau Go pkg
+# Update the package list and install curl and bash
+RUN apt-get update && apt-get install -y \
+    curl \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
 RUN curl -sL https://get.bacalhau.org/install.sh | bash
 
 EXPOSE 8080
