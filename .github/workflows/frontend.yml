@@ -59,10 +59,13 @@ jobs:
           password: ${{ secrets.LABDAO_QUAY_PASSWORD }}
 
       - name: Build and push
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
         uses: docker/build-push-action@v5
         with:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
+            NEXT_PUBLIC_PRIVY_APP_ID
           push: true
           context: frontend/
           tags: ${{ steps.meta.outputs.tags }}
