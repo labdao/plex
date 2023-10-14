@@ -128,8 +128,8 @@ services:
       cache_from:
         - quay.io/labdao/frontend:latest
       args:
+        NEXT_PUBLIC_PRIVY_APP_ID
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
-        NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
     environment:
       NODE_ENV: 'production'
     ports:
