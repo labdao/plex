@@ -110,7 +110,6 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.0.3
           - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
@@ -141,7 +140,6 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.0.3
           - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
@@ -205,16 +203,9 @@ jobs:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Setup docker compose
           docker compose up -d --wait
-
-      - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.1.0'
-        run: |
-          # Setup docker compose 1.1.0
-          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
@@ -222,10 +213,9 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
-          # add bacalhau config file, definitly a better way to do this
-          curl -sL https://get.bacalhau.org/install.sh | bash
+          # point towards prod env until docker in docker job launcher is fixed
+          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
 
           # Add execute permission
           chmod +x plex
@@ -240,15 +230,24 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
+          # revert back to local host for any other steps
+          export BACALHAU_API_HOST="127.0.0.1"
+
       - name: Run bacalhau describe
-        if: matrix.bacalhau_version == '1.0.3'
         # run always even when
+        if: always()
         run: |
+          # point towards prod env until docker in docker job launcher is fixed
+          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
+
           # Execute permission
           chmod +x ./bacalhau
           ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
+
+          # revert back to local host for any other steps
+          export BACALHAU_API_HOST="127.0.0.1"
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
@@ -280,7 +279,6 @@ jobs:
           - ubuntu-22.04
           # -  macos-13
         bacalhau_version:
-          - 1.0.3
           - 1.1.0
     runs-on: ${{ matrix.os }}
     environment: ci
@@ -349,16 +347,9 @@ jobs:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Setup docker compose private
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-
-      - name: Bring up the stack
-        if: matrix.bacalhau_version == '1.1.0'
-        run: |
-          # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.private.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
@@ -366,11 +357,9 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
-        if: matrix.bacalhau_version == '1.0.3'
+        # turn back on once baclahau docker in docker job launcher is fixed
+        if: false
         run: |
-          # add bacalhau config file, definitly a better way to do this
-          curl -sL https://get.bacalhau.org/install.sh | bash
-
           set -x
           # Add execute permission
           chmod +x plex ipfs
@@ -401,7 +390,8 @@ jobs:
           fi
 
       - name: Run bacalhau describe
-        if: matrix.bacalhau_version == '1.0.3'
+        # turn back on once baclahau docker in docker job launcher is fixed
+        if: false
         run: |
           # Execute permission
           chmod +x ./bacalhau
