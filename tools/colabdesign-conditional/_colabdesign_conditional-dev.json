@@ -38,10 +38,10 @@
       }
     },
     "outputs": {
-      "compressed_designs": {
-        "type": "Array",
-        "item": "File",
-        "glob": ["*.zip"]
-      }
+      "design_scores": {
+      "type": "File",
+      "item": "",
+      "glob": ["mpnn_results.csv"]
+    }
     }
   }
