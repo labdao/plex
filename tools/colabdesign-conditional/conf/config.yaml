@@ -1,4 +1,4 @@
 defaults:
-  - inputs: local_matching
+  - inputs: container
   - params: param_config_file
-  - outputs: local
+  - outputs: container
