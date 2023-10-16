@@ -209,13 +209,13 @@ jobs:
         if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Setup docker compose
-          docker compose up -d --wait
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --wait
 
       - name: Bring up the stack
         if: matrix.bacalhau_version == '1.1.0'
         run: |
           # Setup docker compose 1.1.0
-          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml up -d --wait
+          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.ci.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
@@ -223,7 +223,6 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Add execute permission
           chmod +x plex
@@ -239,7 +238,6 @@ jobs:
           fi
 
       - name: Run bacalhau describe
-        if: matrix.bacalhau_version == '1.0.3'
         # run always even when
         run: |
           # Execute permission
@@ -351,13 +349,13 @@ jobs:
         if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+          docker compose -f docker-compose.yml -f docker-compose.private.yml -f docker-compose.ci.yml up -d --wait
 
       - name: Bring up the stack
         if: matrix.bacalhau_version == '1.1.0'
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.private.yml up -d --wait
+          docker compose -f docker-compose.yml -f docker-compose.1.1.0.yml -f docker-compose.private.yml -f docker-compose.ci.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
@@ -365,7 +363,6 @@ jobs:
           docker compose ps
 
       - name: Run Equibind
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
           set -x
           # Add execute permission
@@ -397,7 +394,6 @@ jobs:
           fi
 
       - name: Run bacalhau describe
-        if: matrix.bacalhau_version == '1.0.3'
         run: |
           # Execute permission
           chmod +x ./bacalhau
