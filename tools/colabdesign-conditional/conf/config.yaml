@@ -1,4 +1,31 @@
-defaults:
-  - inputs: local_matching
-  - params: minimal
-  - outputs: local
+name: def
+blueprint_mode: automated
+elements: 5
+buff_length: 0
+def_elen: 5
+def_ss: E
+def_cont: 1
+automated_conditional_fold_blueprint:
+  chain: D
+  def_elen: 3
+  trim_loops: false
+  run_name: def
+  num_designs: 3
+  iterations: 25
+  mask_loops: false
+  mask_contacts: false
+binder_design_target:
+  use_target: true
+  target_chain: D
+  target_hotspot: ""
+  denoiser_noise_scale_ca: 0
+  denoiser_noise_scale_frame: 0
+ProteinMPNN:
+  num_seqs: 8
+  rm_aa: C
+  mpnn_sampling_temp: 0.1
+  use_solubleMPNN: true
+  initial_guess: true
+Alphafold:
+  use_multimer: false
+  num_recycles: 3
