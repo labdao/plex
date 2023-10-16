@@ -363,7 +363,7 @@ class RFdiff_gui(blueprint_gui):
 
   # def __init__(self, elements=elements, adj=None, txt=None, buff_length=buff_length, name=name):
   def __init__(self, blueprint_mode, elements, name, use_target, target_chain, denoiser_noise_scale_ca, denoiser_noise_scale_frame, target_hotspot, iterations, mask_loops, mask_contacts, use_solubleMPNN, 
-         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen, adj=None, txt=None):
+         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen, outputs, adj=None, txt=None):
     self.path = self.name = name
     # self.input = widgets.Output()
     # self.output = widgets.Output()
@@ -493,7 +493,7 @@ class RFdiff_gui(blueprint_gui):
   #            mask_loops=True,
   #            mask_contacts=False,
   #            extra_cmd=None):
-  def diffuse(self, use_target, num_designs, iterations=50,
+  def diffuse(self, use_target, num_designs, iterations=50, outputs,
               mask_loops=True,
               mask_contacts=False,
               extra_cmd=None):
@@ -506,7 +506,7 @@ class RFdiff_gui(blueprint_gui):
     # self.output.clear_output()
     cmd = ["./RFdiffusion/run_inference.py",
           f"inference.num_designs={num_designs}",
-          f"inference.output_prefix=outputs/{self.path}",
+          f"inference.output_prefix={outputs}/{self.path}",
           "scaffoldguided.scaffoldguided=True",
           f"scaffoldguided.scaffold_dir=inputs/{self.path}",
           f"diffuser.T={iterations}",
@@ -620,10 +620,10 @@ def main(blueprint_mode, elements, name, use_target, target_chain, denoiser_nois
         pdb_feats = from_pdb(pdb, chains="D", trim_loops=trim_loops)
         buff_length=(5 if trim_loops else 0)
         rfdiff = RFdiff_gui(**pdb_feats, blueprint_mode=blueprint_mode, elements=elements, name=name, use_target=use_target, target_chain=target_chain, denoiser_noise_scale_ca=denoiser_noise_scale_ca, denoiser_noise_scale_frame=denoiser_noise_scale_frame, target_hotspot=target_hotspot, iterations=iterations, mask_loops=mask_loops, mask_contacts=mask_contacts, use_solubleMPNN=use_solubleMPNN, 
-         use_multimer=use_multimer, initial_guess=initial_guess, num_designs=num_designs, mpnn_sampling_temp=mpnn_sampling_temp, rm_aa=rm_aa, num_recycles=num_recycles, num_seqs=num_seqs, target_pdb=target_pdb, buff_length=buff_length, def_ss=def_ss, def_cont=def_cont, def_elen=def_elen)
+         use_multimer=use_multimer, initial_guess=initial_guess, num_designs=num_designs, mpnn_sampling_temp=mpnn_sampling_temp, rm_aa=rm_aa, num_recycles=num_recycles, num_seqs=num_seqs, target_pdb=target_pdb, buff_length=buff_length, def_ss=def_ss, def_cont=def_cont, def_elen=def_elen, outputs=outputs)
     else:
         rfdiff = RFdiff_gui(blueprint_mode, elements, name, use_target, target_chain, denoiser_noise_scale_ca, denoiser_noise_scale_frame, target_hotspot, iterations, mask_loops, mask_contacts, use_solubleMPNN, 
-         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen)
+         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen, outputs)
 
     # RFD
     if use_target:
@@ -656,7 +656,7 @@ def main(blueprint_mode, elements, name, use_target, target_chain, denoiser_nois
 
     if "rfdiff" in dir():
         # rfdiff.display_output()
-        rfdiff.diffuse(use_target, num_designs, iterations,
+        rfdiff.diffuse(use_target, num_designs, iterations, outputs,
                     mask_loops=mask_loops,
                     mask_contacts=mask_contacts,
                     extra_cmd=extra_cmd)
@@ -796,7 +796,7 @@ def my_app(cfg : DictConfig) -> None:
         cfg.params.binder_design_target.denoiser_noise_scale_ca, cfg.params.binder_design_target.denoiser_noise_scale_frame, cfg.params.binder_design_target.target_hotspot,
         cfg.params.automated_conditional_fold_blueprint.iterations, cfg.params.automated_conditional_fold_blueprint.mask_loops, cfg.params.automated_conditional_fold_blueprint.trim_loops, cfg.params.automated_conditional_fold_blueprint.mask_contacts,
         cfg.params.ProteinMPNN.use_solubleMPNN, cfg.params.Alphafold.use_multimer, cfg.params.ProteinMPNN.initial_guess, cfg.params.automated_conditional_fold_blueprint.num_designs,
-        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, 'outputs')
+        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, cfg.outputs.directory)
 
 if __name__ == "__main__":
     my_app()
