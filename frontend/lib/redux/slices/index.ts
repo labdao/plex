@@ -8,3 +8,6 @@ export * from './toolListSlice'
 
 export * from './flowAddSlice'
 export * from './flowListSlice'
+export * from './flowDetailSlice'
+
+export * from './jobDetailSlice'

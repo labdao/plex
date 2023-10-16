@@ -125,7 +125,7 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error submitting Bacalhau job: %v", err)
 			continue
 		}
-		submittedIOList[i].State = "processing"
+		submittedIOList[i].State = "new"
 		submittedIOList[i].BacalhauJobId = submittedJob.Metadata.ID
 	}
 	log.Println("returning io submited list")

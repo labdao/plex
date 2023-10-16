@@ -9,13 +9,13 @@ services:
     command: >
       sh -c '
       mkdir -p /home/nonroot/.bacalhau &&
-      echo CAASqAkwggSkAgEAAoIBAQDQubr6zD3DLEQ07K2wPUQEFfVQLfqTQihc8lQOWuihElXcqZJLajK4od5zc+nCQ/jyUmrmOsYd7aKBmXfyTwOBwCaXEpqqxlP+Pal/Ruh+Ptpfl11KP4sHg3P5sYM/bMRJrEtg1k3mbaToioH5I9GrH7zv5LDHUSezbYFCJ4ZyakUgal+GXPx+TpbdhIx93pZXPHzxgd/m1rbSyiR7sUqXAokzKf2Qv1sOnGrHHcKy8DiSrXo+YUyDRC3lQKwaSfyrBFq1BLqE+E383zYIc5yhcV3kSGivQ2v9o67jEbss3f3ogEfXplsAnBh1S+RfcfneUaRs/UC/+8kyWAC0sU1ZAgMBAAECggEAHZZWZPrSvnnl6UKrlFH69EFQlt8NqBY2toY7WBWW6E47EZ6P+FTDf9yiNed2eW09OsxoDt7B+rgW0xw4HocIzjm4vq2Kcy7N9To0brBUgKDUP7yrIr1DLft6UyjQnAsFABSGUuHOBR4BxFzt860aKZHELJVUYcylPhAFxKTpsAoSy68/Zfkz5wjGtC/ImcHIwGub7NKNmbouQQe6p4beOkYmyVsX6RL/7RPMi7Jvspq0nj0V0j/T13XBUH4b862cqs54HuJQjI9j4QijA9SuCySXQfJw2If8sM7z/3w+IwYhp2JIu4oMTIppCvTBgzAmh+7OMqfOlL7av9iMmqQiAQKBgQDyDtX4TxN1JiFdJg8L3AV8e53GE2eAGY7zpiN7CDrACDXeyrni8fIVz4wY5Pf7+E49dI1S67dsyHVb2dK6Gg4tyECXoRHYPMRktw8LJf9QfCfYsGrpoj/yq2UZ5SqU1Uh70h3b7W3vdZXPZO1BBzT2iwTPGQl/0I0bunSTl72gYQKBgQDcv2etOyDp72NaiZduLpia0RVc92MAZLyoWyq4rscfjU0MvkCPyTa6sKjF2uaUDS5R8yVHB/6+2Mzs4LuWWpNtp6b3rG88CXxfbGDIYn2BOXDqQ9s2/ceISkNMq+NbfcUbbNvG920Ot20VKjkl9s7LcEC0cLiVU14oWd8BOV6v+QKBgQDWOk8g7ktYOSD6Ib7bTiUE4RrnvTCy7OvZs8ZfEw97+UhEH8OYmW0Z5JAnUC4xsLb+KPMS2k+CVX+YhRW9Y2X9GugfyovShyWBxYno4f4uq1NQsgJNOC3EhfB6lJm1E3aNL48BoAbWEYk+/iIElW5IbQ0ahRwlJNxeGA0ouvk2wQKBgQDZYfwdEa9V8BItJHXlYSmSu/eHt27dAlbui+jEOgmJPsLzm59EeWfV7QYm4WxTu68zsHezPWJWWnVjh+PzKnsobwLzv/FCdCzwY2/jpWnmicRyTiRgQQXvZwJjTJn2jSI/4bGEfD//UA6x2wSwKB55JK/zgVWkZ5a/sdD0CaT/MQKBgA7CMHQIjXl8FqATmBgiejGV6BnbUHko4m0Ab7fQUZY1qlgKrqcXgFmMQkb+p8Og1YeVn8Qy8xuvueAfwemA8OxvLuQNzQcA2qhGZID4Tu2Ng+XIkNxMj1gJelppqVeDnZSFr3TbZcSXIVhk1idAnpGDilS8cOO6LUY/hH/IVGGe > /home/nonroot/.bacalhau/private_key.1235 &&
+      echo CAASqAkwggSkAgEAAoIBAQDQubr6zD3DLEQ07K2wPUQEFfVQLfqTQihc8lQOWuihElXcqZJLajK4od5zc+nCQ/jyUmrmOsYd7aKBmXfyTwOBwCaXEpqqxlP+Pal/Ruh+Ptpfl11KP4sHg3P5sYM/bMRJrEtg1k3mbaToioH5I9GrH7zv5LDHUSezbYFCJ4ZyakUgal+GXPx+TpbdhIx93pZXPHzxgd/m1rbSyiR7sUqXAokzKf2Qv1sOnGrHHcKy8DiSrXo+YUyDRC3lQKwaSfyrBFq1BLqE+E383zYIc5yhcV3kSGivQ2v9o67jEbss3f3ogEfXplsAnBh1S+RfcfneUaRs/UC/+8kyWAC0sU1ZAgMBAAECggEAHZZWZPrSvnnl6UKrlFH69EFQlt8NqBY2toY7WBWW6E47EZ6P+FTDf9yiNed2eW09OsxoDt7B+rgW0xw4HocIzjm4vq2Kcy7N9To0brBUgKDUP7yrIr1DLft6UyjQnAsFABSGUuHOBR4BxFzt860aKZHELJVUYcylPhAFxKTpsAoSy68/Zfkz5wjGtC/ImcHIwGub7NKNmbouQQe6p4beOkYmyVsX6RL/7RPMi7Jvspq0nj0V0j/T13XBUH4b862cqs54HuJQjI9j4QijA9SuCySXQfJw2If8sM7z/3w+IwYhp2JIu4oMTIppCvTBgzAmh+7OMqfOlL7av9iMmqQiAQKBgQDyDtX4TxN1JiFdJg8L3AV8e53GE2eAGY7zpiN7CDrACDXeyrni8fIVz4wY5Pf7+E49dI1S67dsyHVb2dK6Gg4tyECXoRHYPMRktw8LJf9QfCfYsGrpoj/yq2UZ5SqU1Uh70h3b7W3vdZXPZO1BBzT2iwTPGQl/0I0bunSTl72gYQKBgQDcv2etOyDp72NaiZduLpia0RVc92MAZLyoWyq4rscfjU0MvkCPyTa6sKjF2uaUDS5R8yVHB/6+2Mzs4LuWWpNtp6b3rG88CXxfbGDIYn2BOXDqQ9s2/ceISkNMq+NbfcUbbNvG920Ot20VKjkl9s7LcEC0cLiVU14oWd8BOV6v+QKBgQDWOk8g7ktYOSD6Ib7bTiUE4RrnvTCy7OvZs8ZfEw97+UhEH8OYmW0Z5JAnUC4xsLb+KPMS2k+CVX+YhRW9Y2X9GugfyovShyWBxYno4f4uq1NQsgJNOC3EhfB6lJm1E3aNL48BoAbWEYk+/iIElW5IbQ0ahRwlJNxeGA0ouvk2wQKBgQDZYfwdEa9V8BItJHXlYSmSu/eHt27dAlbui+jEOgmJPsLzm59EeWfV7QYm4WxTu68zsHezPWJWWnVjh+PzKnsobwLzv/FCdCzwY2/jpWnmicRyTiRgQQXvZwJjTJn2jSI/4bGEfD//UA6x2wSwKB55JK/zgVWkZ5a/sdD0CaT/MQKBgA7CMHQIjXl8FqATmBgiejGV6BnbUHko4m0Ab7fQUZY1qlgKrqcXgFmMQkb+p8Og1YeVn8Qy8xuvueAfwemA8OxvLuQNzQcA2qhGZID4Tu2Ng+XIkNxMj1gJelppqVeDnZSFr3TbZcSXIVhk1idAnpGDilS8cOO6LUY/hH/IVGGe > /home/nonroot/.bacalhau/libp2p_private_key &&
       chown -R 65532:65532 /home/nonroot/'
     volumes:
       - requestervolume:/home/nonroot/
 
   requester:
-    image: "ghcr.io/bacalhau-project/bacalhau:v1.0.3"
+    image: "ghcr.io/bacalhau-project/bacalhau:v1.1.1"
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao"
     volumes:
@@ -40,14 +40,14 @@ services:
       requester:
         condition: service_started
     healthcheck:
-      test: curl -f http://requester:1234/readyz
+      test: curl -f http://requester:1234/api/v1/healthz
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 10s
 
   compute:
-    image: "ghcr.io/bacalhau-project/bacalhau:v1.0.3"
+    image: "ghcr.io/bacalhau-project/bacalhau:v1.1.1"
     hostname: compute
     user: root
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1235/p2p/Qmd2oBsjjvtUYRmb7zhDEPhSf9YbxA1a7ZLZ6hyCwMqpnh"
@@ -73,7 +73,7 @@ services:
       compute:
         condition: service_started
     healthcheck:
-      test: curl -f http://compute:1234/readyz
+      test: curl -f http://compute:1234/api/v1/healthz
       interval: 10s
       timeout: 10s
       retries: 10
