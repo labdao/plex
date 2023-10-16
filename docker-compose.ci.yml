@@ -8,4 +8,4 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
-      - /root/.bacalhau/:/root/.bacalhau/
+      - /root/.bacalhau/executor_storages/:/root/.bacalhau/executor_storages/
