@@ -796,7 +796,7 @@ def my_app(cfg : DictConfig) -> None:
         cfg.params.binder_design_target.denoiser_noise_scale_ca, cfg.params.binder_design_target.denoiser_noise_scale_frame, cfg.params.binder_design_target.target_hotspot,
         cfg.params.automated_conditional_fold_blueprint.iterations, cfg.params.automated_conditional_fold_blueprint.mask_loops, cfg.params.automated_conditional_fold_blueprint.trim_loops, cfg.params.automated_conditional_fold_blueprint.mask_contacts,
         cfg.params.ProteinMPNN.use_solubleMPNN, cfg.params.Alphafold.use_multimer, cfg.params.ProteinMPNN.initial_guess, cfg.params.automated_conditional_fold_blueprint.num_designs,
-        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, cfg.outputs.directory)
+        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, 'outputs')
 
 if __name__ == "__main__":
     my_app()
