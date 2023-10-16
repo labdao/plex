@@ -1,5 +1,7 @@
 FROM golang:1.20-buster as builder
  
+ARG BACALHAU_VERSION=1.1.1
+
 # Install deps
 RUN apt-get update && apt-get install -y \
   libssl-dev \
@@ -14,14 +16,13 @@ RUN apt-get update && apt-get -y install ca-certificates
 
 # Needed until we figure out a better way to set the bacalhau config file
 # and a better way to stream logs through the bacalhau Go pkg
-RUN curl -sL https://get.bacalhau.org/install.sh | bash
+ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_arm64.tar.gz /usr/local/bin/
 
 FROM busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/gateway/migrations  /gateway/migrations
-COPY --from=builder /root/.bacalhau /root/.bacalhau
 
 # Copy custom IPFS binary with s3ds and healthcheck plugin
 COPY --from=quay.io/labdao/ipfs@sha256:461646b6ea97dffc86b1816380360be3d38d5a2c6c7c86352a2e3b0a5a4ccca5 /usr/local/bin/ipfs /usr/local/bin/ipfs
@@ -47,7 +48,7 @@ COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
 RUN chmod +x /docker-entrypoint.sh
 
-RUN mkdir -p /data/ipfs
+RUN mkdir -p /data/ipfs /root/.bacalhau
 
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
