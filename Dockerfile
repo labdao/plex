@@ -42,8 +42,7 @@ COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
-# Needed until we figure out a better way to set the bacalhau config file
-# and a better way to stream logs through the bacalhau Go pkg
+# Download bacalhau cli
 ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_arm64.tar.gz /usr/local/bin/
 
 RUN chmod +x /docker-entrypoint.sh /usr/local/bin/bacalhau
