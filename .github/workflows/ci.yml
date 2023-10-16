@@ -227,13 +227,11 @@ jobs:
 
       - name: Run Equibind
         run: |
-          # point towards prod env until docker in docker job launcher is fixed
-          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
-          chmod +x ./bacalhau
-          ./bacalhau version
+          # Execute permission
+          chmod +x ./bacalhau ./plex
 
-          # Add execute permission
-          chmod +x plex
+          # Create bacalhau config file
+          ./bacalhau version
 
           result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           cd "$result_dir/entry-0/outputs"
@@ -252,17 +250,8 @@ jobs:
         # run always even when
         if: always()
         run: |
-          # point towards prod env until docker in docker job launcher is fixed
-          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
-
-          # Execute permission
-          chmod +x ./bacalhau
-          ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
-
-          # revert back to local host for any other steps
-          export BACALHAU_API_HOST="127.0.0.1"
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
@@ -384,8 +373,12 @@ jobs:
         # turn back on once baclahau docker in docker job launcher is fixed
         run: |
           set -x
-          # Add execute permission
-          chmod +x plex ipfs
+
+          # Execute permission
+          chmod +x ./bacalhau ./plex ./ipfs
+
+          # Create bacalhau config file
+          ./bacalhau version
 
           # Run tests against it
           # using temp directory for ipfs stuff
@@ -416,9 +409,6 @@ jobs:
         # run always even when
         if: always()
         run: |
-          # Execute permission
-          chmod +x ./bacalhau
-          ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
 
