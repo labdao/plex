@@ -256,6 +256,13 @@ jobs:
         run: |
           docker compose logs
 
+      - name: Run docker logs to get additional logs
+        # run always even when
+        if: always()
+        run: |
+          docker ps -a
+          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
+
       - name: upload outputs
         # run always even when
         if: always()
@@ -412,6 +419,13 @@ jobs:
         if: always()
         run: |
           docker compose logs
+
+      - name: Run docker logs to get additional logs
+        # run always even when
+        if: always()
+        run: |
+          docker ps -a
+          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
 
       - name: upload outputs
         # run always even when
