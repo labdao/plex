@@ -23,6 +23,7 @@ concurrency:
 
 jobs:
   debug:
+    runs-on: ubuntu-22.04
     steps:
       - name: testing
         run: |
