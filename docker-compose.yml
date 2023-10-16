@@ -125,8 +125,8 @@ services:
     build:
       context: ./frontend
       dockerfile: ./Dockerfile
-      cache_from:
-        - quay.io/labdao/frontend:latest
+        # cache_from:
+        #   - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
