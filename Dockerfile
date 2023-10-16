@@ -1,7 +1,5 @@
 FROM golang:1.20-buster as builder
  
-ARG BACALHAU_VERSION=1.1.1
-
 # Install deps
 RUN apt-get update && apt-get install -y \
   libssl-dev \
@@ -14,11 +12,9 @@ RUN cd /app/ \
 
 RUN apt-get update && apt-get -y install ca-certificates
 
-# Needed until we figure out a better way to set the bacalhau config file
-# and a better way to stream logs through the bacalhau Go pkg
-ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_arm64.tar.gz /usr/local/bin/
-
 FROM busybox:1.31.1-glibc
+
+ARG BACALHAU_VERSION=1.1.1
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
@@ -46,9 +42,13 @@ COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
+# Needed until we figure out a better way to set the bacalhau config file
+# and a better way to stream logs through the bacalhau Go pkg
+ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_arm64.tar.gz /usr/local/bin/
+
 RUN chmod +x /docker-entrypoint.sh /usr/local/bin/bacalhau
 
-RUN mkdir -p /data/ipfs /root/.bacalhau
+RUN mkdir -p /data/ipfs
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
