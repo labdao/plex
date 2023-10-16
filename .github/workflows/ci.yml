@@ -32,7 +32,6 @@ jobs:
           getent passwd
           getent group
 
-jobs:
   go:
     strategy:
       matrix:
