@@ -50,6 +50,9 @@ RUN chmod +x /docker-entrypoint.sh
 
 RUN mkdir -p /data/ipfs /root/.bacalhau
 
+# This creates config file needed by bacalhau golang client
+RUN bacalhau version
+
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
 ENV POSTGRES_DB=labdao
