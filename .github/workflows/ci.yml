@@ -216,6 +216,8 @@ jobs:
         run: |
           # point towards prod env until docker in docker job launcher is fixed
           export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
+          chmod +x ./bacalhau
+          ./bacalhau version
 
           # Add execute permission
           chmod +x plex
