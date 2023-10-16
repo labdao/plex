@@ -22,6 +22,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  debug:
+    steps:
+      - name: testing
+        run: |
+          docker compose version
+          id
+          getent passwd
+          getent group
+
+jobs:
   go:
     strategy:
       matrix:
