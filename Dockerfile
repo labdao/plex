@@ -1,20 +1,23 @@
 FROM golang:1.20-buster as builder
- 
+
+ARG BACALHAU_VERSION=1.1.1
+
 # Install deps
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
   libssl-dev \
   ca-certificates \
   fuse
 
 COPY . /app/
-RUN cd /app/ \
-    && CGO_ENABLED=0 go build -o /go/bin/plex
+WORKDIR /app/
+RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-RUN apt-get update && apt-get -y install ca-certificates
+# Download bacalhau cli
+ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_amd64.tar.gz /tmp/bacalhau.tgz
+
+RUN tar -zxvf /tmp/bacalhau.tgz -C /usr/local/bin/
 
 FROM busybox:1.31.1-glibc
-
-ARG BACALHAU_VERSION=1.1.1
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
@@ -30,7 +33,7 @@ COPY --from=quay.io/labdao/ipfs@sha256:461646b6ea97dffc86b1816380360be3d38d5a2c6
 COPY docker/images/ipfs/container-init.d /container-init.d
 
 # init.d script IPFS runs before starting the daemon. Used to manipulate the IPFS config file.
-COPY docker/images/backend/docker-entrypoint.sh /docker-entrypoint.sh
+COPY --chmod=0755 docker/images/backend/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy jq
 COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
@@ -42,10 +45,8 @@ COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
-# Download bacalhau cli
-ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_arm64.tar.gz /usr/local/bin/
-
-RUN chmod +x /docker-entrypoint.sh /usr/local/bin/bacalhau
+# COPY bacalhau cli
+COPY --from=builder --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 
 RUN mkdir -p /data/ipfs
 
