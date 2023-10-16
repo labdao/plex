@@ -134,6 +134,7 @@ jobs:
     needs:
       - go
       - ci-setup-compose
+      - ci-setup-bacalhau
     strategy:
       matrix:
         os:
@@ -276,6 +277,7 @@ jobs:
       - go
       - ci-setup-compose
       - ci-setup-ipfs
+      - ci-setup-bacalhau
     strategy:
       matrix:
         os: 
