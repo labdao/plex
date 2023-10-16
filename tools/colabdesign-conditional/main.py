@@ -493,7 +493,7 @@ class RFdiff_gui(blueprint_gui):
   #            mask_loops=True,
   #            mask_contacts=False,
   #            extra_cmd=None):
-  def diffuse(self, use_target, num_designs, iterations=50, outputs,
+  def diffuse(self, use_target, num_designs, outputs, iterations=50,
               mask_loops=True,
               mask_contacts=False,
               extra_cmd=None):
@@ -656,7 +656,7 @@ def main(blueprint_mode, elements, name, use_target, target_chain, denoiser_nois
 
     if "rfdiff" in dir():
         # rfdiff.display_output()
-        rfdiff.diffuse(use_target, num_designs, iterations, outputs,
+        rfdiff.diffuse(use_target, num_designs, outputs, iterations,
                     mask_loops=mask_loops,
                     mask_contacts=mask_contacts,
                     extra_cmd=extra_cmd)
