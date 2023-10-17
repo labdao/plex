@@ -1,6 +1,6 @@
 # Try running Bacalhau first, to see what version it is.
 - name: Check bacalhau version
-  ansible.builtin.command: /usr/local/bin/bacalhau version
+  ansible.builtin.command: /usr/local/bin/bacalhau version --client --no-style --hide-header
   register: existing_bacalhau_version
   ignore_errors: true
   changed_when: false
@@ -9,7 +9,7 @@
 
 - name: Set fact for currently installed version
   ansible.builtin.set_fact:
-    bacalhau_installed_version: "{{ existing_bacalhau_version.stdout.split('Server Version: ')[1] }}"
+    bacalhau_installed_version: "{{ existing_bacalhau_version.stdout | trim }}"
   when: existing_bacalhau_version.stdout != ''
 
 - name: Print installed kubo version
