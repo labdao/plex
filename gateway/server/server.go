@@ -35,6 +35,12 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/flows", handlers.AddFlowHandler(db)).Methods("POST")
 	router.HandleFunc("/flows", handlers.ListFlowsHandler(db)).Methods("GET")
+	router.HandleFunc("/flows/{cid}", handlers.GetFlowHandler(db)).Methods("GET")
+	router.HandleFunc("/flows/{cid}", handlers.UpdateFlowHandler(db)).Methods("PATCH")
+
+	router.HandleFunc("/jobs/{bacalhauJobID}", handlers.GetJobHandler(db)).Methods("GET")
+	router.HandleFunc("/jobs/{bacalhauJobID}", handlers.UpdateJobHandler(db)).Methods("PATCH")
+	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
 
 	return router
 }

@@ -73,7 +73,7 @@ func ServeWebApp() {
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL")},
 		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "POST"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH"},
 	})
 
 	mux := server.NewServer(db)

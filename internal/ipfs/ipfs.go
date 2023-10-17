@@ -290,3 +290,34 @@ func IsImage(filepath string) bool {
 		strings.HasSuffix(lowercaseFilePath, ".png") ||
 		strings.HasSuffix(lowercaseFilePath, ".gif")
 }
+
+type FileEntry map[string]string
+
+func getContents(sh *shell.Shell, cid string) ([]FileEntry, error) {
+	links, err := sh.List(cid)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []FileEntry
+	for _, link := range links {
+		if link.Type == shell.TDirectory {
+			subFiles, err := getContents(sh, link.Hash)
+			if err != nil {
+				fmt.Println("Error getting subdirectory links:", err)
+				continue
+			}
+			files = append(files, subFiles...)
+		} else {
+			files = append(files, FileEntry{"filename": link.Name, "CID": link.Hash})
+		}
+	}
+
+	return files, nil
+}
+
+func ListFilesInDirectory(cid string) ([]FileEntry, error) {
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
+	sh := shell.NewShell(ipfsNodeUrl)
+	return getContents(sh, cid)
+}

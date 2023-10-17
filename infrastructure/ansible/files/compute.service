@@ -14,10 +14,13 @@ ExecStart=bacalhau serve \
 {% if ansible_ec2_instance_type is defined %}
   --labels instance-type={{ ansible_ec2_instance_type }} \
 {% endif %}
+{% if ansible_ec2_instance_id is defined %}
+  --labels instance-id={{ ansible_ec2_instance_id }} \
+{% endif %}
   --peer {{ requester_peer }} \
-  --limit-job-memory 12gb \
-{% if gpu %}
-  --limit-job-gpu 1 \
+  --limit-job-memory {{ (ansible_memtotal_mb | int * 0.80) | round | int }}Mb \
+{% if num_of_gpus | int > 0 %}
+  --limit-job-gpu {{ num_of_gpus | int }} \
 {% endif %}
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere

@@ -9,15 +9,16 @@ import {
   selectWalletAddress,
   selectFlowAddLoading,
   selectFlowAddKwargs,
-  selectFlowAddSuccess,
   selectFlowAddError,
   selectFlowAddName,
   setFlowAddError,
   setFlowAddKwargs,
   setFlowAddLoading,
   setFlowAddTool,
+  setFlowAddCid,
   setFlowAddSuccess,
   setFlowAddName,
+  selectFlowAddCid,
   dataFileListThunk,
   selectDataFileListError,
   selectDataFileList,
@@ -47,7 +48,7 @@ export default function AddGraph() {
   const loading = useSelector(selectFlowAddLoading)
   const error = useSelector(selectFlowAddError)
   const kwargs = useSelector(selectFlowAddKwargs)
-  const success = useSelector(selectFlowAddSuccess)
+  const cid = useSelector(selectFlowAddCid)
   const selectedTool = useSelector(selectFlowAddTool)
   const toolListError = useSelector(selectToolListError)
   const dataFileListError = useSelector(selectDataFileListError)
@@ -57,18 +58,19 @@ export default function AddGraph() {
   const [selectedToolIndex, setSelectedToolIndex] = useState('')
 
   useEffect(() => {
-    if (success) {
+    if (cid !== '') {
       dispatch(setFlowAddSuccess(false))
       dispatch(setFlowAddKwargs({}))
       dispatch(setFlowAddTool({ CID: '', WalletAddress: '', Name: '', ToolJson: { inputs: {} }}))
       dispatch(setFlowAddError(null))
       dispatch(setFlowAddName(''))
-      router.push('/flow/list')
+      dispatch(setFlowAddCid(''))
+      router.push(`/flow/detail/${cid}`)
       return
     }
     dispatch(toolListThunk())
     dispatch(dataFileListThunk())
-  }, [success, dispatch])
+  }, [cid, dispatch])
 
   const handleToolChange = (event: any) => {
     dispatch(setFlowAddTool(tools[parseInt(event.target.value)]))

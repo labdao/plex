@@ -2,11 +2,11 @@
   remote_user: ubuntu
   # Ability to override host, useful to running playbook in local mode
   hosts: "{{ target_hosts | default('tag_Type_compute_only') }}"
+  gather_facts: true
   vars:
     nvidia_distribution: ubuntu2004
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"
-    gpu: true
     go_version: 1.20.3
     bacalhau_version: "v1.1.0"
     bacalhau_node_type: "compute"
@@ -14,7 +14,8 @@
     owner: labdao
   tasks:
     # Must provide limit flag to ensure running against correct environment
-    - fail:
+    - name: Checking if limit is provided
+      ansible.builtin.fail:
         msg: "you must use -l or --limit"
       when: ansible_limit is not defined
       run_once: true
@@ -26,10 +27,23 @@
     - name: Install Docker
       ansible.builtin.include_tasks: tasks/install_docker_tasks.yaml
 
+    # Get GPU info from system
+    - name: Get lshw display info
+      become: true
+      ansible.builtin.command: lshw -c display -json
+      changed_when: true
+      register: lshw_output
+
+    - name: set number of gpus available
+      vars:
+        query: "[?vendor=='NVIDIA Corporation']"
+      ansible.builtin.set_fact:
+        num_of_gpus: "{{ lshw_output.stdout | from_json | json_query(query) | length }}"
+
     # GPU
     - name: Install tools and binaries for GPU support
       ansible.builtin.include_tasks: tasks/install_gpu_tasks.yaml
-      when: gpu
+      when: num_of_gpus | int > 0
 
     # Ensure handlers are restarted before continuing
     - name: flush handlers
@@ -45,8 +59,8 @@
       ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
       tags: bacalhau
 
-    - name: Pull common containers
-      ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
+        # - name: Pull common containers
+        #   ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
 
   handlers:
     - name: Restart docker
