@@ -1,0 +1,32 @@
+---
+
+# This workflow is used for linting
+
+name: lint
+
+on:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    environment: ci
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
