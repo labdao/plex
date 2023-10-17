@@ -112,7 +112,7 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	return tool, toolInfo, nil
 }
 
-func toolToCmd2(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
+func toolToCmd2(toolConfig Tool, ioEntry IO, ioGraph []IO) ([]string, error) {
 	arguments := strings.Join(toolConfig.Arguments, " ")
 
 	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
@@ -154,7 +154,8 @@ func toolToCmd2(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
 		}
 	}
 
-	cmd := fmt.Sprintf("%s \"%s\"", strings.Join(toolConfig.BaseCommand, " "), arguments)
+	cmd := toolConfig.BaseCommand
+	cmd = append(cmd, arguments)
 
 	return cmd, nil
 }
