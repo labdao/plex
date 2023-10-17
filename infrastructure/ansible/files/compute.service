@@ -19,8 +19,8 @@ ExecStart=bacalhau serve \
 {% endif %}
   --peer {{ requester_peer }} \
   --limit-job-memory 12gb \
-{% if gpu %}
-  --limit-job-gpu 1 \
+{% if num_of_gpus > 0 %}
+  --limit-job-gpu {{ num_of_gpus }} \
 {% endif %}
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere
