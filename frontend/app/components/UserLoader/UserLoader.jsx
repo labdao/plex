@@ -18,6 +18,7 @@ export const UserLoader = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { ready, authenticated } = usePrivy();
 
+
   const walletAddressFromRedux = useSelector(selectWalletAddress)
 
   useEffect(() => {

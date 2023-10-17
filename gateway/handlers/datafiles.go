@@ -80,7 +80,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// get a single datafile
+// Get a single datafile by CID
 func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -88,12 +88,16 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
-		params := mux.Vars(r)
-		id := params["id"]
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
 
 		var dataFile models.DataFile
-		if result := db.First(&dataFile, id); result.Error != nil {
+		result := db.Where("cid = ?", cid).First(&dataFile)
+		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
@@ -106,16 +110,48 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// gets all datafiles
-func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
+// List datafiles based on multiple parameters
+func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
 			return
 		}
 
+		query := db.Model(&models.DataFile{})
+
+		if cid := r.URL.Query().Get("cid"); cid != "" {
+			query = query.Where("cid = ?", cid)
+		}
+
+		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
+		if filename := r.URL.Query().Get("filename"); filename != "" {
+			query = query.Where("filename = ?", filename)
+		}
+
+		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
+			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
+				return
+			}
+			query = query.Where("timestamp <= ?", parsedTime)
+		}
+
+		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
+			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
+				return
+			}
+			query = query.Where("timestamp >= ?", parsedTime)
+		}
+
 		var dataFiles []models.DataFile
-		if result := db.Find(&dataFiles); result.Error != nil {
+		if result := query.Find(&dataFiles); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
