@@ -51,7 +51,7 @@ export default function ListToolFiles() {
             <TableRow key={index}>
               <TableCell>{tool.Name}</TableCell>
               <TableCell>
-                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${tool.CID}/`}>
+                <a href={`${process.env.GATEWAY_ENDPOINT}${tool.CID}/`}>
                   {tool.CID}
                 </a>
               </TableCell>

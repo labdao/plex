@@ -44,7 +44,7 @@ export default function ListToolFiles() {
                 </Link>
               </TableCell>
               <TableCell>
-                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${flow.CID}/`}>
+                <a href={`${process.env.GATEWAY_ENDPOINT}${flow.CID}/`}>
                   {flow.CID}
                 </a>
               </TableCell>
