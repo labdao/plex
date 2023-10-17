@@ -88,6 +88,8 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			job.State = "processing"
 		} else if updatedJob.State.State == model.JobStateCompleted {
 			job.State = "completed"
+		} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
+			job.State = "failed"
 		}
 		log.Println("Updated job")
 
