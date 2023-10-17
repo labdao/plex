@@ -1,10 +1,25 @@
 /* Instruments */
-import { dataFileAddSlice, userSlice, toolAddSlice } from './slices'
-import { jobSlice } from './slices/jobSlice'
+import {
+  userSlice,
+  dataFileAddSlice,
+  dataFileListSlice,
+  toolAddSlice,
+  toolListSlice,
+  flowAddSlice,
+  flowListSlice,
+  flowDetailSlice,
+  jobDetailSlice,
+} from './slices'
+
 
 export const reducer = {
   user: userSlice.reducer,
   dataFileAdd: dataFileAddSlice.reducer,
+  dataFileList: dataFileListSlice.reducer,
   toolAdd: toolAddSlice.reducer,
-  job: jobSlice.reducer,
+  toolList: toolListSlice.reducer,
+  flowAdd: flowAddSlice.reducer,
+  flowList: flowListSlice.reducer,
+  flowDetail: flowDetailSlice.reducer,
+  jobDetail: jobDetailSlice.reducer,
 }

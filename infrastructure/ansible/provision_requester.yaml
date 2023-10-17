@@ -4,7 +4,7 @@
   vars:
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"
-    bacalhau_version: "v1.0.3"
+    bacalhau_version: "v1.1.0"
     bacalhau_node_type: "requester"
     ipfs_connect: /ip4/127.0.0.1/tcp/5001
     owner: labdao

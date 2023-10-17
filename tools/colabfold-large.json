@@ -15,7 +15,7 @@
       "sequence": {
         "type": "File",
         "item": "",
-        "glob": "*.fasta"
+        "glob": ["*.fasta"]
       },
       "recycle": {
         "type": "int",

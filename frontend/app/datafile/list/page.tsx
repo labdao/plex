@@ -20,7 +20,7 @@ export default function ListDataFiles() {
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
 
   useEffect(() => {
-    fetch(`${backendUrl()}/get-datafiles`)
+    fetch(`${backendUrl()}/datafiles`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);

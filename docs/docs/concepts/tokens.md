@@ -4,7 +4,7 @@ sidebar_position: 5
 sidebar_label: Tokens
 ---
 
-**ProofOfScience** represents plex's unique approach to preserving, acknowledging, and ensuring the reproducibility of scientific computations. By leveraging the power of blockchain, each computation in plex can be minted into an [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) token called a ProofOfScience Non-Fungible Token (NFT).
+[**Records**](https://medium.com/@labdao/introducing-records-tokens-for-scientific-creation-d938fbf553e4) represent plex's unique approach to preserving, acknowledging, and ensuring the reproducibility of scientific computations. By leveraging the power of blockchain, each computation in plex can be minted as an [ERC-1155](https://ethereum.org/en/developers/docs/standards/tokens/erc-1155/) NFT.
 
 ## Minting with `plex_mint`
 
@@ -60,7 +60,7 @@ By providing this level of transparency and detail, others can validate, reprodu
 
 ## Reproducibility and Acknowledgement
 
-Storing computations as ProofOfScience tokens on-chain sets a gold standard for scientific reproducibility. It becomes an immutable record of achievement, open to scrutiny and validation by peers.
+Storing computations as Records on-chain sets a gold standard for scientific reproducibility. It becomes an immutable record of achievement, open to scrutiny and validation by peers.
 
 ## Gasless Transactions
 

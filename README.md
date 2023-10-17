@@ -122,7 +122,7 @@ Note:
 docker compose build --parallel
 
 # Build and bring up stack
-docker compose up -d
+docker compose up -d --wait
 ```
 
 To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
@@ -132,7 +132,7 @@ To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.
 > Requirement to have `ipfs` available locally.
 
 ```
-docker compose -f docker-compose.yml -f docker-compose.private.yml  up -d
+docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 ```
 To run `plex` cli against local private environment `export` the following params to your shell before executing `plex` commands:
 ```
@@ -153,7 +153,7 @@ export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJC
 
 ## Running backend database only
 ```
-docker compose up -d dbbackend
+docker compose up -d dbbackend --wait
 ```
 
 
