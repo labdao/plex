@@ -111,7 +111,7 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 			memory = *toolConfig.MemoryGB
 		}
 		log.Println("creating bacalhau job")
-		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)

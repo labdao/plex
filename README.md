@@ -15,9 +15,6 @@
     <a href="https://img.shields.io/github/downloads/labdao/plex/total">
         <img src="https://img.shields.io/github/downloads/labdao/plex/total" alt="total download">
     </a>
-    <a href="https://github.com/labdao/plex/actions/workflows/go.yml" alt="Tests">
-        <img src="https://github.com/labdao/plex/actions/workflows/go.yml/badge.svg" />
-    </a>
     <a href="https://labdao.xyz/">
         <img alt="LabDAO website" src="https://img.shields.io/badge/website-labdao.xyz-red">
     </a>

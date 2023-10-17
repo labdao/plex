@@ -30,37 +30,27 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJobV2(inputs map[string]string, container, selector string, cmd []string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	log.Println("Creating job inside v2 function")
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
 	}
-	cmdJoined := strings.Join([]string{"/bin/bash", "-c", cmd}, " ")
+	fmt.Println("container cmd", cmd)
 	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).
-		WithEntrypoint(cmdJoined).Build()
+		WithEntrypoint(cmd...).Build()
 	job.Spec.PublisherSpec = model.PublisherSpec{
 		Type: model.PublisherIpfs,
 	}
 	job.Spec.Annotations = annotations
 	job.Spec.Timeout = int64(maxTime * 60)
-	job.Spec.Engine = model.EngineDocker
-	job.Spec.Docker.Image = container
-	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
 
-	// plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	// if selector == "" && plexEnv == "stage" {
-	// 	selector = "owner=labdaostage"
-	// } else if selector == "" && plexEnv == "prod" {
-	// 	selector = "owner=labdao"
-	// }
-	// nodeSelectorRequirements, err := parse.NodeSelector(selector)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// job.Spec.NodeSelectors = nodeSelectorRequirements
+	nodeSelectorRequirements, err := parse.NodeSelector(selector)
+	if err != nil {
+		return nil, err
+	}
+	job.Spec.NodeSelectors = nodeSelectorRequirements
 
-	log.Println("Checking memory arg")
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
 	}
@@ -71,14 +61,13 @@ func CreateBacalhauJobV2(inputs map[string]string, container, cmd, selector stri
 		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	}
 	job.Spec.Inputs = []model.StorageSpec{}
-	log.Println("mapping inputs")
 	for key, cid := range inputs {
 		job.Spec.Inputs = append(job.Spec.Inputs,
 			// ToDo for arrays split by comma and put inside a dir that is key/index
 			model.StorageSpec{
 				StorageSource: model.StorageSourceIPFS,
 				CID:           cid,
-				Path:          "/" + key,
+				Path:          "/inputs/" + key,
 			})
 	}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
