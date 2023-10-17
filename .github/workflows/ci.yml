@@ -63,22 +63,18 @@ jobs:
       - name: Test
         run: go test ./... -v
 
-  # Only downloading cli for linux
+  # Only downloading cli for macos
   ci-setup-compose:
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [macos-13]
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
       - name: Download docker compose
         run: |
           # Download docker-compose plugin
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
-          fi
+          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
 
       - name: upload docker-compose plugin to be used later
         uses: actions/upload-artifact@v3
