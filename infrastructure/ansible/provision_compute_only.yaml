@@ -35,7 +35,7 @@
 
     - name: set number of gpus available
       vars:
-        query: "[?configuration.driver=='nvidia']"
+        query: "[?vendor=='NVIDIA Corporation']"
       ansible.builtin.set_fact:
         num_of_gpus: "{{ lshw_output.stdout | from_json | json_query(query) | length }}"
 
