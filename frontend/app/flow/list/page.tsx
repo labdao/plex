@@ -44,7 +44,7 @@ export default function ListToolFiles() {
                 </Link>
               </TableCell>
               <TableCell>
-                <a href={`${process.env.GATEWAY_ENDPOINT}${flow.CID}/`}>
+                <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${flow.CID}/`}>
                   {flow.CID}
                 </a>
               </TableCell>

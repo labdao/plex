@@ -65,13 +65,13 @@ jobs:
       - name: Build and push
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-          GATEWAY_ENDPOINT: ${{ matrix.backends.gateway }}
+          NEXT_PUBLIC_GATEWAY_ENDPOINT: ${{ matrix.backends.gateway }}
         uses: docker/build-push-action@v5
         with:
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
             NEXT_PUBLIC_PRIVY_APP_ID
-            GATEWAY_ENDPOINT
+            NEXT_PUBLIC_GATEWAY_ENDPOINT
           push: true
           context: frontend/
           tags: ${{ steps.meta.outputs.tags }}

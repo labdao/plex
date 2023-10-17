@@ -51,7 +51,7 @@ export default function ListToolFiles() {
             <TableRow key={index}>
               <TableCell>{tool.Name}</TableCell>
               <TableCell>
-                <a href={`${process.env.GATEWAY_ENDPOINT}${tool.CID}/`}>
+                <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${tool.CID}/`}>
                   {tool.CID}
                 </a>
               </TableCell>
