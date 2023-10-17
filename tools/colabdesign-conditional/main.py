@@ -614,10 +614,10 @@ class RFdiff_gui(blueprint_gui):
       progress.description = "stopped"
 
 def main(blueprint_mode, elements, name, use_target, target_chain, denoiser_noise_scale_ca, denoiser_noise_scale_frame, target_hotspot, iterations, mask_loops, trim_loops, mask_contacts, use_solubleMPNN, 
-         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen, pdb, outputs):
+         use_multimer, initial_guess, num_designs, mpnn_sampling_temp, rm_aa, num_recycles, num_seqs, target_pdb, buff_length, def_ss, def_cont, def_elen, pdb, outputs, chain):
 
     if blueprint_mode == "automated":
-        pdb_feats = from_pdb(pdb, chains="D", trim_loops=trim_loops)
+        pdb_feats = from_pdb(pdb, chains=chain, trim_loops=trim_loops)
         buff_length=(5 if trim_loops else 0)
         rfdiff = RFdiff_gui(**pdb_feats, blueprint_mode=blueprint_mode, elements=elements, name=name, use_target=use_target, target_chain=target_chain, denoiser_noise_scale_ca=denoiser_noise_scale_ca, denoiser_noise_scale_frame=denoiser_noise_scale_frame, target_hotspot=target_hotspot, iterations=iterations, mask_loops=mask_loops, mask_contacts=mask_contacts, use_solubleMPNN=use_solubleMPNN, 
          use_multimer=use_multimer, initial_guess=initial_guess, num_designs=num_designs, mpnn_sampling_temp=mpnn_sampling_temp, rm_aa=rm_aa, num_recycles=num_recycles, num_seqs=num_seqs, target_pdb=target_pdb, buff_length=buff_length, def_ss=def_ss, def_cont=def_cont, def_elen=def_elen, outputs=outputs)
@@ -796,7 +796,7 @@ def my_app(cfg : DictConfig) -> None:
         cfg.params.binder_design_target.denoiser_noise_scale_ca, cfg.params.binder_design_target.denoiser_noise_scale_frame, cfg.params.binder_design_target.target_hotspot,
         cfg.params.automated_conditional_fold_blueprint.iterations, cfg.params.automated_conditional_fold_blueprint.mask_loops, cfg.params.automated_conditional_fold_blueprint.trim_loops, cfg.params.automated_conditional_fold_blueprint.mask_contacts,
         cfg.params.ProteinMPNN.use_solubleMPNN, cfg.params.Alphafold.use_multimer, cfg.params.ProteinMPNN.initial_guess, cfg.params.automated_conditional_fold_blueprint.num_designs,
-        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, cfg.outputs.directory)
+        cfg.params.ProteinMPNN.mpnn_sampling_temp, cfg.params.ProteinMPNN.rm_aa, cfg.params.Alphafold.num_recycles, cfg.params.ProteinMPNN.num_seqs, target_pdb, cfg.params.buff_length, cfg.params.def_ss, cfg.params.def_cont, cfg.params.def_elen, binder_template_pdb, cfg.outputs.directory, cfg.params.automated_conditional_fold_blueprint.chain)
 
 if __name__ == "__main__":
     my_app()
