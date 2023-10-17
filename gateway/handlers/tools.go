@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -102,7 +103,8 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		cid := r.URL.Query().Get("cid")
+		vars := mux.Vars(r)
+		cid := vars["cid"]
 		if cid == "" {
 			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
 			return
