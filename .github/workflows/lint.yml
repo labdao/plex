@@ -30,3 +30,4 @@ jobs:
       - uses: hadolint/hadolint-action@v3.1.0
         with:
           recursive: true
+          failure-threshold: warning
