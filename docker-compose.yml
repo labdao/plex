@@ -130,6 +130,7 @@ services:
       args:
         NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
         NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: $NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT
     environment:
       NODE_ENV: 'production'
     ports:
