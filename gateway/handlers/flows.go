@@ -255,6 +255,8 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 				flow.Jobs[index].State = "processing"
 			} else if updatedJob.State.State == model.JobStateCompleted {
 				flow.Jobs[index].State = "completed"
+			} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
+				flow.Jobs[index].State = "failed"
 			}
 
 			log.Println("Updated job")
