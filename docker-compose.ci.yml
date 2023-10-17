@@ -5,7 +5,7 @@ version: "3.7"
 
 services:
   compute:
-    user: 1001
+    user: "1001"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
