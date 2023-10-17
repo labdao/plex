@@ -25,9 +25,9 @@ jobs:
     strategy:
       matrix:
         backends: [
-          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: `http://bacalhau.stg.labdao.xyz:8080/ipfs/`}, 
-          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: `http://bacalhau.prod.labdao.xyz:8080/ipfs/`}, 
-          { env: local, url: 'http://localhost:8080', gateway: `http://bacalhau.labdao.xyz:8080/ipfs/`}
+          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'}, 
+          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'}, 
+          { env: local, url: 'http://localhost:8080', gateway: 'http://bacalhau.labdao.xyz:8080/ipfs/'}
         ]
     runs-on: ubuntu-latest
     steps:
