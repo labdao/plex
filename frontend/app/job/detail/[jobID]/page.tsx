@@ -88,7 +88,7 @@ export default function JobDetail() {
             {job.Inputs.map((inputDatafile, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${inputDatafile.CID}/`}>
+                  <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${inputDatafile.CID}/`}>
                     {inputDatafile.CID}
                   </a>
                 </TableCell>
@@ -113,7 +113,7 @@ export default function JobDetail() {
             {job.Outputs.map((outputDatafile, index) => (
               <TableRow key={index}>
                 <TableCell>
-                  <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${outputDatafile.CID}/`}>
+                  <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${outputDatafile.CID}/`}>
                     {outputDatafile.CID}
                   </a>
                 </TableCell>

@@ -47,7 +47,7 @@ export default function ListDataFiles() {
           {datafiles.map((datafile, index) => (
             <TableRow key={index}>
               <TableCell>
-                <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${datafile.CID}/`}>
+                <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${datafile.CID}/`}>
                   {datafile.CID}
                 </a>
               </TableCell>

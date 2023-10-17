@@ -40,12 +40,12 @@ export default function FlowDetail() {
   return (
     <Box maxWidth={800} margin="auto">
       <Typography gutterBottom>
-        <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${flow.CID}/`}>
+        <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${flow.CID}/`}>
           Name: {flow.Name}
         </a>
       </Typography>
       <Typography gutterBottom>
-        <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${flow.CID}/`}>
+        <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${flow.CID}/`}>
           CID: {flow.CID}
         </a>
       </Typography>
@@ -90,7 +90,7 @@ export default function FlowDetail() {
                 </TableCell>
                 <TableCell>{job.Tool.Name}</TableCell>
                 <TableCell>
-                  <a href={`${process.env.NEXT_PUBLIC_GATEWAY_ENDPOINT}${job.Tool.CID}/`}>
+                  <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.Tool.CID}/`}>
                     {job.Tool.CID}
                   </a>
                 </TableCell>
