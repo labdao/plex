@@ -52,7 +52,7 @@ Node:
         JobSelection:
             Locality: anywhere
             RejectStatelessJobs: false
-            AcceptNetworkedJobs: false
+            AcceptNetworkedJobs: true
             ProbeHTTP: ""
             ProbeExec: ""
         Queue:
