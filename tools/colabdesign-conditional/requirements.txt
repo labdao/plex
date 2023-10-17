@@ -1,0 +1,2 @@
+py3Dmol==2.0.4
+pydssp

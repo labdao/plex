@@ -17,7 +17,7 @@ if not os.path.isdir("RFdiffusion"):
   os.system("pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
   os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .")
 
-  os.system("pip -q install py3Dmol pydssp")
+  # os.system("pip -q install py3Dmol pydssp")
   os.system("wget -qnc https://raw.githubusercontent.com/sokrypton/ColabDesign/v1.1.1/colabdesign/rf/blueprint.js")
   os.system("wget -qnc https://raw.githubusercontent.com/sokrypton/ColabDesign/v1.1.1/colabdesign/rf/blueprint.css")
 
