@@ -2,6 +2,7 @@
   remote_user: ubuntu
   # Ability to override host, useful to running playbook in local mode
   hosts: "{{ target_hosts | default('tag_Type_compute_only') }}"
+  gather_facts: true
   vars:
     nvidia_distribution: ubuntu2004
     ipfs_version: "0.18.0"
