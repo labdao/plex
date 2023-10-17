@@ -47,7 +47,7 @@ Node:
             JobExecutionTimeoutClientIDBypassList: []
             JobNegotiationTimeout: 3m0s
             MinJobExecutionTimeout: 500ms
-            MaxJobExecutionTimeout: "{{ bacalhau_compute_max_job_execution_timeout | default('24h') }}"
+            MaxJobExecutionTimeout: {{ bacalhau_compute_max_job_execution_timeout | default('24h') }}
             DefaultJobExecutionTimeout: 10m0s
         JobSelection:
             Locality: anywhere
