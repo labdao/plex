@@ -79,9 +79,37 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// get datafile(s) based on multiple parameters
-// returns all datafiles if no parameters are specified
-func GetDataFilesHandler(db *gorm.DB) http.HandlerFunc {
+// Get a single datafile by CID
+func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		cid := r.URL.Query().Get("cid")
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var dataFile models.DataFile
+		result := db.Where("cid = ?", cid).First(&dataFile)
+		if result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(dataFile); err != nil {
+			http.Error(w, "Error encoding datafile to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// List datafiles based on multiple parameters
+func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)

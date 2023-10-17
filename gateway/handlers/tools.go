@@ -94,7 +94,37 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func GetToolsHandler(db *gorm.DB) http.HandlerFunc {
+// Get a single tool by CID
+func GetToolHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		cid := r.URL.Query().Get("cid")
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var tool models.Tool
+		result := db.Where("cid = ?", cid).First(&tool)
+		if result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(tool); err != nil {
+			http.Error(w, "Error encoding tool to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// List tools based on multiple parameters
+func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
