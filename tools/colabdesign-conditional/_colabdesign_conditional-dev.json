@@ -6,6 +6,8 @@
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
         "mkdir -p conf/params && mkdir -p conf/inputs && mkdir -p conf/outputs",
+        "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/requirements.txt;",
+        "pip install -r requirements.txt;",
         "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/install.py;",
         "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/main.py;",
         "wget https://raw.githubusercontent.com/labdao/plex/adding_colabdesign_conditional/tools/colabdesign-conditional/conf/inputs/container.yaml && mv container.yaml conf/inputs;",
