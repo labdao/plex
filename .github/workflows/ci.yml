@@ -53,24 +53,24 @@ jobs:
       - name: Test
         run: go test ./... -v
 
-  # Only downloading cli for macos
-  ci-setup-compose:
-    strategy:
-      matrix:
-        os: [macos-13]
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - name: Download docker compose
-        run: |
-          # Download docker-compose plugin
-          curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
+          # # Only downloading cli for macos
+          # ci-setup-compose:
+          #   strategy:
+          #     matrix:
+          #       os: [macos-13]
+          #   runs-on: ${{ matrix.os }}
+          #   environment: ci
+          #   steps:
+          #     - name: Download docker compose
+          #       run: |
+          #         # Download docker-compose plugin
+          #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
 
-      - name: upload docker-compose plugin to be used later
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
-          path: ./docker-compose
+          #     - name: upload docker-compose plugin to be used later
+          #       uses: actions/upload-artifact@v3
+          #       with:
+          #         name: docker-compose-plugin-${{matrix.os}}
+          #         path: ./docker-compose
 
   ci-setup-ipfs:
     strategy:
@@ -129,7 +129,7 @@ jobs:
   ci-public:
     needs:
       - go
-      - ci-setup-compose
+        # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
       matrix:
@@ -269,7 +269,7 @@ jobs:
   ci-private:
     needs:
       - go
-      - ci-setup-compose
+        # - ci-setup-compose
       - ci-setup-ipfs
       - ci-setup-bacalhau
     strategy:
