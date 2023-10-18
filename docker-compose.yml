@@ -171,8 +171,10 @@ services:
         condition: service_healthy
 
   ipfs:
-    image: "ipfs/kubo"
+    image: "ipfs/kubo:v0.18.0"
     hostname: ipfs
+    environment:
+      IPFS_LOGGING: "debug"
     volumes:
       - ipfs:/data/ipfs
     ports:
