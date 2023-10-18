@@ -199,7 +199,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose
-          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --wait
+          docker compose -f docker-compose.yml up -d --wait
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
@@ -343,7 +343,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml -f docker-compose.ci.yml up -d --wait
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 

@@ -56,6 +56,7 @@ services:
       DOCKER_DEFAULT_PLATFORM: linux/amd64
       # Keep containers around - I think
       KEEP_STACK: "true"
+      BACALHAU_DIR: /tmp/bacalhau
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
