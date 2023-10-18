@@ -216,6 +216,9 @@ jobs:
           # Create bacalhau config file
           ./bacalhau version
 
+          # Pull equibind image before running the job to get better idea of job run
+          docker pull $(cat tools/equibind.json | jq -r '.dockerPull')
+
           result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
           cd "$result_dir/entry-0/outputs"
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
@@ -347,6 +350,9 @@ jobs:
 
           # Create bacalhau config file
           ./bacalhau version
+
+          # Pull equibind image before running the job to get better idea of job run
+          docker pull $(cat tools/equibind.json | jq -r '.dockerPull')
 
           # Run tests against it
           # using temp directory for ipfs stuff
