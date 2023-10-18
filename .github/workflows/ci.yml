@@ -299,12 +299,6 @@ jobs:
         with:
           name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
-      - name: download docker compose plugin artifact
-        if: runner.os != 'macos'
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
-
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
