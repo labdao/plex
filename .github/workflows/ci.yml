@@ -317,12 +317,6 @@ jobs:
       - name: Setup docker compose plugin
         if: runner.os != 'macos'
         run: |
-          # Install docker-compose
-          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-          mkdir -p $DOCKER_CONFIG/cli-plugins
-          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
-          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
           # Output version info
           docker version
           docker compose version
