@@ -770,16 +770,21 @@ def my_app(cfg : DictConfig) -> None:
     # # defining receptor file paths
     # input_receptor_path = get_files_from_directory(cfg.inputs.receptors_directory, '.pdb')
     # input_ligand_path = get_files_from_directory(cfg.inputs.ligands_directory, '.pdb')
-    target_pdb = get_files_from_directory(cfg.inputs.target_protein_directory, '.pdb')
-    binder_template_pdb = get_files_from_directory(cfg.inputs.binder_protein_template_directory, '.pdb')
+    if os.path.isdir(cfg.inputs.target_protein_directory):
+      target_pdb = get_files_from_directory(cfg.inputs.target_protein_directory, '.pdb')
+      binder_template_pdb = get_files_from_directory(cfg.inputs.binder_protein_template_directory, '.pdb')
 
-    # filtering receptor and ligand files if pattern is available
-    if cfg.inputs.target_protein_pattern is not None:
-        target_pdb = [file for file in target_pdb if cfg.inputs.target_protein_pattern in file]
-        print("Retained target: ", target_pdb)
-    if cfg.inputs.binder_protein_template_pattern is not None:
-        binder_template_pdb = [file for file in binder_template_pdb if cfg.inputs.binder_protein_template_pattern in file]
-        print("Retained binder template : ", binder_template_pdb)
+      # filtering receptor and ligand files if pattern is available
+      if cfg.inputs.target_protein_pattern is not None:
+          target_pdb = [file for file in target_pdb if cfg.inputs.target_protein_pattern in file]
+          print("Retained target: ", target_pdb)
+      if cfg.inputs.binder_protein_template_pattern is not None:
+          binder_template_pdb = [file for file in binder_template_pdb if cfg.inputs.binder_protein_template_pattern in file]
+          print("Retained binder template : ", binder_template_pdb)
+          
+    elif os.path.isfile(cfg.inputs.target_protein_directory):
+      target_pdb = [cfg.inputs.target_protein_directory]
+      binder_template_pdb = [cfg.inputs.binder_protein_template_directory]
 
     # Check if more than one file is retained
     if len(target_pdb) > 1 or len(binder_template_pdb) > 1:
