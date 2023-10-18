@@ -132,7 +132,8 @@ services:
         - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
-        NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8080/ipfs/}
     environment:
       NODE_ENV: 'production'
     ports:

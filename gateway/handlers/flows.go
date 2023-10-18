@@ -255,6 +255,8 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 				flow.Jobs[index].State = "processing"
 			} else if updatedJob.State.State == model.JobStateCompleted {
 				flow.Jobs[index].State = "completed"
+			} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
+				flow.Jobs[index].State = "failed"
 			}
 
 			log.Println("Updated job")
@@ -282,8 +284,22 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		query := db.Model(&models.Flow{})
+
+		if cid := r.URL.Query().Get("cid"); cid != "" {
+			query = query.Where("cid = ?", cid)
+		}
+
+		if name := r.URL.Query().Get("name"); name != "" {
+			query = query.Where("name = ?", name)
+		}
+
+		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
 		var flows []models.Flow
-		if result := db.Find(&flows); result.Error != nil {
+		if result := query.Preload("Jobs").Find(&flows); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching Flows: %v", result.Error), http.StatusInternalServerError)
 			return
 		}

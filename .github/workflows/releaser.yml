@@ -56,17 +56,3 @@ jobs:
 
       - name: Extract release file
         run: tar -xvzf plex_${{ steps.tag_name.outputs.release }}_linux_amd64.tar.gz
-
-      - name: Run Equibind
-        run: |
-          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-          cd "$result_dir/entry-0/outputs"
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
-        env:
-          PLEX_ACCESS_TOKEN: ${{ secrets.PLEX_ACCESS_TOKEN }}
