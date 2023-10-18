@@ -226,9 +226,6 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
-          # revert back to local host for any other steps
-          export BACALHAU_API_HOST="127.0.0.1"
-
       - name: Run bacalhau describe
         # run always even when
         if: always()
