@@ -10,6 +10,7 @@
       ],
     "dockerPull": "quay.io/labdao/colabdesign@sha256:800f4532138afa9664278d6af4769a6f2c3e30fa554cb53e4a0e9491c10bb48a",
     "gpuBool": true,
+    "memoryGB": 12,
     "networkBool": true,
     "inputs": {
       "target_protein": {
