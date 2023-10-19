@@ -53,28 +53,24 @@ jobs:
       - name: Test
         run: go test ./... -v
 
-  # Only downloading cli for linux
-  ci-setup-compose:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - name: Download docker compose
-        run: |
-          # Download docker-compose plugin
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-linux-x86_64 -o docker-compose
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
-          fi
+          # # Only downloading cli for macos
+          # ci-setup-compose:
+          #   strategy:
+          #     matrix:
+          #       os: [macos-13]
+          #   runs-on: ${{ matrix.os }}
+          #   environment: ci
+          #   steps:
+          #     - name: Download docker compose
+          #       run: |
+          #         # Download docker-compose plugin
+          #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
 
-      - name: upload docker-compose plugin to be used later
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
-          path: ./docker-compose
+          #     - name: upload docker-compose plugin to be used later
+          #       uses: actions/upload-artifact@v3
+          #       with:
+          #         name: docker-compose-plugin-${{matrix.os}}
+          #         path: ./docker-compose
 
   ci-setup-ipfs:
     strategy:
@@ -101,7 +97,7 @@ jobs:
         with:
           name: ipfs-binary-${{matrix.os}}
           path: ./kubo/ipfs
- 
+
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
@@ -133,7 +129,7 @@ jobs:
   ci-public:
     needs:
       - go
-      - ci-setup-compose
+        # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
       matrix:
@@ -147,6 +143,7 @@ jobs:
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      LOG_LEVEL: trace
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -160,12 +157,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
-
-      - name: download docker compose plugin artifact
-        if: runner.os != 'macos'
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
 
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
@@ -185,12 +176,6 @@ jobs:
       - name: Setup docker compose plugin
         if: runner.os != 'macos'
         run: |
-          # Install docker-compose
-          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-          mkdir -p $DOCKER_CONFIG/cli-plugins
-          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
-          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
           # Output version info
           docker version
           docker compose version
@@ -205,7 +190,7 @@ jobs:
       - name: Bring up the stack
         run: |
           # Setup docker compose
-          docker compose up -d --wait
+          docker compose -f docker-compose.yml up -d --wait
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
@@ -216,16 +201,28 @@ jobs:
 
       - name: Run Equibind
         run: |
-          # point towards prod env until docker in docker job launcher is fixed
-          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
-          chmod +x ./bacalhau
+          # Execute permission
+          chmod +x ./bacalhau ./plex
+
+          # Dump BACALHAU_API_HOST
+          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
+
+          # Create bacalhau config file
           ./bacalhau version
 
-          # Add execute permission
-          chmod +x plex
+          # Pull equibind image before running the job to get better idea of job run
+          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
 
-          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          # Get node list
+          ./bacalhau node list
+
+          # Run the job
+          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | tee -a plex_run_output.log
+          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+
+          # chdir for outputs
           cd "$result_dir/entry-0/outputs"
+
           if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
             exit 1
@@ -234,24 +231,12 @@ jobs:
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
 
-          # revert back to local host for any other steps
-          export BACALHAU_API_HOST="127.0.0.1"
-
       - name: Run bacalhau describe
         # run always even when
         if: always()
         run: |
-          # point towards prod env until docker in docker job launcher is fixed
-          export BACALHAU_API_HOST=bacalhau.prod.labdao.xyz
-
-          # Execute permission
-          chmod +x ./bacalhau
-          ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
-
-          # revert back to local host for any other steps
-          export BACALHAU_API_HOST="127.0.0.1"
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
@@ -262,6 +247,13 @@ jobs:
         run: |
           docker compose logs
 
+      - name: Run docker logs to get additional logs
+        # run always even when
+        if: always()
+        run: |
+          docker ps -a
+          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
+
       - name: upload outputs
         # run always even when
         if: always()
@@ -269,18 +261,19 @@ jobs:
         with:
           name: ci-public-output-${{matrix.os}}-${{matrix.bacalhau_version}}
           path: |
+            plex_run_output.log
             job-*
             jobs/
 
   ci-private:
     needs:
       - go
-      - ci-setup-compose
+        # - ci-setup-compose
       - ci-setup-ipfs
       - ci-setup-bacalhau
     strategy:
       matrix:
-        os: 
+        os:
           - ubuntu-22.04
           # -  macos-13
         bacalhau_version:
@@ -290,6 +283,7 @@ jobs:
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
+      LOG_LEVEL: trace
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -309,12 +303,6 @@ jobs:
         with:
           name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
 
-      - name: download docker compose plugin artifact
-        if: runner.os != 'macos'
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-plugin-${{matrix.os}}
-
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
         run: |
@@ -333,12 +321,6 @@ jobs:
       - name: Setup docker compose plugin
         if: runner.os != 'macos'
         run: |
-          # Install docker-compose
-          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-          mkdir -p $DOCKER_CONFIG/cli-plugins
-          mv docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
-          chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
           # Output version info
           docker version
           docker compose version
@@ -364,11 +346,23 @@ jobs:
 
       - name: Run Equibind
         # turn back on once baclahau docker in docker job launcher is fixed
-        if: false
         run: |
           set -x
-          # Add execute permission
-          chmod +x plex ipfs
+
+          # Execute permission
+          chmod +x ./bacalhau ./plex ./ipfs
+
+          # Dump BACALHAU_API_HOST
+          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
+
+          # Create bacalhau config file
+          ./bacalhau version
+
+          # Pull equibind image before running the job to get better idea of job run
+          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
+
+          # Get node list
+          ./bacalhau node list
 
           # Run tests against it
           # using temp directory for ipfs stuff
@@ -382,8 +376,12 @@ jobs:
 
           export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
           export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
+          export BACALHAU_NODE_IPFS_SWARMADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
 
-          result_dir=$(./plex init -t tools/equibind.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+          # Run the job
+          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | tee -a plex_run_output.log
+          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+
           cd "$result_dir/entry-0/outputs"
           ls -ltraR
           cat exitCode stderr stderr log.txt || true
@@ -396,12 +394,9 @@ jobs:
           fi
 
       - name: Run bacalhau describe
-        # turn back on once baclahau docker in docker job launcher is fixed
-        if: false
+        # run always even when
+        if: always()
         run: |
-          # Execute permission
-          chmod +x ./bacalhau
-          ./bacalhau version
           JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
           ./bacalhau describe ${JOB_ID}
 
@@ -414,6 +409,13 @@ jobs:
         run: |
           docker compose logs
 
+      - name: Run docker logs to get additional logs
+        # run always even when
+        if: always()
+        run: |
+          docker ps -a
+          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
+
       - name: upload outputs
         # run always even when
         if: always()
@@ -421,5 +423,6 @@ jobs:
         with:
           name: ci-private-output-${{matrix.os}}-${{matrix.bacalhau_version}}
           path: |
+            plex_run_output.log
             job-*
             jobs/
