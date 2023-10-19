@@ -205,7 +205,7 @@ jobs:
           chmod +x ./bacalhau ./plex
 
           # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to $${BACALHAU_API_HOST}"
+          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
 
           # Create bacalhau config file
           ./bacalhau version
@@ -353,7 +353,7 @@ jobs:
           chmod +x ./bacalhau ./plex ./ipfs
 
           # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to $${BACALHAU_API_HOST}"
+          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
 
           # Create bacalhau config file
           ./bacalhau version
