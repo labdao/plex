@@ -115,39 +115,51 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	return job, err
 }
 
-func CreateBacalhauClient() *client.APIClient {
+func CreateBacalhauClient() (*client.APIClient, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	bacalhauConfigDirPath := filepath.Join(home, ".bacalhau")
 	config.SetUserKey(filepath.Join(bacalhauConfigDirPath, "user_id.pem"))
 	config.SetLibp2pKey(filepath.Join(bacalhauConfigDirPath, "libp2p_private_key"))
 	defaultConfig := config.ForEnvironment()
+	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
+		defaultConfig.Node.IPFS.SwarmAddresses = []string{os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")}
+	}
 	_, err = config.Init(defaultConfig, filepath.Join(home, ".bacalhau"), "config", "yaml")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	apiHost := GetBacalhauApiHost()
 	apiPort := uint16(1234)
 	client := client.NewAPIClient(apiHost, apiPort)
-	return client
+	return client, err
 }
 
 func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
-	client := CreateBacalhauClient()
+	client, err := CreateBacalhauClient()
+	if err != nil {
+		return nil, err
+	}
 	submittedJob, err = client.Submit(context.Background(), job)
 	return submittedJob, err
 }
 
 func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
-	client := CreateBacalhauClient()
+	client, err := CreateBacalhauClient()
+	if err != nil {
+		return nil, err
+	}
 	updatedJob, _, err := client.Get(context.Background(), jobId)
 	return updatedJob, err
 }
 
 func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime int) (results []model.PublishedResult, err error) {
-	client := CreateBacalhauClient()
+	client, err := CreateBacalhauClient()
+	if err != nil {
+		return nil, err
+	}
 
 	sleepConstant := 2
 	maxTrys := maxTime * 60 / sleepConstant
@@ -197,9 +209,6 @@ func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []mode
 		Timeout:   model.DefaultDownloadTimeout,
 		OutputDir: dir,
 	}
-	// if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
-	// 	downloadSettings.IPFSSwarmAddrs = os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")
-	// }
 	downloadSettings.OutputDir = dir
 	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
 	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
