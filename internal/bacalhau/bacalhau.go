@@ -127,6 +127,7 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
 		defaultConfig.Node.IPFS.SwarmAddresses = []string{os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")}
 	}
+	config.Set(defaultConfig)
 	_, err = config.Init(defaultConfig, filepath.Join(home, ".bacalhau"), "config", "yaml")
 	if err != nil {
 		return nil, err
