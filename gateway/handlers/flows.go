@@ -304,8 +304,6 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		log.Println("Fetched flows from DB: ", flows)
-
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flows); err != nil {
 			http.Error(w, "Error encoding Flows to JSON", http.StatusInternalServerError)
