@@ -11,5 +11,5 @@ A key feature of plex is its strict composability, ensuring each tool has define
 * [Data](data.md)
 * [Tools](tools.md)
 * [Input / Output](io.md)
-* [Tokens](tokens.md)
+* [Records](records.md)
 * [Additional resources](resources.md)

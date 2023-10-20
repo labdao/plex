@@ -54,6 +54,9 @@ services:
     environment:
       LOG_LEVEL: trace
       DOCKER_DEFAULT_PLATFORM: linux/amd64
+      # Keep containers around - I think
+      KEEP_STACK: "true"
+      BACALHAU_DIR: /tmp/bacalhau
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
@@ -129,7 +132,8 @@ services:
         - quay.io/labdao/frontend:latest
       args:
         NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
-        NEXT_PUBLIC_BACKEND_URL: http://localhost:8080
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8080/ipfs/}
     environment:
       NODE_ENV: 'production'
     ports:
@@ -167,8 +171,10 @@ services:
         condition: service_healthy
 
   ipfs:
-    image: "ipfs/kubo"
+    image: "ipfs/kubo:v0.18.0"
     hostname: ipfs
+    environment:
+      IPFS_LOGGING: "debug"
     volumes:
       - ipfs:/data/ipfs
     ports:
