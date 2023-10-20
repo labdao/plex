@@ -53,5 +53,4 @@ jobs:
           cache-from: |
             quay.io/labdao/backend:main
           push: true
-          context: /
           tags: ${{ steps.meta.outputs.tags }}
