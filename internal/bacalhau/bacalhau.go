@@ -121,14 +121,17 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 		return nil, err
 	}
 	bacalhauConfigDirPath := filepath.Join(home, ".bacalhau")
-	defaultConfig := config.ForEnvironment()
+	bacalhauConfig, err := config.Load(bacalhauConfigDirPath, "config", "yaml")
+	if err != nil {
+		return nil, err
+	}
 	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
-		defaultConfig.Node.IPFS.SwarmAddresses = []string{os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")}
+		bacalhauConfig.Node.IPFS.SwarmAddresses = []string{os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")}
 	}
 	config.SetUserKey(filepath.Join(bacalhauConfigDirPath, "user_id.pem"))
 	config.SetLibp2pKey(filepath.Join(bacalhauConfigDirPath, "libp2p_private_key"))
-	config.Set(defaultConfig)
-	_, err = config.Init(defaultConfig, filepath.Join(home, ".bacalhau"), "config", "yaml")
+	config.Set(bacalhauConfig)
+	_, err = config.Init(bacalhauConfig, bacalhauConfigDirPath, "config", "yaml")
 	if err != nil {
 		return nil, err
 	}
