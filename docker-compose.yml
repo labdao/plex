@@ -133,7 +133,7 @@ services:
       args:
         NEXT_PUBLIC_PRIVY_APP_ID: $NEXT_PUBLIC_PRIVY_APP_ID
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
-        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8080/ipfs/}
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
     environment:
       NODE_ENV: 'production'
     ports:
@@ -175,11 +175,13 @@ services:
     hostname: ipfs
     environment:
       IPFS_LOGGING: "debug"
+      IPFS_GATEWAY_PORT: "8888"
     volumes:
       - ipfs:/data/ipfs
     ports:
       - 4001:4001
       - 5001:5001
+      - 8888:8888
 
 volumes:
   requestervolume:
