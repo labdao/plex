@@ -6,7 +6,7 @@ FROM continuumio/miniconda3
 ENV PYTHONUNBUFFERED 1
 
 # Install necessary libraries for rdkit
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     libboost-dev \
     libboost-system-dev \

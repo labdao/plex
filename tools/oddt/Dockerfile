@@ -1,7 +1,7 @@
 FROM continuumio/miniconda3:22.11.1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     python3-dev \
     libeigen3-dev \
