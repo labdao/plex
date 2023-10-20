@@ -131,6 +131,10 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 	config.SetUserKey(filepath.Join(bacalhauConfigDirPath, "user_id.pem"))
 	config.SetLibp2pKey(filepath.Join(bacalhauConfigDirPath, "libp2p_private_key"))
 	config.Set(bacalhauConfig)
+
+	// need to write config because Bacalhau Downloader re-reads from config file not the in memory config
+	config.WriteConfig(filepath.Join(bacalhauConfigDirPath, "config.yaml"))
+
 	_, err = config.Init(bacalhauConfig, bacalhauConfigDirPath, "config", "yaml")
 	if err != nil {
 		return nil, err
