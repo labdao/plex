@@ -5,6 +5,7 @@ import React, { useContext, useEffect } from 'react'
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 
 import { useRouter } from 'next/navigation'
 
@@ -25,6 +26,7 @@ export const TopNav = () => {
   const router = useRouter()
   const { ready, authenticated, user, exportWallet } = usePrivy();
   const walletAddress = useSelector(selectWalletAddress)
+  const [isHovered, setIsHovered] = React.useState(false);
 
   const { logout } = usePrivy();
 
@@ -33,6 +35,14 @@ export const TopNav = () => {
 
   const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
     setAnchorEl(event.currentTarget)
+  }
+
+  const handleCopyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(walletAddress);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
   }
 
   const handleClose = () => {
@@ -74,7 +84,13 @@ export const TopNav = () => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick={handleClose}>Wallet: { walletAddress }</MenuItem>
+            <MenuItem
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              onClick={handleCopyToClipboard}
+            >
+              <strong>Wallet:</strong> {walletAddress} {isHovered && <span style={{ marginLeft: '8px' }}><ContentCopyIcon /></span>}
+            </MenuItem>
             <div title={!hasEmbeddedWallet ? 'Export wallet only available for embedded wallets.' : ''}>
               <MenuItem 
                 onClick={handleExportWallet} 
