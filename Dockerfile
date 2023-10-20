@@ -17,6 +17,8 @@ ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_V
 
 RUN tar -zxvf /tmp/bacalhau.tgz -C /usr/local/bin/
 
+FROM ghcr.io/jqlang/jq as jq
+
 FROM busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/plex /plex
@@ -36,7 +38,7 @@ COPY docker/images/ipfs/container-init.d /container-init.d
 COPY --chmod=0755 docker/images/backend/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy jq
-COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
+COPY --from=jq /jq /usr/local/bin/jq
 
 # This shared lib (part of glibc) doesn't seem to be included with busybox.
 COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/

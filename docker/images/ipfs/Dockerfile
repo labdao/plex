@@ -1,9 +1,11 @@
+FROM ghcr.io/jqlang/jq as jq
+
 ARG IPFS_VERSION=0.18.0
 
 # IPFS container with all the utilities
 FROM ipfs/kubo:v${IPFS_VERSION} AS ipfs-with-utils
 # Copy jq
-COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
+COPY --from=jq /jq /usr/local/bin/jq
 
 # Download curl
 ADD https://github.com/moparisthebest/static-curl/releases/download/v8.2.1/curl-amd64 /usr/local/bin/curl
