@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { PrivyProvider, User } from '@privy-io/react-auth';
 import { PrivyAuthContext } from './PrivyContext';
+import { optimismGoerli } from '@wagmi/chains';
 
 export default function PrivyProviderWrapper({
     children,   
@@ -27,7 +28,9 @@ export default function PrivyProviderWrapper({
                         theme: "dark",
                         accentColor: "#6bdaad",
                         logo: "https://imgur.com/6egHxy0.png"
-                    }
+                    },
+                    defaultChain: optimismGoerli,
+                    supportedChains: [optimismGoerli]
                 }}
             >
                 {children}
