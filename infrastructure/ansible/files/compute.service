@@ -2,6 +2,7 @@
 Description=Bacalhau
 
 [Service]
+Environment="KEEP_STACK=true"
 Restart=on-failure
 RestartSec=5s
 User=ubuntu
