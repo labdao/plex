@@ -4,7 +4,7 @@
   hosts: "{{ target_hosts | default('tag_Type_compute_only') }}"
   gather_facts: true
   vars:
-    nvidia_distribution: ubuntu2004
+    nvidia_distribution: ubuntu2204
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"
     go_version: 1.20.3
