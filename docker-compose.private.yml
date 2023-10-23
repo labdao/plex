@@ -6,7 +6,6 @@
 
 services:
   ipfs:
-    image: private_ipfs
     build:
       context: ./docker/images/ipfs
       dockerfile: ./Dockerfile
