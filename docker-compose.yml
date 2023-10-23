@@ -7,8 +7,6 @@ services:
     image: "ghcr.io/bacalhau-project/bacalhau:v1.1.2"
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
-    volumes:
-      - requestervolume:/home/nonroot/
     environment:
       # BACALHAU_ENVIRONMENT: production
       LOG_LEVEL: trace
@@ -37,7 +35,7 @@ services:
     image: "ghcr.io/bacalhau-project/bacalhau:v1.1.2"
     hostname: compute
     user: root
-    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --max-job-execution-timeout "24h"
+    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --max-job-execution-timeout "24h"
     environment:
       LOG_LEVEL: trace
       DOCKER_DEFAULT_PLATFORM: linux/amd64
@@ -158,20 +156,21 @@ services:
         condition: service_healthy
 
   ipfs:
-    image: "ipfs/kubo:v0.18.0"
     hostname: ipfs
+    build:
+      context: ./docker/images/ipfs
+      dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/ipfs:latest
     environment:
       IPFS_LOGGING: "debug"
       IPFS_GATEWAY_PORT: "8888"
-    volumes:
-      - ipfs:/data/ipfs
+      IPFS_DEBUG: "true"
     ports:
       - 4001:4001
       - 5001:5001
       - 8888:8888
 
 volumes:
-  requestervolume:
-  ipfs:
   dbdata-backend:
   dbdata-receptor:
