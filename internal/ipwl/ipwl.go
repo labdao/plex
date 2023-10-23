@@ -300,7 +300,12 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector 
 		fmt.Println("Downloading Bacalhau job")
 		fmt.Printf("Output dir of %s \n", outputsDirPath)
 	}
-	err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
+
+	for _, result := range results {
+		fmt.Printf("Downloading result %s to %s \n", result.Data.CID, outputsDirPath)
+		err = ipfs.DownloadToDirectory(result.Data.CID, outputsDirPath)
+	}
+
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error downloading Bacalhau results: %w", err)
