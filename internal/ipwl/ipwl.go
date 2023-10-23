@@ -311,12 +311,6 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector 
 		return fmt.Errorf("error downloading Bacalhau results: %w", err)
 	}
 
-	// err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
-	// if err != nil {
-	//	updateIOWithError(ioJsonPath, index, err, fileMutex)
-	//	return fmt.Errorf("error downloading Bacalhau results: %w", err)
-	//}
-
 	if verbose {
 		fmt.Println("Cleaning Bacalhau job")
 	}
