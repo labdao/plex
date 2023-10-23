@@ -106,7 +106,7 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.0
+          - 1.1.2
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -137,9 +137,11 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.0
+          - 1.1.2
     runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
@@ -277,9 +279,11 @@ jobs:
           - ubuntu-22.04
           # -  macos-13
         bacalhau_version:
-          - 1.1.0
+          - 1.1.2
     runs-on: ${{ matrix.os }}
     environment: ci
+    env:
+      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
     env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
