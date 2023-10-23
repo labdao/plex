@@ -51,7 +51,7 @@
 - name: Set requester_peer url
   ansible.builtin.set_fact:
     requester_peer: "/dns4/{{ requester_hostname }}/tcp/1234/http"
-  when: requester_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+  when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
 
 - name: Set ipfs connect url
   ansible.builtin.set_fact:
