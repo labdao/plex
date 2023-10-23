@@ -142,7 +142,6 @@ jobs:
     environment: ci
     env:
       BACALHAU_VERSION: ${{matrix.bacalhau_version}}
-    env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
       LOG_LEVEL: trace
@@ -284,7 +283,6 @@ jobs:
     environment: ci
     env:
       BACALHAU_VERSION: ${{matrix.bacalhau_version}}
-    env:
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
       LOG_LEVEL: trace
