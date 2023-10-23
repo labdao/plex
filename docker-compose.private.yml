@@ -20,6 +20,7 @@ services:
       LIBP2P_FORCE_PNET: "1"
       IPFS_DEBUG: "true"
       IPFS_LOGGING: "debug"
+      IPFS_GATEWAY_PORT: "8888"
     volumes:
       - privateipfs:/data/ipfs
 
