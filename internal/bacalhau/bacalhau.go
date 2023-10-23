@@ -3,7 +3,6 @@ package bacalhau
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,7 +16,6 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
-	"gopkg.in/yaml.v3"
 )
 
 func GetBacalhauApiHost() string {
@@ -117,46 +115,6 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	return job, err
 }
 
-// Define a simplified struct that only captures the SwarmAddresses field
-type Config struct {
-	Node struct {
-		IPFS struct {
-			SwarmAddresses []string `yaml:"SwarmAddresses"`
-		} `yaml:"IPFS"`
-	}
-}
-
-func modifySwarmAddresses(filePath string, newAddresses []string) error {
-	// Read YAML from file
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("error reading from file: %v", err)
-	}
-
-	var config Config
-
-	// Parse the YAML into the struct
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return fmt.Errorf("error parsing YAML: %v", err)
-	}
-
-	// Overwrite the SwarmAddresses values
-	config.Node.IPFS.SwarmAddresses = newAddresses
-
-	// Marshal the struct back to YAML
-	updatedYAML, err := yaml.Marshal(&config)
-	if err != nil {
-		return fmt.Errorf("error marshaling to YAML: %v", err)
-	}
-
-	// Save the updated YAML back to the file
-	if err := ioutil.WriteFile(filePath, updatedYAML, 0644); err != nil {
-		return fmt.Errorf("error writing to file: %v", err)
-	}
-
-	return nil
-}
-
 func CreateBacalhauClient() (*client.APIClient, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -170,11 +128,6 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 	if os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES") != "" {
 		swarmAddresses := []string{os.Getenv("BACALHAU_IPFS_SWARM_ADDRESSES")}
 		bacalhauConfig.Node.IPFS.SwarmAddresses = swarmAddresses
-
-		// need to write config because Bacalhau Downloader re-reads from config file not the in memory config
-		if err := modifySwarmAddresses(filepath.Join(bacalhauConfigDirPath, "config.yaml"), swarmAddresses); err != nil {
-			return nil, err
-		}
 	}
 	config.SetUserKey(filepath.Join(bacalhauConfigDirPath, "user_id.pem"))
 	config.SetLibp2pKey(filepath.Join(bacalhauConfigDirPath, "libp2p_private_key"))
