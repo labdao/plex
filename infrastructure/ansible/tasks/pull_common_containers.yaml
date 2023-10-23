@@ -3,6 +3,9 @@
     name: "{{ item }}"
     source: pull
   loop:
+    - "ubuntu"
+    - "alpine"
+    - "nvidia/cuda"
     - "dfam/tetools:1.85"
     - "docker.io/mcmenemy/plex-dlkcat@sha256:92cfec2676bc5b8d75ee37c0fc31eb9c2e43c73a2acce2e4aaa60066b7a56f38"
     - "ghcr.io/labdao/diffdock:main@sha256:b00432de73478d3da578e4a16ee669178828109f3c7bf9c58d44bb7514f68629"
