@@ -48,18 +48,9 @@
     receptor_hostname: "receptor.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
   when: ansible_ec2_tags_instance_Env is defined
 
-# Bacalhau PeerID, example `curl -s bacalhau.staging.labdao.xyz:1234/node_info | jq -r '.PeerInfo.ID'`
-- name: Determine requester bacalhau peer id
-  ansible.builtin.uri:
-    url: "http://{{ requester_hostname }}:1234/node_info"
-    return_content: true
-  register: requester_output
-  when: requester_hostname is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
-
 - name: Set requester_peer url
   ansible.builtin.set_fact:
-    # requester_peer: /dns4/requester.staging.labdao.xyz/tcp/1235/p2p/QmeLa2fx2FMNDWbeY3UqjELc1MbKwNxggcmdBmLZepY6VK
-    requester_peer: "/dns4/{{ requester_hostname }}/tcp/1235/p2p/{{ requester_output.content | from_json | community.general.json_query('PeerInfo.ID') }}"
+    requester_peer: "/dns4/{{ requester_hostname }}/tcp/1234/http"
   when: requester_output is defined and ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
 
 - name: Set ipfs connect url
@@ -97,16 +88,16 @@
     state: started
     enabled: true
 
-- name: Flush handler to ensure Bacalhau is running
-  ansible.builtin.meta: flush_handlers
-
-- name: Deploy config file
-  become: true
-  ansible.builtin.template:
-    src: "files/{{ bacalhau_node_type }}.yaml"
-    dest: /home/ubuntu/.bacalhau/config.yaml
-    owner: ubuntu
-    group: ubuntu
-    mode: "0644"
-  notify:
-    - Restart Bacalhau
+      # - name: Flush handler to ensure Bacalhau is running
+      #   ansible.builtin.meta: flush_handlers
+      #
+      # - name: Deploy config file
+      #   become: true
+      #   ansible.builtin.template:
+      #     src: "files/{{ bacalhau_node_type }}.yaml"
+      #     dest: /home/ubuntu/.bacalhau/config.yaml
+      #     owner: ubuntu
+      #     group: ubuntu
+      #     mode: "0644"
+      #   notify:
+      #     - Restart Bacalhau
