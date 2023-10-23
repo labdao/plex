@@ -89,6 +89,8 @@ services:
       context: .
       cache_from:
         - quay.io/labdao/backend:latest
+      args:
+        BACALHAU_VERSION: ${BACALHAU_VERSION:-1.1.1}
     ports:
       - 8080:8080
     environment:
