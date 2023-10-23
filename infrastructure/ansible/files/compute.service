@@ -19,7 +19,7 @@ ExecStart=bacalhau serve \
   --labels instance-id={{ ansible_ec2_instance_id }} \
 {% endif %}
   --job-selection-probe-http {{ receptor_url }} \
-  --max-job-execution-timeout "{{ bacalhau_compute_max_job_execution_timeout | default('24h') }}" \
+  --max-job-execution-timeout "{{ bacalhau_max_job_execution_timeout | default('24h') }}" \
   --peer {{ requester_peer }} \
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere
