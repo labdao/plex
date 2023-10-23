@@ -9,7 +9,7 @@ if [ -n "${IPFS_DATASTORE_STORAGEMAX}" ]; then
   ipfs config Datastore.StorageMax "${IPFS_DATASTORE_STORAGEMAX}"
 fi
 
-if [ -N "${IPFS_DATASTORE_STORAGEGCWATERMARK}" ]; then
+if [ -n "${IPFS_DATASTORE_STORAGEGCWATERMARK}" ]; then
   ipfs config Datastore.StorageGCWatermark "${IPFS_DATASTORE_STORAGEGCWATERMARK}"
 fi
 
