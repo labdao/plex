@@ -3,12 +3,13 @@ import { saveUserDataToServer } from './actions'
 
 interface UserPayload {
   walletAddress: string,
+  isMember: boolean,
 }
 
 export const saveUserAsync = createAppAsyncThunk(
   'user/saveUserDataToServer',
-  async ({walletAddress}: {walletAddress: string}) => {
-    const result = await saveUserDataToServer(walletAddress);
+  async ({walletAddress, isMember}: UserPayload) => {
+    const result = await saveUserDataToServer(walletAddress, isMember);
     return result;
   }
 )

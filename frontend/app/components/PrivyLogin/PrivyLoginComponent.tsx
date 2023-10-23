@@ -22,11 +22,12 @@ const PrivyLoginComponent: React.FC = () => {
                 router.push('/');
             } else if (isNewUser) {
                 console.log('New user');
-                dispatch(saveUserAsync({ walletAddress }));
+                dispatch(saveUserAsync({ walletAddress, isMember: false }));
                 dispatch(setIsLoggedIn(true));
                 router.push('/');
             } else if (user) {
                 console.log('User authenticated');
+                dispatch(saveUserAsync({ walletAddress, isMember: false }));
                 dispatch(setIsLoggedIn(true));
                 router.push('/');
             }
