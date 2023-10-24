@@ -12,6 +12,7 @@
     "@mantine/hooks": "^7.0.2",
     "@mui/icons-material": "^5.14.3",
     "@privy-io/react-auth": "latest",
+    "@privy-io/wagmi-connector": "^0.1.5",
     "@reduxjs/toolkit": "1.9.5",
     "@wagmi/chains": "^1.8.0",
     "ethereumjs-util": "^7.1.5",
@@ -19,7 +20,8 @@
     "next": "latest",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-redux": "8.1.0"
+    "react-redux": "8.1.0",
+    "wagmi": "^1.4.5"
   },
   "devDependencies": {
     "@types/node": "20.3.1",
