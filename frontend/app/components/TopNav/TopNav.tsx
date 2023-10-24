@@ -21,6 +21,9 @@ import {
 import { usePrivy } from '@privy-io/react-auth';
 import { PrivyAuthContext } from '../../../lib/PrivyContext';
 
+import { useSignMessage } from 'wagmi';
+import { recoverMessageAddress } from 'viem'
+
 export const TopNav = () => {
   const dispatch = useDispatch()
   const router = useRouter()
