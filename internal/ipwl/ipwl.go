@@ -59,11 +59,6 @@ func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, m
 		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
 	}
 
-	if maxTime > 60 {
-		fmt.Println("Error: maxTime cannot exceed 60 minutes")
-		os.Exit(1)
-	}
-
 	retry := false
 	fmt.Println("Processing IO Entries")
 	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, annotations)
