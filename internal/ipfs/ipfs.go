@@ -113,11 +113,8 @@ func DownloadToDirectory(cid, directory string) error {
 	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
-	// Construct the full directory path where the CID content will be downloaded
-	downloadPath := path.Join(directory, cid)
-
 	// Use the Get method to download the file or directory with the specified CID
-	err := sh.Get(cid, downloadPath)
+	err := sh.Get(cid, directory)
 	if err != nil {
 		return err
 	}
@@ -289,4 +286,35 @@ func IsImage(filepath string) bool {
 		strings.HasSuffix(lowercaseFilePath, ".jpeg") ||
 		strings.HasSuffix(lowercaseFilePath, ".png") ||
 		strings.HasSuffix(lowercaseFilePath, ".gif")
+}
+
+type FileEntry map[string]string
+
+func getContents(sh *shell.Shell, cid string) ([]FileEntry, error) {
+	links, err := sh.List(cid)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []FileEntry
+	for _, link := range links {
+		if link.Type == shell.TDirectory {
+			subFiles, err := getContents(sh, link.Hash)
+			if err != nil {
+				fmt.Println("Error getting subdirectory links:", err)
+				continue
+			}
+			files = append(files, subFiles...)
+		} else {
+			files = append(files, FileEntry{"filename": link.Name, "CID": link.Hash})
+		}
+	}
+
+	return files, nil
+}
+
+func ListFilesInDirectory(cid string) ([]FileEntry, error) {
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
+	sh := shell.NewShell(ipfsNodeUrl)
+	return getContents(sh, cid)
 }

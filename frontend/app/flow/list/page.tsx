@@ -7,6 +7,7 @@ import {
   flowListThunk,
   selectFlowList,
 } from '@/lib/redux'
+import Link from 'next/link'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -37,9 +38,13 @@ export default function ListToolFiles() {
         <TableBody>
           {flows.map((flow, index) => (
             <TableRow key={index}>
-              <TableCell>{flow.Name}</TableCell>
               <TableCell>
-                <a href={`http://bacalhau.labdao.xyz:8080/ipfs/${flow.CID}/`}>
+                <Link href={`/flow/detail/${flow.CID}`}>
+                  {flow.Name}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${flow.CID}/`}>
                   {flow.CID}
                 </a>
               </TableCell>

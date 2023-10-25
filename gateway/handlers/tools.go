@@ -95,6 +95,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+// Get a single tool by CID
 func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -102,12 +103,16 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
-		params := mux.Vars(r)
-		cid := params["cid"]
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
 
 		var tool models.Tool
-		if result := db.First(&tool, "cid = ?", cid); result.Error != nil {
+		result := db.Where("cid = ?", cid).First(&tool)
+		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tool: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
@@ -120,20 +125,33 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func GetToolsHandler(db *gorm.DB) http.HandlerFunc {
+// List tools based on multiple parameters
+func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
 			return
 		}
 
+		query := db.Model(&models.Tool{})
+
+		if cid := r.URL.Query().Get("cid"); cid != "" {
+			query = query.Where("cid = ?", cid)
+		}
+
+		if name := r.URL.Query().Get("name"); name != "" {
+			query = query.Where("name = ?", name)
+		}
+
+		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
 		var tools []models.Tool
-		if result := db.Find(&tools); result.Error != nil {
+		if result := query.Find(&tools); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching tools: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
-
-		log.Println("Fetching tools from DB: ", tools)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(tools); err != nil {

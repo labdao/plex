@@ -4,11 +4,17 @@ export interface Tool {
   CID: string
   WalletAddress: string
   Name: string
+}
+
+export interface ToolDetail {
+  CID: string
+  WalletAddress: string
+  Name: string
   ToolJson: {inputs: {}}
 }
 
 interface ToolListSliceState {
-  tools: Tool[]
+  tools: ToolDetail[]
   loading: boolean
   error: string | null
   success: boolean
@@ -25,7 +31,7 @@ export const toolListSlice = createSlice({
   name: 'toolList',
   initialState,
   reducers: {
-    setToolList: (state, action: PayloadAction<Tool[]>) => {
+    setToolList: (state, action: PayloadAction<ToolDetail[]>) => {
       state.tools = action.payload
     },
     setToolListLoading: (state, action: PayloadAction<boolean>) => {
