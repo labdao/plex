@@ -20,7 +20,7 @@ export default function PrivyProviderWrapper({
     return (
         <PrivyAuthContext.Provider value={{ user, authenticated }}>
             <PrivyProvider
-                appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
+                appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'clo7adk6w07q7jq0f08yrnkur'}
                 onSuccess={handleLogin}
                 config={{
                     appearance: {
