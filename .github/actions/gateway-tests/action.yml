@@ -66,10 +66,10 @@ runs:
 
         cid_value=$(echo "$response" | jq -r '.cid')
 
-        if [ "$cid_value" == "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2" ]; then
+        if [ "$cid_value" == "QmdkNTB5yz4x83HTVrwMw9cxPE4t5Szyae8PSPC5igdxXJ" ]; then
            echo "Add Tool upload test passed"
         else
-           echo "Add Tool upload test failed: Expected 'QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2' but got '$cid_value'"
+           echo "Add Tool upload test failed: Expected 'QmdkNTB5yz4x83HTVrwMw9cxPE4t5Szyae8PSPC5igdxXJ' but got '$cid_value'"
            exit 1
         fi
       shell: bash
@@ -92,7 +92,7 @@ runs:
         payload='{
           "name": "testFlow",
           "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-          "toolCid": "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2",
+          "toolCid": "QmdkNTB5yz4x83HTVrwMw9cxPE4t5Szyae8PSPC5igdxXJ",
           "scatteringMethod": "dotProduct",
           "kwargs": {
             "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
