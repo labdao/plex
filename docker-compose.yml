@@ -35,7 +35,7 @@ services:
     image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.2}"
     hostname: compute
     user: root
-    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --max-job-execution-timeout "24h" --job-selection-accept-networked --job-selection-data-locality anywhere --limit-job-cpu 1.2
+    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --max-job-execution-timeout "24h" --job-selection-accept-networked --job-selection-data-locality anywhere
     environment:
       LOG_LEVEL: trace
       DOCKER_DEFAULT_PLATFORM: linux/amd64
