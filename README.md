@@ -94,6 +94,15 @@ go build
 
 # Setup
 
+## Frontend Development Only
+```
+$ export NEXT_PUBLIC_BACKEND_URL=https://api.prod.labdao.xyz
+$ export NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=http://bacalhau.prod.labdao.xyz:8080/ipfs/
+$ cd frontend
+$ npm install
+$ npm run dev
+```
+
 * Install [docker](https://docs.docker.com/engine/install/)
 * Define necessary env variables
 ```
