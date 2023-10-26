@@ -105,8 +105,16 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 		} else {
 			memory = *toolConfig.MemoryGB
 		}
+
+		var cpu float64
+		if toolConfig.Cpu == nil {
+			cpu = 0
+		} else {
+			cpu = *toolConfig.Cpu
+		}
+
 		log.Println("creating bacalhau job")
-		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)
@@ -260,8 +268,13 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector 
 	} else {
 		memory = *toolConfig.MemoryGB
 	}
-
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+	var cpu float64
+	if toolConfig.Cpu == nil {
+		cpu = 0
+	} else {
+		cpu = *toolConfig.Cpu
+	}
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating Bacalhau job: %w", err)
