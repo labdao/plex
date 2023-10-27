@@ -22,8 +22,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docker:
+  backend:
     runs-on: ubuntu-latest
+    outputs:
+      backed_image_digest: 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +50,7 @@ jobs:
           password: ${{ secrets.LABDAO_QUAY_PASSWORD }}
 
       - name: Build and push
+        id: build-and-push
         uses: docker/build-push-action@v5
         with:
           cache-from: |
