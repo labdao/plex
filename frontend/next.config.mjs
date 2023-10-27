@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/tool/list",
+        destination: "/models",
         permanent: true,
       },
     ];

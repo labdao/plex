@@ -23,8 +23,8 @@ import { NavLink } from "./NavLink";
 
 const navItems = [
   {
-    title: "Tools",
-    href: "/tool/list",
+    title: "Models",
+    href: "/models",
   },
   {
     title: "Flows",
@@ -64,51 +64,52 @@ export default function Header() {
       <Link href="/" className="flex items-center gap-4 font-bold uppercase text-lg">
         <Logo className="h-8 w-auto" /> Lab Exchange
       </Link>
+      {authenticated && (
+        <>
+          <div className="flex gap-8 ml-16 mr-auto">
+            {navItems.map((navItem, idx) => (
+              <NavLink key={idx} href={navItem.href} className="font-medium uppercase">
+                {navItem.title}
+              </NavLink>
+            ))}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <User />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent collisionPadding={10}>
+              {user?.email?.address && (
+                <>
+                  <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
 
-      <div className="flex gap-8 ml-16 mr-auto">
-        {navItems.map((navItem, idx) => (
-          <NavLink key={idx} href={navItem.href} className="font-medium uppercase">
-            {navItem.title}
-          </NavLink>
-        ))}
-      </div>
+              {walletAddress && (
+                <>
+                  <DropdownMenuLabel>
+                    Wallet: <em className="font-normal">{walletAddress}</em>
+                  </DropdownMenuLabel>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger>
-          <User />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent collisionPadding={10}>
-          {user?.email?.address && (
-            <>
-              <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-            </>
-          )}
-
-          {walletAddress && (
-            <>
-              <DropdownMenuLabel>
-                Wallet: <em className="font-normal">{walletAddress}</em>
-              </DropdownMenuLabel>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <DropdownMenuItem disabled={!hasEmbeddedWallet} onClick={handleExportWallet}>
-                      <DownloadIcon size={20} className="mr-1" />
-                      Export Wallet
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent>Export wallet only available for embedded wallets.</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <DropdownMenuSeparator />
-            </>
-          )}
-          <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <DropdownMenuItem disabled={!hasEmbeddedWallet} onClick={handleExportWallet}>
+                          <DownloadIcon size={20} className="mr-1" />
+                          Export Wallet
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      {!hasEmbeddedWallet && <TooltipContent>Export wallet only available for embedded wallets.</TooltipContent>}
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
     </nav>
   );
 }

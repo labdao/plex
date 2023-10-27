@@ -56,10 +56,8 @@ export default function ListToolFiles() {
   }, []);
 
   return (
-    <div className="container mt-14">
-      <div className="border rounded-lg overflow-hidden">
-        <DataTable columns={columns} data={tools} />
-      </div>
+    <div className="border rounded-lg overflow-hidden">
+      <DataTable columns={columns} data={tools} />
     </div>
   );
 }

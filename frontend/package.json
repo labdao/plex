@@ -12,6 +12,7 @@
     "@mantine/hooks": "^7.0.2",
     "@mui/icons-material": "^5.14.3",
     "@privy-io/react-auth": "^1.42.0",
+    "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-navigation-menu": "^1.1.4",
     "@radix-ui/react-slot": "^1.0.2",

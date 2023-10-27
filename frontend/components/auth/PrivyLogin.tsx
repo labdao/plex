@@ -68,8 +68,8 @@ const PrivyLogin: React.FC = () => {
   return (
     <div className="container flex justify-center">
       <div className="p-20 text-center">
-        <h2 className="uppercase font-bold mb-2">Log In to Get Started</h2>
-        <Button onClick={handleLogin}>Login</Button>
+        <h2 className="uppercase text-2xl font-bold mb-4">Log In to Get Started</h2>
+        <Button onClick={handleLogin}>Log in</Button>
       </div>
     </div>
   );

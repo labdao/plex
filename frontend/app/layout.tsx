@@ -1,10 +1,10 @@
 import "@/styles/globals.css";
 
+import UserLoader from "@components/auth/UserLoader";
 import { cn } from "@lib/utils";
 import { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 
-import UserLoader from "@/app/components/auth/UserLoader";
 import Footer from "@/components/global/Footer";
 import Header from "@/components/global/Header";
 import { Providers } from "@/lib/providers";

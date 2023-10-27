@@ -1,6 +1,6 @@
 "use client";
 
-import PrivyLogin from "@/app/components/auth/PrivyLogin";
+import PrivyLogin from "@components/auth/PrivyLogin";
 
 export default function LoginPage() {
   return (
