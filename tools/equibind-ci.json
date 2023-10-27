@@ -17,6 +17,7 @@
   "gpuBool": false,
   "networkBool": false,
   "memoryGB": 5,
+  "cpu": 1.5,
   "inputs": {
     "protein": {
       "type": "File",

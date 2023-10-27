@@ -34,6 +34,7 @@ type Tool struct {
 	DockerPull  string                `json:"dockerPull"`
 	GpuBool     bool                  `json:"gpuBool"`
 	MemoryGB    *int                  `json:"memoryGB"`
+	Cpu         *float64              `json:"cpu"`
 	NetworkBool bool                  `json:"networkBool"`
 	Inputs      map[string]ToolInput  `json:"inputs"`
 	Outputs     map[string]ToolOutput `json:"outputs"`
