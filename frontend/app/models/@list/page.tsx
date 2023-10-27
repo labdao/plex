@@ -1,12 +1,6 @@
 "use client";
 
 import { DataTable } from "@components/ui/data-table";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
@@ -27,7 +21,11 @@ export default function ListToolFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>{row.getValue("CID")}</a>;
+        return (
+          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
+            {row.getValue("CID")}
+          </a>
+        );
       },
     },
     {

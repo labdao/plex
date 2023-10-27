@@ -27,12 +27,12 @@ const navItems = [
     href: "/models",
   },
   {
-    title: "Flows",
-    href: "/flow/list",
+    title: "Experiments",
+    href: "/experiments",
   },
   {
     title: "Data",
-    href: "/datafile/list",
+    href: "/data",
   },
 ];
 
