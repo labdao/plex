@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import PrivyLoginComponent from '../components/PrivyLogin/PrivyLoginComponent'
+import PrivyLogin from "@/app/components/auth/PrivyLogin";
 
 export default function LoginPage() {
   return (
     <div>
-      <PrivyLoginComponent />
+      <PrivyLogin />
     </div>
-  )
+  );
 }
