@@ -17,6 +17,8 @@
     "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
     "gpuBool": true,
     "networkBool": true,
+    "memoryGB": 12,
+    "cpu": 3,
     "inputs": {
       "protein": {
         "type": "File",
