@@ -27,7 +27,7 @@ jobs:
         backends: [
           { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'}, 
           { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'}, 
-          { env: local, url: 'http://localhost:8080', gateway: 'http://bacalhau.labdao.xyz:8080/ipfs/'}
+          { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
         ]
     runs-on: ubuntu-latest
     steps:
@@ -68,6 +68,8 @@ jobs:
           NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${{ matrix.backends.gateway }}
         uses: docker/build-push-action@v5
         with:
+          cache-from: |
+            quay.io/labdao/frontend:main-${{ matrix.backends.env }}
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
             NEXT_PUBLIC_PRIVY_APP_ID

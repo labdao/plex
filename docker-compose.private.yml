@@ -6,13 +6,6 @@
 
 services:
   ipfs:
-    image: private_ipfs
-    build:
-      context: ./docker/images/ipfs
-      dockerfile: ./Dockerfile
-      cache_from:
-        - quay.io/labdao/ipfs:latest
-      target: ipfs-with-utils
     environment:
       IPFS_S3_ENABLED: "false"
       IPFS_SWARM_KEY_BASE64: "L2tleS9zd2FybS9wc2svMS4wLjAvCi9iYXNlMTYvCjk0Y2Y4ODFiMDZmZDI5YTgxNDVlMmY2MjNiMmRjNGMwNTU2Y2QxNTIwNWM4YjhjMzg0YWEzOThkY2U4YWFhMzYK"
@@ -20,8 +13,7 @@ services:
       LIBP2P_FORCE_PNET: "1"
       IPFS_DEBUG: "true"
       IPFS_LOGGING: "debug"
-    volumes:
-      - privateipfs:/data/ipfs
+      IPFS_GATEWAY_PORT: "8888"
 
   backend:
     environment:
@@ -33,6 +25,3 @@ services:
       LIBP2P_FORCE_PNET: "1"
       IPFS_DEBUG: "true"
       IPFS_LOGGING: "debug"
-
-volumes:
-  privateipfs:

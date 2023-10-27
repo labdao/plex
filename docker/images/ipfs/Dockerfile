@@ -40,6 +40,8 @@ EXPOSE 8081
 
 ENV IPFS_PATH /data/ipfs
 
+ENV IPFS_PROFILE "server"
+
 # The default logging level
 ENV IPFS_LOGGING ""
 
