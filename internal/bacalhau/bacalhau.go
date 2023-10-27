@@ -30,7 +30,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJobV2(inputs map[string]string, container, selector string, cmd []string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJobV2(inputs map[string]string, container, selector string, cmd []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	log.Println("Creating job inside v2 function")
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
@@ -54,6 +54,9 @@ func CreateBacalhauJobV2(inputs map[string]string, container, selector string, c
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
 	}
+	if cpu > 0 {
+		job.Spec.Resources.CPU = fmt.Sprintf("%f", cpu)
+	}
 	if gpu {
 		job.Spec.Resources.GPU = "1"
 	}
@@ -75,7 +78,7 @@ func CreateBacalhauJobV2(inputs map[string]string, container, selector string, c
 	return job, err
 }
 
-func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
@@ -103,6 +106,9 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 
 	if memory > 0 {
 		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
+	}
+	if cpu > 0 {
+		job.Spec.Resources.CPU = fmt.Sprintf("%f", cpu)
 	}
 	if gpu {
 		job.Spec.Resources.GPU = "1"
