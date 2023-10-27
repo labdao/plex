@@ -63,26 +63,43 @@ func CheckNFTOwnership(walletAddress string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error calling contract for tokenID: %w", err)
 	}
-
 	maxTokenID := new(big.Int).SetBytes(result)
 
-	for tokenID := big.NewInt(0); tokenID.Cmp(maxTokenID) <= 0; tokenID.Add(tokenID, big.NewInt(1)) {
-		callData, err := parsedABI.Pack("balanceOf", address, tokenID)
-		if err != nil {
-			return false, fmt.Errorf("error packing balanceOf call for tokenID %s: %w", tokenID.String(), err)
+	batchSize := 100
+
+	var batchAddresses []common.Address
+	var batchTokenIDs []*big.Int
+
+	for i := 0; i < int(maxTokenID.Int64()); i += batchSize {
+		batchAddresses = []common.Address{}
+		batchTokenIDs = []*big.Int{}
+
+		for j := i; j < i+batchSize && j < int(maxTokenID.Int64()); j++ {
+			batchAddresses = append(batchAddresses, address)
+			batchTokenIDs = append(batchTokenIDs, big.NewInt(int64(j)))
 		}
 
+		callData, err := parsedABI.Pack("balanceOfBatch", batchAddresses, batchTokenIDs)
+		if err != nil {
+			return false, fmt.Errorf("error packing balanceOfBatch call: %w", err)
+		}
 		msg.Data = callData
 
 		result, err := client.CallContract(context.Background(), msg, nil)
 		if err != nil {
-			return false, fmt.Errorf("error calling contract for balanceOf with tokenID %s: %w", tokenID.String(), err)
+			return false, fmt.Errorf("error calling contract for balanceOfBatch: %w", err)
 		}
 
-		balance := new(big.Int).SetBytes(result)
+		balances := []*big.Int{}
+		err = parsedABI.UnpackIntoInterface(&balances, "balanceOfBatch", result)
+		if err != nil {
+			return false, fmt.Errorf("error unpacking balanceOfBatch result: %w", err)
+		}
 
-		if balance.Cmp(big.NewInt(0)) > 0 {
-			return true, nil
+		for _, balance := range balances {
+			if balance.Cmp(big.NewInt(0)) > 0 {
+				return true, nil
+			}
 		}
 	}
 
