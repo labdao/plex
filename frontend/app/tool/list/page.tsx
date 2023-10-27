@@ -1,14 +1,15 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-
-import backendUrl from 'lib/backendUrl'
+import { DataTable } from "@components/ui/data-table";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import { ColumnDef } from "@tanstack/react-table";
+import backendUrl from "lib/backendUrl";
+import React, { useEffect, useState } from "react";
 
 export default function ListToolFiles() {
   interface Tool {
@@ -17,49 +18,48 @@ export default function ListToolFiles() {
     WalletAddress: string;
   }
 
+  const columns: ColumnDef<Tool>[] = [
+    {
+      accessorKey: "Name",
+      header: "Name",
+    },
+    {
+      accessorKey: "CID",
+      header: "CID",
+      cell: ({ row }) => {
+        return <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>{row.getValue("CID")}</a>;
+      },
+    },
+    {
+      accessorKey: "WalletAddress",
+      header: "Wallet Address",
+    },
+  ];
+
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
     fetch(`${backendUrl()}/tools`)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
         return response.json();
       })
-      .then(data => {
-        console.log('Fetched tools:', data);
+      .then((data) => {
+        console.log("Fetched tools:", data);
         setTools(data);
       })
-      .catch(error => {
-        console.error('Error fetching tools:', error);
+      .catch((error) => {
+        console.error("Error fetching tools:", error);
       });
   }, []);
 
   return (
-    <TableContainer>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>CID</TableCell>
-            <TableCell>Uploader Wallet Address</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tools.map((tool, index) => (
-            <TableRow key={index}>
-              <TableCell>{tool.Name}</TableCell>
-              <TableCell>
-                <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool.CID}/`}>
-                  {tool.CID}
-                </a>
-              </TableCell>
-              <TableCell>{tool.WalletAddress}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  )
+    <div className="container mt-14">
+      <div className="border rounded-lg overflow-hidden">
+        <DataTable columns={columns} data={tools} />
+      </div>
+    </div>
+  );
 }

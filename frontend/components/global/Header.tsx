@@ -19,6 +19,22 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import Logo from "./Logo";
+import { NavLink } from "./NavLink";
+
+const navItems = [
+  {
+    title: "Tools",
+    href: "/tool/list",
+  },
+  {
+    title: "Flows",
+    href: "/flow/list",
+  },
+  {
+    title: "Data",
+    href: "/datafile/list",
+  },
+];
 
 export default function Header() {
   const dispatch = useDispatch();
@@ -49,7 +65,13 @@ export default function Header() {
         <Logo className="h-8 w-auto" /> Lab Exchange
       </Link>
 
-      <div></div>
+      <div className="flex gap-8 ml-16 mr-auto">
+        {navItems.map((navItem, idx) => (
+          <NavLink key={idx} href={navItem.href} className="font-medium uppercase">
+            {navItem.title}
+          </NavLink>
+        ))}
+      </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger>
@@ -84,7 +106,7 @@ export default function Header() {
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </nav>

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+Learn more about these variables here: 
+https://ui.shadcn.com/docs/theming#list-of-variables
+*/
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -22,8 +27,8 @@
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 45.1%;
 
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 219 97% 37%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -35,6 +40,7 @@
     --radius: 0.5rem;
   }
 
+  /* Currently not implemented */
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
