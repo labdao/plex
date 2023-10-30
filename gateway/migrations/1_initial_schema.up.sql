@@ -13,15 +13,6 @@ CREATE TABLE flows (
     wallet_address VARCHAR(42) NOT NULL
 );
 
--- Create input_outputs table
-CREATE TABLE input_outputs (
-    id SERIAL PRIMARY KEY,
-    job_id INT NOT NULL,
-    key_name VARCHAR(255) NOT NULL,
-    class VARCHAR(255) NOT NULL,
-    datafile_id INT NOT NULL
-);
-
 -- Create jobs table
 CREATE TABLE jobs (
     bacalhau_job_id VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -50,16 +41,16 @@ CREATE TABLE users (
 
 -- Create many-to-many relation tables
 CREATE TABLE job_inputs (
-    bacalhau_job_id VARCHAR(255) NOT NULL,
-    cid VARCHAR(255) NOT NULL,
+    job_bacalhau_job_id VARCHAR(255) NOT NULL,
+    data_file_c_id   VARCHAR(255) NOT NULL,
     PRIMARY KEY (bacalhau_job_id, cid),
     FOREIGN KEY (bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
     FOREIGN KEY (cid) REFERENCES data_files(cid)
 );
 
 CREATE TABLE job_outputs (
-    bacalhau_job_id VARCHAR(255) NOT NULL,
-    cid VARCHAR(255) NOT NULL,
+    job_bacalhau_job_id VARCHAR(255) NOT NULL,
+    data_file_c_id VARCHAR(255) NOT NULL,
     PRIMARY KEY (bacalhau_job_id, cid),
     FOREIGN KEY (bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
     FOREIGN KEY (cid) REFERENCES data_files(cid)

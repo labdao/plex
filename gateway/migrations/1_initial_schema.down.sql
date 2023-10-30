@@ -13,9 +13,6 @@ DROP INDEX IF EXISTS idx_jobs_tool_id;
 DROP INDEX IF EXISTS idx_jobs_flow_id;
 DROP TABLE IF EXISTS jobs;
 
--- Drop input_outputs table
-DROP TABLE IF EXISTS input_outputs;
-
 -- Drop flows table
 DROP TABLE IF EXISTS flows;
 
