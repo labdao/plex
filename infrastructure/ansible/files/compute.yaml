@@ -42,7 +42,7 @@ Node:
                 # 100x disk
                 Disk: "100000Gb"
                 # If GPU is available, set it to 100x to accept more jobs
-                GPU: "{% if num_of_gpus > 0 %}{{ num_of_gpus | int * 100 }}{% endif %}"
+                GPU: "{% if num_of_gpus | int > 0 %}{{ num_of_gpus | int * 100 }}{% endif %}"
             MaxJobExecutionTimeout: 0s
         ExecutionStore:
             Type: BoltDB
