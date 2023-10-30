@@ -1,14 +1,15 @@
 "use client";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { DataFileSelect } from "@/components/shared/DataFileSelect";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   addFlowThunk,
@@ -121,7 +122,7 @@ export default function AddGraph() {
               </div>
               <div>
                 <Label>Tool</Label>
-                <Select onValueChange={handleToolChange}>
+                <Select onValueChange={handleToolChange} defaultValue={selectedToolIndex}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a tool" />
                   </SelectTrigger>
@@ -143,22 +144,7 @@ export default function AddGraph() {
                 return (
                   <div key={key}>
                     <Label>{key}</Label>
-                    <Select onValueChange={(value) => handleKwargsChange(value, key)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={`Select ${key}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {dataFiles.map((dataFile) => {
-                            return (
-                              <SelectItem key={dataFile.CID} value={dataFile.CID + "/" + dataFile.Filename}>
-                                {dataFile.Filename}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <DataFileSelect onSelect={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} dataFiles={dataFiles} label={key} />
                   </div>
                 );
               })}
