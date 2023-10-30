@@ -43,15 +43,15 @@ CREATE TABLE users (
 CREATE TABLE job_inputs (
     job_bacalhau_job_id VARCHAR(255) NOT NULL,
     data_file_c_id   VARCHAR(255) NOT NULL,
-    PRIMARY KEY (bacalhau_job_id, cid),
-    FOREIGN KEY (bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
-    FOREIGN KEY (cid) REFERENCES data_files(cid)
+    PRIMARY KEY (job_bacalhau_job_id, data_file_c_id),
+    FOREIGN KEY (job_bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
+    FOREIGN KEY (data_file_c_id) REFERENCES data_files(cid)
 );
 
 CREATE TABLE job_outputs (
     job_bacalhau_job_id VARCHAR(255) NOT NULL,
     data_file_c_id VARCHAR(255) NOT NULL,
-    PRIMARY KEY (bacalhau_job_id, cid),
-    FOREIGN KEY (bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
-    FOREIGN KEY (cid) REFERENCES data_files(cid)
+    PRIMARY KEY (job_bacalhau_job_id, data_file_c_id),
+    FOREIGN KEY (job_bacalhau_job_id) REFERENCES jobs(bacalhau_job_id),
+    FOREIGN KEY (data_file_c_id) REFERENCES data_files(cid)
 );
