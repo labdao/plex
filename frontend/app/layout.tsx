@@ -1,13 +1,13 @@
 import "@/styles/globals.css";
 
-import UserLoader from "@components/auth/UserLoader";
-import { cn } from "@lib/utils";
 import { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 
+import UserLoader from "@/components/auth/UserLoader";
 import Footer from "@/components/global/Footer";
 import Header from "@/components/global/Header";
 import { Providers } from "@/lib/providers";
+import { cn } from "@/lib/utils";
 
 export const fontSans = Inter({
   subsets: ["latin"],
@@ -24,7 +24,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
     <html lang="en">
       <body className={cn("min-h-screen bg-background font-primary antialiased", fontSans.variable, fontPrimary.variable)}>
         <Providers>
-          <div className="flex flex-col min-h-screen w-full bg-gray-100">
+          <div className="flex flex-col w-full min-h-screen bg-gray-100">
             <Header />
             <div className="grow">
               <UserLoader>{props.children}</UserLoader>

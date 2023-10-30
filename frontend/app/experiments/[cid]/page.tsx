@@ -1,9 +1,9 @@
 "use client";
 
-import { Alert } from "@components/ui/alert";
-import { Button } from "@components/ui/button";
-import { Card, CardContent, CardTitle } from "@components/ui/card";
-import { DataTable } from "@components/ui/data-table";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink, RefreshCcw } from "lucide-react";
 import Link from "next/link";

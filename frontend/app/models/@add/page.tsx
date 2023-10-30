@@ -1,13 +1,13 @@
 "use client";
 
-import { Alert } from "@components/ui/alert";
-import { Button } from "@components/ui/button";
 import { JsonInput } from "@mantine/core";
 import { MantineProvider } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   AppDispatch,
@@ -44,7 +44,7 @@ export default function AddTool() {
     if (toolSuccess) {
       dispatch(setAddToolSuccess(false));
       dispatch(setAddToolJson(""));
-      router.push("/tool/list");
+      router.push("/models");
       return;
     }
     dispatch(toolListThunk());
