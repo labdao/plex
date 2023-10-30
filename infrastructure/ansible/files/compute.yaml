@@ -35,10 +35,14 @@ Node:
                 Disk: ""
                 GPU: ""
             QueueResourceLimits:
-                CPU: ""
-                Memory: ""
-                Disk: ""
-                GPU: ""
+                # 100x CPU
+                CPU: "{{ ansible_processor_vcpus | int * 100 }}"
+                # 100x memory
+                Memory: "{{ ansible_memtotal_mb | int * 100 }}Mi"
+                # 100x disk
+                Disk: "100000Gb"
+                # If GPU is available, set it to 100x to accept more jobs
+                GPU: "{% if num_of_gpus > 0 %}{{ num_of_gpus | int * 100 }}{% endif %}"
             MaxJobExecutionTimeout: 0s
         ExecutionStore:
             Type: BoltDB
