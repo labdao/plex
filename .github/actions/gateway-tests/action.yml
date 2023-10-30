@@ -59,7 +59,7 @@ runs:
     - name: Test add Tool Endpoint
       run: |
         TOOL_JSON_CONTENT=$(jq -c . < tools/equibind.json)
-        json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+        json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6\"}"
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
                -d "$json_payload")
@@ -91,7 +91,7 @@ runs:
       run: |
         payload='{
           "name": "testFlow",
-          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "walletAddress": "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6",
           "toolCid": "QmTFMb527A3VDCmVNwC1d6yCM3eUdvLwHsEXwtRULeczZ2",
           "scatteringMethod": "dotProduct",
           "kwargs": {
