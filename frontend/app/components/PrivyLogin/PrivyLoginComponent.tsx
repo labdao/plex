@@ -5,7 +5,7 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import { useLogin, useWallets } from '@privy-io/react-auth';
 import { PrivyAuthContext } from '../../../lib/PrivyContext';
-import { saveUserAsync } from '@/lib/redux/slices/userSlice/thunks';
+import { saveUserAsync, fetchUserMemberStatusAsync } from '@/lib/redux/slices/userSlice/thunks';
 import { useRouter } from 'next/navigation'
 
 const PrivyLoginComponent: React.FC = () => {
@@ -23,11 +23,13 @@ const PrivyLoginComponent: React.FC = () => {
             } else if (isNewUser) {
                 console.log('New user');
                 dispatch(saveUserAsync({ walletAddress, isMember: false }));
+                dispatch(fetchUserMemberStatusAsync(walletAddress));
                 dispatch(setIsLoggedIn(true));
                 router.push('/');
             } else if (user) {
                 console.log('User authenticated');
                 dispatch(saveUserAsync({ walletAddress, isMember: false }));
+                dispatch(fetchUserMemberStatusAsync(walletAddress));
                 dispatch(setIsLoggedIn(true));
                 router.push('/');
             }

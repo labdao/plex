@@ -17,6 +17,7 @@ import {
   selectIsLoggedIn,
   setWalletAddress,
   setIsLoggedIn,
+  selectIsMember,
 } from '@/lib/redux'
 import { usePrivy } from '@privy-io/react-auth';
 import { PrivyAuthContext } from '../../../lib/PrivyContext';
@@ -29,6 +30,7 @@ export const TopNav = () => {
   const router = useRouter()
   const { ready, authenticated, user, exportWallet } = usePrivy();
   const walletAddress = useSelector(selectWalletAddress)
+  const isMember = useSelector(selectIsMember)
   const [isHovered, setIsHovered] = React.useState(false);
 
   const { logout } = usePrivy();
@@ -93,6 +95,9 @@ export const TopNav = () => {
               onClick={handleCopyToClipboard}
             >
               <strong>Wallet:</strong> {walletAddress} {isHovered && <span style={{ marginLeft: '8px' }}><ContentCopyIcon /></span>}
+            </MenuItem>
+            <MenuItem>
+              Membership Status: {isMember ? 'True' : 'False'}
             </MenuItem>
             <div title={!hasEmbeddedWallet ? 'Export wallet only available for embedded wallets.' : ''}>
               <MenuItem 

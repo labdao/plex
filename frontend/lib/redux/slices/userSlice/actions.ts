@@ -13,7 +13,7 @@ export const saveUserDataToServer = async (
     const response = await fetch(`${backendUrl()}/user`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletAddress, isMember: false }),
+      body: JSON.stringify({ walletAddress, isMember }),
     })
 
     if (!response.ok) {
