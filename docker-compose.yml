@@ -164,6 +164,8 @@ services:
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/ipfs:latest
+    volumes:
+      - ipfs:/data/ipfs
     environment:
       IPFS_LOGGING: "debug"
       IPFS_GATEWAY_PORT: "8888"
@@ -176,3 +178,4 @@ services:
 volumes:
   dbdata-backend:
   dbdata-receptor:
+  ipfs:
