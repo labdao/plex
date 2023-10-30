@@ -10,9 +10,7 @@ ExecStart=bacalhau serve \
   --node-type requester \
   --ipfs-connect {{ ipfs_connect }} \
   --private-internal-ipfs=false \
-{% if receptor_url is defined %}
   --job-selection-probe-http {{ receptor_url }} \
-{% endif %}
   --labels owner={{ owner }} \
   --job-selection-accept-networked \
   --job-selection-data-locality anywhere \

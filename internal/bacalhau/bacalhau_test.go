@@ -12,10 +12,11 @@ func TestCreateBacalhauJob(t *testing.T) {
 	maxTime := 60
 	timeOut := maxTime * 60 // Bacalhau timeout is in seconds, so we need to multiply by 60
 	memory := "12gb"
+	cpu := "1.200000"
 	gpu := "1"
 	networkFlag := true
 	selector := ""
-	job, err := CreateBacalhauJob(cid, container, cmd, selector, 60, 12, true, networkFlag, []string{})
+	job, err := CreateBacalhauJob(cid, container, cmd, selector, 60, 12, 1.200000, true, networkFlag, []string{})
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
@@ -25,8 +26,8 @@ func TestCreateBacalhauJob(t *testing.T) {
 	if job.Spec.Resources.Memory != memory {
 		t.Errorf("got = %s; wanted %s", job.Spec.Resources.Memory, memory)
 	}
-	if job.Spec.Resources.GPU != gpu {
-		t.Errorf("got = %s; wanted %s", job.Spec.Resources.GPU, gpu)
+	if job.Spec.Resources.CPU != cpu {
+		t.Errorf("got = %s; wanted %s", job.Spec.Resources.CPU, cpu)
 	}
 	if job.Spec.Resources.GPU != gpu {
 		t.Errorf("got = %s; wanted %s", job.Spec.Resources.GPU, gpu)
