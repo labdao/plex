@@ -113,11 +113,8 @@ func DownloadToDirectory(cid, directory string) error {
 	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 
-	// Construct the full directory path where the CID content will be downloaded
-	downloadPath := path.Join(directory, cid)
-
 	// Use the Get method to download the file or directory with the specified CID
-	err := sh.Get(cid, downloadPath)
+	err := sh.Get(cid, directory)
 	if err != nil {
 		return err
 	}

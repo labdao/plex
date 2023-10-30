@@ -15,11 +15,12 @@ const LogViewer = () => {
 
   useEffect(() => {
     setLogs('')
-    // remove http:// or https:// from backendUrl for websocket
-    let formattedBackendUrl = backendUrl().replace('http://', '')
-    formattedBackendUrl = formattedBackendUrl.replace('https://', '')
+
+    let formattedBackendUrl = backendUrl().replace('http://', '').replace('https://', '');
+    let wsProtocol = backendUrl().startsWith('https://') ? 'wss' : 'ws';
+  
     console.log(formattedBackendUrl)
-    const ws = new WebSocket(`ws://${formattedBackendUrl}/jobs/${job.BacalhauJobID}/logs`)
+    const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${job.BacalhauJobID}/logs`)
 
     ws.onopen = () => {
       console.log('connected')

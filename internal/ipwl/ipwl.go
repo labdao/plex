@@ -59,11 +59,6 @@ func RunIO(ioJsonCid, outputDir, selector string, verbose, showAnimation bool, m
 		annotations = append(annotations, fmt.Sprintf("userId=%s", userID))
 	}
 
-	if maxTime > 60 {
-		fmt.Println("Error: maxTime cannot exceed 60 minutes")
-		os.Exit(1)
-	}
-
 	retry := false
 	fmt.Println("Processing IO Entries")
 	ProcessIOList(workDirPath, ioJsonPath, selector, retry, verbose, showAnimation, maxTime, annotations)
@@ -110,8 +105,16 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 		} else {
 			memory = *toolConfig.MemoryGB
 		}
+
+		var cpu float64
+		if toolConfig.Cpu == nil {
+			cpu = 0
+		} else {
+			cpu = *toolConfig.Cpu
+		}
+
 		log.Println("creating bacalhau job")
-		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)
@@ -265,8 +268,13 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector 
 	} else {
 		memory = *toolConfig.MemoryGB
 	}
-
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+	var cpu float64
+	if toolConfig.Cpu == nil {
+		cpu = 0
+	} else {
+		cpu = *toolConfig.Cpu
+	}
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(cid, toolConfig.DockerPull, cmd, selector, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error creating Bacalhau job: %w", err)
@@ -300,7 +308,12 @@ func processIOTask(ioEntry IO, index, maxTime int, jobDir, ioJsonPath, selector 
 		fmt.Println("Downloading Bacalhau job")
 		fmt.Printf("Output dir of %s \n", outputsDirPath)
 	}
-	err = bacalhau.DownloadBacalhauResults(outputsDirPath, submittedJob, results)
+
+	for _, result := range results {
+		fmt.Printf("Downloading result %s to %s \n", result.Data.CID, outputsDirPath)
+		err = ipfs.DownloadToDirectory(result.Data.CID, outputsDirPath)
+	}
+
 	if err != nil {
 		updateIOWithError(ioJsonPath, index, err, fileMutex)
 		return fmt.Errorf("error downloading Bacalhau results: %w", err)

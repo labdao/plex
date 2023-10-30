@@ -58,7 +58,7 @@ func ServeWebApp() {
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL")},
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PATCH"},
 	})
