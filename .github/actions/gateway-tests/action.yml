@@ -87,8 +87,28 @@ runs:
         fi
       shell: bash
 
-    - name: Test Add Flow Endpoint
+    - name: Add User and Test Add Flow Endpoint
       run: |
+        # Add User Endpoint Test
+        payload='{
+          "walletAddress": "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6",
+          "isMember": false
+        }'
+
+        response=$(curl -s -X POST "http://localhost:8080/user" \
+              -H "Content-Type: application/json" \
+              -d "$payload")
+
+        # Check if the response contains the expected WalletAddress
+        responseWalletAddress=$(echo "$response" | jq -r '.WalletAddress')
+        if [ "$responseWalletAddress" != "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6" ]; then
+          echo "Add User test failed: Expected WalletAddress '0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6' but got '$responseWalletAddress'"
+          exit 1
+        fi
+
+        echo "Add User test passed"
+
+        # Test Add Flow Endpoint
         payload='{
           "name": "testFlow",
           "walletAddress": "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6",
@@ -105,16 +125,14 @@ runs:
                -d "$payload")
 
         # Extract the CID from the response
-        echo "$response"
         cid_value=$(echo "$response" | jq -r '.cid')
-        echo "$response" | jq -r '.cid'
 
         # Check if the CID exists
         if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
-           echo "$response" | jq -r '.cid'
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"
            exit 1
         fi
       shell: bash
+
