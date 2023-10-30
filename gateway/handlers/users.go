@@ -36,9 +36,6 @@ func updateUserMemberStatus(db *gorm.DB, walletAddress string) (models.User, err
 
 func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: comment out when working
-		fmt.Println("AddUserHandler function called...")
-
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
 			utils.SendJSONError(w, "Only POST method is supported", http.StatusBadRequest)
 			fmt.Println("Received non-POST request for /user endpoint.")
