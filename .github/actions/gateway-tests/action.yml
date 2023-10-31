@@ -99,6 +99,8 @@ runs:
               -H "Content-Type: application/json" \
               -d "$payload")
 
+        echo "Response: $response"
+
         # Check if the response contains the expected WalletAddress
         responseWalletAddress=$(echo "$response" | jq -r '.WalletAddress')
         if [ "$responseWalletAddress" != "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6" ]; then
@@ -123,6 +125,8 @@ runs:
         response=$(curl -s -X POST "http://localhost:8080/flows" \
                -H "Content-Type: application/json" \
                -d "$payload")
+
+        echo "Response: $response"
 
         # Extract the CID from the response
         cid_value=$(echo "$response" | jq -r '.cid')
