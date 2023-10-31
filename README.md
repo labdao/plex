@@ -94,7 +94,7 @@ go build
 
 # Setup
 
-## Running the complete stack locally
+## Running the Complete Stack Locally
 We have `docker-compose` files available to bring up the stack locally.
 
 Note:
