@@ -1,6 +1,6 @@
 {
     "class": "CommandLineTool",
-    "name": "colabfold-miniV2 gateway 12GB memory",
+    "name": "colabfold-mini gateway",
     "description": "Protein folding prediction using Colabfold (mini settings)",
     "author": "",
     "baseCommand": ["/bin/bash", "-c"],
@@ -11,6 +11,7 @@
     "gpuBool": true,
     "networkBool": true,
     "memoryGB": 12,
+    "cpu": 1.5,
     "inputs": {
       "sequence": {
         "type": "File",
