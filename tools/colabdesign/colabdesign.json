@@ -1,6 +1,6 @@
 {
   "class": "CommandLineTool",
-  "name": "colabdesign-dev",
+  "name": "colabdesign",
   "description": "one-pot design of protein backbones and sequences",
   "author": "",
   "baseCommand": ["/bin/bash", "-c"],
