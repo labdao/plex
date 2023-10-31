@@ -101,6 +101,7 @@ services:
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
       FRONTEND_URL: http://localhost:3000
+      NEXT_PUBLIC_OPTIMISM_GOERLI_ALCHEMY_RPC: ${NEXT_PUBLIC_OPTIMISM_GOERLI_ALCHEMY_RPC:-https://goerli.optimism.io}
     depends_on:
       dbbackend:
         condition: service_healthy
