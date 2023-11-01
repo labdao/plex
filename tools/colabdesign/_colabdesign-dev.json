@@ -5,16 +5,12 @@
     "author": "",
     "baseCommand": ["/bin/bash", "-c"],
     "arguments": [
-        "wget https://raw.githubusercontent.com/labdao/plex/main/tools/colabdesign/install.py;",
-        "wget https://raw.githubusercontent.com/labdao/plex/main/tools/colabdesign/main.py;",
         "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
-        "python install.py;",
-        "echo 'Install complete!';",
         "echo 'Attempting main.py...';",
         "python main.py;",
         "echo 'main.py complete!';"
       ],
-    "dockerPull": "docker.io/niklastr/dev@sha256:01dd6d1eb418d67e97e7517de220e76f9403517502efa411f68c2eeb88977d0f",
+    "dockerPull": "quay.io/labdao/colabdesign:pr-745@sha256:c43df6bf0851e6d4cf8fed80ea1ab4c16556718c5b3fa5bbae42462950c4ef44",
     "gpuBool": true,
     "networkBool": true,
     "inputs": {
