@@ -15,13 +15,13 @@ const PrivyLogin: React.FC = () => {
 
   const { login } = useLogin({
     onComplete: async (user, isNewUser, wasAlreadyAuthenticated) => {
+      const walletAddress = await getWalletAddress();
       if (wasAlreadyAuthenticated) {
         console.log("User was already authenticated");
         dispatch(setIsLoggedIn(true));
         router.push("/");
       } else if (isNewUser) {
         console.log("New user");
-        const walletAddress = await getWalletAddress();
         dispatch(saveUserAsync({ walletAddress }));
         dispatch(setIsLoggedIn(true));
         router.push("/");
@@ -68,7 +68,7 @@ const PrivyLogin: React.FC = () => {
   return (
     <div className="container flex justify-center">
       <div className="p-20 text-center">
-        <h2 className="uppercase text-2xl font-bold mb-4">Log In to Get Started</h2>
+        <h2 className="mb-4 text-2xl font-bold uppercase">Log In to Get Started</h2>
         <Button onClick={handleLogin}>Log in</Button>
       </div>
     </div>
