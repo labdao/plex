@@ -2,7 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ReactNode } from "react";
 
 import { selectWalletAddress, setIsLoggedIn, setWalletAddress, useDispatch, useSelector } from "@/lib/redux";
@@ -34,7 +34,7 @@ const UserLoader = ({ children }: UserLoaderProps) => {
       }
     }
     setIsLoaded(true);
-  }, [dispatch, ready, authenticated]);
+  }, [dispatch, ready, authenticated, walletAddressFromRedux, router]);
 
   if (!isLoaded) return null;
 

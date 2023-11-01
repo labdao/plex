@@ -1,4 +1,5 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
+
 import { saveUserDataToServer } from './actions'
 
 interface UserPayload {

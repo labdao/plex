@@ -1,13 +1,12 @@
 'use client'
 
+import backendUrl from 'lib/backendUrl'
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 
 import {
   selectJobDetail,
 } from '@/lib/redux'
-
-import backendUrl from 'lib/backendUrl'
 
 const LogViewer = () => {
   const [logs, setLogs] = useState('')

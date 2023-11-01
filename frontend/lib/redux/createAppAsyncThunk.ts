@@ -2,7 +2,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 
 /* Instruments */
-import type { ReduxState, ReduxDispatch } from './store'
+import type { ReduxDispatch,ReduxState } from './store'
 
 /**
  * ? A utility function to create a typed Async Thunk Actions.

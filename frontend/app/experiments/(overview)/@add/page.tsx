@@ -67,7 +67,7 @@ export default function AddGraph() {
     }
     dispatch(toolListThunk());
     dispatch(dataFileListThunk());
-  }, [cid, dispatch]);
+  }, [cid, dispatch, router]);
 
   const handleToolChange = (value: string) => {
     dispatch(setFlowAddTool(tools[parseInt(value)]));

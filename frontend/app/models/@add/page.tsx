@@ -2,7 +2,6 @@
 
 import { JsonInput } from "@mantine/core";
 import { MantineProvider } from "@mantine/core";
-import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -17,8 +16,6 @@ import {
   selectAddToolJson,
   selectAddToolLoading,
   selectAddToolSuccess,
-  selectDataFileListError,
-  selectToolListError,
   selectWalletAddress,
   setAddToolError,
   setAddToolJson,
@@ -31,16 +28,12 @@ export default function AddTool() {
   const [open, setOpen] = React.useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
 
   const walletAddress = useSelector(selectWalletAddress);
   const loading = useSelector(selectAddToolLoading);
   const error = useSelector(selectAddToolError);
   const toolJson = useSelector(selectAddToolJson);
   const toolSuccess = useSelector(selectAddToolSuccess);
-
-  const toolListError = useSelector(selectToolListError);
-  const dataFileListError = useSelector(selectDataFileListError);
 
   useEffect(() => {
     if (toolSuccess) {
