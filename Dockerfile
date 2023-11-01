@@ -22,6 +22,7 @@ FROM busybox:1.31.1-glibc
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/gateway/migrations  /gateway/migrations
+COPY --from=builder /app/gateway/utils /gateway/utils
 
 # Copy custom IPFS binary with s3ds and healthcheck plugin
 COPY --from=quay.io/labdao/ipfs@sha256:461646b6ea97dffc86b1816380360be3d38d5a2c6c7c86352a2e3b0a5a4ccca5 /usr/local/bin/ipfs /usr/local/bin/ipfs
@@ -52,9 +53,6 @@ RUN mkdir -p /data/ipfs
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
-
-# Copy smart contract ABI
-COPY --from=builder /app/gateway/utils/clean-abi.json /gateway/utils/clean-abi.json
 
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
