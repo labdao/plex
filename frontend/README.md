@@ -1,29 +1,24 @@
-# Redux Toolkit TypeScript Example
+# Plex Frontend
 
-This example shows how to integrate Next.js with [Redux Toolkit](https://redux-toolkit.js.org).
-
-The **Redux Toolkit** is a standardized way to write Redux logic (create actions and reducers, setup the store with some default middlewares like redux devtools extension). This example demonstrates each of these features with Next.js
-
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-redux&project-name=with-redux&repository-name=with-redux)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## Get Started
 
 ```bash
-npx create-next-app --example with-redux with-redux-app
+npm install && npm run dev
 ```
 
-```bash
-yarn create next-app --example with-redux with-redux-app
-```
+## Add a Component
 
-```bash
-pnpm create next-app --example with-redux with-redux-app
-```
+Missing a component? Find it here: [shadcn/ui components](https://ui.shadcn.com/docs/components)
+Follow the instructions for installing via the CLI.
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+## Data Tables
+
+Tables use the [react-table](https://react-table.tanstack.com/) library. Good examples on integrating with shadcn can be found here: [shadcn/ui data-table](https://ui.shadcn.com/docs/components/data-table)
+
+## Useful Docs
+
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [shadcn/ui](https://ui.shadcn.com/docs)
+- [react-table](https://react-table.tanstack.com/)
+- [Lucide Icons](https://lucide.dev/icons/)
+- [Next.js](https://nextjs.org/docs/getting-started)
