@@ -33,15 +33,15 @@ if not os.path.isdir("params"):
 if not os.path.isdir("RFdiffusion"):
   print("installing RFdiffusion...")
   os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
-  os.system("pip -q install jedi omegaconf hydra-core icecream pyrsistent")
-  os.system("pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
-  os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .")
+  os.system("pip -q install --no-cache-dir jedi omegaconf hydra-core icecream pyrsistent")
+  os.system("pip install --no-cache-dir dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
+  os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install --no-cache-dir .")
   os.system("wget -qnc https://files.ipd.uw.edu/krypton/ananas")
   os.system("chmod +x ananas")
 
 if not os.path.isdir("colabdesign"):
   print("installing ColabDesign...")
-  os.system("pip -q install git+https://github.com/sokrypton/ColabDesign.git")
+  os.system("pip -q install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git")
   os.system("ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign")
 
 if not os.path.isdir("RFdiffusion/models"):
