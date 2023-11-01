@@ -1,4 +1,5 @@
-FROM us-docker.pkg.dev/colab-images/public/runtime
+# FROM us-docker.pkg.dev/colab-images/public/runtime
+FROM python:3.9.18-slim-bullseye 
 RUN apt update -y \
     && apt install -y wget nano
 RUN pip3 install hydra-core --upgrade
