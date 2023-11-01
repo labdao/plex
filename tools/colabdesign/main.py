@@ -28,11 +28,12 @@ if not os.path.isdir("params"):
   aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Complex_beta_ckpt.pt; \
   aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar; \
   tar -xf alphafold_params_2022-12-06.tar -C params; \
+  rm -rf alphafold_params_2022-12-06.tar; \
   touch params/done.txt) &")
 
 if not os.path.isdir("RFdiffusion"):
   print("installing RFdiffusion...")
-  os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
+  os.system("git clone --depth 1 https://github.com/sokrypton/RFdiffusion.git")
   os.system("pip -q install --no-cache-dir jedi omegaconf hydra-core icecream pyrsistent")
   os.system("pip install --no-cache-dir dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
   os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install --no-cache-dir .")
