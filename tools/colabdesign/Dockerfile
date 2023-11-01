@@ -5,7 +5,8 @@ RUN apt update -y \
 RUN pip3 install --no-cache-dir hydra-core --upgrade
 RUN mkdir /app
 # installation
-RUN pip3 install --no-cache-dir matplotlib ipywidgets google.colab
+RUN pip3 install cython
+RUN pip3 install --no-cache-dir matplotlib ipywidgets google-colab
 COPY . /app
 WORKDIR /app
 RUN python3 install.py
