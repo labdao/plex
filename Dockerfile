@@ -53,6 +53,9 @@ RUN mkdir -p /data/ipfs
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
 
+# Copy smart contract ABI
+COPY --from=builder /app/gateway/utils/clean-abi.json /gateway/utils/clean-abi.json
+
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
 ENV POSTGRES_DB=labdao
