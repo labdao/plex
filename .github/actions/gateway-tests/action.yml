@@ -101,7 +101,7 @@ runs:
         echo "Response: $response"
 
         # Check if the response contains the expected WalletAddress
-        responseWalletAddress=$(echo "$response" | jq -r '.WalletAddress')
+        responseWalletAddress=$(echo "$response" | jq -r '.walletAddress')
         if [ "$responseWalletAddress" != "0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6" ]; then
           echo "Add User test failed: Expected WalletAddress '0xFAC3C5053ED4B4A7689118Cc626A49F3296484E6' but got '$responseWalletAddress'"
           exit 1
