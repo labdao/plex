@@ -62,7 +62,7 @@ export default function AddGraph() {
       dispatch(setFlowAddError(null));
       dispatch(setFlowAddName(""));
       dispatch(setFlowAddCid(""));
-      router.push(`/experiment/${cid}`);
+      router.push(`/experiments/${cid}`);
       return;
     }
     dispatch(toolListThunk());

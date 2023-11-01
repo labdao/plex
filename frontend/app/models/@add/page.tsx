@@ -28,6 +28,8 @@ import {
 } from "@/lib/redux";
 
 export default function AddTool() {
+  const [open, setOpen] = React.useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
@@ -44,7 +46,8 @@ export default function AddTool() {
     if (toolSuccess) {
       dispatch(setAddToolSuccess(false));
       dispatch(setAddToolJson(""));
-      router.push("/models");
+      setOpen(false);
+      //TODO: Update the list
       return;
     }
     dispatch(toolListThunk());
@@ -71,7 +74,7 @@ export default function AddTool() {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
         <Button size="lg">Add Model</Button>
       </DialogTrigger>
