@@ -24,6 +24,7 @@ jobs:
   tools:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         tools:
           - colabdesign
