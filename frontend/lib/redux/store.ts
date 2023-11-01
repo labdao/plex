@@ -1,14 +1,14 @@
 /* Core */
-import { configureStore, type ThunkAction, type Action } from '@reduxjs/toolkit'
+import { type Action,configureStore, type ThunkAction } from '@reduxjs/toolkit'
 import {
-  useSelector as useReduxSelector,
-  useDispatch as useReduxDispatch,
   type TypedUseSelectorHook,
+  useDispatch as useReduxDispatch,
+  useSelector as useReduxSelector,
 } from 'react-redux'
 
+import { middleware } from './middleware'
 /* Instruments */
 import { reducer } from './rootReducer'
-import { middleware } from './middleware'
 
 export const reduxStore = configureStore({
   reducer,

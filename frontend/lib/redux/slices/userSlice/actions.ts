@@ -1,5 +1,5 @@
-import backendUrl from "lib/backendUrl"
 import { createAction } from "@reduxjs/toolkit"
+import backendUrl from "lib/backendUrl"
 
 export const setError = createAction<string | null>('user/setError')
 

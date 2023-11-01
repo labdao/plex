@@ -1,5 +1,5 @@
-import React from 'react';
 import { User } from '@privy-io/react-auth';
+import React from 'react';
 
 interface AuthState {
     user: User | null;
