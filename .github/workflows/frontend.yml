@@ -54,6 +54,8 @@ jobs:
             type=ref,suffix=-${{ matrix.backends.env }},event=branch
             type=ref,suffix=-${{ matrix.backends.env }},event=pr
             type=ref,suffix=-${{ matrix.backends.env }},event=tag
+            type=sha,suffix=-${{ matrix.backends.env }}
+
   
       - name: Login to quay.io
         uses: docker/login-action@v3
