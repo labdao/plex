@@ -1,6 +1,7 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setFlowDetailError, setFlowDetailSuccess, setFlowDetail, setFlowDetailLoading } from './slice'
+
 import { getFlow, patchFlow } from './asyncActions'
+import { setFlowDetail, setFlowDetailError, setFlowDetailLoading,setFlowDetailSuccess } from './slice'
 
 
 export const flowDetailThunk = createAppAsyncThunk(

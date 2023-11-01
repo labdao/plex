@@ -1,14 +1,14 @@
 "use client";
 
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { RefreshCcw } from "lucide-react";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import { AppDispatch, jobDetailThunk, jobPatchDetailThunk, selectJobDetail, selectJobDetailError, selectJobDetailLoading } from "@/lib/redux";
 
 import LogViewer from "./LogViewer";

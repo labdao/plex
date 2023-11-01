@@ -12,5 +12,5 @@ export function useAuth() {
     if (!user || !walletAddress) {
       router.push("/login");
     }
-  }, [user]);
+  }, [user, walletAddress, router]);
 }
