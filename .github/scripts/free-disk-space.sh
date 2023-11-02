@@ -39,8 +39,13 @@ sudo apt-get remove -y '^mongodb-.*'
 sudo apt-get remove -y '^mysql-.*' '^libmysql.*'
 sudo apt-get remove -y '^postgresql-.*'
 sudo apt-get remove -y '^ruby-.*'
-sudo apt-get remove -y 'esl-erlang'
-sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox microsoft-edge-stable powershell mono-devel libgl1-mesa-dri iso-codes azure-cli google-cloud-cli nginx
+
+# looping over package to avoid passing in a whole list together with some packages
+# missing causing 'Unable to locate package' error and stopping other packages for being removed
+for package in azure-cli google-chrome-stable firefox microsoft-edge-stable powershell mono-devel libgl1-mesa-dri iso-codes azure-cli google-cloud-cli; do
+  sudo apt-get remove -y ${package}
+done
+
 sudo apt-get autoremove -y
 sudo apt-get clean
 df -h
