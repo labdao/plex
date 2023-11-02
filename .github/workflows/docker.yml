@@ -64,8 +64,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          cache-from: |
-            quay.io/labdao/${{inputs.name}}:main
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{inputs.context}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
