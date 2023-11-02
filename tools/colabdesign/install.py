@@ -4,7 +4,6 @@ import sys, random, string, re
 print("Starting install.py...")
 
 if not os.path.isdir("params"):
-  os.system("apt-get install aria2")
   os.system("mkdir params")
   # send param download into background
   os.system("(\
