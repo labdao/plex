@@ -5,14 +5,14 @@ import signal
 import sys
 import random
 import string
-import re
+# import re
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
 import py3Dmol
 from google.colab import files
-from IPython.display import display, HTML
+from IPython.display import display # , HTML
 
 print("Starting main.py...")
 
@@ -61,7 +61,7 @@ if 'RFdiffusion' not in sys.path:
 
 # third party imports
 from hydra import compose, initialize
-from omegaconf import DictConfig, OmegaConf
+# from omegaconf import DictConfig, OmegaConf
 from inference.utils import parse_pdb
 from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
