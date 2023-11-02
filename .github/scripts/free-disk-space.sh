@@ -58,4 +58,12 @@ sudo rm -rf /usr/local/share/powershell
 sudo rm -rf /usr/local/share/chromium
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /usr/local/lib/node_modules
+
+df -h
+
+echo "Removing docs and man pages"
+sudo rm -rf /usr/share/doc/
+sudo rm -rf /usr/share/man/
+sudo rm -rf /usr/share/locale/
+
 df -h
