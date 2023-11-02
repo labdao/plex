@@ -12,12 +12,14 @@ on:
     paths:
       - 'docker/images/ipfs/**'
       - '.github/workflows/ipfs.yml'
+      - '.github/workflows/docker.yml'
 
   pull_request:
     branches: ["main"]
     paths:
       - 'docker/images/ipfs/**'
       - '.github/workflows/ipfs.yml'
+      - '.github/workflows/docker.yml'
 
 # Only run one at a time
 concurrency:
@@ -25,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  backend:
+  ipfs:
     uses: ./.github/workflows/docker.yml
     with:
       name: ipfs

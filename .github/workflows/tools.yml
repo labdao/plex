@@ -12,11 +12,13 @@ on:
     paths:
       - 'tools/**'
       - '.github/workflows/tools.yml'
+      - '.github/workflows/docker.yml'
   pull_request:
     branches: ["main"]
     paths:
       - 'tools/**'
       - '.github/workflows/tools.yml'
+      - '.github/workflows/docker.yml'
 
 # Only run one at a time
 concurrency:
