@@ -7,12 +7,14 @@
     "arguments": [
         "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
         "echo 'Attempting main.py...';",
-        "python main.py;",
+        "python -u main.py;",
         "echo 'main.py complete!';"
       ],
-    "dockerPull": "quay.io/labdao/colabdesign:pr-745@sha256:c43df6bf0851e6d4cf8fed80ea1ab4c16556718c5b3fa5bbae42462950c4ef44",
+    "dockerPull": "quay.io/labdao/colabdesign:092737b@sha256:d2a996b3aea969f043ec915d6e8c78e2948bf5a0cebd145f67181d5322412a8f",
     "gpuBool": true,
     "networkBool": true,
+    "cpu": 3,
+    "memoryGB": 12,
     "inputs": {
       "protein": {
         "type": "File",
