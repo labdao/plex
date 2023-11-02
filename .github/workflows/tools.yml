@@ -36,3 +36,4 @@ jobs:
     with:
       name: ${{matrix.tools}}
       context: tools/${{matrix.tools}}
+    secrets: inherit
