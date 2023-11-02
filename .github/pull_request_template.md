@@ -1,10 +1,11 @@
-## What type of PR is this? (check all applicable)
+## What type of PR is this? 
+_Remove the categories that do not apply_
 
-- [ ] 🎮 Feature
-- [ ] 🐛 Bug Fix
-- [ ] 🍧 Refactor
-- [ ] 🔋 Optimization
-- [ ] 📓 Documentation Update
+- 🎮 Feature
+- 🐛 Bug Fix
+- 🍧 Refactor
+- 🔋 Optimization
+- 📓 Documentation Update
 
 ## Description
 

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
 import { PrivyProvider, User } from '@privy-io/react-auth';
+import React, { useState } from 'react';
+
 import { PrivyAuthContext } from './PrivyContext';
 
 export default function PrivyProviderWrapper({

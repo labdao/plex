@@ -1,14 +1,14 @@
 /* Instruments */
 import {
-  userSlice,
   dataFileAddSlice,
   dataFileListSlice,
+  flowAddSlice,
+  flowDetailSlice,
+  flowListSlice,
+  jobDetailSlice,
   toolAddSlice,
   toolListSlice,
-  flowAddSlice,
-  flowListSlice,
-  flowDetailSlice,
-  jobDetailSlice,
+  userSlice,
 } from './slices'
 
 

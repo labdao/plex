@@ -87,6 +87,7 @@ func init() {
 	initCmd.Flags().BoolVarP(&autoRun, "autoRun", "", false, "Auto submit the IO to plex run")
 	initCmd.Flags().StringVarP(&selector, "selector", "s", "", "Bacalhau Selector (label query) to filter nodes on which this job can be executed, supports '=', '==', and '!='.(e.g. -s key1=value1,key2=value2). Matching objects must satisfy all of the specified label constraints")
 	initCmd.Flags().IntVarP(&maxTime, "maxTime", "m", 60, "Maximum time (min) to run a job")
+	initCmd.Flags().BoolVarP(&showAnimation, "showAnimation", "", true, "Show job processing animation")
 	annotationsForAutoRun = initCmd.Flags().StringArrayP("annotations", "a", []string{}, "Annotations to add to Bacalhau job")
 
 	rootCmd.AddCommand(initCmd)
