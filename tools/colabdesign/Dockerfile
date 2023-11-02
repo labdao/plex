@@ -1,5 +1,5 @@
 # FROM us-docker.pkg.dev/colab-images/public/runtime
-FROM python:3.9.18-slim-bullseye 
+FROM python:3.10.12-slim-bullseye 
 RUN apt update -y \
     && apt install --no-install-recommends -y wget unzip git aria2
 RUN pip3 install --no-cache-dir hydra-core --upgrade
