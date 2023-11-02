@@ -1,0 +1,31 @@
+{
+    "class": "CommandLineTool",
+    "name": "openmm simulate-protein 0.4 correct image",
+    "description": "",
+    "author": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "python scripts/simulate-protein.py"
+    ],
+    "dockerPull": "docker.io/openzyme/plex_openmm@sha256:47d0785f6872c00c2af467d004f418e42493dd68deac08ee8307317b3c239f6c",
+    "gpuBool": true,
+    "networkBool": false,
+    "memoryGB": 12,
+    "cpu": 1.5,
+    "inputs": {
+        "protein": {
+            "type": "File",
+            "glob": ["*.pdb"]
+        }
+    },
+    "outputs": {
+        "trajectory": {
+            "type": "File",
+            "glob": ["trajectory.dcd"]
+        },
+        "final_state": {
+            "type": "File",
+            "glob": ["final_state.pdbx"]
+        }
+    }
+}
