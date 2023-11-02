@@ -59,6 +59,7 @@ sudo rm -rf /usr/local/share/powershell
 sudo rm -rf /usr/local/share/chromium
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /usr/local/lib/node_modules
+sudo rm -rf /var/lib/gems/
 sudo rm -rf /opt/hostedtoolcache/go /opt/hostedtoolcache/Ruby /opt/hostedtoolcache/node
 
 df -h
