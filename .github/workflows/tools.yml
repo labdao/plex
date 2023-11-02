@@ -6,6 +6,9 @@ name: tools
 on:
   push:
     branches: ["main"]
+    # Pattern matched against refs/tags
+    tags:
+      - '**'
     paths:
       - 'tools/**'
       - '.github/workflows/tools.yml'
