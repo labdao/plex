@@ -60,7 +60,7 @@ if 'RFdiffusion' not in sys.path:
 
 # third party imports
 from hydra import compose, initialize
-# from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from inference.utils import parse_pdb
 from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
