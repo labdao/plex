@@ -12,7 +12,7 @@ on:
       context:
         required: false
         type: string
-        default: "/"
+        default: "."
       tag-suffix:
         required: false
         type: string
