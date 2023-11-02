@@ -6,12 +6,12 @@ name: backend
 on:
   push:
     branches: ["main"]
-    paths-ignore:
-      - 'docs/**'
-      - 'infrastructure/**'
     # Pattern matched against refs/tags
     tags:
       - '**'
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
 
   pull_request:
     branches: ["main"]

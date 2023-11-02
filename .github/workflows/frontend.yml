@@ -6,12 +6,12 @@ name: frontend
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend.yml'
     # Pattern matched against refs/tags
     tags:
       - '**'
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
 
   pull_request:
     branches: ["main"]

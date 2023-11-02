@@ -6,12 +6,12 @@ name: ipfs
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'docker/images/ipfs/**'
-      - '.github/workflows/ipfs.yml'
     # Pattern matched against refs/tags
     tags:
       - '**'
+    paths:
+      - 'docker/images/ipfs/**'
+      - '.github/workflows/ipfs.yml'
 
   pull_request:
     branches: ["main"]

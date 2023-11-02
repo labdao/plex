@@ -6,12 +6,12 @@ name: receptor
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'receptor/**'
-      - '.github/workflows/receptor.yml'
     # Pattern matched against refs/tags
     tags:
       - '**'
+    paths:
+      - 'receptor/**'
+      - '.github/workflows/receptor.yml'
   pull_request:
     branches: ["main"]
     paths:
