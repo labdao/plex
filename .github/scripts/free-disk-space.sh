@@ -37,7 +37,8 @@ sudo apt-get remove -y '^dotnet-.*'
 sudo apt-get remove -y 'php.*'
 sudo apt-get remove -y '^mongodb-.*'
 sudo apt-get remove -y '^mysql-.*'
-sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+sudo apt-get remove -y '^postgresql-.*'
+sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox microsoft-edge-stable powershell mono-devel libgl1-mesa-dri iso-codes azure-cli google-cloud-cli
 sudo apt-get autoremove -y
 sudo apt-get clean
 df -h
