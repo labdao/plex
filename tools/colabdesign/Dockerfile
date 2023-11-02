@@ -14,7 +14,7 @@ RUN mkdir /app
 # installation
 COPY . /app
 WORKDIR /app
-RUN python3 install.py
+RUN python3 -u install.py
 
 # Cleanup
 RUN apt-get clean autoclean \

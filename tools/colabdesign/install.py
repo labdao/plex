@@ -4,6 +4,7 @@ import sys, random, string, re
 print("Starting install.py...")
 
 if not os.path.isdir("params"):
+  print("downloading params...")
   os.system("mkdir params")
   # send param download into background
   os.system("(\
