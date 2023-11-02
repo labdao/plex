@@ -1,7 +1,7 @@
-# Workflow to build ipfs container
+# Workflow to build receptor container
 ---
 
-name: ipfs
+name: receptor
 
 on:
   push:
@@ -10,14 +10,13 @@ on:
     tags:
       - '**'
     paths:
-      - 'docker/images/ipfs/**'
-      - '.github/workflows/ipfs.yml'
-
+      - 'receptor/**'
+      - '.github/workflows/receptor.yml'
   pull_request:
     branches: ["main"]
     paths:
-      - 'docker/images/ipfs/**'
-      - '.github/workflows/ipfs.yml'
+      - 'receptor/**'
+      - '.github/workflows/receptor.yml'
 
 # Only run one at a time
 concurrency:
@@ -41,7 +40,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: quay.io/labdao/ipfs
+          images: quay.io/labdao/receptor
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -59,6 +58,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           cache-from: |
-            quay.io/labdao/ipfs:main
+            quay.io/labdao/receptor:main
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          context: receptor/
