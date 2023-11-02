@@ -42,6 +42,9 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
+      - name: show space usage
+        run: du -h --max-depth=10 / | grep '[0-9]G\>'
+
       - name: output df
         run: df -h
 
