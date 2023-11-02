@@ -1,6 +1,7 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setJobDetailError, setJobDetailSuccess, setJobDetail, setJobDetailLoading } from './slice'
+
 import { getJob, patchJob } from './asyncActions'
+import { setJobDetail, setJobDetailError, setJobDetailLoading,setJobDetailSuccess } from './slice'
 
 
 export const jobDetailThunk = createAppAsyncThunk(
