@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: ""
+      run-disk-space-cleanup:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-and-push:
@@ -31,6 +35,7 @@ jobs:
 
       - name: Free Disk Space
         run: .github/scripts/free-disk-space.sh
+        if: ${{ inputs.run-disk-space-cleanup }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

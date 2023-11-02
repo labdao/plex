@@ -38,4 +38,5 @@ jobs:
     with:
       name: ${{matrix.tools}}
       context: tools/${{matrix.tools}}
+      run-disk-space-cleanup: true
     secrets: inherit
