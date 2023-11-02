@@ -17,7 +17,8 @@ from IPython.display import display # , HTML
 print("Starting main.py...")
 
 # setup
-if not os.path.isdir("params"):
+if not os.path.isfile("params/done.txt"):
+  print("params/done.txt doesnt exists, downloading params...")
   os.system("mkdir params")
   # send param download into background
   os.system("(\
