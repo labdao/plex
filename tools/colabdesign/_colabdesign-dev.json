@@ -10,7 +10,7 @@
         "python -u main.py;",
         "echo 'main.py complete!';"
       ],
-    "dockerPull": "quay.io/labdao/colabdesign:092737b@sha256:d2a996b3aea969f043ec915d6e8c78e2948bf5a0cebd145f67181d5322412a8f",
+    "dockerPull": "quay.io/labdao/colabdesign:6cc5ae4@sha256:9761286d6bce72bb6786e73e9da72a18b328fee70fd49d226a0999aef627e654",
     "gpuBool": true,
     "networkBool": true,
     "cpu": 3,
