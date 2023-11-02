@@ -26,17 +26,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # JOB to run change detection
+  changes:
+    runs-on: ubuntu-latest
+    # Required permissions
+    permissions:
+      pull-requests: read
+    # Set job outputs to values from filter step
+    outputs:
+      tools: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        # Only run when tool's directory or workflow files have changed
+        # Add new tools here
+        filters: |
+          colabdesign:
+            - 'tools/colabdesign/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
+          colabfold:
+            - 'tools/colabfold/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
+          oddt:
+            - 'tools/oddt/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
+
   tools:
+    needs: changes
     strategy:
       fail-fast: false
       matrix:
-        tools:
-          - colabdesign
-          - colabfold
-          - oddt
+        tools: "${{ fromJSON(needs.changes.outputs.tools) }}"
     uses: ./.github/workflows/docker.yml
     with:
-      name: ${{matrix.tools}}
-      context: tools/${{matrix.tools}}
+      name: ${{ matrix.tools }}
+      context: tools/${{ matrix.tools }}
       run-disk-space-cleanup: true
     secrets: inherit
