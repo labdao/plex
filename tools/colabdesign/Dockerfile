@@ -2,7 +2,7 @@ FROM us-docker.pkg.dev/colab-images/public/runtime
 
 # Remove unwanted pip packages to slim down image
 RUN pip3 install --no-cache-dir pip-autoremove
-RUN pip-autoremove torch tensorflow -y
+RUN pip-autoremove tensorflow -y
 
 # Remove /tools directory
 RUN rm -rf /tools/
