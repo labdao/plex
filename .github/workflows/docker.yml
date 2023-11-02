@@ -1,5 +1,4 @@
 # Reusable workflow for building docker containers
-# Workflow to build tools containers
 ---
 
 name: Build docker container
@@ -7,27 +6,32 @@ on:
   workflow_call:
     inputs:
       name:
+        description: 'name of the container image'
         required: true
         type: string
       context:
+        description: 'build context'
         required: false
         type: string
         default: "."
       tag-suffix:
+        description: 'container tag suffix'
         required: false
         type: string
         default: ""
       tag-prefix:
+        description: 'container tag prefix'
         required: false
         type: string
         default: ""
       run-disk-space-cleanup:
+        description: 'Boolean flag whether clean script is required on the runner. Should set it to true for large images'
         required: false
         type: boolean
         default: false
 
 jobs:
-  build-and-push:
+  container-build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
