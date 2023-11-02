@@ -31,12 +31,18 @@ jobs:
           - colabfold
           - oddt
     steps:
+      - name: output df
+        run: df -h
+
       - name: Remove unnecessary files
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: output df
+        run: df -h
 
       - name: Checkout
         uses: actions/checkout@v4
