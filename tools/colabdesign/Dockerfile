@@ -25,7 +25,7 @@ RUN pip -q install --no-cache-dir git+https://github.com/googlecolab/colabtools.
 
 # Install ColabDesign
 RUN pip -q install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git && \
-     ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign
+     ln -s /opt/conda/lib/python3.*/site-packages/colabdesign colabdesign
 
 # Install ananas
 ADD https://files.ipd.uw.edu/krypton/ananas ananas
