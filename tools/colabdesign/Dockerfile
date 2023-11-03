@@ -8,10 +8,16 @@ RUN pip3 install --no-cache-dir pip-autoremove && \
      rm -rf /tools/
 
 RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y wget aria2 git
+     apt-get install --no-install-recommends -y wget aria2 git zip unzip
 
 # Install hydra-core
 RUN pip3 install --no-cache-dir hydra-core --upgrade
+
+# Install missing dependencies
+RUN set -ex; \
+     pip3 install ipywidgets httplib2 && \
+     pip3 install -U numpy && \
+     pip3 install -U 'jax[cuda11_pip]' -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 # Copy in Files
 COPY . /app
