@@ -16,6 +16,7 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/bacalhau-project/bacalhau/pkg/system"
+	"github.com/gorilla/websocket"
 )
 
 func GetBacalhauApiHost() string {
@@ -119,6 +120,77 @@ func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int
 	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	return job, err
+}
+
+type Msg struct {
+	Tag          uint8
+	Data         string
+	ErrorMessage string
+}
+
+func StreamBacalhauJobLogsToWebSocket(readerContext context.Context, jobID string, conn *websocket.Conn) error {
+	ctx, cancel := context.WithCancel(readerContext)
+	defer cancel()
+
+	client, err := CreateBacalhauClient()
+	if err != nil {
+		return err
+	}
+
+	job, jobFound, err := client.Get(ctx, jobID)
+	if err != nil {
+		return err
+	}
+
+	if !jobFound {
+		return fmt.Errorf("could not find job %s", jobID)
+	}
+
+	executionID := ""
+	for _, execution := range job.State.Executions {
+		if execution.State.IsActive() {
+			executionID = execution.ComputeReference
+		}
+	}
+
+	if executionID == "" {
+		return fmt.Errorf("unable to find an active execution for job (ID: %s)", jobID)
+	}
+
+	history := true
+	follow := true
+	bacalhauLogConn, err := client.Logs(ctx, jobID, executionID, history, follow)
+	if err != nil {
+		log.Printf("Error connecting to Bacalhau log stream: %s", err)
+		return err
+	}
+	defer bacalhauLogConn.Close()
+
+	// Read messages from the Bacalhau log WebSocket and forward to client's WebSocket
+	for {
+		var msg Msg
+		err := bacalhauLogConn.ReadJSON(&msg)
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+				log.Printf("Error reading from Bacalhau WebSocket: %s", err)
+			}
+			break // Exit the loop if there is an error
+		}
+
+		// Check for an error message within the received message
+		if msg.ErrorMessage != "" {
+			log.Printf("Error message received: %s", msg.ErrorMessage)
+			break
+		}
+
+		// Forward the received data to the client's WebSocket
+		if err := conn.WriteJSON(msg); err != nil {
+			log.Printf("Error writing to client WebSocket: %s", err)
+			break
+		}
+	}
+
+	return nil
 }
 
 func CreateBacalhauClient() (*client.APIClient, error) {

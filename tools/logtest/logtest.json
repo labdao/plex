@@ -1,0 +1,22 @@
+{
+    "class": "CommandLineTool",
+    "name": "log test 0.1",
+    "description": "",
+    "author": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "python -u main.py"
+    ],
+    "dockerPull": "docker.io/openzyme/logtest@sha256:0acc8c5c228b9d8b9796aeadb670af5790efb4551d6463e50af4167847643cbf",
+    "gpuBool": false,
+    "networkBool": false,
+    "memoryGB": 4,
+    "cpu": 0.8,
+    "inputs": {
+        "message": {
+            "type": "File",
+            "glob": ["*.txt"]
+        }
+    },
+    "outputs": {}
+}
