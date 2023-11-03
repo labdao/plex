@@ -19,11 +19,6 @@ on:
         required: false
         type: string
         default: ""
-      tag-prefix:
-        description: 'container tag prefix'
-        required: false
-        type: string
-        default: ""
       run-disk-space-cleanup:
         description: 'Boolean flag whether clean script is required on the runner. Should set it to true for large images'
         required: false
@@ -63,10 +58,10 @@ jobs:
         with:
           images: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}
           tags: |
-            type=ref,suffix=${{ inputs.tag-suffix }},prefix=${{ inputs.tag-prefix }},event=branch
-            type=ref,suffix=${{ inputs.tag-suffix }},prefix=${{ inputs.tag-prefix }},event=pr
-            type=ref,suffix=${{ inputs.tag-suffix }},prefix=${{ inputs.tag-prefix }},event=tag
-            type=sha,suffix=${{ inputs.tag-suffix }},prefix=${{ inputs.tag-prefix }}
+            type=ref,suffix=${{ inputs.tag-suffix }},event=branch
+            type=ref,suffix=${{ inputs.tag-suffix }},event=pr
+            type=ref,suffix=${{ inputs.tag-suffix }},event=tag
+            type=sha,suffix=${{ inputs.tag-suffix }}
   
       - name: Login to registry
         uses: docker/login-action@v3
