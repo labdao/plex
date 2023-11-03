@@ -1,12 +1,14 @@
-FROM us-docker.pkg.dev/colab-images/public/runtime
+# FROM us-docker.pkg.dev/colab-images/public/runtime
+FROM docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
+ENV DEBIAN_FRONTEND=noninteractive
 # Remove unwanted pip packages and directories
 RUN pip3 install --no-cache-dir pip-autoremove && \
      pip-autoremove tensorflow -y && \
      rm -rf /tools/
 
 RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y wget aria2
+     apt-get install --no-install-recommends -y wget aria2 git
 
 # Install hydra-core
 RUN pip3 install --no-cache-dir hydra-core --upgrade
@@ -17,6 +19,9 @@ COPY . /app
 WORKDIR /app
 
 # RUN python3 -u install.py
+
+# Install Google colab
+RUN pip -q install --no-cache-dir git+https://github.com/googlecolab/colabtools.git@1b6462d0e66f5b17ce77c6a17d3a366e327b7096
 
 # Install ColabDesign
 RUN pip -q install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git && \
