@@ -40,7 +40,7 @@ jobs:
     outputs:
       changes: ${{ steps.filter.outputs.ipfs }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: dorny/paths-filter@v2
       id: filter
       with:
@@ -67,7 +67,7 @@ jobs:
     outputs:
       changes: ${{ steps.filter.outputs.receptor }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: dorny/paths-filter@v2
       id: filter
       with:
@@ -94,7 +94,7 @@ jobs:
     outputs:
       changes: ${{ steps.filter.outputs.frontend }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: dorny/paths-filter@v2
       id: filter
       with:
