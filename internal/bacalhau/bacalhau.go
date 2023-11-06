@@ -168,23 +168,17 @@ func StreamBacalhauJobLogsToWebSocket(readerContext context.Context, jobID strin
 
 	// Read messages from the Bacalhau log WebSocket and forward to client's WebSocket
 	for {
-		var msg Msg
-		err := bacalhauLogConn.ReadJSON(&msg)
+		// Read message from Bacalhau WebSocket as raw bytes
+		_, message, err := bacalhauLogConn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				log.Printf("Error reading from Bacalhau WebSocket: %s", err)
 			}
 			break // Exit the loop if there is an error
 		}
-
-		// Check for an error message within the received message
-		if msg.ErrorMessage != "" {
-			log.Printf("Error message received: %s", msg.ErrorMessage)
-			break
-		}
-
-		// Forward the received data to the client's WebSocket
-		if err := conn.WriteJSON(msg); err != nil {
+	
+		// Forward the raw message as text to the client WebSocket
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 			log.Printf("Error writing to client WebSocket: %s", err)
 			break
 		}
