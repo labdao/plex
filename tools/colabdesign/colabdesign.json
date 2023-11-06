@@ -5,12 +5,16 @@
   "author": "",
   "baseCommand": ["/bin/bash", "-c"],
   "arguments": [
-      "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
-      "python main.py;"
-    ],
-  "dockerPull": "quay.io/labdao/colabdesign@sha256:800f4532138afa9664278d6af4769a6f2c3e30fa554cb53e4a0e9491c10bb48a",
+    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
+    "echo 'Attempting main.py...';",
+    "python -u main.py;",
+    "echo 'main.py complete!';"
+  ],
+  "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
   "gpuBool": true,
   "networkBool": true,
+  "cpu": 3,
+  "memoryGB": 12,
   "inputs": {
     "protein": {
       "type": "File",
