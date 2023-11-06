@@ -2,11 +2,8 @@
 FROM docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive
-# Remove unwanted pip packages and directories
-RUN pip3 install --no-cache-dir pip-autoremove && \
-     pip-autoremove tensorflow -y && \
-     rm -rf /tools/
 
+# Install required packages
 RUN apt-get update -y && \
      apt-get install --no-install-recommends -y wget aria2 git zip unzip
 
