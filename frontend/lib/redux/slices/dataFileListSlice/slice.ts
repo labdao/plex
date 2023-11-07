@@ -5,38 +5,72 @@ export interface DataFile {
   CID: string // Content Identifier in IPFS
 }
 
+// interface DataFileListSliceState {
+//   dataFiles: DataFile[]
+//   loading: boolean
+//   error: string | null
+//   success: boolean
+// }
+
+// const initialState: DataFileListSliceState = {
+//   dataFiles: [],
+//   loading: false,
+//   error: null,
+//   success: false,
+// }
+
+// export const dataFileListSlice = createSlice({
+//   name: 'dataFileList',
+//   initialState,
+//   reducers: {
+//     setDataFileList: (state, action: PayloadAction<DataFile[]>) => {
+//       state.dataFiles = action.payload
+//     },
+//     setDataFileListLoading: (state, action: PayloadAction<boolean>) => {
+//       state.loading = action.payload
+//     },
+//     setDataFileListError: (state, action: PayloadAction<string | null>) => {
+//       state.error = action.payload
+//     },
+//     setDataFileListSuccess: (state, action: PayloadAction<boolean>) => {
+//       state.success = action.payload
+//     }
+//   }
+// })
+
 interface DataFileListSliceState {
-  dataFiles: DataFile[]
-  loading: boolean
-  error: string | null
-  success: boolean
+  dataFiles: DataFile[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
+  success: boolean;
 }
 
 const initialState: DataFileListSliceState = {
   dataFiles: [],
-  loading: false,
+  status: 'idle',
   error: null,
   success: false,
-}
+};
 
 export const dataFileListSlice = createSlice({
   name: 'dataFileList',
   initialState,
   reducers: {
     setDataFileList: (state, action: PayloadAction<DataFile[]>) => {
-      state.dataFiles = action.payload
+      state.dataFiles = action.payload;
     },
     setDataFileListLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload
+      state.status = action.payload ? 'loading' : 'idle';
     },
     setDataFileListError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload
+      state.error = action.payload;
     },
     setDataFileListSuccess: (state, action: PayloadAction<boolean>) => {
-      state.success = action.payload
-    }
-  }
-})
+      state.success = action.payload;
+      state.status = action.payload ? 'succeeded' : 'failed';
+    },
+  },
+});
 
 export const {
   setDataFileList,
