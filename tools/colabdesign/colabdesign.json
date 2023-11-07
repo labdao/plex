@@ -5,7 +5,8 @@
   "author": "",
   "baseCommand": ["/bin/bash", "-c"],
   "arguments": [
-    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
+    "mv /inputs/protein/*.pdb /inputs/target_protein.pdb",
+    "mv /inputs/config/*.yaml /inputs/config.yaml",
     "echo 'Attempting main.py...';",
     "python -u main.py;",
     "echo 'main.py complete!';"
