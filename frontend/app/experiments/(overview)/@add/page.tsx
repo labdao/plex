@@ -1,5 +1,6 @@
 "use client";
 
+import { PayloadAction } from "@reduxjs/toolkit";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -35,6 +36,7 @@ import {
   setFlowAddTool,
   toolListThunk,
 } from "@/lib/redux";
+import { DataFile } from '@/lib/redux/slices/dataFileListSlice/slice';
 
 export default function AddGraph() {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,6 +55,7 @@ export default function AddGraph() {
   const tools = useSelector(selectToolList);
 
   const [selectedToolIndex, setSelectedToolIndex] = useState("");
+  const [inputDataFiles, setInputDataFiles] = useState<Record<string, DataFile[]>>({});
 
   useEffect(() => {
     if (cid !== "") {
@@ -69,9 +72,23 @@ export default function AddGraph() {
     dispatch(dataFileListThunk());
   }, [cid, dispatch, router]);
 
-  const handleToolChange = (value: string) => {
-    dispatch(setFlowAddTool(tools[parseInt(value)]));
+  const handleToolChange = async (value: string) => {
+    const selectedTool = tools[parseInt(value)];
+    dispatch(setFlowAddTool(selectedTool));
     setSelectedToolIndex(value);
+  
+    const newInputDataFiles: Record<string, DataFile[]> = {};
+  
+    for (const inputKey in selectedTool.ToolJson.inputs) {
+      const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[] }>)[inputKey];
+      if (typeof input === 'object' && input !== null && 'glob' in input) {
+        const globPatterns = input.glob;
+        const action = await dispatch(dataFileListThunk(globPatterns)) as PayloadAction<DataFile[]>;
+        newInputDataFiles[inputKey] = action.payload;
+      }
+    }
+  
+    setInputDataFiles(newInputDataFiles);
   };
 
   const handleKwargsChange = (value: string, key: string) => {
@@ -141,10 +158,21 @@ export default function AddGraph() {
               </div>
 
               {Object.keys(selectedTool.ToolJson.inputs).map((key) => {
+                // @ts-ignore
+                const inputDetail = selectedTool.ToolJson.inputs[key];
                 return (
                   <div key={key}>
-                    <Label>{key}</Label>
-                    <DataFileSelect onSelect={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} dataFiles={dataFiles} label={key} />
+                    <Label>
+                      {key}
+                      {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(', ')})`}
+                    </Label>
+                    {/* <DataFileSelect onSelect={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} dataFiles={inputDataFiles[key]} label={key} /> */}
+                    <DataFileSelect 
+                      onSelect={(value) => handleKwargsChange(value, key)} 
+                      value={kwargs[key]?.[0]} 
+                      dataFiles={inputDataFiles[key] ? inputDataFiles[key] : []} 
+                      label={key} 
+                    />
                   </div>
                 );
               })}
