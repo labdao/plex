@@ -128,8 +128,13 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
 
+		// TODO: remove comments when working
+		// if filename := r.URL.Query().Get("filename"); filename != "" {
+		// 	query = query.Where("filename = ?", filename)
+		// }
+
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("filename = ?", filename)
+			query = query.Where("filename LIKE ?", "%"+filename+"%")
 		}
 
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
