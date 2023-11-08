@@ -97,6 +97,28 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var kwargs map[string][]string
+
+		kwargsRaw, ok := requestData["kwargs"]
+		if !ok {
+			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
+			return
+		}
+
+		err = json.Unmarshal(kwargsRaw, &kwargs)
+		if err != nil {
+			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
+			http.Error(w, "Invalid structure for kwargs", http.StatusBadRequest)
+			return
+		}
+
+		for key, value := range kwargs {
+			if len(value) == 0 || value[0] == "" {
+				log.Printf("Invalid or missing value for key '%s' in kwargs", key)
+				http.Error(w, fmt.Sprintf("Invalid or missing value for key '%s' in kwargs", key), http.StatusBadRequest)
+				return
+			}
+		}
+
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
 		if err != nil {
 			http.Error(w, "Invalid or missing kwargs", http.StatusBadRequest)
