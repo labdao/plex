@@ -5,16 +5,89 @@ import signal
 import sys
 import random
 import string
-# import re
+import re
 import json
 import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
 import py3Dmol
 from google.colab import files
-from IPython.display import display # , HTML
+from IPython.display import display, HTML
+
+import subprocess
+import pandas as pd
+
+def prodigy_run(csv_path, pdb_path):
+    
+    # load csv
+    df = pd.read_csv(csv_path)
+
+    if not os.path.isdir("prodigy"):
+        print("installing Prodigy...")
+        #install prodigy
+        os.system("git clone -q https://github.com/haddocking/prodigy")
+        # os.system("pip install -q /content/prodigy/")
+        os.system("pip install -q prodigy/")    
+
+    for i,r in df.iterrows():
+        design = r['design']
+        n = r['n']
+        file_path = f"{pdb_path}/design{design}_n{n}.pdb"
+        print(file_path)
+        try:
+            subprocess.run(["prodigy", "-q", file_path], stdout=open('temp.txt', 'w'), check=True)
+            with open('temp.txt', 'r') as f:
+                lines = f.readlines()
+                if lines:  # Check if lines is not empty
+                    affinity = float(lines[0].split(' ')[-1].split('/')[0])
+                    df.loc[i,'affinity'] = affinity
+                else:
+                    print(f"No output from prodigy for {r['path']}")
+                    # Handle the case where prodigy did not produce output
+        except subprocess.CalledProcessError:
+            print(f"Prodigy command failed for {r['path']}")
+    # export results
+    df.to_csv(f"{csv_path}",index=None)
 
 print("Starting main.py...")
+
+# setup
+if not os.path.isdir("params"):
+  os.system("apt-get install aria2")
+  os.system("mkdir params")
+  # send param download into background
+  os.system("(\
+  aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip; \
+  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt; \
+  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt; \
+  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Complex_beta_ckpt.pt; \
+  aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar; \
+  tar -xf alphafold_params_2022-12-06.tar -C params; \
+  touch params/done.txt) &")
+
+if not os.path.isdir("RFdiffusion"):
+  print("installing RFdiffusion...")
+  os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
+  os.system("pip -q install jedi omegaconf hydra-core icecream pyrsistent")
+  os.system("pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
+  os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .")
+  os.system("wget -qnc https://files.ipd.uw.edu/krypton/ananas")
+  os.system("chmod +x ananas")
+
+if not os.path.isdir("colabdesign"):
+  print("installing ColabDesign...")
+  os.system("pip -q install git+https://github.com/sokrypton/ColabDesign.git")
+  os.system("ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign")
+
+if not os.path.isdir("RFdiffusion/models"):
+  print("downloading RFdiffusion params...")
+  os.system("mkdir RFdiffusion/models")
+  models = ["Base_ckpt.pt","Complex_base_ckpt.pt","Complex_beta_ckpt.pt"]
+  for m in models:
+    while os.path.isfile(f"{m}.aria2"):
+      time.sleep(5)
+  os.system(f"mv {' '.join(models)} RFdiffusion/models")
+  os.system("unzip schedules.zip; rm schedules.zip")
 
 if 'RFdiffusion' not in sys.path:
   os.environ["DGLBACKEND"] = "pytorch"
@@ -29,12 +102,30 @@ from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
 
+def get_files_from_directory(root_dir, extension, max_depth=3):
+    pdb_files = []
+    
+    for root, dirs, files in os.walk(root_dir):
+        depth = root[len(root_dir):].count(os.path.sep)
+        
+        if depth <= max_depth:
+            for f in files:
+                if f.endswith(extension):
+                    pdb_files.append(os.path.join(root, f))
+                    
+            # Prune the directory list if we are at max_depth
+            if depth == max_depth:
+                del dirs[:]
+    print("Found {} files with extension {} in directory {}".format(len(pdb_files), extension, root_dir))
+    return pdb_files
+
 def get_pdb(pdb_code=None):
   print("Getting PDB...", pdb_code)
   if pdb_code is None or pdb_code == "":
-    upload_dict = files.upload()
-    pdb_string = upload_dict[list(upload_dict.keys())[0]]
-    with open("tmp.pdb","wb") as out: out.write(pdb_string)
+    # upload_dict = files.upload()
+    # pdb_string = upload_dict[list(upload_dict.keys())[0]]
+    # with open("tmp.pdb","wb") as out: out.write(pdb_string)
+    print("Warning: no target pdb file.")
     return "tmp.pdb"
   elif os.path.isfile(pdb_code):
     return pdb_code
@@ -47,10 +138,10 @@ def get_pdb(pdb_code=None):
     os.system(f"wget -qnc https://alphafold.ebi.ac.uk/files/AF-{pdb_code}-F1-model_v3.pdb")
     return f"AF-{pdb_code}-F1-model_v3.pdb"
 
-def run_ananas(pdb_str, path, sym=None):
+def run_ananas(pdb_str, path, outputs_directory, sym=None):
   print("Running AnAnaS...")
-  pdb_filename = f"outputs/{path}/ananas_input.pdb"
-  out_filename = f"outputs/{path}/ananas.json"
+  pdb_filename = f"{outputs_directory}/{path}/ananas_input.pdb"
+  out_filename = f"{outputs_directory}/{path}/ananas.json"
   with open(pdb_filename,"w") as handle:
     handle.write(pdb_str)
 
@@ -100,7 +191,7 @@ def run(command, steps, num_designs=1, visual="none"):
       pid = int(f.read().strip())
     os.remove(pid_file)
     return pid
-
+  
   def is_process_running(pid):
     try:
       os.kill(pid, 0)
@@ -178,10 +269,10 @@ def run(command, steps, num_designs=1, visual="none"):
 def run_diffusion(contigs, path, pdb=None, iterations=50,
                   symmetry="none", order=1, hotspot=None,
                   chains=None, add_potential=False,
-                  num_designs=1, use_beta_model=False, visual="none"):
+                  num_designs=1, use_beta_model=False, visual="none", outputs_directory="outputs"):
 
   print("Running diffusion with contigs:", contigs, "and path:", path)
-  full_path = f"outputs/{path}"
+  full_path = f"{outputs_directory}/{path}"
   os.makedirs(full_path, exist_ok=True)
   opts = [f"inference.output_prefix={full_path}",
           f"inference.num_designs={num_designs}"]
@@ -223,7 +314,7 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
   if mode in ["partial","fixed"]:
     pdb_str = pdb_to_string(get_pdb(pdb), chains=chains)
     if symmetry == "auto":
-      a, pdb_str = run_ananas(pdb_str, path)
+      a, pdb_str = run_ananas(pdb_str, path, outputs_directory)
       if a is None:
         print(f'ERROR: no symmetry detected')
         symmetry = None
@@ -292,8 +383,8 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
 
   # fix pdbs
   for n in range(num_designs):
-    pdbs = [f"outputs/traj/{path}_{n}_pX0_traj.pdb",
-            f"outputs/traj/{path}_{n}_Xt-1_traj.pdb",
+    pdbs = [f"{outputs_directory}/traj/{path}_{n}_pX0_traj.pdb",
+            f"{outputs_directory}/traj/{path}_{n}_Xt-1_traj.pdb",
             f"{full_path}_{n}.pdb"]
     for pdb in pdbs:
       with open(pdb,"r") as handle: pdb_str = handle.read()
@@ -301,120 +392,157 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
 
   return contigs, copies
 
+import hydra
+from omegaconf import DictConfig, OmegaConf
+from hydra.core.hydra_config import HydraConfig
 
-# Initialize Hydra
-print("Initializing Hydra...")
-initialize(config_path="../inputs")
-cfg = compose(config_name="config.yaml")
-print(OmegaConf.to_yaml(cfg))
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def my_app(cfg : DictConfig) -> None:
+    print(OmegaConf.to_yaml(cfg))
+    print(f"Working directory : {os.getcwd()}")
 
-start_time = time.time()
+    # defining output directory
+    if cfg.outputs.directory is None:
+        outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+    else:
+        outputs_directory = cfg.outputs.directory
+    print(f"Output directory  : {outputs_directory}")
 
-print("running RFDiffusion...")
-name = cfg.basic_settings.experiment_name
-pdb = cfg.basic_settings.pdb
-hotspot = cfg.advanced_settings.hotspot.replace(" ", "")
-iterations = cfg.expert_settings.RFDiffusion_Binder.iterations
-num_designs = cfg.basic_settings.num_designs
-use_beta_model = cfg.advanced_settings.use_beta_model
-visual = cfg.expert_settings.RFDiffusion_Binder.visual
+    # filtering target and binder files if pattern is available
+    if cfg.inputs_target.target_pattern is not None:
+        input_target_path = get_files_from_directory(cfg.inputs_target.target_directory, '.csv')
+        input_target_path = [file for file in input_target_path if cfg.inputs_target.target_pattern in file]
+        print("Retained targets : ", input_target_path)
+    elif cfg.inputs_target.target_pattern is None:
+        input_target_path = cfg.inputs_target.target_directory
+        # input_target_path = OmegaConf.to_container(input_target_path)
+    if not isinstance(input_target_path, list):
+        input_target_path = [input_target_path]
+    
+    # running main function
+    for target_path in input_target_path:
+        # for binder_path in input_binder_path:
+        
+            
+        start_time = time.time()
 
-# symmetry settings
-symmetry = cfg.expert_settings.RFDiffusion_Symmetry.symmetry
-order = cfg.expert_settings.RFDiffusion_Symmetry.order
-chains = cfg.expert_settings.RFDiffusion_Symmetry.chains
-add_potential = cfg.expert_settings.RFDiffusion_Symmetry.add_potential
+        print("running RFDiffusion...")
+        name = cfg.params.basic_settings.experiment_name
+        pdb = target_path # cfg.basic_settings.pdb
+        hotspot = cfg.params.advanced_settings.hotspot.replace(" ", "")
+        iterations = cfg.params.expert_settings.RFDiffusion_Binder.iterations
+        num_designs = cfg.params.basic_settings.num_designs
+        use_beta_model = cfg.params.advanced_settings.use_beta_model
+        visual = cfg.params.expert_settings.RFDiffusion_Binder.visual
 
-# contig assembly
-##TODO: simplify load contig parameters
-binder_length = cfg.basic_settings.binder_length
-pdb_chain = cfg.basic_settings.pdb_chain
-pdb_start_residue = cfg.advanced_settings.pdb_start_residue
-pdb_end_residue = cfg.advanced_settings.pdb_end_residue
-min_binder_length = cfg.advanced_settings.min_binder_length
-max_binder_length = cfg.advanced_settings.max_binder_length
-contigs_override = cfg.expert_settings.RFDiffusion_Binder.contigs_override
+        # symmetry settings
+        symmetry = cfg.params.expert_settings.RFDiffusion_Symmetry.symmetry
+        order = cfg.params.expert_settings.RFDiffusion_Symmetry.order
+        chains = cfg.params.expert_settings.RFDiffusion_Symmetry.chains
+        add_potential = cfg.params.expert_settings.RFDiffusion_Symmetry.add_potential
 
-## binder length
-if min_binder_length != None and max_binder_length != None:
-    binder_length_constructed = str(min_binder_length) + "-" + str(max_binder_length)
-else:
-    binder_length_constructed = str(binder_length) + "-" + str(binder_length)
+        # contig assembly
+        ##TODO: simplify load contig parameters
+        binder_length = cfg.params.basic_settings.binder_length
+        pdb_chain = cfg.params.basic_settings.pdb_chain
+        pdb_start_residue = cfg.params.advanced_settings.pdb_start_residue
+        pdb_end_residue = cfg.params.advanced_settings.pdb_end_residue
+        min_binder_length = cfg.params.advanced_settings.min_binder_length
+        max_binder_length = cfg.params.advanced_settings.max_binder_length
+        contigs_override = cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
 
-## residue start
-if pdb_start_residue != None and pdb_end_residue != None:
-    residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
-else:
-    residue_constructed = ""
+        ## binder length
+        if min_binder_length != None and max_binder_length != None:
+            binder_length_constructed = str(min_binder_length) + "-" + str(max_binder_length)
+        else:
+            binder_length_constructed = str(binder_length) + "-" + str(binder_length)
 
-## contig assembly
-contigs_constructed = pdb_chain + residue_constructed + "/0: " + binder_length_constructed
-if contigs_override == "":
-    contigs = contigs_constructed
-else:
-    contigs = contigs_override
+        ## residue start
+        if pdb_start_residue != None and pdb_end_residue != None:
+            residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
+        else:
+            residue_constructed = ""
 
-# determine where to save
-path = name
-while os.path.exists(f"outputs/{path}_0.pdb"):
-  path = name + "_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+        ## contig assembly
+        contigs_constructed = pdb_chain + residue_constructed + "/0: " + binder_length_constructed
+        if contigs_override == "":
+            contigs = contigs_constructed
+        else:
+            contigs = contigs_override
 
-flags = {"contigs":contigs,
-        "pdb":pdb,
-        "order":order,
-        "iterations":iterations,
-        "symmetry":symmetry,
-        "hotspot":hotspot,
-        "path":path,
-        "chains":chains,
-        "add_potential":add_potential,
-        "num_designs":num_designs,
-        "use_beta_model":use_beta_model,
-        "visual":visual}
+        # determine where to save
+        path = name
+        while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
+          path = name + "_" + ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
 
-for k,v in flags.items():
-  if isinstance(v,str):
-    flags[k] = v.replace("'","").replace('"','')
+        flags = {"contigs":contigs,
+                "pdb":pdb,
+                "order":order,
+                "iterations":iterations,
+                "symmetry":symmetry,
+                "hotspot":hotspot,
+                "path":path,
+                "chains":chains,
+                "add_potential":add_potential,
+                "num_designs":num_designs,
+                "use_beta_model":use_beta_model,
+                "visual":visual,
+                "outputs_directory":outputs_directory}
 
-contigs, copies = run_diffusion(**flags)
+        for k,v in flags.items():
+          if isinstance(v,str):
+            flags[k] = v.replace("'","").replace('"','')
 
-#@title run **ProteinMPNN** to generate a sequence and **AlphaFold** to validate
-num_seqs = cfg.expert_settings.ProteinMPNN.num_seqs
-initial_guess = cfg.expert_settings.ProteinMPNN.initial_guess
-num_recycles = cfg.expert_settings.Alphafold.num_recycles
-use_multimer = cfg.expert_settings.Alphafold.use_multimer
-rm_aa = cfg.expert_settings.ProteinMPNN.rm_aa
-mpnn_sampling_temp = cfg.expert_settings.ProteinMPNN.mpnn_sampling_temp
-use_solubleMPNN = cfg.expert_settings.ProteinMPNN.use_solubleMPNN
+        contigs, copies = run_diffusion(**flags)
 
-contigs_str = ":".join(contigs)
-opts = [f"--pdb=outputs/{path}_0.pdb",
-        f"--loc=outputs/{path}",
-        f"--contig={contigs_str}",
-        f"--copies={copies}",
-        f"--num_seqs={num_seqs}",
-        f"--num_recycles={num_recycles}",
-        f"--rm_aa={rm_aa}",
-        f"--mpnn_sampling_temp={mpnn_sampling_temp}",
-        f"--num_designs={num_designs}"]
-if initial_guess: opts.append("--initial_guess")
-if use_multimer: opts.append("--use_multimer")
-if use_solubleMPNN: opts.append("--use_soluble")
-opts = ' '.join(opts)
+        #@title run **ProteinMPNN** to generate a sequence and **AlphaFold** to validate
+        num_seqs = cfg.params.expert_settings.ProteinMPNN.num_seqs
+        initial_guess = cfg.params.expert_settings.ProteinMPNN.initial_guess
+        num_recycles = cfg.params.expert_settings.Alphafold.num_recycles
+        use_multimer = cfg.params.expert_settings.Alphafold.use_multimer
+        rm_aa = cfg.params.expert_settings.ProteinMPNN.rm_aa
+        mpnn_sampling_temp = cfg.params.expert_settings.ProteinMPNN.mpnn_sampling_temp
+        use_solubleMPNN = cfg.params.expert_settings.ProteinMPNN.use_solubleMPNN
 
-command_design = f"python colabdesign/rf/designability_test.py {opts}"
-os.system(command_design)
+        if not os.path.isfile("params/done.txt"):
+          print("downloading AlphaFold params...")
+          while not os.path.isfile("params/done.txt"):
+            time.sleep(5)
 
-command_mv = f"mkdir outputs/{path}/traj && mv outputs/traj/{path}* outputs/{path}/traj && mv outputs/{path}_* outputs/{path}"
-command_zip = f"zip -r {path}.result.zip outputs/{path}*"
-command_collect = f"mv {path}.result.zip /outputs && mv outputs/{path}/best.pdb /outputs && mv outputs/{path}/mpnn_results.csv /outputs && mv outputs/{path}/design.fasta /outputs"
-os.system(command_mv)
-os.system(command_zip)
-os.system(command_collect)
+        contigs_str = ":".join(contigs)
+        opts = [f"--pdb={outputs_directory}/{path}_0.pdb",
+                f"--loc={outputs_directory}/{path}",
+                f"--contig={contigs_str}",
+                f"--copies={copies}",
+                f"--num_seqs={num_seqs}",
+                f"--num_recycles={num_recycles}",
+                f"--rm_aa={rm_aa}",
+                f"--mpnn_sampling_temp={mpnn_sampling_temp}",
+                f"--num_designs={num_designs}"]
+        if initial_guess: opts.append("--initial_guess")
+        if use_multimer: opts.append("--use_multimer")
+        if use_solubleMPNN: opts.append("--use_soluble")
+        opts = ' '.join(opts)
 
-print("design complete...")
-end_time = time.time()
-duration = end_time - start_time
-print(f"executed in {duration:.2f} seconds.")
+        command_design = f"python colabdesign/rf/designability_test.py {opts}"
+        os.system(command_design)
 
-print("Completed main.py...")
+        print("running Prodigy")
+        prodigy_run(f"{outputs_directory}/{path}/mpnn_results.csv", f"{outputs_directory}/{path}/all_pdb")
+
+        command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
+        command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
+        command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory} && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory} && mv {outputs_directory}/{path}/design.fasta /{outputs_directory}"
+        os.system(command_mv)
+        os.system(command_zip)
+        os.system(command_collect)
+
+        print("design complete...")
+        end_time = time.time()
+        duration = end_time - start_time
+        print(f"executed in {duration:.2f} seconds.")
+
+        print("Completed main.py...")
+
+if __name__ == "__main__":
+    my_app()
