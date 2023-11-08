@@ -11,8 +11,7 @@
     "arguments": [
         "mv /inputs/protein/*.pdb /inputs/target_protein.pdb;",
         "mv /inputs/config/*.yaml /inputs/config.yaml;",
-        "python -u main.py;",
-        "echo 'main.py complete!';"
+        "python -u main.py;"
     ],
     "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
     "gpuBool": true,

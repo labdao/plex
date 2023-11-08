@@ -55,6 +55,12 @@ RUN set -ex; \
      unzip schedules.zip; rm schedules.zip && \
      touch params/done.txt
 
+# Install prodigy
+RUN apt-get update -y && \
+     apt-get install --no-install-recommends -y build-essential && \
+     git clone -q https://github.com/haddocking/prodigy && \
+     pip install -q prodigy/
+
 # Cleanup
 RUN apt-get clean autoclean \
     && apt-get autoremove -y \

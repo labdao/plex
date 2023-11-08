@@ -318,17 +318,7 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
   return contigs, copies
 
 def prodigy_run(csv_path, pdb_path):
-    
-    # load csv
     df = pd.read_csv(csv_path)
-
-    if not os.path.isdir("prodigy"):
-        print("installing Prodigy...")
-        #install prodigy
-        os.system("git clone -q https://github.com/haddocking/prodigy")
-        # os.system("pip install -q /content/prodigy/")
-        os.system("pip install -q prodigy/")    
-
     for i,r in df.iterrows():
         design = r['design']
         n = r['n']
@@ -376,7 +366,6 @@ def my_app(cfg : DictConfig) -> None:
             
         start_time = time.time()
 
-        print("running RFDiffusion...")
         name = cfg.params.basic_settings.experiment_name
         pdb = target_path # cfg.basic_settings.pdb
         hotspot = cfg.params.advanced_settings.hotspot.replace(" ", "")
