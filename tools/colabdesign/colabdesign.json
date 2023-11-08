@@ -35,7 +35,7 @@
         },
         "target_chain": {
             "type": "string",
-            "default": "D",
+            "default": "A",
             "grouping": "target",
             "position": "102"
         },
