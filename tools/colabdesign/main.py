@@ -13,88 +13,13 @@ import ipywidgets as widgets
 import py3Dmol
 from google.colab import files
 from IPython.display import display, HTML
-
 import subprocess
 import pandas as pd
 
-def prodigy_run(csv_path, pdb_path):
-    
-    # load csv
-    df = pd.read_csv(csv_path)
-
-    if not os.path.isdir("prodigy"):
-        print("installing Prodigy...")
-        #install prodigy
-        os.system("git clone -q https://github.com/haddocking/prodigy")
-        # os.system("pip install -q /content/prodigy/")
-        os.system("pip install -q prodigy/")    
-
-    for i,r in df.iterrows():
-        design = r['design']
-        n = r['n']
-        file_path = f"{pdb_path}/design{design}_n{n}.pdb"
-        print(file_path)
-        try:
-            subprocess.run(["prodigy", "-q", file_path], stdout=open('temp.txt', 'w'), check=True)
-            with open('temp.txt', 'r') as f:
-                lines = f.readlines()
-                if lines:  # Check if lines is not empty
-                    affinity = float(lines[0].split(' ')[-1].split('/')[0])
-                    df.loc[i,'affinity'] = affinity
-                else:
-                    print(f"No output from prodigy for {r['path']}")
-                    # Handle the case where prodigy did not produce output
-        except subprocess.CalledProcessError:
-            print(f"Prodigy command failed for {r['path']}")
-    # export results
-    df.to_csv(f"{csv_path}",index=None)
-
-print("Starting main.py...")
-
-# setup
-if not os.path.isdir("params"):
-  os.system("apt-get install aria2")
-  os.system("mkdir params")
-  # send param download into background
-  os.system("(\
-  aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Complex_beta_ckpt.pt; \
-  aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar; \
-  tar -xf alphafold_params_2022-12-06.tar -C params; \
-  touch params/done.txt) &")
-
-if not os.path.isdir("RFdiffusion"):
-  print("installing RFdiffusion...")
-  os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
-  os.system("pip -q install jedi omegaconf hydra-core icecream pyrsistent")
-  os.system("pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html")
-  os.system("cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .")
-  os.system("wget -qnc https://files.ipd.uw.edu/krypton/ananas")
-  os.system("chmod +x ananas")
-
-if not os.path.isdir("colabdesign"):
-  print("installing ColabDesign...")
-  os.system("pip -q install git+https://github.com/sokrypton/ColabDesign.git")
-  os.system("ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign")
-
-if not os.path.isdir("RFdiffusion/models"):
-  print("downloading RFdiffusion params...")
-  os.system("mkdir RFdiffusion/models")
-  models = ["Base_ckpt.pt","Complex_base_ckpt.pt","Complex_beta_ckpt.pt"]
-  for m in models:
-    while os.path.isfile(f"{m}.aria2"):
-      time.sleep(5)
-  os.system(f"mv {' '.join(models)} RFdiffusion/models")
-  os.system("unzip schedules.zip; rm schedules.zip")
-
-if 'RFdiffusion' not in sys.path:
-  os.environ["DGLBACKEND"] = "pytorch"
-  sys.path.append('RFdiffusion')
-
 # third party imports
+import hydra
 from hydra import compose, initialize
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from inference.utils import parse_pdb
 from colabdesign.rf.utils import get_ca
@@ -392,9 +317,37 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
 
   return contigs, copies
 
-import hydra
-from omegaconf import DictConfig, OmegaConf
-from hydra.core.hydra_config import HydraConfig
+def prodigy_run(csv_path, pdb_path):
+    
+    # load csv
+    df = pd.read_csv(csv_path)
+
+    if not os.path.isdir("prodigy"):
+        print("installing Prodigy...")
+        #install prodigy
+        os.system("git clone -q https://github.com/haddocking/prodigy")
+        # os.system("pip install -q /content/prodigy/")
+        os.system("pip install -q prodigy/")    
+
+    for i,r in df.iterrows():
+        design = r['design']
+        n = r['n']
+        file_path = f"{pdb_path}/design{design}_n{n}.pdb"
+        print(file_path)
+        try:
+            subprocess.run(["prodigy", "-q", file_path], stdout=open('temp.txt', 'w'), check=True)
+            with open('temp.txt', 'r') as f:
+                lines = f.readlines()
+                if lines:  # Check if lines is not empty
+                    affinity = float(lines[0].split(' ')[-1].split('/')[0])
+                    df.loc[i,'affinity'] = affinity
+                else:
+                    print(f"No output from prodigy for {r['path']}")
+                    # Handle the case where prodigy did not produce output
+        except subprocess.CalledProcessError:
+            print(f"Prodigy command failed for {r['path']}")
+    # export results
+    df.to_csv(f"{csv_path}",index=None)
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg : DictConfig) -> None:
@@ -408,18 +361,15 @@ def my_app(cfg : DictConfig) -> None:
         outputs_directory = cfg.outputs.directory
     print(f"Output directory  : {outputs_directory}")
 
-    # filtering target and binder files if pattern is available
+    # defining input files
+    input_target_path = get_files_from_directory(cfg.inputs.target_directory, ".pdb")
     if cfg.inputs.target_pattern is not None:
-        input_target_path = get_files_from_directory(cfg.inputs.target_directory, '.csv')
         input_target_path = [file for file in input_target_path if cfg.inputs.target_pattern in file]
-        print("Retained targets : ", input_target_path)
-    elif cfg.inputs.target_pattern is None:
-        input_target_path = cfg.inputs.target_directory
-        # input_target_path = OmegaConf.to_container(input_target_path)
     if not isinstance(input_target_path, list):
         input_target_path = [input_target_path]
+    print("Identified Targets : ", input_target_path)
     
-    # running main function
+    # running design for every input target file
     for target_path in input_target_path:
         # for binder_path in input_binder_path:
         
@@ -495,7 +445,6 @@ def my_app(cfg : DictConfig) -> None:
 
         contigs, copies = run_diffusion(**flags)
 
-        #@title run **ProteinMPNN** to generate a sequence and **AlphaFold** to validate
         num_seqs = cfg.params.expert_settings.ProteinMPNN.num_seqs
         initial_guess = cfg.params.expert_settings.ProteinMPNN.initial_guess
         num_recycles = cfg.params.expert_settings.Alphafold.num_recycles
@@ -541,8 +490,6 @@ def my_app(cfg : DictConfig) -> None:
         end_time = time.time()
         duration = end_time - start_time
         print(f"executed in {duration:.2f} seconds.")
-
-        print("Completed main.py...")
 
 if __name__ == "__main__":
     my_app()

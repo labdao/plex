@@ -1,3 +1,2 @@
-name: "pdb"
-target_directory: 'pdc_upar_1.pdb'
-target_pattern: null
+target_directory: /inputs
+target_pattern: target

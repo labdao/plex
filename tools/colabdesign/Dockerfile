@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required packages
 RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y wget aria2 git zip unzip
+     apt-get install --no-install-recommends -y wget aria2 git zip unzip less nano
 
 # Install hydra-core
 RUN pip3 install --no-cache-dir hydra-core --upgrade
