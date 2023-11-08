@@ -94,12 +94,20 @@
         }
     },
     "outputs": {
-        "compressed_designs": {
-            "type": "Array",
-            "item": "File",
-            "glob": [
-                "*.zip"
-            ]
+        "scores": {
+          "type": "File",
+          "item": "",
+          "glob": ["mpnn_results.csv"]
+        },
+        "best_design": {
+          "type": "File",
+          "item": "",
+          "glob": ["best.pdb"]
+        },
+        "all_outputs": {
+          "type": "Array",
+          "item": "File",
+          "glob": ["*"]
         }
     }
 }
