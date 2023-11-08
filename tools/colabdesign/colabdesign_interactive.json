@@ -4,13 +4,16 @@
     "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
     "author": "sokrypton",
     "task": "protein design",
-    "baseCommand": ["/bin/bash", "-c"],
+    "baseCommand": [
+        "/bin/bash",
+        "-c"
+    ],
     "arguments": [
-      "mv /inputs/protein/*.pdb /inputs/target_protein.pdb",
-      "mv /inputs/config/*.yaml /inputs/config.yaml",
-      "echo 'Attempting main.py...';",
-      "python -u main.py;",
-      "echo 'main.py complete!';"
+        "mv /inputs/protein/*.pdb /inputs/target_protein.pdb;",
+        "mv /inputs/config/*.yaml /inputs/config.yaml;",
+        "echo 'Attempting main.py...';",
+        "python -u main.py;",
+        "echo 'main.py complete!';"
     ],
     "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
     "gpuBool": true,
@@ -21,57 +24,61 @@
         "target_protein": {
             "type": "File",
             "item": "",
-            "glob": ["*.pdb"],
+            "glob": [
+                "*.pdb"
+            ],
             "grouping": "target",
-            "position": 101
+            "position": "101"
         },
         "target_chain": {
             "type": "string",
             "default": "D",
             "grouping": "target",
-            "position": 102
+            "position": "102"
         },
         "target_start_residue": {
             "type": "int",
-            "default": 1,
-            "min": 1,
+            "default": "1",
+            "min": "1",
             "grouping": "target",
-            "position": 103
+            "position": "103"
         },
         "target_end_residue": {
             "type": "int",
-            "min": 1,
+            "min": "1",
             "grouping": "target",
-            "position": 104
+            "position": "104"
         },
         "hotspot": {
             "type": "string",
             "default": "",
             "grouping": "target",
-            "position": 105
+            "position": "105"
         },
         "binder_length": {
             "type": "int",
-            "default": 50,
-            "min": 1,
-            "max": 1000,
+            "default": "50",
+            "min": "1",
+            "max": "1000",
             "description": "The length of the protein binder that is being designed",
             "grouping": "binder",
-            "position": 201
+            "position": "201"
         },
         "number_of_binders": {
             "type": "int",
-            "default": 2,
+            "default": "2",
             "description": "The number of protein binders to be designed",
             "grouping": "binder",
-            "position": 202
+            "position": "202"
         }
     },
     "outputs": {
-      "compressed_designs": {
-        "type": "Array",
-        "item": "File",
-        "glob": ["*.zip"]
-      }
+        "compressed_designs": {
+            "type": "Array",
+            "item": "File",
+            "glob": [
+                "*.zip"
+            ]
+        }
     }
-  }
+}
