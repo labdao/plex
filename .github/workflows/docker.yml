@@ -1,0 +1,80 @@
+# Reusable workflow for building docker containers
+---
+
+name: Build docker container
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: 'name of the container image'
+        required: true
+        type: string
+      context:
+        description: 'build context'
+        required: false
+        type: string
+        default: "."
+      tag-suffix:
+        description: 'container tag suffix'
+        required: false
+        type: string
+        default: ""
+      run-disk-space-cleanup:
+        description: 'Boolean flag whether clean script is required on the runner. Should set it to true for large images'
+        required: false
+        type: boolean
+        default: false
+      registry:
+        description: 'container registry'
+        required: false
+        type: string
+        default: 'quay.io'
+      registry-org-name:
+        description: 'container registry org name'
+        required: false
+        type: string
+        default: 'labdao'
+
+jobs:
+  container-build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        run: .github/scripts/free-disk-space.sh
+        if: ${{ inputs.run-disk-space-cleanup }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}
+          tags: |
+            type=ref,suffix=${{ inputs.tag-suffix }},event=branch
+            type=ref,suffix=${{ inputs.tag-suffix }},event=pr
+            type=ref,suffix=${{ inputs.tag-suffix }},event=tag
+            type=sha,suffix=${{ inputs.tag-suffix }}
+  
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.LABDAO_QUAY_USERNAME }}
+          password: ${{ secrets.LABDAO_QUAY_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          context: ${{inputs.context}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
