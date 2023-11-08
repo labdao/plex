@@ -9,9 +9,16 @@
         "-c"
     ],
     "arguments": [
-        "mv /inputs/protein/*.pdb /inputs/target_protein.pdb;",
-        "mv /inputs/config/*.yaml /inputs/config.yaml;",
-        "python -u main.py;"
+        "python -u main.py \\",
+        "inputs=container \\",
+        "outputs=container \\",
+        "params.basic_settings.pdb_chain=$(inputs.target_chain.value) \\",
+        "params.advanced_settings.pdb_start_residue=$(inputs.target_start_residue.value) \\",
+        "params.advanced_settings.pdb_end_residue=$(inputs.target_end_residue.value) \\",
+        "params.advanced_settings.hotspot=$(inputs.hotspot.value) \\",
+        "params.basic_settings.binder_length=$(inputs.binder_length.value) \\",
+        "params.basic_settings.num_designs=$(inputs.number_of_binders.value) \\",
+        "params.expert_settings.RFDiffusion_Binder.contigs_override=$(inputs.full_prompt.value);"
     ],
     "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
     "gpuBool": true,

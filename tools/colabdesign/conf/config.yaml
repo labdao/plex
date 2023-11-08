@@ -1,4 +1,4 @@
 defaults:
   - inputs: container
-  - params: params
+  - params: default
   - outputs: container
