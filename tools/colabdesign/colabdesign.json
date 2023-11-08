@@ -5,13 +5,8 @@
   "author": "",
   "baseCommand": ["/bin/bash", "-c"],
   "arguments": [
-    "mv /inputs/*.pdb /inputs/target_protein.pdb || true;",
-    "mv /inputs/*.yaml /inputs/config.yaml || true;",
-    "mv /inputs/protein/*.pdb /inputs/target_protein.pdb || true;",
-    "mv /inputs/config/*.yaml /inputs/config.yaml || true;",
+    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
     "ls /inputs;",
-    "test -s /inputs/target_protein.pdb || (echo Target protein missing...Exiting && exit 1);",
-    "test -s /inputs/config.yaml || (echo Config file missing...Exiting && exit 1);",
     "echo 'Attempting main.py...';",
     "python -u main.py;",
     "echo 'main.py complete!';"
