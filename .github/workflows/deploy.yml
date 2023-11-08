@@ -10,19 +10,19 @@ on:
         required: true
         type: string
       container-name:
-        description: 'name of the container image'
+        description: 'name of the container'
         required: true
         type: string
       task-definition:
-        description: 'name of the container image'
+        description: 'task definition'
         required: true
         type: string
       service:
-        description: 'name of the container image'
+        description: 'service name'
         required: true
         type: string
       cluster:
-        description: 'name of the container image'
+        description: 'ecs cluster name'
         required: true
         type: string
 
