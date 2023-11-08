@@ -1,4 +1,4 @@
 defaults:
-  - inputs_target: VTNC
-  - params: default
+  - inputs_target: binder
+  - params: params
   - outputs: hydra
