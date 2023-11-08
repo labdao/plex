@@ -49,11 +49,15 @@ jobs:
         role-to-assume: arn:aws:iam::321042884980:role/github-action-role
         aws-region: us-east-2
 
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition ${{ inputs.task-definition }} --query taskDefinition > task-definition.json
+
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: ${{ inputs.task-definition }}
+        task-definition: task-definition.json
         container-name: ${{ inputs.container-name }}
         image: ${{ inputs.image }}
 
@@ -64,3 +68,8 @@ jobs:
         service: ${{ inputs.service }}
         cluster: ${{ inputs.cluster }}
         wait-for-service-stability: true
+
+    - name: Cleanup
+      # run always even when failure
+      if: always()
+      run: rm -rf task-definition.json
