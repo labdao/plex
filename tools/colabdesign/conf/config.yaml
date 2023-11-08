@@ -1,4 +1,4 @@
 defaults:
-  - inputs_target: binder
+  - inputs: container
   - params: params
-  - outputs: hydra
+  - outputs: container

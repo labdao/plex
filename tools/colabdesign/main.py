@@ -409,12 +409,12 @@ def my_app(cfg : DictConfig) -> None:
     print(f"Output directory  : {outputs_directory}")
 
     # filtering target and binder files if pattern is available
-    if cfg.inputs_target.target_pattern is not None:
-        input_target_path = get_files_from_directory(cfg.inputs_target.target_directory, '.csv')
-        input_target_path = [file for file in input_target_path if cfg.inputs_target.target_pattern in file]
+    if cfg.inputs.target_pattern is not None:
+        input_target_path = get_files_from_directory(cfg.inputs.target_directory, '.csv')
+        input_target_path = [file for file in input_target_path if cfg.inputs.target_pattern in file]
         print("Retained targets : ", input_target_path)
-    elif cfg.inputs_target.target_pattern is None:
-        input_target_path = cfg.inputs_target.target_directory
+    elif cfg.inputs.target_pattern is None:
+        input_target_path = cfg.inputs.target_directory
         # input_target_path = OmegaConf.to_container(input_target_path)
     if not isinstance(input_target_path, list):
         input_target_path = [input_target_path]
