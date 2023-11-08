@@ -20,7 +20,7 @@
         "params.basic_settings.num_designs=$(inputs.number_of_binders.value) \\",
         "params.expert_settings.RFDiffusion_Binder.contigs_override=$(inputs.full_prompt.value);"
     ],
-    "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
+    "dockerPull": "quay.io/labdao/colabdesign@sha256:06c331562c5be4ebc6849f86df72348bfcb3365cd80d386f4222cd848c0abe92",
     "gpuBool": true,
     "networkBool": true,
     "cpu": 3,
@@ -29,9 +29,7 @@
         "target_protein": {
             "type": "File",
             "item": "",
-            "glob": [
-                "*.pdb"
-            ],
+            "glob": ["*.pdb"],
             "grouping": "target",
             "position": "101"
         },
@@ -93,17 +91,17 @@
         "scores": {
           "type": "File",
           "item": "",
-          "glob": ["mpnn_results.csv"]
+          "glob": ["*_scores.csv"]
         },
         "best_design": {
           "type": "File",
           "item": "",
-          "glob": ["best.pdb"]
+          "glob": ["*_best.pdb"]
         },
         "all_outputs": {
           "type": "Array",
           "item": "File",
-          "glob": ["*"]
+          "glob": ["*.zip"]
         }
     }
 }

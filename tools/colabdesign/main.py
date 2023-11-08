@@ -470,7 +470,7 @@ def my_app(cfg : DictConfig) -> None:
 
         command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
         command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
-        command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory} && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory} && mv {outputs_directory}/{path}/design.fasta /{outputs_directory}"
+        command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
         os.system(command_mv)
         os.system(command_zip)
         os.system(command_collect)
