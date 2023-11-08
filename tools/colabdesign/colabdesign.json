@@ -29,25 +29,20 @@
     }
   },
   "outputs": {
+    "scores": {
+      "type": "File",
+      "item": "",
+      "glob": ["mpnn_results.csv"]
+    },
     "best_design": {
       "type": "File",
       "item": "",
       "glob": ["best.pdb"]
     },
-    "design_scores": {
-      "type": "File",
-      "item": "",
-      "glob": ["mpnn_results.csv"]
-    },
-    "design_sequences": {
-      "type": "File",
-      "item": "",
-      "glob": ["design.fasta"]
-    },
-    "compressed_designs": {
+    "all_outputs": {
       "type": "Array",
       "item": "File",
-      "glob": ["*.zip"]
+      "glob": ["*"]
     }
   }
 }
