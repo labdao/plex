@@ -87,16 +87,6 @@
             "example": "A1-283:B1-6/1/B8-20/22/B43-47",
             "grouping": "_advanced",
             "position": "301"
-        },
-        "parameters": {
-            "type": "File",
-            "item": "",
-            "glob": [
-                "*.yaml"
-            ],
-            "description": "A complete Hydra parameter config file that gives control over all other parameters not listed in the UI. This *does not* override other GUI inputs",
-            "grouping": "_advanced",
-            "position": "302"
         }
     },
     "outputs": {
