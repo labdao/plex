@@ -74,7 +74,7 @@
             "type": "string",
             "default": "",
             "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs",
-            "grouping": "advanced",
+            "grouping": "_advanced",
             "position": "301"
         },
         "parameters": {
@@ -84,7 +84,7 @@
                 "*.yaml"
             ],
             "description": "A complete Hydra parameter config file that gives control over all other parameters not listed in the UI. This *does not* override other GUI inputs",
-            "grouping": "advanced",
+            "grouping": "_advanced",
             "position": "302"
         }
     },
