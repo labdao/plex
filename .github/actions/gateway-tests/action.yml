@@ -58,7 +58,7 @@ runs:
 
     - name: Test add Tool Endpoint
       run: |
-        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind.json)
+        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind/equibind.json)
         json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
@@ -66,10 +66,10 @@ runs:
 
         cid_value=$(echo "$response" | jq -r '.cid')
 
-        if [ "$cid_value" == "QmdkNTB5yz4x83HTVrwMw9cxPE4t5Szyae8PSPC5igdxXJ" ]; then
+        if [ "$cid_value" == "	QmcBuLS1v4n1DFYLGMDkvDxqs9w9G9VqM2D6F1HDBnnwjf" ]; then
            echo "Add Tool upload test passed"
         else
-           echo "Add Tool upload test failed: Expected 'QmdkNTB5yz4x83HTVrwMw9cxPE4t5Szyae8PSPC5igdxXJ' but got '$cid_value'"
+           echo "Add Tool upload test failed: Expected 'QmcBuLS1v4n1DFYLGMDkvDxqs9w9G9VqM2D6F1HDBnnwjf' but got '$cid_value'"
            exit 1
         fi
       shell: bash
