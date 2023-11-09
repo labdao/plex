@@ -66,7 +66,7 @@ runs:
 
         cid_value=$(echo "$response" | jq -r '.cid')
 
-        if [ "$cid_value" == "	QmcBuLS1v4n1DFYLGMDkvDxqs9w9G9VqM2D6F1HDBnnwjf" ]; then
+        if [ "$cid_value" == "QmcBuLS1v4n1DFYLGMDkvDxqs9w9G9VqM2D6F1HDBnnwjf" ]; then
            echo "Add Tool upload test passed"
         else
            echo "Add Tool upload test failed: Expected 'QmcBuLS1v4n1DFYLGMDkvDxqs9w9G9VqM2D6F1HDBnnwjf' but got '$cid_value'"
