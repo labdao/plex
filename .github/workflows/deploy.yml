@@ -9,22 +9,20 @@ on:
         description: 'container image'
         required: true
         type: string
-      container-name:
+      environment:
+        description: 'Select your target environment'
+        required: true
+        type: choice
+        options:
+          - stg
+          - prod
+      container:
         description: 'name of the container'
         required: true
-        type: string
-      task-definition:
-        description: 'task definition'
-        required: true
-        type: string
-      service:
-        description: 'service name'
-        required: true
-        type: string
-      cluster:
-        description: 'ecs cluster name'
-        required: true
-        type: string
+        type: choice
+        options:
+          - frontend
+          - backend
 
 # Only run one at a time
 concurrency:
@@ -43,24 +41,40 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
 
+    - name: Set envs
+      run: |
+        echo "ECS_TASK_DEFINITION=labdao-${{ inputs.environment }}-ecs-task-${{ inputs.container }}" >> $GITHUB_ENV
+        echo "ECS_CONTAINER_NAME=labdao-${{ inputs.environment }}-${{ inputs.container }}" >> $GITHUB_ENV
+        echo "ECS_SERVICE=labdao-${{ inputs.environment }}-ecs-service-frontend" >> $GITHUB_ENV
+        echo "ECS_CLUSTER=labdao-${{ inputs.environment }}-cluster" >> $GITHUB_ENV
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: arn:aws:iam::321042884980:role/github-action-role
         aws-region: us-east-2
 
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
+
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
-        task-definition: ${{ inputs.task-definition }}
-        container-name: ${{ inputs.container-name }}
+        task-definition: task-definition.json
+        container-name: ${{ env.ECS_CONTAINER_NAME }}
         image: ${{ inputs.image }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.service }}
-        cluster: ${{ inputs.cluster }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
+
+    - name: Cleanup
+      # run always even when failure
+      if: always()
+      run: rm -rf task-definition.json
