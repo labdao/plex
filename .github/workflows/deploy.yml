@@ -45,7 +45,7 @@ jobs:
       run: |
         echo "ECS_TASK_DEFINITION=labdao-${{ inputs.environment }}-ecs-task-${{ inputs.container }}" >> $GITHUB_ENV
         echo "ECS_CONTAINER_NAME=labdao-${{ inputs.environment }}-${{ inputs.container }}" >> $GITHUB_ENV
-        echo "ECS_SERVICE=labdao-${{ inputs.environment }}-ecs-service-frontend" >> $GITHUB_ENV
+        echo "ECS_SERVICE=labdao-${{ inputs.environment }}-ecs-service-${{ inputs.container }}" >> $GITHUB_ENV
         echo "ECS_CLUSTER=labdao-${{ inputs.environment }}-cluster" >> $GITHUB_ENV
 
     - name: Configure AWS credentials
