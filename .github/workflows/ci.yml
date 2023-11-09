@@ -228,7 +228,8 @@ jobs:
         # run always even when
         if: always()
         run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done'
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          cat /tmp/output.log
 
       - name: Run docker compose logs
         # run always even when
@@ -379,7 +380,8 @@ jobs:
         # run always even when
         if: always()
         run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done'
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          cat /tmp/output.log
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
