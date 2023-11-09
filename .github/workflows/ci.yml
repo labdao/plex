@@ -72,32 +72,6 @@ jobs:
           #         name: docker-compose-plugin-${{matrix.os}}
           #         path: ./docker-compose
 
-  ci-setup-ipfs:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-            # - macos-13
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - name: Download and extract ipfs binary tarball
-        run: |
-          # Download ipfs binary
-          # Download docker-compose plugin
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_darwin-arm64.tar.gz -o kubo.tgz
-          fi
-          tar -zxvf kubo.tgz
-
-      - name: upload ipfs binary to be used later
-        uses: actions/upload-artifact@v3
-        with:
-          name: ipfs-binary-${{matrix.os}}
-          path: ./kubo/ipfs
-
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
@@ -228,7 +202,7 @@ jobs:
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
           # Get equibind job id
-          echo \"EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}')\" >> $GITHUB_ENV
+          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
 
           # chdir for outputs
           cd "$result_dir/entry-0/outputs"
@@ -284,7 +258,6 @@ jobs:
     needs:
       - go
         # - ci-setup-compose
-      - ci-setup-ipfs
       - ci-setup-bacalhau
     strategy:
       matrix:
@@ -308,11 +281,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: plex-binary-${{matrix.os}}
-
-      - name: download ipfs binary
-        uses: actions/download-artifact@v3
-        with:
-          name: ipfs-binary-${{matrix.os}}
 
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
@@ -365,7 +333,7 @@ jobs:
           set -x
 
           # Execute permission
-          chmod +x ./bacalhau ./plex ./ipfs
+          chmod +x ./bacalhau ./plex
 
       - name: Run Equibind
         # turn back on once baclahau docker in docker job launcher is fixed
@@ -383,26 +351,12 @@ jobs:
           # Get node list
           ./bacalhau node list
 
-          # Run tests against it
-          # using temp directory for ipfs stuff
-          export IPFS_PATH=$(mktemp -d)
-
-          # Initialize IPFS repo
-          ./ipfs init -e
-
-          # Copy over swarm key and config
-          cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-
-          export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
-          export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-          export BACALHAU_NODE_IPFS_SWARMADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-
           # Run the job
           ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
           # Set equibind job id
-          echo \"EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}')\" >> $GITHUB_ENV
+          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
 
           cd "$result_dir/entry-0/outputs"
           ls -ltraR
