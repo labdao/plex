@@ -200,10 +200,16 @@ jobs:
           # Inspect number of running containers
           docker compose ps
 
-      - name: Run Equibind
+      - name: fix permissions
         run: |
+          set -x
+
           # Execute permission
           chmod +x ./bacalhau ./plex
+
+      - name: Run Equibind
+        run: |
+          set -x
 
           # Dump BACALHAU_API_HOST
           echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
@@ -221,6 +227,9 @@ jobs:
           ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
+          # Get equibind job id
+          echo \"EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}')\" >> $GITHUB_ENV
+
           # chdir for outputs
           cd "$result_dir/entry-0/outputs"
 
@@ -236,11 +245,16 @@ jobs:
         # run always even when
         if: always()
         run: |
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
+          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
+
+      - name: Test log streaming
+        # run always even when
+        if: always()
+        run: |
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done'
 
       - name: Run docker compose logs
         # run always even when
@@ -346,13 +360,16 @@ jobs:
           # Inspect number of running containers
           docker compose ps
 
-      - name: Run Equibind
-        # turn back on once baclahau docker in docker job launcher is fixed
+      - name: fix permissions
         run: |
           set -x
 
           # Execute permission
           chmod +x ./bacalhau ./plex ./ipfs
+
+      - name: Run Equibind
+        # turn back on once baclahau docker in docker job launcher is fixed
+        run: |
 
           # Dump BACALHAU_API_HOST
           echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
@@ -384,6 +401,9 @@ jobs:
           ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
+          # Set equibind job id
+          echo \"EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}')\" >> $GITHUB_ENV
+
           cd "$result_dir/entry-0/outputs"
           ls -ltraR
           cat exitCode stderr stderr log.txt || true
@@ -399,8 +419,13 @@ jobs:
         # run always even when
         if: always()
         run: |
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
+          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
+
+      - name: Test log streaming
+        # run always even when
+        if: always()
+        run: |
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done'
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
