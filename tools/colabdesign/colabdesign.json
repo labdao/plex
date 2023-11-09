@@ -86,7 +86,7 @@
             "grouping": "_advanced",
             "position": "301"
         }
-    },
+    }
     "outputs": {
         "scores": {
           "type": "File",
@@ -104,4 +104,4 @@
           "glob": ["*.zip"]
         }
     }
-}
+  }

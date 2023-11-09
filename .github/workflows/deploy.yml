@@ -1,0 +1,66 @@
+# Reusable workflow for deploying new image to ecs
+---
+
+name: Deploy to ECS
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'container image'
+        required: true
+        type: string
+      container-name:
+        description: 'name of the container'
+        required: true
+        type: string
+      task-definition:
+        description: 'task definition'
+        required: true
+        type: string
+      service:
+        description: 'service name'
+        required: true
+        type: string
+      cluster:
+        description: 'ecs cluster name'
+        required: true
+        type: string
+
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::321042884980:role/github-action-role
+        aws-region: us-east-2
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ inputs.task-definition }}
+        container-name: ${{ inputs.container-name }}
+        image: ${{ inputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ inputs.service }}
+        cluster: ${{ inputs.cluster }}
+        wait-for-service-stability: true

@@ -32,3 +32,21 @@
       - containerd.io
       - docker-compose-plugin
     update_cache: true
+
+- name: Push custom docker daemon config
+  vars:
+    docker_config:
+      # data-root: /var/lib/docker
+      # pidfile: /var/run/docker.pid
+      live-restore: true
+      max-concurrent-downloads: 20
+      max-download-attempts: 5
+      storage-driver: overlay2
+  become: true
+  ansible.builtin.copy:
+    content: "{{ docker_config | to_json(indent=2, sort_keys=True) }}"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "0400"
+  notify: Restart docker
