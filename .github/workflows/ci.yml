@@ -106,7 +106,7 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
+          - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -137,7 +137,7 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
+          - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
@@ -278,7 +278,7 @@ jobs:
           - ubuntu-22.04
           # -  macos-13
         bacalhau_version:
-          - 1.1.2
+          - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
     env:

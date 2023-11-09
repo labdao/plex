@@ -1,6 +1,6 @@
 FROM golang:1.20-buster as builder
 
-ARG BACALHAU_VERSION=1.1.2
+ARG BACALHAU_VERSION=1.1.4
 
 # Install deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
