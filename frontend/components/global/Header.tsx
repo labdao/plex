@@ -23,8 +23,8 @@ import { NavLink } from "./NavLink";
 
 const navItems = [
   {
-    title: "Models",
-    href: "/models",
+    title: "Tasks",
+    href: "/tasks",
   },
   {
     title: "Experiments",
@@ -60,9 +60,9 @@ export default function Header() {
   };
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-background border-b">
-      <Link href="/" className="flex items-center gap-4 font-bold uppercase text-lg">
-        <Logo className="h-8 w-auto" /> Lab Exchange
+    <nav className="flex items-center justify-between p-4 border-b bg-background">
+      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase">
+        <Logo className="w-auto h-8" /> Lab Exchange
       </Link>
       {authenticated && (
         <>
