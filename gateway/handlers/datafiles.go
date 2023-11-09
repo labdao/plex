@@ -129,7 +129,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("filename = ?", filename)
+			query = query.Where("filename LIKE ?", "%"+filename+"%")
 		}
 
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
