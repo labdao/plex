@@ -69,8 +69,8 @@ export default function FlowDetail() {
   return (
     <div className="container mt-8">
       <Card className="pt-4">
-        <CardTitle className="px-4 flex justify-between items-center border-b pb-4 mb-4">
-          {flow.Name}{" "}
+        <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
+          <span className="font-heading">{flow.Name}</span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => dispatch(flowPatchDetailThunk(flow.CID))} disabled={loading}>
               <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
@@ -94,7 +94,7 @@ export default function FlowDetail() {
         </CardContent>
       </Card>
       <Card className="mt-4">
-        <div className="p-4 font-medium uppercase">Jobs</div>
+        <div className="p-4 font-bold font-heading">Jobs</div>
         <div className="bg-gray-50">
           <DataTable columns={columns} data={flow.Jobs} />
         </div>

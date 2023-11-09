@@ -61,14 +61,14 @@ export default function Header() {
 
   return (
     <nav className="flex items-center justify-between p-4 border-b bg-background">
-      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase">
+      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase font-heading">
         <Logo className="w-auto h-8" /> Lab Exchange
       </Link>
       {authenticated && (
         <>
           <div className="flex gap-8 ml-16 mr-auto">
             {navItems.map((navItem, idx) => (
-              <NavLink key={idx} href={navItem.href} className="font-medium uppercase">
+              <NavLink key={idx} href={navItem.href} className="font-mono font-bold uppercase">
                 {navItem.title}
               </NavLink>
             ))}
@@ -77,7 +77,7 @@ export default function Header() {
             <DropdownMenuTrigger>
               <User />
             </DropdownMenuTrigger>
-            <DropdownMenuContent collisionPadding={10}>
+            <DropdownMenuContent collisionPadding={10} className="font-mono tracking-wider uppercase">
               {user?.email?.address && (
                 <>
                   <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
@@ -87,8 +87,8 @@ export default function Header() {
 
               {walletAddress && (
                 <>
-                  <DropdownMenuLabel>
-                    Wallet: <em className="font-normal">{walletAddress}</em>
+                  <DropdownMenuLabel className="font-normal truncate w-72">
+                    Wallet: <em>{walletAddress}</em>
                   </DropdownMenuLabel>
 
                   <TooltipProvider>

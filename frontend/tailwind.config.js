@@ -14,8 +14,10 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        primary: ["var(--font-primary)", ...fontFamily.mono],
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        heading: ["var(--font-heading)", ...fontFamily.sans],
+        body: ["var(--font-body)", ...fontFamily.sans],
+        mono: ["var(--font-mono)", ...fontFamily.mono],
+        raster: ["var(--font-raster)", ...fontFamily.mono],
       },
       colors: {
         border: "hsl(var(--border))",
