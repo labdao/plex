@@ -10,10 +10,12 @@ COPY . /app/
 WORKDIR /app/
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
+ARG BACALHAU_VERSION=1.1.4
+
+# For bacalhau cli
+FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4} as bacalhau
 
 FROM busybox:1.31.1-glibc
-
-ARG BACALHAU_VERSION=1.1.4
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
@@ -30,7 +32,7 @@ COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
 # COPY bacalhau cli
-COPY --from=ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4} --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
+COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
