@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import { DataFileSelect } from "@/components/shared/DataFileSelect";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { badgeVariants } from "@/components/ui/badge";
@@ -96,7 +97,23 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           <div className="grid grid-cols-3 gap-8">
             <div className="col-span-2">
               <Card>
-                <CardContent></CardContent>
+                <CardContent>
+                  {Object.keys(inputs || {}).map((key) => {
+                    // @ts-ignore
+                    const input = inputs[key];
+                    console.log(input);
+                    if (input.type === "File")
+                      return (
+                        <>
+                          <DataFileSelect
+                            onSelect={(value) => console.log(value)}
+                            globPatterns={input.glob}
+                            label={input.glob && `${input.glob.join(", ")}`}
+                          />
+                        </>
+                      );
+                  })}
+                </CardContent>
               </Card>
             </div>
             <div>
