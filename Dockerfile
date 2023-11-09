@@ -1,7 +1,5 @@
 FROM golang:1.20-buster as builder
 
-ARG BACALHAU_VERSION=1.1.4
-
 # Install deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
   libssl-dev \
@@ -12,19 +10,14 @@ COPY . /app/
 WORKDIR /app/
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-# Download bacalhau cli
-ADD https://github.com/bacalhau-project/bacalhau/releases/download/v${BACALHAU_VERSION}/bacalhau_v${BACALHAU_VERSION}_linux_amd64.tar.gz /tmp/bacalhau.tgz
-
-RUN tar -zxvf /tmp/bacalhau.tgz -C /usr/local/bin/
 
 FROM busybox:1.31.1-glibc
+
+ARG BACALHAU_VERSION=1.1.4
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /app/gateway/migrations  /gateway/migrations
-
-# init.d script IPFS runs before starting the daemon. Used to manipulate the IPFS config file.
-COPY --chmod=0755 docker/images/backend/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Copy jq
 COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
@@ -37,7 +30,7 @@ COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
 # COPY bacalhau cli
-COPY --from=builder --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
+COPY --from=ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4} --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
@@ -51,6 +44,6 @@ ENV BACALHAU_API_HOST=127.0.0.1
 
 EXPOSE 8080
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["/plex"]
 
 CMD ["web"]
