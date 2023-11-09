@@ -166,7 +166,6 @@ export default function AddGraph() {
                       {key}
                       {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(', ')})`}
                     </Label>
-                    {/* <DataFileSelect onSelect={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} dataFiles={inputDataFiles[key]} label={key} /> */}
                     <DataFileSelect 
                       onSelect={(value) => handleKwargsChange(value, key)} 
                       value={kwargs[key]?.[0]} 
