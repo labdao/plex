@@ -154,8 +154,6 @@ jobs:
           NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${{ matrix.backends.gateway }}
         uses: docker/build-push-action@v5
         with:
-          cache-from: |
-            quay.io/labdao/frontend:main-${{ matrix.backends.env }}
           build-args: |
             NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
             NEXT_PUBLIC_PRIVY_APP_ID
@@ -163,3 +161,5 @@ jobs:
           push: true
           context: frontend/
           tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
