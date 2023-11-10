@@ -82,4 +82,4 @@ jobs:
 
       - name: Image available
         run: |
-          echo "### IMAGE ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}@{{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "### :docker: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}@${{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
