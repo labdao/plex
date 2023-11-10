@@ -67,6 +67,7 @@ jobs:
           - 'https://api.stg.labdao.xyz/tools'
             # - 'https://api.prod.labdao.xyz/tools'
     steps:
+      - uses: actions/checkout@v4
       - name: Version tool name
         run: |
           echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
