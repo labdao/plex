@@ -34,6 +34,10 @@ on:
         required: false
         type: string
         default: 'labdao'
+    outputs:
+      IMAGE:
+        description: "IMAGE URL"
+        value: ${{ steps.image-output.outputs.IMAGE }}
 
 jobs:
   container-build-and-push:
@@ -62,7 +66,7 @@ jobs:
             type=ref,suffix=${{ inputs.tag-suffix }},event=pr
             type=ref,suffix=${{ inputs.tag-suffix }},event=tag
             type=sha,suffix=${{ inputs.tag-suffix }}
-  
+
       - name: Login to registry
         uses: docker/login-action@v3
         with:
@@ -80,6 +84,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Image available
-        run: |
-          echo "### :docker: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}@${{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+      - name: Image output
+        id: image-output
+        env:
+          DOCKER_IMAGE_NAME: "${{ inputs.name }}"
+          DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
+        run:
+          echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
+          echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
+          echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT

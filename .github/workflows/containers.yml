@@ -149,6 +149,7 @@ jobs:
           password: ${{ secrets.LABDAO_QUAY_PASSWORD }}
 
       - name: Build and push
+        id: build-and-push
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${{ matrix.backends.gateway }}
@@ -163,3 +164,13 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Image output
+        id: image-output
+        env:
+          DOCKER_IMAGE_NAME: "frontend"
+          DOCKER_IMAGE: "quay.io/labdao/frontend@${{ steps.build-and-push.outputs.digest }}"
+        run:
+          echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
+          echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
+          echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT
