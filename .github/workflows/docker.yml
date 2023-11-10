@@ -18,6 +18,7 @@ on:
         description: 'build args'
         required: false
         type: string
+        default: ""
       tag-suffix:
         description: 'container tag suffix'
         required: false
