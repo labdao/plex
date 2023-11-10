@@ -106,8 +106,6 @@ jobs:
   frontend:
     needs: changes-frontend
     if: ${{ needs.changes-frontend.outputs.changes == 'true' }}
-    env:
-      NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
     strategy:
       matrix:
         backends: [
@@ -116,6 +114,8 @@ jobs:
           { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
         ]
     uses: ./.github/workflows/docker.yml
+    env:
+      NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
     with:
       name: frontend
       context: frontend
