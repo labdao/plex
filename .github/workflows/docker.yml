@@ -82,6 +82,9 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{ inputs.context }}
+          # TODO dirty hack to make frontend work
+          secrets: |
+            NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
