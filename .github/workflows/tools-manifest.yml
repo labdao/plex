@@ -71,7 +71,7 @@ jobs:
       - name: Version tool name
         run: |
           echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
-          echo "NORMALIZED_GIT_REF=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "NORMALIZED_GIT_REF=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           echo "GIT_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Versionined tool name
@@ -87,6 +87,7 @@ jobs:
 
       - name: Dump Manifest json
         run: |
+          echo '### Tool config' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat /tmp/manifest.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
