@@ -82,5 +82,4 @@ jobs:
 
       - name: Image available
         run: |
-          echo ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}:${{ steps.build-and-push.outputs.digest }}
-          echo IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}:${{ steps.build-and-push.outputs.digest }} >> $GITHUB_OUTPUT
+          echo "### IMAGE ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}@{{ steps.build-and-push.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
