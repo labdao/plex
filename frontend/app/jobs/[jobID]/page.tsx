@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import backendUrl from "lib/backendUrl";
 import { RefreshCcw } from "lucide-react";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -31,7 +32,7 @@ export default function JobDetail() {
       header: "Filename",
       cell: ({ row }) => {
         return (
-          <a target="_blank" href={`http://localhost:8080/datafiles/${row.getValue("CID")}/download`}>
+          <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
             {row.getValue("Filename")}
           </a>
         );

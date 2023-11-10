@@ -19,7 +19,7 @@ export default function ListDataFiles() {
       header: "Filename",
       cell: ({ row }) => {
         return (
-          <a target="_blank" href={`http://localhost:8080/datafiles/${row.getValue("CID")}/download`}>
+          <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
             {row.getValue("Filename")}
           </a>
         );
@@ -43,6 +43,7 @@ export default function ListDataFiles() {
   ];
 
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
+  // const [sorting, setSorting] = useState([]);
 
   useEffect(() => {
     fetch(`${backendUrl()}/datafiles`)
