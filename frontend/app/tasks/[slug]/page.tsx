@@ -11,15 +11,16 @@ import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk, toolListThunk } from "@/lib/redux";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
+import { ChevronsUpDownIcon } from "lucide-react";
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -52,10 +53,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     }
   }, [dispatch, task.default_tool?.CID]);
 
-  const { author, name, description, github, paper, inputs } = tool.ToolJson;
-
   const groupedInputs = Object.entries(tool.ToolJson?.inputs).reduce((acc: { [key: string]: any }, [key, input]: [string, any]) => {
-    const sectionName = input.grouping?.startsWith("_") ? "collapsed" : "standard";
+    const sectionName = input.grouping?.startsWith("_") ? "collapsible" : "standard";
     const groupName = input.grouping || "Options";
     if (!acc[sectionName]) {
       acc[sectionName] = {};
@@ -167,6 +166,28 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                                 return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
                               })}
                             </CardContent>
+                          </Card>
+                        );
+                      })}
+
+                      {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
+                        return (
+                          <Card key={groupKey}>
+                            <Collapsible>
+                              <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase text-bold font-heading">
+                                {groupKey.replace("_", "")}
+                                <ChevronsUpDownIcon />
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <CardContent className="pt-0 space-y-4">
+                                  {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
+                                    // @ts-ignore
+                                    const input = groupedInputs?.collapsible?.[groupKey]?.[key];
+                                    return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                                  })}
+                                </CardContent>
+                              </CollapsibleContent>
+                            </Collapsible>
                           </Card>
                         );
                       })}
