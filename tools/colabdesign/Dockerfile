@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required packages
 RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y wget aria2 git zip unzip less nano
+     apt-get install --no-install-recommends -y wget aria2 git zip unzip less nano build-essential
 
 # Install hydra-core
 RUN pip3 install --no-cache-dir hydra-core --upgrade
@@ -53,9 +53,7 @@ RUN set -ex; \
      touch params/done.txt
 
 # Install prodigy
-RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y build-essential && \
-     git clone -q https://github.com/haddocking/prodigy && \
+RUN git clone -q https://github.com/haddocking/prodigy && \
      pip install -q prodigy/
 
 # Cleanup
