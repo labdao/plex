@@ -84,7 +84,7 @@ jobs:
           context: ${{ inputs.context }}
           # TODO dirty hack to make frontend work
           secrets: |
-            NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -95,5 +95,5 @@ jobs:
           DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
         run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
-          echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
-          echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT
+          echo ':docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`' >>  $GITHUB_STEP_SUMMARY
+          echo 'IMAGE=${{ env.DOCKER_IMAGE }}' >>  $GITHUB_OUTPUT
