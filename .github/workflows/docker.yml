@@ -14,6 +14,10 @@ on:
         required: false
         type: string
         default: "."
+      secrets:
+        description: 'secrets'
+        required: false
+        type: string
       build-args:
         description: 'build args'
         required: false
@@ -82,6 +86,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{ inputs.context }}
+          secrets: ${{ inputs.secrets }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
