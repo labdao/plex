@@ -24,11 +24,6 @@ on:
           - frontend
           - backend
 
-# Only run one at a time
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   deploy:
     name: Deploy
