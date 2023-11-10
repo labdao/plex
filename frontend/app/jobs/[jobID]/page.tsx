@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import backendUrl from "lib/backendUrl";
 import { RefreshCcw } from "lucide-react";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,12 +28,26 @@ export default function JobDetail() {
 
   const columns: ColumnDef<File>[] = [
     {
-      accessorKey: "CID",
-      header: "CID",
-    },
-    {
       accessorKey: "Filename",
       header: "Filename",
+      cell: ({ row }) => {
+        return (
+          <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
+            {row.getValue("Filename")}
+          </a>
+        );
+      },
+    },
+    {
+      accessorKey: "CID",
+      header: "CID",
+      cell: ({ row }) => {
+        return (
+          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
+            {row.getValue("CID")}
+          </a>
+        );
+      },
     },
   ];
 
@@ -67,10 +82,18 @@ export default function JobDetail() {
               Error: <strong>{job.Error || "None"}</strong>
             </div>
             <div className="py-4 border-b">
-              Tool CID: <strong>{job.ToolID}</strong>
+              Tool CID: <strong>
+                <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.ToolID}/`}>
+                  {job.ToolID}
+                </a>
+              </strong>
             </div>
             <div className="py-4">
-              Flow Initial CID: <strong>{job.FlowID}</strong>
+              Flow Initial CID: <strong>
+                <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.FlowID}/`}>
+                  {job.FlowID}
+                </a>
+              </strong>
             </div>
           </CardContent>
         </Card>
