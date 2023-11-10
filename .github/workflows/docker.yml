@@ -101,6 +101,8 @@ jobs:
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # gh workflow run 'deploy to ecs' -f "image=quay.io/labdao/frontend:sha-402aadf-stg@sha256:2aee85f8c768ca6385199228fa3bb93036290e6380a541bbf05a27650078b5b4" -f "container=frontend"  -f "environment=stg"
           gh workflow run 'Deploy to ECS' -f "imageaasdasdasdasd=quay.io/labdao/frontend:sha-402aadf-stg@sha256:2aee85f8c768ca6385199228fa3bb93036290e6380a541bbf05a27650078b5b4" -f "container=frontend" 
