@@ -117,7 +117,7 @@ jobs:
     with:
       name: frontend
       context: frontend
-      suffix: -${{ matrix.backends.env }}
+      tag-suffix: -${{ matrix.backends.env }}
       build-args: |
         NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
