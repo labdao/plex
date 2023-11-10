@@ -33,7 +33,10 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
             <FormItem className="group">
               <FormLabel className="flex items-center justify-between gap-2">
                 <span>
-                  <span>{inputKey.replaceAll("_", " ")}</span> <LabelDescription>{input?.type}</LabelDescription>{" "}
+                  <span>{inputKey.replaceAll("_", " ")}</span>{" "}
+                  <LabelDescription>
+                    {input?.type} {input?.array ? "array" : ""}
+                  </LabelDescription>{" "}
                 </span>
                 {fields.length > 1 && (
                   <Button className="invisible -mt-2 -mb-1 group-hover:visible" size="icon" variant="ghost" onClick={() => remove(index)}>

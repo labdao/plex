@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 import Logo from "./Logo";
 import { NavLink } from "./NavLink";
+import { Button } from "../ui/button";
 
 const navItems = [
   {
@@ -73,6 +74,9 @@ export default function Header() {
               </NavLink>
             ))}
           </div>
+          <Button asChild className="mr-4">
+            <Link href="/tasks/protein-design">Run Experiment</Link>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <User />

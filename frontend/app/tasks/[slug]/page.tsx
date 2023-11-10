@@ -21,6 +21,8 @@ import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
 import { ChevronsUpDownIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { VariantSummary } from "./VariantSummary";
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,6 +33,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       name: "protein design",
       slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
       default_tool: {
+        //CID: "QmXHQhZG8PSNY9g8MAcsHjGYWSrbZpPjaoPPk9QoRZCT3w",
         CID: "QmbxyLKaZg73PvnREPdVitKziw2xTDjTp268VNy1hMkR5E",
       },
     }),
@@ -53,7 +56,13 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     }
   }, [dispatch, task.default_tool?.CID]);
 
-  const groupedInputs = Object.entries(tool.ToolJson?.inputs).reduce((acc: { [key: string]: any }, [key, input]: [string, any]) => {
+  // Order and group the inputs by their position and grouping value
+  const sortedInputs = Object.entries(tool.ToolJson?.inputs)
+    // @ts-ignore
+    .sort(([, a], [, b]) => a.position - b.position);
+
+  const groupedInputs = sortedInputs.reduce((acc: { [key: string]: any }, [key, input]: [string, any]) => {
+    // _advanced and any others with _ get added to collapsible
     const sectionName = input.grouping?.startsWith("_") ? "collapsible" : "standard";
     const groupName = input.grouping || "Options";
     if (!acc[sectionName]) {
@@ -199,7 +208,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
             <div>
               <Card className="sticky top-4">
                 <CardContent>
-                  <Button type="submit" form="task-form" size="lg" className="w-full">
+                  <VariantSummary sortedInputs={sortedInputs} form={form} />
+                  <Button type="submit" form="task-form" className="w-full">
                     Submit
                   </Button>
                 </CardContent>

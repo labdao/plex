@@ -35,19 +35,21 @@ export function DataFileSelect({ onChange, value, label, globPatterns }: DataFil
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          className="justify-between w-full p-6 text-base font-normal tracking-normal normal-case font-body"
+          className="justify-between w-full p-6 text-base font-normal tracking-normal lowercase font-body"
           variant="outline"
           role="combobox"
           aria-expanded={open}
         >
-          {value ? dataFiles.find((dataFile) => getDataFileValue(dataFile) === value)?.Filename : `Select ${label} file...`}
-          <ChevronsUpDown className="w-4 h-4 ml-2 opacity-50 shrink-0" />
+          <span className={cn(!value && "text-muted-foreground")}>
+            {value ? dataFiles.find((dataFile) => getDataFileValue(dataFile) === value)?.Filename : `Select ${label} file...`}
+          </span>
+          <ChevronsUpDown className="w-4 h-4 ml-2 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 " style={{ width: `var(--radix-popover-trigger-width)` }}>
         <Command>
           <CommandInput placeholder={`Search files...`} />
-          <CommandEmpty>No file found.</CommandEmpty>
+          <CommandEmpty className="lowercase">No file found.</CommandEmpty>
           {dataFileListError && <CommandItem>Error fetching data files.</CommandItem>}
           <CommandGroup className="overflow-y-auto max-h-[300px]">
             {dataFiles.map((dataFile) => (
