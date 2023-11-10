@@ -1,39 +1,31 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import dayjs from "dayjs";
 import { BookOpenIcon, GithubIcon, PlusIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import React, { useEffect } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
-import { DataFileSelect } from "@/components/shared/DataFileSelect";
 import { PageLoader } from "@/components/shared/PageLoader";
+import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  AppDispatch,
-  selectToolDetail,
-  selectToolDetailError,
-  selectToolDetailLoading,
-  selectToolList,
-  selectToolListError,
-  toolDetailThunk,
-  toolListThunk,
-} from "@/lib/redux";
-import { cn } from "@/lib/utils";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk, toolListThunk } from "@/lib/redux";
 
+import { DynamicArrayField } from "./DynamicArrayField";
+import formGenerator from "./formGenerator";
 import mockToolJson from "./mockToolJson";
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
+  const dispatch = useDispatch<AppDispatch>();
+
   // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
   const task = {
     name: "protein design",
@@ -47,15 +39,11 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     notFound();
   }
 
-  const dispatch = useDispatch<AppDispatch>();
-
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
 
-  const tools = useSelector(selectToolList);
-  const toolListError = useSelector(selectToolListError);
-
+  // On page load fetch the default tool details
   useEffect(() => {
     const defaultToolCID = task.default_tool?.CID;
     if (defaultToolCID) {
@@ -64,62 +52,12 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     dispatch(toolListThunk());
   }, [dispatch, task.default_tool?.CID]);
 
-  const { author, name, description, github, paper, inputs } = mockToolJson;
+  const { author, name, description, github, paper, inputs } = mockToolJson; //@TODO: replace with tool.ToolJson
+  const { generatedFormSchema, generatedDefaultValues } = formGenerator(inputs, task, tool);
 
-  console.log(inputs);
-
-  const inputsToSchema = (inputs: {}) => {
-    const schema = {};
-    for (var key in inputs) {
-      const input = inputs[key];
-      if (input.type === "File") {
-        schema[key] = z.array(
-          z.object({
-            value: z.string().min(input.required ? 1 : 0),
-          })
-        );
-      } else if (input.type === "string") {
-        schema[key] = z.array(
-          z.object({
-            value: z.string().min(input.required ? 1 : 0),
-          })
-        );
-      } else if (input.type === "int") {
-        // Hacky
-        const min = parseInt(input.min) || Number.MIN_SAFE_INTEGER;
-        const max = parseInt(input.max) || Number.MAX_SAFE_INTEGER;
-        schema[key] = z.array(
-          z.object({
-            value: z.coerce.number().int().min(min).max(max),
-          })
-        );
-      }
-    }
-    return schema;
-  };
-
-  const inputsToDefaultValues = (inputs: {}) => {
-    const defaultValues = {};
-    for (var key in inputs) {
-      const input = inputs[key];
-      defaultValues[key] = [{ value: input.default }];
-    }
-    return defaultValues;
-  };
-
-  const formSchema = z.object({
-    name: z.string().min(1, { message: "Name is required" }),
-    tool: z.string().min(1, { message: "Tool is required" }),
-    ...inputsToSchema(inputs),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: `${task.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
-      tool: tool?.CID,
-      ...inputsToDefaultValues(inputs),
-    },
+  const form = useForm<z.infer<typeof generatedFormSchema>>({
+    resolver: zodResolver(generatedFormSchema),
+    defaultValues: generatedDefaultValues,
   });
 
   // If the tool changes, fetch new tool details
@@ -132,7 +70,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof generatedFormSchema>) {
     console.log("===== Form Submitted =====", values);
   }
 
@@ -198,22 +136,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                           <FormItem>
                             <FormLabel>Model</FormLabel>
                             <FormControl>
-                              <Select onValueChange={field.onChange} defaultValue={tool?.CID}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectGroup>
-                                    {tools.map((tool, index) => {
-                                      return (
-                                        <SelectItem key={index} value={tool?.CID}>
-                                          {tool?.ToolJson?.author || "unknown"}/{tool.Name}
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectGroup>
-                                </SelectContent>
-                              </Select>
+                              <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
                             </FormControl>
                             <FormDescription>
                               <a
@@ -228,12 +151,16 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                           </FormItem>
                         )}
                       />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="space-y-4">
                       {!toolDetailLoading && (
                         <>
                           {Object.keys(inputs || {}).map((key) => {
                             // @ts-ignore
                             const input = inputs[key];
-                            return <DynamicField key={key} inputKey={key} form={form} input={input} />;
+                            return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
                           })}
                         </>
                       )}
@@ -243,9 +170,9 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
               </Form>
             </div>
             <div>
-              <Card>
+              <Card className="sticky top-4">
                 <CardContent>
-                  <Button type="submit" form="task-form" className="w-full">
+                  <Button type="submit" form="task-form" size="lg" className="w-full">
                     Submit
                   </Button>
                 </CardContent>
@@ -256,50 +183,5 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
         {toolDetailLoading && <PageLoader />}
       </div>
     </>
-  );
-}
-
-function DynamicField({ input, inputKey, form }) {
-  const { fields, append } = useFieldArray({
-    name: inputKey,
-    control: form.control,
-  });
-
-  return (
-    <div className="p-4 border rounded-lg">
-      {fields.map((field, index) => (
-        <FormField
-          key={field.id}
-          control={form.control}
-          name={`${inputKey}.${index}.value`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {inputKey.replaceAll("_", " ")} <LabelDescription>{input?.type}</LabelDescription>
-              </FormLabel>
-              <FormControl>
-                <>
-                  {input.type === "File" && (
-                    <DataFileSelect
-                      onSelect={field.onChange}
-                      value={field.value}
-                      globPatterns={input.glob}
-                      label={input.glob && `${input.glob.join(", ")}`}
-                    />
-                  )}
-                  {input.type === "string" && <Input {...field} />}
-                  {input.type === "int" && <Input type="number" {...field} />}
-                </>
-              </FormControl>
-              <FormDescription>{input?.description}</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      ))}
-      <Button type="button" variant="secondary" size="sm" className="w-full mt-2" onClick={() => append({ value: input.default })}>
-        <PlusIcon />
-      </Button>
-    </div>
   );
 }

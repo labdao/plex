@@ -1,4 +1,4 @@
-export default {
+const json = {
   class: "CommandLineTool",
   name: "diffusion",
   description:
@@ -149,3 +149,5 @@ export default {
     },
   },
 };
+
+export default json;

@@ -8,18 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AppDispatch, dataFileListThunk, selectDataFileList, selectDataFileListError } from "@/lib/redux";
-import { DataFile } from "@/lib/redux/slices/dataFileListSlice/slice";
 import { cn } from "@/lib/utils";
 
 interface DataFileSelectProps {
-  onSelect: (value: string) => void;
+  onChange: (value: string) => void;
   value: string;
-  dataFiles: { CID: string; Filename: string }[];
   label: string;
   globPatterns?: [];
 }
 
-export function DataFileSelect({ onSelect, value, label, globPatterns }: DataFileSelectProps) {
+export function DataFileSelect({ onChange, value, label, globPatterns }: DataFileSelectProps) {
   const dispatch = useDispatch<AppDispatch>();
 
   const dataFiles = useSelector(selectDataFileList);
@@ -58,7 +56,7 @@ export function DataFileSelect({ onSelect, value, label, globPatterns }: DataFil
                 value={getDataFileValue(dataFile)}
                 onSelect={() => {
                   //currentValue doesn't work here
-                  onSelect(getDataFileValue(dataFile) === value ? "" : getDataFileValue(dataFile));
+                  onChange(getDataFileValue(dataFile) === value ? "" : getDataFileValue(dataFile));
                   setOpen(false);
                 }}
               >

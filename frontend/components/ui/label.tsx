@@ -10,7 +10,7 @@ const labelVariants = cva("lowercase font-body leading-none peer-disabled:cursor
   variants: {
     variant: {
       default: "block text-base py-2",
-      description: "mx-1 inline-block text-xs text-muted-foreground",
+      description: "empty:hidden first:ml-0 mx-2 inline-block text-xs text-muted-foreground",
     },
   },
   defaultVariants: {
