@@ -72,9 +72,15 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v5
+        id: build-and-push
         with:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{inputs.context}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Image available
+        run: |
+          echo ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}:${{ steps.build-and-push.outputs.digest }}
+          echo IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}:${{ steps.build-and-push.outputs.digest }} >> $GITHUB_OUTPUT
