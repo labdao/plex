@@ -120,9 +120,10 @@ jobs:
       - name: Trigger deploy to stg
         id: deploy-to-ecs
         if: |
-          inputs.name == 'backend' ||
-          (inputs.name == 'frontend' && inputs.deploy-environment == 'stg')
+          github.ref == 'ref/head/main' &&
+          (inputs.name == 'backend' ||
+          (inputs.name == 'frontend' && inputs.deploy-environment == 'stg'))
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo gh workflow run 'Deploy to ECS' --ref 'ops/LAB-734-deploy-to-ecs-via-workflows' -f "image=${{ steps.docker-build-and-push-outputs.outputs.IMAGE }}" -f "container=${{ inputs.name }}" -f "environment=stg"
+          gh workflow run 'Deploy to ECS' -f "image=${{ steps.docker-build-and-push-outputs.outputs.IMAGE }}" -f "container=${{ inputs.name }}" -f "environment=${{ inputs.deploy-environment }}"

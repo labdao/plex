@@ -30,6 +30,7 @@ jobs:
     uses: ./.github/workflows/docker.yml
     with:
       name: backend
+      deploy-environment: 'stg'
     secrets: inherit
 
   ########## IPFS container ##################################
