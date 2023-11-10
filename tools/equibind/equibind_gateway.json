@@ -1,6 +1,6 @@
 {
   "class": "CommandLineTool",
-  "name": "equibind gatway",
+  "name": "equibind gateway",
   "description": "Docking of small molecules to a protein",
   "author": "@misc{stärk2022equibind,\n      title={EquiBind: Geometric Deep Learning for Drug Binding Structure Prediction}, \n      author={Hannes Stärk and Octavian-Eugen Ganea and Lagnajit Pattanaik and Regina Barzilay and Tommi Jaakkola},\n      year={2022},\n      eprint={2202.05146},\n      archivePrefix={arXiv},\n      primaryClass={q-bio.BM}\n}",
   "baseCommand": ["/bin/bash", "-c"],
@@ -19,16 +19,33 @@
   "gpuBool": false,
   "networkBool": false,
   "memoryGB": 5,
+  "cpu": 0.8,
   "inputs": {
     "protein": {
       "type": "File",
-      "item": "",
-      "glob": ["*.pdb"]
+      "description": "Protein structure file",
+      "array": false,
+      "glob": ["*.pdb"],
+      "default": "example_protein.pdb",
+      "min": "",
+      "max": "",
+      "example": "example_protein.pdb",
+      "grouping": "",
+      "position": "1",
+      "required": true
     },
     "small_molecule": {
       "type": "File",
-      "item": "",
-      "glob": ["*.sdf", "*.mol2"]
+      "description": "Small molecule file",
+      "array": false,
+      "glob": ["*.sdf", "*.mol2"],
+      "default": "example_molecule.sdf",
+      "min": "",
+      "max": "",
+      "example": "example_molecule.sdf",
+      "grouping": "",
+      "position": "2",
+      "required": true
     }
   },
   "outputs": {
