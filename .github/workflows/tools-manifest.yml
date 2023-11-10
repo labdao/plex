@@ -82,7 +82,7 @@ jobs:
 
       - name: Dump updated manifest file to be POSTed
         run: |
-          jq '{\"toolJson\": ., \"walletAddress\": \"${{ env.TOOLS_WALLET_ADDRESS }}\"}' tools/${{ matrix.tools }}/${{ matrix.tools }}.json  > /tmp/manifest.json
+          jq '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"}' tools/${{ matrix.tools }}/${{ matrix.tools }}.json  > /tmp/manifest.json
 
       - name: Dump Manifest json
         run: |
