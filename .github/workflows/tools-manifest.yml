@@ -55,6 +55,7 @@ jobs:
   tools:
     needs: changes-tools
     runs-on: ubuntu-latest
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:
