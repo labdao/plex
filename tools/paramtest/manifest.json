@@ -1,0 +1,86 @@
+{
+    "class": "CommandLineTool",
+    "name": "nonfileparamtest",
+    "description": "test nonfile params",
+    "author": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+        "python -u main.py $(inputs.mystring.value) $(inputs.myint.value)"
+    ],
+    "dockerPull": "docker.io/openzyme/nonfileparamtest@sha256:a1d0082f886a5824f6e50acd2a6e0017e4a953743bae64bb5c9ff575cc17b0e8",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "first_file": {
+            "type": "file",
+            "description": "First file to have contents added to result.",
+            "array": false,
+            "glob": ["example_first_file.txt"],
+            "default": "Qm/example_first_file.txt",
+            "min": "",
+            "max": "",
+            "example": "Qm/example_first_file.txt",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        },
+        "file_array": {
+            "type": "file",
+            "array": true,
+            "description": "Rest of the files to have contents added to result.",
+            "glob": ["*.txt"],
+            "default": "['Qm/example_file.txt', 'Qm/other_example_file.txt']",
+            "min": "",
+            "max": "",
+            "example": "['Qm/example_file.txt', 'Qm/other_example_file.txt']",
+            "grouping": "File Params",
+            "position": "2",
+            "required": true
+        },
+        "first_string": {
+            "type": "string",
+            "array": false,
+            "description": "First string to add to result.",
+            "glob": [""],
+            "default": "example first string",
+            "min": "",
+            "max": "",
+            "example": "example first string",
+            "grouping": "String Params",
+            "position": "3",
+            "required": true
+        },
+        "string_array": {
+            "type": "string",
+            "array": false,
+            "description": "Rest of strings to add to result.",
+            "glob": [""],
+            "default": "['string 1', 'string 2', 'string 3']",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "4",
+            "required": true
+        },
+        "first_number": {
+            "type": "number",
+            "array": false,
+            "description": "First number to add to result. Will also multiply with sum of number_array.",
+            "glob": [""],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "4",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["result.txt"]
+        }
+    }
+}
