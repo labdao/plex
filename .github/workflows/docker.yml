@@ -14,6 +14,10 @@ on:
         required: false
         type: string
         default: "."
+      build-args:
+        description: 'build args'
+        required: false
+        type: string
       tag-suffix:
         description: 'container tag suffix'
         required: false
@@ -34,10 +38,6 @@ on:
         required: false
         type: string
         default: 'labdao'
-          # outputs:
-          #   IMAGE:
-          #     description: "IMAGE URL"
-          #     value: ${{ steps.image-output.outputs.IMAGE }}
 
 jobs:
   container-build-and-push:
@@ -78,9 +78,10 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-and-push
         with:
+          build-args: ${{ inputs.build-args }}|
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          context: ${{inputs.context}}
+          context: ${{ inputs.context }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -91,5 +92,5 @@ jobs:
           DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
         run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
-          echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
-          echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT
+          echo ":docker: **${env.DOCKER_IMAGE_NAME}** image available at `${env.DOCKER_IMAGE}`" >>  $GITHUB_STEP_SUMMARY
+          echo "IMAGE=${env.DOCKER_IMAGE}" >>  $GITHUB_OUTPUT
