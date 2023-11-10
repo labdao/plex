@@ -19,6 +19,9 @@ on:
       - 'tools/**'
       - '.github/workflows/tools-manifest.yml'
 
+env:
+  TOOLS_WALLET_ADDRESS: "0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4"
+
 # Only run one at a time
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -44,13 +47,13 @@ jobs:
         filters: |
           colabdesign:
             - 'tools/colabdesign/colabdesign.json'
-              # - '.github/workflows/tools-manifest.yml'
+            - '.github/workflows/tools-manifest.yml'
           colabfold:
             - 'tools/colabfold/colabfold.json'
-              # - '.github/workflows/tools-manifest.yml'
+            - '.github/workflows/tools-manifest.yml'
           oddt:
             - 'tools/oddt/oddt.json'
-              # - '.github/workflows/tools-manifest.yml'
+            - '.github/workflows/tools-manifest.yml'
 
   tools:
     needs: changes-tools
@@ -60,5 +63,36 @@ jobs:
       fail-fast: false
       matrix:
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
+        endpoints:
+          - 'https://api.stg.labdao.xyz/tools'
+            # - 'https://api.prod.labdao.xyz/tools'
     steps:
-      - run: echo "GOT  ${{ matrix.tools }}" >> $GITHUB_STEP_SUMMARY
+      - name: Version tool name
+        run: |
+          echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
+          echo "NORMALIZED_GIT_REF=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+          echo "GIT_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Versionined tool name
+        env:
+          TOOL_NAME_VERSIONED: "${{ env.TOOL_NAME }}-${{ env.NORMALIZED_GIT_REF }}-${{ env.GIT_SHORT_SHA }}"
+        run: |
+          echo "TOOL_NAME_VERSIONED=${{ env.TOOL_NAME_VERSIONED }}" >> $GITHUB_ENV
+          echo "TOOL_NAME_VERSIONED=${{ env.TOOL_NAME_VERSIONED }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Dump updated manifest file to be POSTed
+        run: jq "{\"toolJson\": ., \"walletAddress\": \"$TOOLS_WALLET_ADDRESS\"}" tools/${{ matrix.tools }}/${{ matrix.tools }}.json  > /tmp/manifest.json
+
+      - name: Dump Manifest json
+        run: |
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/manifest.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+          # - name: POST Manifest to environment
+          #   run: |
+          #     set -xe
+
+          #     curl --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
+          #     CID=$(cat output.json | jq -r '.cid'}
+          #     echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
