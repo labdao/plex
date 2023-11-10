@@ -106,6 +106,8 @@ jobs:
   frontend:
     needs: changes-frontend
     if: ${{ needs.changes-frontend.outputs.changes == 'true' }}
+    env:
+      NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
     strategy:
       matrix:
         backends: [
@@ -120,9 +122,6 @@ jobs:
       suffix: -${{ matrix.backends.env }}
       build-args: |
         NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
-        NEXT_PUBLIC_PRIVY_APP_ID
-        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT
-      secrets: |
-        NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+        NEXT_PUBLIC_PRIVY_APP_ID=${{ env.NEXT_PUBLIC_PRIVY_APP_ID }}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
     secrets: inherit
