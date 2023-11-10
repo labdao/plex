@@ -89,7 +89,7 @@ jobs:
         env:
           DOCKER_IMAGE_NAME: "${{ inputs.name }}"
           DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
-        run:
+        run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
           echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
           echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT

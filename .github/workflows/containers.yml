@@ -170,7 +170,7 @@ jobs:
         env:
           DOCKER_IMAGE_NAME: "frontend"
           DOCKER_IMAGE: "quay.io/labdao/frontend@${{ steps.build-and-push.outputs.digest }}"
-        run:
+        run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
           echo ":docker: **${{ env.DOCKER_IMAGE_NAME }}** image available at `${{ env.DOCKER_IMAGE }}`" >>  $GITHUB_STEP_SUMMARY
           echo "IMAGE=${{ env.DOCKER_IMAGE }}" >>  $GITHUB_OUTPUT
