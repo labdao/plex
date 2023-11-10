@@ -121,4 +121,5 @@ jobs:
       build-args: |
         NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
+      deploy-environment: ${{ matrix.backend.env }}
     secrets: inherit

@@ -38,11 +38,27 @@ on:
         required: false
         type: string
         default: 'labdao'
+      deploy-environment:
+        description: 'environemnt to deploy into'
+        required: false
+        type: string
 
 jobs:
   container-build-and-push:
     runs-on: ubuntu-latest
     steps:
+      - name: Inputs
+        id: docker-build-and-push-inputs
+        run: |
+          echo "## INPUTS" >> $GITHUB_STEP_SUMMARY
+          echo 'name:${{ inputs.name }}' >> $GITHUB_STEP_SUMMARY
+          echo 'context:${{ inputs.context }}' >> $GITHUB_STEP_SUMMARY
+          echo 'build-args:${{ inputs.build-args }}' >> $GITHUB_STEP_SUMMARY
+          echo 'tag-suffix:${{ inputs.tag-suffix }}' >> $GITHUB_STEP_SUMMARY
+          echo 'run-disk-space-cleanup:${{ inputs.run-disk-space-cleanup }}' >> $GITHUB_STEP_SUMMARY
+          echo 'registry:${{ inputs.registry }}' >> $GITHUB_STEP_SUMMARY
+          echo 'registry-org-name:${{ inputs.registry-org-name }}' >> $GITHUB_STEP_SUMMARY
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -89,7 +105,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Image output
-        id: image-output
+        id: docker-build-and-push-outputs
         env:
           DOCKER_IMAGE_NAME: "${{ inputs.name }}"
           DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
@@ -101,8 +117,10 @@ jobs:
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
+        if: |
+          inputs.name == 'backend' ||
+          (inputs.name == 'frontend' && inputs.deploy-environment == 'stg')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # gh workflow run 'deploy to ecs' -f "image=quay.io/labdao/frontend:sha-402aadf-stg@sha256:2aee85f8c768ca6385199228fa3bb93036290e6380a541bbf05a27650078b5b4" -f "container=frontend"  -f "environment=stg"
-          gh workflow run 'Deploy to ECS' -f "imageaasdasdasdasd=${{ steps.image-output.outputs.IMAGE }}" -f "container=frontend" 
+          echo gh workflow run 'Deploy to ECS' --ref 'ops/LAB-734-deploy-to-ecs-via-workflows' -f "image=${{ steps.docker-build-and-push-output.outputs.IMAGE }}" -f "container=${{ inputs.name }}" -f "environment=stg"
