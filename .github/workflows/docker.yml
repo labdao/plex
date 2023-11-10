@@ -34,10 +34,10 @@ on:
         required: false
         type: string
         default: 'labdao'
-    outputs:
-      IMAGE:
-        description: "IMAGE URL"
-        value: ${{ steps.image-output.outputs.IMAGE }}
+          # outputs:
+          #   IMAGE:
+          #     description: "IMAGE URL"
+          #     value: ${{ steps.image-output.outputs.IMAGE }}
 
 jobs:
   container-build-and-push:
