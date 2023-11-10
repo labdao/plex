@@ -77,7 +77,7 @@ jobs:
 
       - name: Dump updated manifest file to be POSTed
         run: |
-          jq --arg toolname "${{ env.TOOL_NAME_VERSIONED }}" '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"} | .toolJson.name |= $toolname'  tools/colabdesign/colabdesign.json
+          jq --arg toolname "${{ env.TOOL_NAME_VERSIONED }}" '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"} | .toolJson.name |= $toolname'  tools/colabdesign/colabdesign.json > /tmp/manifest.json
 
       - name: Dump Manifest json
         run: |
