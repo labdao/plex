@@ -1,0 +1,62 @@
+# Workflow to upload tool manifests
+---
+
+name: tools manifests
+
+on:
+  push:
+    branches: ["main"]
+    # Pattern matched against refs/tags
+    tags:
+      - '**'
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-manifest.yml'
+
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-manifest.yml'
+
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ################ TOOLS MANIFEST ###########################
+  changes-tools:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      tools: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        # Only run when tool's directory or workflow files have changed
+        ###############################################################
+        ################## Add new tools here #########################
+        ###############################################################
+        filters: |
+          colabdesign:
+            - 'tools/colabdesign/colabdesign.json'
+              # - '.github/workflows/tools-manifest.yml'
+          colabfold:
+            - 'tools/colabfold/colabfold.json'
+              # - '.github/workflows/tools-manifest.yml'
+          oddt:
+            - 'tools/oddt/oddt.json'
+              # - '.github/workflows/tools-manifest.yml'
+
+  tools:
+    needs: changes-tools
+    strategy:
+      fail-fast: false
+      matrix:
+        tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
+    steps:
+      - run: echo "GOT  ${{ matrix.tools }}" >> $GITHUB_STEP_SUMMARY
