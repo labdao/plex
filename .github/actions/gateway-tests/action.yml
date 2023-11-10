@@ -58,7 +58,7 @@ runs:
 
     - name: Test add Tool Endpoint
       run: |
-        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind/equibind._gateway.json)
+        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind/equibind_gateway.json)
         json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
