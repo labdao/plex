@@ -1,8 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookOpenIcon, GithubIcon, PlusIcon } from "lucide-react";
 import { notFound } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
@@ -10,9 +9,8 @@ import * as z from "zod";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
@@ -20,20 +18,23 @@ import { Separator } from "@/components/ui/separator";
 import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk, toolListThunk } from "@/lib/redux";
 
 import { DynamicArrayField } from "./DynamicArrayField";
-import formGenerator from "./formGenerator";
-import mockToolJson from "./mockToolJson";
+import { generateDefaultValues, generateSchema } from "./formGenerator";
+import TaskPageHeader from "./TaskPageHeader";
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
 
   // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
-  const task = {
-    name: "protein design",
-    slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
-    default_tool: {
-      CID: "QmTLQJWhh7iL7sHPpDfve8p1CiW6xu8Mzraamjugaku4j8",
-    },
-  };
+  const task = useMemo(
+    () => ({
+      name: "protein design",
+      slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
+      default_tool: {
+        CID: "QmbxyLKaZg73PvnREPdVitKziw2xTDjTp268VNy1hMkR5E",
+      },
+    }),
+    []
+  );
 
   if (task.slug !== params?.slug) {
     notFound();
@@ -49,16 +50,34 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     if (defaultToolCID) {
       dispatch(toolDetailThunk(defaultToolCID));
     }
-    dispatch(toolListThunk());
   }, [dispatch, task.default_tool?.CID]);
 
-  const { author, name, description, github, paper, inputs } = mockToolJson; //@TODO: replace with tool.ToolJson
-  const { generatedFormSchema, generatedDefaultValues } = formGenerator(inputs, task, tool);
+  const { author, name, description, github, paper, inputs } = tool.ToolJson;
 
-  const form = useForm<z.infer<typeof generatedFormSchema>>({
-    resolver: zodResolver(generatedFormSchema),
-    defaultValues: generatedDefaultValues,
+  const groupedInputs = Object.entries(tool.ToolJson?.inputs).reduce((acc: { [key: string]: any }, [key, input]: [string, any]) => {
+    const sectionName = input.grouping?.startsWith("_") ? "collapsed" : "standard";
+    const groupName = input.grouping || "Options";
+    if (!acc[sectionName]) {
+      acc[sectionName] = {};
+    }
+    if (!acc[sectionName][groupName]) {
+      acc[sectionName][groupName] = {};
+    }
+    acc[sectionName][groupName][key] = input;
+    return acc;
+  }, {});
+
+  const formSchema = generateSchema(tool.ToolJson?.inputs);
+  const defaultValues = generateDefaultValues(tool.ToolJson?.inputs, task, tool);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: defaultValues,
   });
+
+  useEffect(() => {
+    form.reset(generateDefaultValues(tool.ToolJson?.inputs, task, tool));
+  }, [tool, form, task]);
 
   // If the tool changes, fetch new tool details
   useEffect(() => {
@@ -70,7 +89,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function onSubmit(values: z.infer<typeof generatedFormSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
   }
 
@@ -84,28 +103,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           </Alert>
         )}
         <>
-          <h1 className="mb-4 text-3xl font-heading">
-            <span className="text-muted-foreground">
-              {task.name}/{author || "unknown"}/
-            </span>
-            {name}
-          </h1>
-          <p className="max-w-prose line-clamp-2 min-h-[3em]">{description}</p>
-          {(github || paper) && (
-            <div className="flex gap-2 mt-4">
-              {github && (
-                <a href={github} target="_blank" className={badgeVariants({ variant: "muted", size: "lg" })}>
-                  github <GithubIcon className="ml-2" size={20} />
-                </a>
-              )}
-              {paper && (
-                <a href={paper} target="_blank" className={badgeVariants({ variant: "muted", size: "lg" })}>
-                  paper <BookOpenIcon className="ml-2" size={20} />
-                </a>
-              )}
-            </div>
-          )}
-          <Separator className="my-6" />
+          <TaskPageHeader tool={tool} task={task} />
+
           <div className="grid grid-cols-3 gap-8">
             <div className="col-span-2">
               <Form {...form}>
@@ -153,19 +152,26 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                       />
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardContent className="space-y-4">
-                      {!toolDetailLoading && (
-                        <>
-                          {Object.keys(inputs || {}).map((key) => {
-                            // @ts-ignore
-                            const input = inputs[key];
-                            return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
-                          })}
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
+                  {!toolDetailLoading && (
+                    <>
+                      {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
+                        return (
+                          <Card key={groupKey}>
+                            <CardHeader>
+                              <CardTitle className="uppercase">{groupKey}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
+                                // @ts-ignore
+                                const input = groupedInputs?.standard?.[groupKey]?.[key];
+                                return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                              })}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </>
+                  )}
                 </form>
               </Form>
             </div>
