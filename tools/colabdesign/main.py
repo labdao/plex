@@ -72,6 +72,59 @@ from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
 
+def extract_deepest_keys(nested_dict, current_path="", deepest_keys=None):
+    if deepest_keys is None:
+        deepest_keys = {}
+
+    for key, value in nested_dict.items():
+        path = f"{current_path}.{key}" if current_path else key
+
+        if isinstance(value, dict):
+            extract_deepest_keys(value, path, deepest_keys)
+        else:
+            deepest_keys[path] = value
+
+    return deepest_keys
+
+def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
+    for path, value in deepest_keys_values.items():
+        # Handle special cases for certain keys
+        if 'target_protein_directory' in path or 'binder_protein_template_directory' in path:
+            value = os.path.splitext(os.path.basename(value))[0]
+
+        # Add the values as a new column in df_results
+        df_results[path] = value
+    
+    return df_results
+
+import yaml
+
+def enricher(multirun_path, cfg):
+
+    # Find the scores file in multirun_path
+    results_csv_path = None
+    for file_name in os.listdir(f"{multirun_path}/"):
+        if file_name.endswith("_scores.csv"):
+            results_csv_path = os.path.join(multirun_path, file_name)
+            break
+
+    # Check if the mpnn_results.csv file is found
+    if results_csv_path is None:
+        print("No scores file found in the specified directory.")
+        return
+
+    # Read the scores csv into a DataFrame
+    df_results = pd.read_csv(results_csv_path)
+
+    # Extract and add the deepest level keys and values to df_results
+    deepest_keys_values = extract_deepest_keys(OmegaConf.to_container(cfg))
+
+    df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
+
+    # print('enriched results', df_results)
+
+    df_results.to_csv(results_csv_path, index=False)
+
 def get_files_from_directory(root_dir, extension, max_depth=3):
     pdb_files = []
     
@@ -368,7 +421,6 @@ def prodigy_run(csv_path, pdb_path):
         design = r['design']
         n = r['n']
         file_path = f"{pdb_path}/design{design}_n{n}.pdb"
-        print(file_path)
         try:
             subprocess.run(["prodigy", "-q", file_path], stdout=open('temp.txt', 'w'), check=True)
             with open('temp.txt', 'r') as f:
@@ -377,10 +429,13 @@ def prodigy_run(csv_path, pdb_path):
                     affinity = float(lines[0].split(' ')[-1].split('/')[0])
                     df.loc[i,'affinity'] = affinity
                 else:
-                    print(f"No output from prodigy for {r['path']}")
+                    # print(f"No output from prodigy for {r['path']}")
+                    print(f"No output from prodigy for {file_path}")
                     # Handle the case where prodigy did not produce output
         except subprocess.CalledProcessError:
-            print(f"Prodigy command failed for {r['path']}")
+            # print(f"Prodigy command failed for {r['path']}")
+            print(f"Prodigy command failed for {file_path}")
+
     # export results
     df.to_csv(f"{csv_path}",index=None)
 
@@ -519,6 +574,10 @@ def my_app(cfg : DictConfig) -> None:
         os.system(command_mv)
         os.system(command_zip)
         os.system(command_collect)
+
+        # enrich and summarise run and results information and write to csv file
+        print("running enricher")
+        enricher(outputs_directory, cfg)
 
         print("design complete...")
         end_time = time.time()
