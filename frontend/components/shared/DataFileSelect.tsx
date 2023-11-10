@@ -37,7 +37,7 @@ export function DataFileSelect({ onSelect, value, label, globPatterns }: DataFil
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          className="justify-between w-full font-sans font-normal tracking-normal normal-case"
+          className="justify-between w-full p-6 text-base font-normal tracking-normal normal-case font-body"
           variant="outline"
           role="combobox"
           aria-expanded={open}

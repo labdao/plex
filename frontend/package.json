@@ -9,6 +9,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@hookform/resolvers": "^3.3.2",
     "@mantine/core": "^7.0.2",
     "@mantine/hooks": "^7.0.2",
     "@privy-io/react-auth": "^1.42.0",
@@ -27,16 +28,19 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
+    "dayjs": "^1.11.10",
     "ethereumjs-util": "^7.1.5",
     "jwt-decode": "^3.1.2",
     "lucide-react": "^0.290.0",
     "next": "latest",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.48.2",
     "react-redux": "8.1.0",
     "tailwind": "^4.0.0",
     "tailwind-merge": "^1.14.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "20.3.1",

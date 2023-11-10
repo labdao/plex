@@ -16,7 +16,7 @@ export function NavLink({ href, exact, children, className = "", ...props }: Nav
   const isActive = exact ? pathname === href : pathname.startsWith(href);
 
   return (
-    <Link href={href} {...props} className={cn(!isActive && "text-muted", className)}>
+    <Link href={href} {...props} className={cn(!isActive && "text-muted-foreground", className)}>
       {children}
     </Link>
   );

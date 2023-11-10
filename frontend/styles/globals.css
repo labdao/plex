@@ -24,8 +24,8 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
 
-    --muted: 0 0% 70%;
-    --muted-foreground: 0 0% 96.1%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 70%;
 
     --accent: 219 97% 37%;
     --accent-foreground: 0 0% 100%;
@@ -34,7 +34,7 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 79.8%;
-    --input: 0 0% 89.8%;
+    --input: 0 0% 79.8%;
     --ring: 219 97% 37%;
 
     --radius: 0.5rem;
