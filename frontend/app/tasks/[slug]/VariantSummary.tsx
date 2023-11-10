@@ -3,6 +3,8 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface VariantSummaryProps {
   form: UseFormReturn<any>;
@@ -33,23 +35,30 @@ export function VariantSummary({ sortedInputs, form }: VariantSummaryProps) {
 
   return (
     <>
-      <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
-      <div className="mb-4 space-y-2 lowercase">
-        {(variantSummaryInfo?.items || []).map((item: { name: string; variantCount: number }, index: number) => (
-          <div className="flex justify-between text-muted-foreground" key={index}>
-            <span>{item.name}</span>{" "}
-            <span className="mr-3">
-              x <span className="text-foreground">{item.variantCount}</span>
-            </span>
+      <Card className="sticky top-4">
+        <CardContent>
+          <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
+          <div className="mb-4 space-y-2 lowercase">
+            {(variantSummaryInfo?.items || []).map((item: { name: string; variantCount: number }, index: number) => (
+              <div className="flex justify-between text-muted-foreground" key={index}>
+                <span>{item.name}</span>{" "}
+                <span className="mr-3">
+                  x <span className="text-foreground">{item.variantCount}</span>
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between pt-2 border-t text-muted-foreground">
+              <span>Total Runs</span>{" "}
+              <Badge size="lg" className="text-base" variant="secondary">
+                {variantSummaryInfo?.total || 1}
+              </Badge>
+            </div>
           </div>
-        ))}
-        <div className="flex justify-between pt-2 border-t text-muted-foreground">
-          <span>Total Runs</span>{" "}
-          <Badge size="lg" className="text-base" variant="secondary">
-            {variantSummaryInfo?.total || 1}
-          </Badge>
-        </div>
-      </div>
+          <Button type="submit" form="task-form" className="w-full">
+            Submit <Badge className="mx-1">{variantSummaryInfo?.total || 1}</Badge> Experimental Run{variantSummaryInfo?.total > 1 && "s"}
+          </Button>
+        </CardContent>
+      </Card>
     </>
   );
 }

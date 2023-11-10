@@ -9,19 +9,17 @@ import * as z from "zod";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk, toolListThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
 import { ChevronsUpDownIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { VariantSummary } from "./VariantSummary";
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
@@ -206,14 +204,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
               </Form>
             </div>
             <div>
-              <Card className="sticky top-4">
-                <CardContent>
-                  <VariantSummary sortedInputs={sortedInputs} form={form} />
-                  <Button type="submit" form="task-form" className="w-full">
-                    Submit
-                  </Button>
-                </CardContent>
-              </Card>
+              <VariantSummary sortedInputs={sortedInputs} form={form} />
             </div>
           </div>
         </>
