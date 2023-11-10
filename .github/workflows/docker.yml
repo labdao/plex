@@ -52,7 +52,7 @@ jobs:
         run: |
           echo "## INPUTS" >> $GITHUB_STEP_SUMMARY
           echo "| INPUT NAME | INPUT VALUE |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|"
+          echo "|---|---|"  >> $GITHUB_STEP_SUMMARY
           echo "| name | ${{ inputs.name }} |" >> $GITHUB_STEP_SUMMARY
           echo "| context | ${{ inputs.context }} |" >> $GITHUB_STEP_SUMMARY
           echo "| build-args | ${{ inputs.build-args }} |" >> $GITHUB_STEP_SUMMARY

@@ -53,7 +53,7 @@ jobs:
           echo 'Inputs provided to workflow' >> $GITHUB_STEP_SUMMARY
 
           echo '| INPUT NAME | INPUT VALUE |' >> $GITHUB_STEP_SUMMARY
-          echo '|---|---|'
+          echo '|---|---|' >> $GITHUB_STEP_SUMMARY
           echo '| image | ${{ inputs.image }}' >> $GITHUB_STEP_SUMMARY
           echo '| environment | ${{ inputs.environment }}' >> $GITHUB_STEP_SUMMARY
           echo '| container | ${{ inputs.container }}' >> $GITHUB_STEP_SUMMARY
@@ -61,7 +61,7 @@ jobs:
           echo 'Deployment parameters'
 
           echo '| PARAMETER NAME | PARAMETER VALUE |' >> $GITHUB_STEP_SUMMARY
-          echo '|---|---|'
+          echo '|---|---|' >> $GITHUB_STEP_SUMMARY
           echo "| ECS_TASK_DEFINITION | ${{ env.ECS_TASK_DEFINITION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ECS_CONTAINER_NAME | ${{ env.ECS_CONTAINER_NAME }} |" >> $GITHUB_STEP_SUMMARY
           echo "| ECS_SERVICE | {{ env.ECS_SERVICE }} |" >> $GITHUB_STEP_SUMMARY
