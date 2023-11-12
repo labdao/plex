@@ -150,7 +150,7 @@ jobs:
         if: inputs.preview-enabled == 'true'
         run: |
           # Setup docker compose tunnel
-          docker compose -f docker-compose.tunnel.yml up -d
+          docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
 
       - name: docker compose build
