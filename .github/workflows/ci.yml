@@ -34,9 +34,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: 1.20.3
+          cache-dependency-path: go.sum
 
       - name: Install dependencies
         run: go mod download
@@ -47,30 +48,30 @@ jobs:
       - name: upload plex binary to be used by other jobs
         uses: actions/upload-artifact@v3
         with:
-          name: plex-binary-${{matrix.os}}
+          name: plex-binary-${{ matrix.os }}
           path: ./plex
 
       - name: Test
         run: go test ./... -v
 
-          # # Only downloading cli for macos
-          # ci-setup-compose:
-          #   strategy:
-          #     matrix:
-          #       os: [macos-13]
-          #   runs-on: ${{ matrix.os }}
-          #   environment: ci
-          #   steps:
-          #     - name: Download docker compose
-          #       run: |
-          #         # Download docker-compose plugin
-          #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
+  # # Only downloading cli for macos
+  # ci-setup-compose:
+  #   strategy:
+  #     matrix:
+  #       os: [macos-13]
+  #   runs-on: ${{ matrix.os }}
+  #   environment: ci
+  #   steps:
+  #     - name: Download docker compose
+  #       run: |
+  #         # Download docker-compose plugin
+  #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
 
-          #     - name: upload docker-compose plugin to be used later
-          #       uses: actions/upload-artifact@v3
-          #       with:
-          #         name: docker-compose-plugin-${{matrix.os}}
-          #         path: ./docker-compose
+  #     - name: upload docker-compose plugin to be used later
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: docker-compose-plugin-${{ matrix.os }}
+  #         path: ./docker-compose
 
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
@@ -97,10 +98,10 @@ jobs:
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: ./bacalhau
 
-  ci-public:
+  ci:
     needs:
       - go
         # - ci-setup-compose
@@ -112,10 +113,13 @@ jobs:
           # - macos-13
         bacalhau_version:
           - 1.1.4
+        network_mode:
+          - public
+          - private
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
+      BACALHAU_VERSION: ${{ matrix.bacalhau_version }}
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
       LOG_LEVEL: trace
@@ -126,12 +130,12 @@ jobs:
       - name: download plex binary
         uses: actions/download-artifact@v3
         with:
-          name: plex-binary-${{matrix.os}}
+          name: plex-binary-${{ matrix.os }}
 
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
 
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
@@ -162,10 +166,19 @@ jobs:
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
-      - name: Bring up the stack
+      - name: Bring up the public stack
+        if: matrix.network_mode == 'public'
         run: |
           # Setup docker compose
           docker compose -f docker-compose.yml up -d --wait
+        env:
+          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+
+      - name: Bring up the private stack
+        if: matrix.network_mode == 'private'
+        run: |
+          # Setup docker compose private
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
@@ -249,162 +262,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output-${{matrix.os}}-${{matrix.bacalhau_version}}
-          path: |
-            plex_run_output.log
-            job-*
-            jobs/
-
-  ci-private:
-    needs:
-      - go
-        # - ci-setup-compose
-      - ci-setup-bacalhau
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-          # -  macos-13
-        bacalhau_version:
-          - 1.1.4
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
-      # Setting it at workflow level to be used by all the steps
-      BACALHAU_API_HOST: "127.0.0.1"
-      LOG_LEVEL: trace
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: download plex binary
-        uses: actions/download-artifact@v3
-        with:
-          name: plex-binary-${{matrix.os}}
-
-      - name: download bacalhau binary
-        uses: actions/download-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
-
-      - name: Setup docker (missing on MacOS)
-        if: runner.os == 'macos'
-        run: |
-          brew install colima docker docker-compose
-          colima start
-
-          # For testcontainers to find the Colima socket
-          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
-          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
-
-          mkdir -p ~/.docker/cli-plugins
-          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-          docker version
-          docker compose version
-
-      - name: Setup docker compose plugin
-        if: runner.os != 'macos'
-        run: |
-          # Output version info
-          docker version
-          docker compose version
-
-      - name: docker compose build
-        run: |
-          # Build in parallel
-          docker compose build --parallel
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Bring up the stack
-        run: |
-          # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Run docker compose ps
-        run: |
-          # Inspect number of running containers
-          docker compose ps
-
-      - name: fix permissions
-        run: |
-          set -x
-
-          # Execute permission
-          chmod +x ./bacalhau ./plex
-
-      - name: Run Equibind
-        # turn back on once baclahau docker in docker job launcher is fixed
-        run: |
-
-          # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
-
-          # Create bacalhau config file
-          ./bacalhau version
-
-          # Pull equibind image before running the job to get better idea of job run
-          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
-
-          # Get node list
-          ./bacalhau node list
-
-          # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
-          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-
-          # Set equibind job id
-          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
-
-          cd "$result_dir/entry-0/outputs"
-          ls -ltraR
-          cat exitCode stderr stderr log.txt || true
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
-
-      - name: Run bacalhau describe
-        # run always even when
-        if: always()
-        run: |
-          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
-
-      - name: Test log streaming
-        # run always even when
-        if: always()
-        run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
-          cat /tmp/output.log
-
-      - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-tests
-
-      - name: Run docker compose logs
-        # run always even when
-        if: always()
-        run: |
-          docker compose logs
-
-      - name: Run docker logs to get additional logs
-        # run always even when
-        if: always()
-        run: |
-          docker ps -a
-          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
-
-      - name: upload outputs
-        # run always even when
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-private-output-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: ci-${{ matrix.network_mode }}-output-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: |
             plex_run_output.log
             job-*
