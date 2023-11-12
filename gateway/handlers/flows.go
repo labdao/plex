@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -48,6 +49,26 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	}
 
 	return cid, nil
+}
+
+// extractCidIfPossible checks if the input is a string that contains a '/'
+// and starts with 'Qm'. It returns the CID if these conditions are met.
+func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
+	// Check if input is a string.
+	strInput, ok := input.(string)
+	if !ok {
+		return "", false, errors.New("input is not a string")
+	}
+
+	// Check if the string contains '/' and starts with 'Qm'.
+	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+		split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+		cid = split[0]                            // The CID is the first part of the split.
+		return cid, true, nil
+	}
+
+	// If the string doesn't meet the conditions, return ok as false.
+	return "", false, nil
 }
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
@@ -96,7 +117,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var kwargs map[string][]string
+		var kwargs map[string][]interface{}
 
 		kwargsRaw, ok := requestData["kwargs"]
 		if !ok {
@@ -174,13 +195,17 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			for _, input := range job.Inputs {
+				cid, ok, err := extractCidIfPossible(input)
+				if !ok || err != nil {
+					continue
+				}
 				var dataFile models.DataFile
 				// Lookup DataFile with CID corresponding to input.IPFS
-				result := db.First(&dataFile, "cid = ?", input.IPFS)
+				result := db.First(&dataFile, "cid = ?", cid)
 				if result.Error != nil {
 					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 						// Handle the case where no matching DataFile is found if necessary
-						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", input.IPFS), http.StatusInternalServerError)
+						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 						return
 					} else {
 						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)

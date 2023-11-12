@@ -1,0 +1,14 @@
+this is the example first file's contents
+its contents will appear before the other files' contents
+contents from first file in array
+contents from second file in array
+contents from the third file in the array
+Example first string
+String 1
+String 2
+String 3
+42
+True
+False
+True
+False
