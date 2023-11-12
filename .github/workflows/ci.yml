@@ -106,7 +106,7 @@ jobs:
       - name: Build
         run: go build
 
-      - name: upload plex binary to be used by other jobs
+      - name: Upload plex binary
         uses: actions/upload-artifact@v3
         with:
           name: plex-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
