@@ -147,7 +147,7 @@ jobs:
           docker compose version
 
       - name: Bring tunnel for previewing environment
-        if: inputs.preview-enabled == "true"
+        if: inputs.preview-enabled == 'true'
         run: |
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d
@@ -279,5 +279,5 @@ jobs:
 
       - name: Sleep infinity if environemnt preview is set
         # run always even when
-        if: inputs.preview-enabled == "true"
+        if: inputs.preview-enabled == 'true'
         run: sleep infinity
