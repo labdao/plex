@@ -22,38 +22,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  go:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-            # - macos-13
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.20.3
-          cache-dependency-path: go.sum
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Build
-        run: go build
-
-      - name: upload plex binary to be used by other jobs
-        uses: actions/upload-artifact@v3
-        with:
-          name: plex-binary-${{ matrix.os }}
-          path: ./plex
-
-      - name: Test
-        run: go test ./... -v
-
   # # Only downloading cli for macos
   # ci-setup-compose:
   #   strategy:
@@ -103,8 +71,7 @@ jobs:
 
   ci:
     needs:
-      - go
-        # - ci-setup-compose
+      # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
       matrix:
@@ -127,10 +94,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: download plex binary
-        uses: actions/download-artifact@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          name: plex-binary-${{ matrix.os }}
+          go-version: 1.20.3
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build
+
+      - name: upload plex binary to be used by other jobs
+        uses: actions/upload-artifact@v3
+        with:
+          name: plex-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
+          path: ./plex
+
+      - name: Test
+        run: go test ./... -v
 
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
