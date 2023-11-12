@@ -116,7 +116,7 @@ jobs:
       - name: Upload plex binary
         uses: actions/upload-artifact@v3
         with:
-          name: plex-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
+          name: plex-binary-${{ matrix.network_mode }}-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: ./plex
 
       - name: download bacalhau binary
