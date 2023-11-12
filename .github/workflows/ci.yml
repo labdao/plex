@@ -112,9 +112,6 @@ jobs:
           name: plex-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: ./plex
 
-      - name: Test
-        run: go test ./... -v
-
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
@@ -210,6 +207,11 @@ jobs:
             echo "Docked files found:"
             find . -name '*docked.sdf' | grep 'docked.sdf'
           fi
+
+      - name: Go Test
+        # run always even when
+        if: always()
+        run: go test ./... -v
 
       - name: Run bacalhau describe
         # run always even when
