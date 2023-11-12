@@ -117,14 +117,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var kwargs map[string][]interface{}
-
 		kwargsRaw, ok := requestData["kwargs"]
 		if !ok {
 			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
 			return
 		}
 
+		var kwargs map[string][]interface{}
 		err = json.Unmarshal(kwargsRaw, &kwargs)
 		if err != nil {
 			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
