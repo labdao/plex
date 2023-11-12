@@ -15,6 +15,17 @@ export default function ListDataFiles() {
 
   const columns: ColumnDef<DataFile>[] = [
     {
+      accessorKey: "Filename",
+      header: "Filename",
+      cell: ({ row }) => {
+        return (
+          <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
+            {row.getValue("Filename")}
+          </a>
+        );
+      },
+    },
+    {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
@@ -29,13 +40,10 @@ export default function ListDataFiles() {
       accessorKey: "WalletAddress",
       header: "Uploader Wallet Address",
     },
-    {
-      accessorKey: "Filename",
-      header: "Filename",
-    },
   ];
 
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
+  // const [sorting, setSorting] = useState([]);
 
   useEffect(() => {
     fetch(`${backendUrl()}/datafiles`)
