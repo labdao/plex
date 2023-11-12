@@ -5,6 +5,13 @@
 name: CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      preview-enabled:
+        description: 'check whether to enable preview by setting up tunnel and keep environment up'
+        required: true
+        type: bool
+        default: true
   push:
     branches: ["main"]
     paths-ignore:
@@ -139,26 +146,45 @@ jobs:
           docker version
           docker compose version
 
+      - name: Bring tunnel for previewing environment
+        if: inputs.preview-enabled == true
+        run: |
+          # Setup docker compose tunnel
+          docker compose -f docker-compose.tunnel.yml up -d
+          cat ./docker/.env.tunnel
+
       - name: docker compose build
         run: |
-          # Build in parallel
-          docker compose build --parallel
+          # Build in parallel with tunnelling enabled
+          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
+            docker compose --env-file ./docker/.env.tunnel build --parallel
+          else
+            docker compose build --parallel
+          fi
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
         run: |
-          # Setup docker compose
-          docker compose -f docker-compose.yml up -d --wait
+          # Setup docker compose with tunnelling enabled
+          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
+            docker compose --env-file ./docker/.env.tunnel -f docker-compose.yml up -d --wait
+          else
+            docker compose -f docker-compose.yml up -d --wait
+          fi
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
         run: |
-          # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+          # Setup docker compose with tunnelling enabled
+          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
+            docker compose --env-file ./docker/.env.tunnel -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+          else
+            docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
+          fi
         env:
           NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
@@ -250,3 +276,8 @@ jobs:
             plex_run_output.log
             job-*
             jobs/
+
+      - name: Sleep infinity if environemnt preview is set
+        # run always even when
+        if: inputs.preview-enabled == true
+        run: sleep infinity
