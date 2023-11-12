@@ -3,6 +3,7 @@ package ipwl
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/labdao/plex/internal/bacalhau"
 )
@@ -20,7 +21,7 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 			continue
 		}
 		log.Println("Creating cmd")
-		cmd, err := toolToCmd(toolConfig, ioEntry, ioList)
+		cmd, err := toolToCmd(toolConfig, ioEntry)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error reading tool config: %v", err)
@@ -28,14 +29,42 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 		}
 		log.Printf("cmd: %s \n", cmd)
 		log.Println("mapping inputs")
-		bacalhauInputs := make(map[string]string)
+		fileInputs := make(map[string]string)
+		fileArrayInputs := make(map[string][]string)
 
 		for key, input := range ioEntry.Inputs {
-			inputStr, ok := input.(string)
-			if !ok {
-				continue
+			fmt.Println("going thru inputs with new code")
+			fmt.Println(input)
+			switch v := input.(type) {
+			case string:
+				if strings.HasPrefix(v, "Qm") {
+					fmt.Println("found file input")
+					fmt.Println(v)
+					fileInputs[key] = v
+				} else {
+					fmt.Println("input is a string but does not have 'Qm' prefix")
+				}
+			case []interface{}: // Changed from []string to []interface{}
+				fmt.Println("found slice, checking each for 'Qm' prefix")
+				var stringArray []string
+				allValid := true
+				for _, elem := range v {
+					str, ok := elem.(string)
+					if !ok || !strings.HasPrefix(str, "Qm") {
+						allValid = false
+						fmt.Println("element is not a string or does not have 'Qm' prefix:", elem)
+						break
+					}
+					stringArray = append(stringArray, str)
+				}
+				if allValid && len(stringArray) > 0 {
+					fmt.Println("found file array")
+					fmt.Println(stringArray)
+					fileArrayInputs[key] = stringArray
+				}
+			default:
+				fmt.Println("input is neither a string nor a slice of strings")
 			}
-			bacalhauInputs[key] = inputStr
 		}
 
 		log.Println("creating bacalhau job")
@@ -55,7 +84,7 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 		}
 
 		log.Println("creating bacalhau job")
-		bacalhauJob, err := bacalhau.CreateBacalhauJobV2(bacalhauInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(fileInputs, fileArrayInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)

@@ -117,43 +117,32 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	return tool, toolInfo, nil
 }
 
-func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) ([]string, error) {
-	arguments := strings.Join(toolConfig.Arguments, " ")
+func toolToCmd(toolConfig Tool, ioEntry IO) ([]string, error) {
+	var arguments []string
 
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
-	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
+	for _, arg := range toolConfig.Arguments {
+		placeholderRegex := regexp.MustCompile(`\$\((inputs\.[a-zA-Z0-9_]+)(\.value)?\)`)
+		matches := placeholderRegex.FindAllStringSubmatch(arg, -1)
 
-	for _, match := range fileMatches {
-		placeholder := match[0]
-		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
-		key = strings.TrimSuffix(key, ".basename")
-		key = strings.TrimSuffix(key, ".ext")
-		key = strings.TrimSuffix(key, ".default")
+		for _, match := range matches {
+			placeholder := match[0]
+			key := match[1]
+			inputKey := strings.TrimPrefix(key, "inputs.")
 
-		var replacement string
-		input := ioEntry.Inputs[key]
-		switch match[2] {
-		case ".value":
-			replacement = fmt.Sprintf("/%s/%s", key, input)
+			inputValue, ok := ioEntry.Inputs[inputKey]
+			if !ok {
+				return nil, fmt.Errorf("input key %s not found in IO entry", inputKey)
+			}
+
+			// Assuming input value replacement needs to be quoted for Bacalhau command.
+			replacement := fmt.Sprintf("%v", inputValue)
+
+			arg = strings.Replace(arg, placeholder, replacement, -1)
 		}
 
-		arguments = strings.Replace(arguments, placeholder, replacement, -1)
+		arguments = append(arguments, arg)
 	}
 
-	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
-	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
-
-	for _, match := range nonFileMatches {
-		placeholder := match[0]
-		key := strings.TrimPrefix(match[1], "inputs.")
-
-		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
-			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
-		}
-	}
-
-	cmd := toolConfig.BaseCommand
-	cmd = append(cmd, arguments)
-
+	cmd := append(toolConfig.BaseCommand, arguments...)
 	return cmd, nil
 }

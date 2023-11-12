@@ -194,28 +194,53 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			for _, input := range job.Inputs {
-				cid, ok, err := extractCidIfPossible(input)
-				if !ok || err != nil {
+				var cidsToAdd []string
+				switch v := input.(type) {
+				case string:
+					strInput, ok := input.(string)
+					if !ok {
+						continue
+					}
+					// Check if the string contains '/' and starts with 'Qm'.
+					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+						split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+						cid := split[0]                           // The CID is the first part of the split.
+						cidsToAdd = append(cidsToAdd, cid)
+					}
+				case []interface{}: // Changed from []string to []interface{}
+					fmt.Println("found slice, checking each for 'Qm' prefix")
+					for _, elem := range v {
+						strInput, ok := elem.(string)
+						if !ok {
+							continue
+						}
+						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+							split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+							cid := split[0]                           // The CID is the first part of the split.
+							cidsToAdd = append(cidsToAdd, cid)
+						}
+					}
+				default:
 					continue
 				}
-				var dataFile models.DataFile
-				// Lookup DataFile with CID corresponding to input.IPFS
-				result := db.First(&dataFile, "cid = ?", cid)
-				if result.Error != nil {
-					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						// Handle the case where no matching DataFile is found if necessary
-						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
-						return
-					} else {
-						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
-						return
+				for _, cid := range cidsToAdd {
+					var dataFile models.DataFile
+					// Lookup DataFile with CID corresponding to input.IPFS
+					result := db.First(&dataFile, "cid = ?", cid)
+					if result.Error != nil {
+						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							// Handle the case where no matching DataFile is found if necessary
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							return
+						} else {
+							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							return
+						}
 					}
+					// Append found DataFile to jobEntry's Inputs
+					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
 				}
-
-				// Append found DataFile to jobEntry's Inputs
-				jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
 			}
-
 			// Save jobEntry with related inputs
 			result = db.Save(&jobEntry)
 			if result.Error != nil {
@@ -223,7 +248,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 		}
-
 		utils.SendJSONResponseWithCID(w, submittedIoListCid)
 	}
 }

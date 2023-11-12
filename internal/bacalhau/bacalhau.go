@@ -30,7 +30,7 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJobV2(inputs map[string]string, container, selector string, cmd []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string][]string, container, selector string, cmd []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	log.Println("Creating job inside v2 function")
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
@@ -64,60 +64,52 @@ func CreateBacalhauJobV2(inputs map[string]string, container, selector string, c
 		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	}
 	job.Spec.Inputs = []model.StorageSpec{}
-	for key, cid := range inputs {
+	for key, input := range fileInputs {
+		// Split the string on the "/" character to separate the CID and filename
+		parts := strings.Split(input, "/")
+		if len(parts) != 2 {
+			fmt.Println("here input file")
+			fmt.Println(input)
+			return nil, fmt.Errorf("not a valid cid path")
+		}
+
+		cid, _ := parts[0], parts[1]
+
 		job.Spec.Inputs = append(job.Spec.Inputs,
-			// ToDo for arrays split by comma and put inside a dir that is key/index
 			model.StorageSpec{
 				StorageSource: model.StorageSourceIPFS,
 				CID:           cid,
 				Path:          "/inputs/" + key,
 			})
 	}
+
+	for key, inputs := range fileArrayInputs {
+		for i, input := range inputs {
+			// Split the string on the "/" character to separate the CID and filename
+			parts := strings.Split(input, "/")
+			if len(parts) != 2 {
+				fmt.Println("here input file array")
+				fmt.Println(i)
+				fmt.Println(input)
+				return nil, fmt.Errorf("not a valid cid path")
+			}
+
+			cid, _ := parts[0], parts[1]
+
+			// Construct the path with the key and index 'i'
+			indexedPath := fmt.Sprintf("/inputs/%s/%d", key, i)
+
+			job.Spec.Inputs = append(job.Spec.Inputs,
+				model.StorageSpec{
+					StorageSource: model.StorageSourceIPFS,
+					CID:           cid,
+					Path:          indexedPath,
+				})
+		}
+	}
+
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	log.Println("returning job")
-	return job, err
-}
-
-func CreateBacalhauJob(cid, container, cmd, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
-	job, err = model.NewJobWithSaneProductionDefaults()
-	if err != nil {
-		return nil, err
-	}
-	job.Spec.Engine = model.EngineDocker
-	job.Spec.Docker.Image = container
-	job.Spec.PublisherSpec = model.PublisherSpec{
-		Type: model.PublisherIpfs,
-	}
-	job.Spec.Docker.Entrypoint = []string{"/bin/bash", "-c", cmd}
-	job.Spec.Annotations = annotations
-	job.Spec.Timeout = int64(maxTime * 60)
-
-	plexEnv, _ := os.LookupEnv("PLEX_ENV")
-	if selector == "" && plexEnv == "stage" {
-		selector = "owner=labdaostage"
-	} else if selector == "" && plexEnv == "prod" {
-		selector = "owner=labdao"
-	}
-	nodeSelectorRequirements, err := parse.NodeSelector(selector)
-	if err != nil {
-		return nil, err
-	}
-	job.Spec.NodeSelectors = nodeSelectorRequirements
-
-	if memory > 0 {
-		job.Spec.Resources.Memory = fmt.Sprintf("%dgb", memory)
-	}
-	if cpu > 0 {
-		job.Spec.Resources.CPU = fmt.Sprintf("%f", cpu)
-	}
-	if gpu {
-		job.Spec.Resources.GPU = "1"
-	}
-	if network {
-		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
-	}
-	job.Spec.Inputs = []model.StorageSpec{{StorageSource: model.StorageSourceIPFS, CID: cid, Path: "/inputs"}}
-	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	return job, err
 }
 
