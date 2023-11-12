@@ -149,6 +149,8 @@ jobs:
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
         run: |
+          # Create emptyfile
+          touch ./docker/.env.tunnel
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
@@ -194,6 +196,7 @@ jobs:
           docker compose ps
 
       - name: fix permissions
+        if: always()
         run: |
           set -x
 
@@ -277,7 +280,7 @@ jobs:
             job-*
             jobs/
 
-      - name: Sleep infinity if environemnt preview is set
+      - name: Sleep for 300 minutes if environemnt preview is set
         # run always even when
         if: inputs.preview-enabled == 'true'
-        run: sleep infinity
+        run: sleep 300m
