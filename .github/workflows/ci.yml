@@ -171,8 +171,6 @@ jobs:
           else
             docker compose build --parallel
           fi
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
@@ -183,8 +181,6 @@ jobs:
           else
             docker compose -f docker-compose.yml up -d --wait
           fi
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
@@ -195,8 +191,6 @@ jobs:
           else
             docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
           fi
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
 
       - name: Run docker compose ps
         run: |
