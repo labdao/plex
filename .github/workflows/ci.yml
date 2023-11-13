@@ -166,6 +166,11 @@ jobs:
           # Dump file contents
           cat ./docker/.env.tunnel
 
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
+        run: |
+          cat ./docker/.env.tunnel
+
       - name: docker compose build
         run: |
           # Source tunnel URL file
