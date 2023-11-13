@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { ToolDetail } from "../toolDetailSlice";
+import { ToolDetail } from "@/lib/redux";
 
 export interface Tool {
   CID: string;

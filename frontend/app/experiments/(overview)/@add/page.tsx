@@ -61,7 +61,7 @@ export default function AddGraph() {
     if (cid !== "") {
       dispatch(setFlowAddSuccess(false));
       dispatch(setFlowAddKwargs({}));
-      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {} } }));
+      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}));
       dispatch(setFlowAddError(null));
       dispatch(setFlowAddName(""));
       dispatch(setFlowAddCid(""));
