@@ -1,7 +1,7 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
 
 import { listDataFiles } from './asyncActions'
-import { setDataFileList,setDataFileListError, setDataFileListSuccess } from './slice'
+import { setDataFileList, setDataFileListError, setDataFileListSuccess } from './slice'
 
 export const dataFileListThunk = createAppAsyncThunk(
   'datafiles/listDataFiles',

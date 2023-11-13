@@ -2,34 +2,54 @@
 
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AppDispatch, dataFileListThunk, selectDataFileList, selectDataFileListError } from "@/lib/redux";
 import { cn } from "@/lib/utils";
+
+import { listDataFiles } from "@/lib/redux/slices/dataFileListSlice/asyncActions";
+
+interface DataFile {
+  CID: string;
+  Filename: string;
+}
 
 interface DataFileSelectProps {
   onChange: (value: string) => void;
   value: string;
   label: string;
-  globPatterns?: [];
+  globPatterns?: string[]; // assuming globPatterns is an array of string patterns
 }
 
 export function DataFileSelect({ onChange, value, label, globPatterns }: DataFileSelectProps) {
-  const dispatch = useDispatch<AppDispatch>();
-
-  const dataFiles = useSelector(selectDataFileList);
-  const dataFileListError = useSelector(selectDataFileListError);
-
-  const [open, setOpen] = useState(false);
+  const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    dispatch(dataFileListThunk(globPatterns));
-  }, [dispatch, globPatterns]);
+    setLoading(true);
+    setError(null);
 
-  const getDataFileValue = (dataFile: { CID: string; Filename: string }) => dataFile.CID + "/" + dataFile.Filename;
+    listDataFiles(globPatterns)
+      .then((fetchedDataFiles: DataFile[]) => {
+        setDataFiles(fetchedDataFiles);
+        setLoading(false);
+      })
+      .catch((fetchError: Error) => {
+        setError(fetchError.message);
+        setLoading(false);
+      });
+
+    return () => {
+      setDataFiles([]);
+      setError(null);
+      setLoading(false);
+    };
+  }, [globPatterns]);
+
+  const getDataFileValue = (dataFile: DataFile): string => `${dataFile.CID}/${dataFile.Filename}`;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,7 +70,7 @@ export function DataFileSelect({ onChange, value, label, globPatterns }: DataFil
         <Command>
           <CommandInput placeholder={`Search files...`} />
           <CommandEmpty className="lowercase">No file found.</CommandEmpty>
-          {dataFileListError && <CommandItem>Error fetching data files.</CommandItem>}
+          {error && <CommandItem>Error fetching data files.</CommandItem>}
           <CommandGroup className="overflow-y-auto max-h-[300px]">
             {dataFiles.map((dataFile) => (
               <CommandItem
