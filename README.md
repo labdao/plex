@@ -94,6 +94,22 @@ go build
 
 # Setup
 
+## Setting up tunnel to allow remote connectivity (Optiona)
+Perform this setup only if you want to allow others to connect to your local environment over the internet.
+
+```
+# Required, create empty file for tunnel info
+touch docker/.env.tunnel
+
+# Bring up tunnel compose
+docker compose  -f docker-compose.tunnel.yml up -d --wait
+```
+
+Once compose is running, you should be able to view the URLs.
+```
+cat docker/.env.tunnel
+```
+
 ## Running the Complete Stack Locally
 We have `docker-compose` files available to bring up the stack locally.
 
@@ -102,6 +118,9 @@ Note:
 * New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
 
 ```
+# Optional step, Source Tunnelling urls
+source docker/.env.tunnel
+
 # Optionally, build in parallel before running
 docker compose build --parallel
 
@@ -111,14 +130,17 @@ docker compose up -d --wait
 
 To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
 
-# Running with private IPFS
+## Running with private IPFS
 
 ```
+# Optional step, Source Tunnelling urls
+source docker/.env.tunnel
+
+# Build and bring up the private IPFS stack
 docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 ```
 
 Once environment is up, set `BACALHAU_API_HOST=127.0.0.1` environment variable to point `plex` cli to the local environment.
-
 
 ## Full Stack Development
 * Define necessary env variables

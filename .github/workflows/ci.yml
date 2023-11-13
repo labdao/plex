@@ -157,38 +157,40 @@ jobs:
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
         run: |
+          # Create empty file to avoid issues
+          touch ./docker/.env.tunnel
+
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
+
+          # Dump file contents
           cat ./docker/.env.tunnel
 
       - name: docker compose build
         run: |
-          # Build in parallel with tunnelling enabled
-          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
-            docker compose --env-file ./docker/.env.tunnel build --parallel
-          else
-            docker compose build --parallel
-          fi
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Build compose
+          docker compose build --parallel
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
         run: |
-          # Setup docker compose with tunnelling enabled
-          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
-            docker compose --env-file ./docker/.env.tunnel -f docker-compose.yml up -d --wait
-          else
-            docker compose -f docker-compose.yml up -d --wait
-          fi
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
+          docker compose -f docker-compose.yml up -d --wait
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
         run: |
-          # Setup docker compose with tunnelling enabled
-          if [[ "${{ inputs.preview-enabled }}" == true ]]; then
-            docker compose --env-file ./docker/.env.tunnel -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-          else
-            docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-          fi
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
