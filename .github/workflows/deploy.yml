@@ -49,18 +49,18 @@ jobs:
 
           echo '| INPUT NAME | INPUT VALUE |' >> $GITHUB_STEP_SUMMARY
           echo '|---|---|' >> $GITHUB_STEP_SUMMARY
-          echo '| image | `${{ inputs.image }}`' >> $GITHUB_STEP_SUMMARY
-          echo '| environment | `${{ inputs.environment }}`' >> $GITHUB_STEP_SUMMARY
-          echo '| container | `${{ inputs.container }}`' >> $GITHUB_STEP_SUMMARY
+          echo '| image | ${{ inputs.image }} |' >> $GITHUB_STEP_SUMMARY
+          echo '| environment | ${{ inputs.environment }} |' >> $GITHUB_STEP_SUMMARY
+          echo '| container | ${{ inputs.container }} |' >> $GITHUB_STEP_SUMMARY
 
           echo 'Deployment parameters'
 
           echo '| PARAMETER NAME | PARAMETER VALUE |' >> $GITHUB_STEP_SUMMARY
           echo '|---|---|' >> $GITHUB_STEP_SUMMARY
-          echo "| ECS_TASK_DEFINITION | `${{ env.ECS_TASK_DEFINITION }}` |" >> $GITHUB_STEP_SUMMARY
-          echo "| ECS_CONTAINER_NAME | `${{ env.ECS_CONTAINER_NAME }}` |" >> $GITHUB_STEP_SUMMARY
-          echo "| ECS_SERVICE | `${{ env.ECS_SERVICE }}` |" >> $GITHUB_STEP_SUMMARY
-          echo "| ECS_CLUSTER | `${{ env.ECS_CLUSTER }}` |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_TASK_DEFINITION | ${{ env.ECS_TASK_DEFINITION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_CONTAINER_NAME | ${{ env.ECS_CONTAINER_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_SERVICE | ${{ env.ECS_SERVICE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_CLUSTER | ${{ env.ECS_CLUSTER }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout
         uses: actions/checkout@v3
