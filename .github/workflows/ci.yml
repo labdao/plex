@@ -154,7 +154,9 @@ jobs:
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
-          echo "::notice::Missing semicolon"
+          while read line;do
+            echo "::debug::$line"
+          done < ./docker/.env.tunnel
 
       - name: docker compose build
         run: |
