@@ -155,11 +155,6 @@ jobs:
           docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
 
-      - name: Tunnel URLs
-        if: inputs.preview-enabled == 'true'
-        run: |
-          while read line;do echo "::debug::${line}" done < ./docker/.env.tunnel
-
       - name: docker compose build
         run: |
           # Build in parallel with tunnelling enabled
@@ -284,6 +279,11 @@ jobs:
             plex_run_output.log
             job-*
             jobs/
+
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
+        run: |
+          cat ./docker/.env.tunnel
 
       - name: Sleep for 300 minutes if environemnt preview is set
         # run always even when
