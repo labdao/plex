@@ -111,7 +111,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
         <>
           <TaskPageHeader tool={tool} task={task} />
 
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="col-span-2">
               <Form {...form}>
                 <form id="task-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
