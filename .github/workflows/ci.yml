@@ -32,6 +32,7 @@ jobs:
   # # Only downloading cli for macos
   # ci-setup-compose:
   #   strategy:
+  #     fail-fast: false
   #     matrix:
   #       os: [macos-13]
   #   runs-on: ${{ matrix.os }}
@@ -51,6 +52,7 @@ jobs:
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
@@ -81,6 +83,7 @@ jobs:
       # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04

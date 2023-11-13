@@ -108,6 +108,7 @@ jobs:
     needs: changes-frontend
     if: ${{ needs.changes-frontend.outputs.changes == 'true' }}
     strategy:
+      fail-fast: false
       matrix:
         backends: [
           { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},
