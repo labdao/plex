@@ -22,6 +22,22 @@ import TaskPageHeader from "./TaskPageHeader";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { VariantSummary } from "./VariantSummary";
 
+import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+
+type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
+
+type DynamicKeys = {
+  [key: string]: Array<{ value: any }>;
+};
+
+type TransformedJSON = {
+  name: string;
+  toolCid: string;
+  walletAddress: string;
+  scatteringMethod: string;
+  kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
+};
+
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -95,8 +111,101 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
+  function transformJson(
+    originalJson: any,
+    walletAddress: string
+  ): TransformedJSON {
+    const { name, tool, ...dynamicKeys } = originalJson;
+
+    // Define the transformation for the dynamic keys using a more specific type
+    // @ts-ignore
+    const kwargs = Object.fromEntries(
+      // @ts-ignore
+      Object.entries<DynamicKeys>(dynamicKeys).map(([key, valueArray]: [string, JsonValueArray]) => [
+        key,
+        valueArray.map((valueObject) => valueObject.value),
+      ])
+    );
+
+    // Return the transformed JSON
+    return {
+      name: name,
+      toolCid: tool,
+      walletAddress: walletAddress,
+      scatteringMethod: "crossProduct",
+      kwargs: kwargs,
+    };
+  }
+
   function onSubmit(values: z.infer<typeof formSchema>) {
+    // submit here
     console.log("===== Form Submitted =====", values);
+    /*
+    payload='{
+          "name": "test equibind new backend",
+          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "toolCid": "QmXt1WFynKUcQCR5ihPz3gFmXnLoq5pFGHFEj32oRxPwxE",
+          "scatteringMethod": "crossProduct",
+          "kwargs": {
+            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
+            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf", "QmViB4EnKX6PXd77WYSgMDMq9ZMX14peu3ZNoVV1LHUZwS/ZINC000019632618.sdf"]
+          }
+        }'
+    */
+   /*
+   {
+    "name": "protein-design-2023-11-13-07-27",
+    "tool": "QmbxyLKaZg73PvnREPdVitKziw2xTDjTp268VNy1hMkR5E",
+    "binder_length": [
+        {
+            "value": 50
+        },
+        {
+            "value": 75
+        }
+    ],
+    "full_prompt": [
+        {
+            "value": ""
+        }
+    ],
+    "hotspot": [
+        {
+            "value": "A30,A33"
+        }
+    ],
+    "number_of_binders": [
+        {
+            "value": 2
+        }
+    ],
+    "target_chain": [
+        {
+            "value": "A"
+        }
+    ],
+    "target_end_residue": [
+        {
+            "value": 1
+        }
+    ],
+    "target_protein": [
+        {
+            "value": "QmVM6i5sHMyUm9qrSsAzLLWRDYAResgMttQj9s2D8Qb8dJ/best.pdb"
+        }
+    ],
+    "target_start_residue": [
+        {
+            "value": 1
+        }
+    ]
+}
+*/
+
+    console.log('transformed payload')
+    console.log(transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b"));
+    console.log('submitting')
+    createFlow(transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b"))
   }
 
   return (
