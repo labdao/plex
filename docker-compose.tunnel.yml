@@ -7,7 +7,7 @@ services:
     hostname: cloudflared-frontend
     network_mode: host
 
-  # sidecar container for requester healthcheck
+  # sidecar container for cloudflared health
   cloudflared-frontend-health:
     image: "alpine"
     command: sh -c 'apk add curl && sleep infinity'
@@ -28,7 +28,7 @@ services:
     hostname: cloudflared-backend
     network_mode: host
 
-  # sidecar container for requester healthcheck
+  # sidecar container for cloudflared health
   cloudflared-backend-health:
     image: "alpine"
     command: sh -c 'apk add curl && sleep infinity'
@@ -49,7 +49,7 @@ services:
     hostname: cloudflared-ipfs
     network_mode: host
 
-  # sidecar container for requester healthcheck
+  # sidecar container for cloudflared health
   cloudflared-ipfs-health:
     image: "alpine"
     command: sh -c 'apk add curl && sleep infinity'
