@@ -160,6 +160,5 @@ func toolToCmd(toolConfig Tool, ioEntry IO) ([]string, error) {
 		arguments = append(arguments, arg)
 	}
 
-	cmd := append(toolConfig.BaseCommand, arguments...)
-	return cmd, nil
+	return arguments, nil
 }

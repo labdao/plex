@@ -7,15 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/config"
-	"github.com/bacalhau-project/bacalhau/pkg/downloader"
-	"github.com/bacalhau-project/bacalhau/pkg/downloader/util"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
-	"github.com/bacalhau-project/bacalhau/pkg/system"
 )
 
 func GetBacalhauApiHost() string {
@@ -30,14 +26,24 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string][]string, container, selector string, cmd []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string][]string, container, selector string, baseCmd, params []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
 	log.Println("Creating job inside v2 function")
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("container cmd", cmd)
-	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithParameters(cmd...).Build()
+	fmt.Println("container baseCmd", baseCmd)
+	fmt.Println("container params", params)
+	if len(baseCmd) > 0 && len(params) > 0 {
+		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEntrypoint(baseCmd...).WithParameters(params...).Build()
+	} else if len(baseCmd) > 0 {
+		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEntrypoint(baseCmd...).Build()
+	} else if len(params) > 0 {
+		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithParameters(params...).Build()
+	} else {
+		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).Build()
+	}
+
 	job.Spec.PublisherSpec = model.PublisherSpec{
 		Type: model.PublisherIpfs,
 	}
@@ -156,64 +162,4 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 	}
 	updatedJob, _, err := client.Get(context.Background(), jobId)
 	return updatedJob, err
-}
-
-func GetBacalhauJobResults(submittedJob *model.Job, showAnimation bool, maxTime int) (results []model.PublishedResult, err error) {
-	client, err := CreateBacalhauClient()
-	if err != nil {
-		return nil, err
-	}
-
-	sleepConstant := 2
-	maxTrys := maxTime * 60 / sleepConstant
-
-	animation := []string{"\U0001F331", "_", "_", "_", "_"}
-	fmt.Println("Job running...")
-
-	fmt.Printf("Bacalhau job id: %s \n", submittedJob.Metadata.ID)
-
-	for i := 0; i < maxTrys; i++ {
-		updatedJob, _, err := client.Get(context.Background(), submittedJob.Metadata.ID)
-		if err != nil {
-			return results, err
-		}
-		if i == maxTrys-1 {
-			return results, fmt.Errorf("bacalhau job did not finish within the expected time (~%d min); please check the job status manually with `bacalhau describe %s`", maxTime, submittedJob.Metadata.ID)
-		}
-		if updatedJob.State.State == model.JobStateCancelled {
-			return results, fmt.Errorf("bacalhau cancelled job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
-		} else if updatedJob.State.State == model.JobStateError {
-			return results, fmt.Errorf("bacalhau errored job; please run `bacalhau describe %s` for more details", submittedJob.Metadata.ID)
-		} else if updatedJob.State.State == model.JobStateCompleted {
-			results, err = client.GetResults(context.Background(), submittedJob.Metadata.ID)
-			if err != nil {
-				return results, err
-			}
-			if len(results) > 0 {
-				return results, err
-			} else {
-				return results, fmt.Errorf("bacalhau job completed but no results found")
-			}
-		}
-		if showAnimation {
-			saplingIndex := i % 5
-			animation[saplingIndex] = "\U0001F331"
-			fmt.Printf("////%s////\r", strings.Join(animation, ""))
-			animation[saplingIndex] = "_"
-		}
-		time.Sleep(time.Duration(sleepConstant) * time.Second)
-	}
-	return results, err
-}
-
-func DownloadBacalhauResults(dir string, submittedJob *model.Job, results []model.PublishedResult) error {
-	cm := system.NewCleanupManager()
-	downloadSettings := &model.DownloaderSettings{
-		Timeout:   model.DefaultDownloadTimeout,
-		OutputDir: dir,
-	}
-	downloadSettings.OutputDir = dir
-	downloaderProvider := util.NewStandardDownloaders(cm, downloadSettings)
-	err := downloader.DownloadResults(context.Background(), results, downloaderProvider, downloadSettings)
-	return err
 }

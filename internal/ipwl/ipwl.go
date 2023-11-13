@@ -21,13 +21,13 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 			continue
 		}
 		log.Println("Creating cmd")
-		cmd, err := toolToCmd(toolConfig, ioEntry)
+		params, err := toolToCmd(toolConfig, ioEntry)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error reading tool config: %v", err)
 			continue
 		}
-		log.Printf("cmd: %s \n", cmd)
+		log.Printf("params: %s \n", params)
 		log.Println("mapping inputs")
 		fileInputs := make(map[string]string)
 		fileArrayInputs := make(map[string][]string)
@@ -84,7 +84,7 @@ func SubmitIoList(ioList []IO, selector string, maxTime int, annotations []strin
 		}
 
 		log.Println("creating bacalhau job")
-		bacalhauJob, err := bacalhau.CreateBacalhauJob(fileInputs, fileArrayInputs, toolConfig.DockerPull, selector, cmd, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
+		bacalhauJob, err := bacalhau.CreateBacalhauJob(fileInputs, fileArrayInputs, toolConfig.DockerPull, selector, toolConfig.BaseCommand, params, maxTime, memory, cpu, toolConfig.GpuBool, toolConfig.NetworkBool, annotations)
 		if err != nil {
 			submittedIOList[i].State = "failed"
 			submittedIOList[i].ErrMsg = fmt.Sprintf("error creating Bacalhau job: %v", err)

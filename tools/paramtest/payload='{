@@ -1,5 +1,5 @@
         payload='{
-          "name": "test all params ",
+          "name": "test all params stage",
           "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
           "toolCid": "QmdnRYRyZytjrcC8Q9y7g5zMe1nSQyUJmxvZX1SMKB8tQT",
           "scatteringMethod": "crossProduct",
@@ -20,6 +20,10 @@
                -H "Content-Type: application/json" \
                -d "$payload"
 
+        curl -X POST "https://api.stg.labdao.xyz/flows" \
+               -H "Content-Type: application/json" \
+               -d "$payload"
+
 
 
 docker build -t paramtest .
@@ -27,3 +31,14 @@ docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" paramtes
 ring 3"]' 3 '[2, 4, 8]' true '[true, false, true, false]'
 docker tag paramtest openzyme/paramtest
 docker push openzyme/paramtest
+
+payload='{
+          "name": "testFlow",
+          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "toolCid": "QmXt1WFynKUcQCR5ihPz3gFmXnLoq5pFGHFEj32oRxPwxE",
+          "scatteringMethod": "crossProduct",
+          "kwargs": {
+            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
+            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf", "QmViB4EnKX6PXd77WYSgMDMq9ZMX14peu3ZNoVV1LHUZwS/ZINC000019632618.sdf"]
+          }
+        }'
