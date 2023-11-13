@@ -8,10 +8,15 @@ on:
   workflow_dispatch:
     inputs:
       preview-enabled:
-        description: 'check whether to enable preview by setting up tunnel and keep environment up'
-        required: true
+        description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
+        required: false
         type: bool
         default: true
+      preview-timeout:
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        required: false
+        type: string
+        default: "300m"
   push:
     branches: ["main"]
     paths-ignore:
@@ -288,7 +293,6 @@ jobs:
         run: |
           cat ./docker/.env.tunnel
 
-      - name: Sleep for 300 minutes if environemnt preview is set
-        # run always even when
+      - name: Sleep for preview-timeout
         if: inputs.preview-enabled == 'true'
-        run: sleep 300m
+        run: sleep ${{ inputs.preview-timeout }}
