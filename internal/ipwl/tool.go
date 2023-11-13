@@ -126,16 +126,33 @@ func toolToCmd(toolConfig Tool, ioEntry IO) ([]string, error) {
 
 		for _, match := range matches {
 			placeholder := match[0]
-			key := match[1]
-			inputKey := strings.TrimPrefix(key, "inputs.")
+			inputKey := strings.TrimPrefix(match[1], "inputs.")
 
 			inputValue, ok := ioEntry.Inputs[inputKey]
 			if !ok {
 				return nil, fmt.Errorf("input key %s not found in IO entry", inputKey)
 			}
 
-			// Assuming input value replacement needs to be quoted for Bacalhau command.
-			replacement := fmt.Sprintf("%v", inputValue)
+			var replacement string
+			// Determine the type of inputValue and process accordingly
+			switch v := inputValue.(type) {
+			case []interface{}:
+				// Directly marshal to JSON, as we're already asserting types on insertion
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal array for key %s: %s", inputKey, err)
+				}
+				replacement = string(jsonBytes)
+			case string, bool, float64, int: // Add other types as needed
+				// Single values are not JSON arrays, so marshal directly to JSON
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal value for key %s: %s", inputKey, err)
+				}
+				replacement = string(jsonBytes)
+			default:
+				return nil, fmt.Errorf("unsupported type for key %s", inputKey)
+			}
 
 			arg = strings.Replace(arg, placeholder, replacement, -1)
 		}

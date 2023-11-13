@@ -37,8 +37,7 @@ func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string]
 		return nil, err
 	}
 	fmt.Println("container cmd", cmd)
-	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).
-		WithEntrypoint(cmd...).Build()
+	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithParameters(cmd...).Build()
 	job.Spec.PublisherSpec = model.PublisherSpec{
 		Type: model.PublisherIpfs,
 	}
