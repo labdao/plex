@@ -154,9 +154,11 @@ jobs:
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
-          while read line;do
-            echo "::debug::$line"
-          done < ./docker/.env.tunnel
+
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
+        run: |
+          while read line;do echo "::debug::${line}" done < ./docker/.env.tunnel
 
       - name: docker compose build
         run: |
