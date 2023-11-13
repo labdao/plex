@@ -9,13 +9,15 @@ module.exports = {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1240px",
       },
     },
     extend: {
       fontFamily: {
-        primary: ["var(--font-primary)", ...fontFamily.mono],
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        heading: ["var(--font-heading)", ...fontFamily.sans],
+        body: ["var(--font-body)", ...fontFamily.sans],
+        mono: ["var(--font-mono)", ...fontFamily.mono],
+        raster: ["var(--font-raster)", ...fontFamily.mono],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -24,6 +26,7 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
+          light: "hsl(var(--primary) / 0.5)",
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
