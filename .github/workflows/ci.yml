@@ -157,8 +157,6 @@ jobs:
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
         run: |
-          # Create emptyfile
-          touch ./docker/.env.tunnel
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
           cat ./docker/.env.tunnel
