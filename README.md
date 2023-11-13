@@ -112,27 +112,13 @@ docker compose up -d --wait
 To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
 
 # Running with private IPFS
-> Requirement to have `ipfs` available locally.
 
 ```
 docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 ```
-To run `plex` cli against local private environment `export` the following params to your shell before executing `plex` commands:
-```
 
-# using temp directory for ipfs repo
-export IPFS_PATH=$(mktemp -d)
+Once environment is up, set `BACALHAU_API_HOST=127.0.0.1` environment variable to point `plex` cli to the local environment.
 
-# Initialize IPFS repo
-ipfs init -e
-
-# Copy over swarm key and config
-cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-
-export BACALHAU_API_HOST="127.0.0.1"
-export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
-export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-```
 
 ## Full Stack Development
 * Define necessary env variables

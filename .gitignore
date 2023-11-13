@@ -329,4 +329,4 @@ gateway/gorm.db
 tools/tmp*
 
 # Ignore docker stuff
-docker/.env.tunnel
+# docker/.env.tunnel
