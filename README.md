@@ -94,7 +94,7 @@ go build
 
 # Setup
 
-## Setting up tunnel to allow remote connectivity (Optiona)
+## Setting up tunnel to allow remote connectivity (Optional)
 Perform this setup only if you want to allow others to connect to your local environment over the internet.
 
 ```
