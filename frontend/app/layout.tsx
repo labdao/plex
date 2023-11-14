@@ -1,7 +1,8 @@
 import "@/styles/globals.css";
 
 import { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 
 import UserLoader from "@/components/auth/UserLoader";
 import Footer from "@/components/global/Footer";
@@ -9,20 +10,88 @@ import Header from "@/components/global/Header";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
-export const fontSans = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
+const fontRaster = localFont({
+  src: [
+    {
+      path: "../fonts/FKRasterRomanCompact-Blended.woff2",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-raster",
 });
 
-export const fontPrimary = Space_Grotesk({
+const fontMono = localFont({
+  src: [
+    {
+      path: "../fonts/PPFraktionMono-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/PPFraktionMono-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../fonts/PPFraktionMono-RegularItalic.woff2",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../fonts/PPFraktionMono-BoldItalic.woff2",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-mono",
+});
+
+const fontBody = localFont({
+  src: [
+    {
+      path: "../fonts/PPNeueMontreal-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/PPNeueMontreal-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../fonts/PPNeueMontreal-Italic.woff2",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../fonts/PPNeueMontreal-BoldItalic.woff2",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-body",
+});
+
+const fontHeading = Space_Grotesk({
+  variable: "--font-heading",
+  weight: ["500"],
+  style: ["normal"],
   subsets: ["latin"],
-  variable: "--font-primary",
 });
 
 export default function RootLayout(props: React.PropsWithChildren) {
   return (
     <html lang="en">
-      <body className={cn("min-h-screen bg-background font-primary antialiased", fontSans.variable, fontPrimary.variable)}>
+      <body
+        className={cn(
+          "min-h-screen bg-background font-body antialiased",
+          fontRaster.variable,
+          fontMono.variable,
+          fontBody.variable,
+          fontHeading.variable
+        )}
+      >
         <Providers>
           <div className="flex flex-col w-full min-h-screen bg-gray-100">
             <Header />

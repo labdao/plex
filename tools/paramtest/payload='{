@@ -1,0 +1,44 @@
+        payload='{
+          "name": "test all params stage",
+          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "toolCid": "QmdnRYRyZytjrcC8Q9y7g5zMe1nSQyUJmxvZX1SMKB8tQT",
+          "scatteringMethod": "crossProduct",
+          "kwargs": {
+            "first_file": ["QmfQqo1kUYNuyCJRRYj7LPRjPdoiiH1E9KjY8wzURBKKxE/example_first_file.txt"],
+            "file_array": [["QmSuMCJ24jj3E4Uu3QdVT4iKDu1KPgJ9unnQBe7yJ9QEo7/array_0_file.txt", "QmWbF24RHTZyocEhCAwDpjWoxy47PgG9hGNGYYN1jnpiW7/array_1_file.txt", "QmbmHzQM7gX5gVvFr6nHqnUjGzprLEeuahLCSjBDDJs2WF/array_2_file.txt"]],
+            "first_string": ["example first string"],
+            "string_array": [["string 1", "string 2", "string 3"]],
+            "first_number": [3],
+            "number_array": [[2,4,8]],
+            "first_bool": [true],
+            "bool_array": [[false, true, false]]
+          }
+        }'
+
+
+        curl -X POST "http://localhost:8080/flows" \
+               -H "Content-Type: application/json" \
+               -d "$payload"
+
+        curl -X POST "https://api.stg.labdao.xyz/flows" \
+               -H "Content-Type: application/json" \
+               -d "$payload"
+
+
+
+docker build -t paramtest .
+docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" paramtest "Example first string" '["String 1", "String 2", "St
+ring 3"]' 3 '[2, 4, 8]' true '[true, false, true, false]'
+docker tag paramtest openzyme/paramtest
+docker push openzyme/paramtest
+
+payload='{
+          "name": "testFlow",
+          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
+          "toolCid": "QmXt1WFynKUcQCR5ihPz3gFmXnLoq5pFGHFEj32oRxPwxE",
+          "scatteringMethod": "crossProduct",
+          "kwargs": {
+            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
+            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf", "QmViB4EnKX6PXd77WYSgMDMq9ZMX14peu3ZNoVV1LHUZwS/ZINC000019632618.sdf"]
+          }
+        }'

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import { ToolDetail } from '../toolListSlice/slice'
+import { ToolDetail } from "@/lib/redux";
 
 export interface Kwargs {
   [key: string]: string[];
@@ -18,7 +18,7 @@ interface FlowAddSliceState {
 
 const initialState: FlowAddSliceState = {
   name: "",
-  tool: { CID: '', WalletAddress: '', Name: '', ToolJson: { inputs: {} }},
+  tool: { CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }},
   kwargs: {},
   cid: '',
   loading: false,

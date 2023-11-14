@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -14,17 +13,17 @@ import (
 )
 
 type ToolInput struct {
-	Type        string   `json:"type"`
-	Description string   `json:"description"`
-	Array       bool     `json:"array"`
-	Glob        []string `json:"glob"`
-	Default     string   `json:"default"`
-	Min         string   `json:"min"`
-	Max         string   `json:"max"`
-	Example     string   `json:"example"`
-	Grouping    string   `json:"grouping"`
-	Position    string   `json:"position"`
-	Required    bool     `json:"required"`
+	Type        string      `json:"type"`
+	Description string      `json:"description"`
+	Array       bool        `json:"array"`
+	Glob        []string    `json:"glob"`
+	Default     interface{} `json:"default"`
+	Min         string      `json:"min"`
+	Max         string      `json:"max"`
+	Example     string      `json:"example"`
+	Grouping    string      `json:"grouping"`
+	Position    string      `json:"position"`
+	Required    bool        `json:"required"`
 }
 
 type ToolOutput struct {
@@ -57,12 +56,6 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	var toolFilePath string
 	var cid string
 	var err error
-
-	// Check if toolPath is a key in CORE_TOOLS
-	if cid, ok := CORE_TOOLS[toolPath]; ok {
-		toolPath = cid
-		toolInfo.IPFS = toolPath
-	}
 
 	if ipfs.IsValidCID(toolPath) {
 		toolInfo.IPFS = toolPath
@@ -124,114 +117,48 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	return tool, toolInfo, nil
 }
 
-func toolToCmd2(toolConfig Tool, ioEntry IO, ioGraph []IO) ([]string, error) {
-	arguments := strings.Join(toolConfig.Arguments, " ")
+func toolToCmd(toolConfig Tool, ioEntry IO) ([]string, error) {
+	var arguments []string
 
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
-	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
+	for _, arg := range toolConfig.Arguments {
+		placeholderRegex := regexp.MustCompile(`\$\((inputs\.[a-zA-Z0-9_]+)(\.value)?\)`)
+		matches := placeholderRegex.FindAllStringSubmatch(arg, -1)
 
-	for _, match := range fileMatches {
-		placeholder := match[0]
-		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
-		key = strings.TrimSuffix(key, ".basename")
-		key = strings.TrimSuffix(key, ".ext")
-		key = strings.TrimSuffix(key, ".default")
+		for _, match := range matches {
+			placeholder := match[0]
+			inputKey := strings.TrimPrefix(match[1], "inputs.")
 
-		var replacement string
-		input := ioEntry.Inputs[key]
-		switch match[2] {
-		case ".filepath":
-			replacement = fmt.Sprintf("/%s/%s", key, input.FilePath)
-		case ".basename":
-			replacement = strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))
-		case ".ext":
-			ext := filepath.Ext(input.FilePath)
-			replacement = strings.TrimPrefix(ext, ".")
-		case ".default":
-			replacement = toolConfig.Inputs[key].Default
+			inputValue, ok := ioEntry.Inputs[inputKey]
+			if !ok {
+				return nil, fmt.Errorf("input key %s not found in IO entry", inputKey)
+			}
+
+			var replacement string
+			// Determine the type of inputValue and process accordingly
+			switch v := inputValue.(type) {
+			case []interface{}:
+				// Directly marshal to JSON, as we're already asserting types on insertion
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal array for key %s: %s", inputKey, err)
+				}
+				replacement = string(jsonBytes)
+			case string, bool, float64, int: // Add other types as needed
+				// Single values are not JSON arrays, so marshal directly to JSON
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal value for key %s: %s", inputKey, err)
+				}
+				replacement = string(jsonBytes)
+			default:
+				return nil, fmt.Errorf("unsupported type for key %s", inputKey)
+			}
+
+			arg = strings.Replace(arg, placeholder, replacement, -1)
 		}
 
-		arguments = strings.Replace(arguments, placeholder, replacement, -1)
+		arguments = append(arguments, arg)
 	}
 
-	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
-	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
-
-	for _, match := range nonFileMatches {
-		placeholder := match[0]
-		key := strings.TrimPrefix(match[1], "inputs.")
-
-		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
-			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
-		}
-	}
-
-	cmd := toolConfig.BaseCommand
-	cmd = append(cmd, arguments)
-
-	return cmd, nil
-}
-
-func toolToCmd(toolConfig Tool, ioEntry IO, ioGraph []IO) (string, error) {
-	arguments := strings.Join(toolConfig.Arguments, " ")
-
-	placeholderRegex := regexp.MustCompile(`\$\((inputs\..+?(\.filepath|\.basename|\.ext|\.default))\)`)
-	fileMatches := placeholderRegex.FindAllStringSubmatch(arguments, -1)
-
-	for _, match := range fileMatches {
-		placeholder := match[0]
-		key := strings.TrimSuffix(strings.TrimPrefix(match[1], "inputs."), ".filepath")
-		key = strings.TrimSuffix(key, ".basename")
-		key = strings.TrimSuffix(key, ".ext")
-		key = strings.TrimSuffix(key, ".default")
-
-		var replacement string
-		input := ioEntry.Inputs[key]
-		switch match[2] {
-		case ".filepath":
-			replacement = fmt.Sprintf("/inputs/%s", input.FilePath)
-		case ".basename":
-			replacement = strings.TrimSuffix(input.FilePath, filepath.Ext(input.FilePath))
-		case ".ext":
-			ext := filepath.Ext(input.FilePath)
-			replacement = strings.TrimPrefix(ext, ".")
-		case ".default":
-			replacement = toolConfig.Inputs[key].Default
-		}
-
-		arguments = strings.Replace(arguments, placeholder, replacement, -1)
-	}
-
-	nonFilePlaceholderRegex := regexp.MustCompile(`\$\((inputs\..+?)\)`)
-	nonFileMatches := nonFilePlaceholderRegex.FindAllStringSubmatch(arguments, -1)
-
-	for _, match := range nonFileMatches {
-		placeholder := match[0]
-		key := strings.TrimPrefix(match[1], "inputs.")
-
-		if input, ok := toolConfig.Inputs[key]; ok && input.Type != "File" {
-			arguments = strings.Replace(arguments, placeholder, fmt.Sprintf("%v", input.Default), -1)
-		}
-	}
-
-	cmd := fmt.Sprintf("%s \"%s\"", strings.Join(toolConfig.BaseCommand, " "), arguments)
-
-	return cmd, nil
-}
-
-// You can use custom tools by passing the cid directly to plex -t arguments
-var CORE_TOOLS = map[string]string{
-	"equibind":             "QmZ2HarAgwZGjc3LBx9mWNwAQkPWiHMignqKup1ckp8NhB",
-	"diffdock":             "QmSzetFkveiQYZ5FgpZdHHfsjMWYz5YzwMAvqUgUFhFPMM",
-	"colabfold-mini":       "QmcRH74qfqDBJFku3mEDGxkAf6CSpaHTpdbe1pMkHnbcZD",
-	"colabfold-standard":   "QmXnM1VpdGgX5huyU3zTjJovsu42KPfWhjxhZGkyvy9PVk",
-	"colabfold-large":      "QmPYqMy19VFFuYztL6b5ruo4Kw4JWT583emStGrSYTH5Yi",
-	"bam2fastq":            "QmbPUirWiWCv9sgdHLekf5AnoCdw4QPU2SyfGGKs9JRRbq",
-	"oddt":                 "QmUx7NdxkXXZvbK1JXZVUYUBqsevWkbVxgTzpWJ4Xp4inf",
-	"rfdiffusion":          "QmXnCBCtoYuPyGsEJVpjn5regHfFSYa8kx44e22XxDX2t2",
-	"repeatmodeler":        "QmZdXxnUt1sFFR39CfkEUgiioUBf6qP5CUs8TCb7Wqn4MC",
-	"gnina":                "QmYfGaWzxwi8HiWLdiX4iQXuuLXVKYrr6YC3DknEvZeSne",
-	"batch-dlkcat":         "QmThdvypN8gDDwwyNnpSYsdwvyxCET8s1jym3HZCTaBzmD",
-	"openbabel-pdb-to-sdf": "QmbbDSDZJp8G7EFaNKsT7Qe7S9iaaemZmyvS6XgZpdR5e3",
-	"openbabel-rmsd":       "QmUxrKgAs5r42xVki4vtMskJa1Z7WA64wURkwywPMch7dA",
+	return arguments, nil
 }
