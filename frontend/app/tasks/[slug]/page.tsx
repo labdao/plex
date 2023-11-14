@@ -178,8 +178,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           <div className="grid grid-cols-3 gap-8">
             <div className="col-span-2">
               <Form {...form}>
-              <form id="task-form" onSubmit={form.handleSubmit(onSubmit.bind(this))} className="space-y-8">
-                <form id="task-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
                   <Card>
                     <CardContent className="space-y-4">
                       <FormField
