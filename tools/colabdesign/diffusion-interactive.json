@@ -12,7 +12,6 @@
     "main.py"
     ],
     "arguments": [
-        "python -u main.py \\",
         "inputs=container \\",
         "outputs=container \\",
         "params.basic_settings.pdb_chain=$(inputs.target_chain.value) \\",
