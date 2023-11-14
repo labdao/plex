@@ -65,7 +65,7 @@ jobs:
       - name: Version tool name
         run: |
           echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
-          echo "NORMALIZED_GIT_REF=$(echo $GITHUB_REF | sed 's/refs\//g' | sed 's/heads\///g' | sed 's/\/merge//g' | sed 's/\//-/g')" >> $GITHUB_ENV
+          echo "NORMALIZED_GIT_REF=$(echo $GITHUB_REF | sed 's/refs\///g' | sed 's/heads\///g' | sed 's/\/merge//g' | sed 's/\//-/g')" >> $GITHUB_ENV
           echo "GIT_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: debug
         run: |
