@@ -86,15 +86,6 @@
             "grouping": "binder",
             "position": "202",
             "required":true
-        },
-        "full_prompt": {
-            "type": "string",
-            "default": "",
-            "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-            "example": "A1-283:B1-6/1/B8-20/22/B43-47",
-            "grouping": "_advanced",
-            "position": "301",
-            "required":false
         }
     },
     "outputs": {
