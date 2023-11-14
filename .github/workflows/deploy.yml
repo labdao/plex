@@ -24,11 +24,6 @@ on:
           - frontend
           - backend
 
-# Only run one at a time
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   deploy:
     name: Deploy
@@ -38,43 +33,65 @@ jobs:
       id-token: write
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Envs
+        run: |
+          # Set envs used for actual deployment
+          echo "ECS_TASK_DEFINITION=labdao-${{ inputs.environment }}-ecs-task-${{ inputs.container }}" >> $GITHUB_ENV
+          echo "ECS_CONTAINER_NAME=labdao-${{ inputs.environment }}-${{ inputs.container }}" >> $GITHUB_ENV
+          echo "ECS_SERVICE=labdao-${{ inputs.environment }}-ecs-service-${{ inputs.container }}" >> $GITHUB_ENV
+          echo "ECS_CLUSTER=labdao-${{ inputs.environment }}-cluster" >> $GITHUB_ENV
 
-    - name: Set envs
-      run: |
-        echo "ECS_TASK_DEFINITION=labdao-${{ inputs.environment }}-ecs-task-${{ inputs.container }}" >> $GITHUB_ENV
-        echo "ECS_CONTAINER_NAME=labdao-${{ inputs.environment }}-${{ inputs.container }}" >> $GITHUB_ENV
-        echo "ECS_SERVICE=labdao-${{ inputs.environment }}-ecs-service-${{ inputs.container }}" >> $GITHUB_ENV
-        echo "ECS_CLUSTER=labdao-${{ inputs.environment }}-cluster" >> $GITHUB_ENV
+      - name: Input and deploy parameters
+        run: |
+          echo "## INPUTS" >> $GITHUB_STEP_SUMMARY
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: arn:aws:iam::321042884980:role/github-action-role
-        aws-region: us-east-2
+          echo 'Inputs provided to workflow' >> $GITHUB_STEP_SUMMARY
 
-    - name: Download task definition
-      run: |
-        aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
+          echo '| INPUT NAME | INPUT VALUE |' >> $GITHUB_STEP_SUMMARY
+          echo '|---|---|' >> $GITHUB_STEP_SUMMARY
+          echo '| image | ${{ inputs.image }}' >> $GITHUB_STEP_SUMMARY
+          echo '| environment | ${{ inputs.environment }}' >> $GITHUB_STEP_SUMMARY
+          echo '| container | ${{ inputs.container }}' >> $GITHUB_STEP_SUMMARY
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: ${{ env.ECS_CONTAINER_NAME }}
-        image: ${{ inputs.image }}
+          echo 'Deployment parameters'
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ env.ECS_SERVICE }}
-        cluster: ${{ env.ECS_CLUSTER }}
-        wait-for-service-stability: true
+          echo '| PARAMETER NAME | PARAMETER VALUE |' >> $GITHUB_STEP_SUMMARY
+          echo '|---|---|' >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_TASK_DEFINITION | ${{ env.ECS_TASK_DEFINITION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_CONTAINER_NAME | ${{ env.ECS_CONTAINER_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_SERVICE | {{ env.ECS_SERVICE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECS_CLUSTER | ${{ env.ECS_CLUSTER }} |" >> $GITHUB_STEP_SUMMARY
 
-    - name: Cleanup
-      # run always even when failure
-      if: always()
-      run: rm -rf task-definition.json
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::321042884980:role/github-action-role
+          aws-region: us-east-2
+
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.ECS_CONTAINER_NAME }}
+          image: ${{ inputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Cleanup
+        # run always even when failure
+        if: always()
+        run: rm -rf task-definition.json
