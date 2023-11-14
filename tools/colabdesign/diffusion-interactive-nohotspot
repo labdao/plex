@@ -17,10 +17,8 @@
         "params.basic_settings.pdb_chain=$(inputs.target_chain.value) \\",
         "params.advanced_settings.pdb_start_residue=$(inputs.target_start_residue.value) \\",
         "params.advanced_settings.pdb_end_residue=$(inputs.target_end_residue.value) \\",
-        "params.advanced_settings.hotspot=$(inputs.hotspot.value) \\",
         "params.basic_settings.binder_length=$(inputs.binder_length.value) \\",
-        "params.basic_settings.num_designs=$(inputs.number_of_binders.value) \\",
-        "params.expert_settings.RFDiffusion_Binder.contigs_override=$(inputs.full_prompt.value);"
+        "params.basic_settings.num_designs=$(inputs.number_of_binders.value) \\"
     ],
     "dockerPull": "quay.io/labdao/colabdesign@sha256:06c331562c5be4ebc6849f86df72348bfcb3365cd80d386f4222cd848c0abe92",
     "gpuBool": true,
@@ -57,15 +55,6 @@
             "grouping": "target",
             "position": "104",
             "required":true
-        },
-        "hotspot": {
-            "type": "string",
-            "default": "",
-            "grouping": "target",
-            "description": "Target residues that should be in contact with the binder.",
-            "example": "A30,A33,A34",
-            "position": "105",
-            "required":false
         },
         "binder_length": {
             "type": "int",
