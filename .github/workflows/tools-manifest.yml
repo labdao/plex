@@ -89,10 +89,10 @@ jobs:
           cat /tmp/manifest.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-          # - name: POST Manifest to environment
-          #   run: |
-          #     set -xe
+      - name: POST Manifest to environment
+        run: |
+          set -xe
 
-          #     curl --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
-          #     CID=$(cat output.json | jq -r '.cid'}
-          #     echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
+          curl --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
+          CID=$(cat output.json | jq -r '.cid'}
+          echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
