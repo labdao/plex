@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"time"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -130,6 +131,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						// If file is not in DataFile table then save it to the table
 						dataFile.CID = fileEntry["CID"]
 						dataFile.Filename = fileEntry["filename"]
+						dataFile.Timestamp = time.Now()
 						if err := db.Create(&dataFile).Error; err != nil {
 							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
 							return
