@@ -15,6 +15,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
 import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
+import { useRouter } from "next/navigation";
+
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
@@ -40,6 +42,7 @@ type TransformedJSON = {
 
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
   const task = useMemo(
@@ -137,75 +140,27 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     };
   }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // submit here
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
-    /*
-    payload='{
-          "name": "test equibind new backend",
-          "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-          "toolCid": "QmXt1WFynKUcQCR5ihPz3gFmXnLoq5pFGHFEj32oRxPwxE",
-          "scatteringMethod": "crossProduct",
-          "kwargs": {
-            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
-            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf", "QmViB4EnKX6PXd77WYSgMDMq9ZMX14peu3ZNoVV1LHUZwS/ZINC000019632618.sdf"]
-          }
-        }'
-    */
-   /*
-   {
-    "name": "protein-design-2023-11-13-07-27",
-    "tool": "QmbxyLKaZg73PvnREPdVitKziw2xTDjTp268VNy1hMkR5E",
-    "binder_length": [
-        {
-            "value": 50
-        },
-        {
-            "value": 75
-        }
-    ],
-    "full_prompt": [
-        {
-            "value": ""
-        }
-    ],
-    "hotspot": [
-        {
-            "value": "A30,A33"
-        }
-    ],
-    "number_of_binders": [
-        {
-            "value": 2
-        }
-    ],
-    "target_chain": [
-        {
-            "value": "A"
-        }
-    ],
-    "target_end_residue": [
-        {
-            "value": 1
-        }
-    ],
-    "target_protein": [
-        {
-            "value": "QmVM6i5sHMyUm9qrSsAzLLWRDYAResgMttQj9s2D8Qb8dJ/best.pdb"
-        }
-    ],
-    "target_start_residue": [
-        {
-            "value": 1
-        }
-    ]
-}
-*/
 
     console.log('transformed payload')
-    console.log(transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b"));
+    const transformedPayload = transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b");
+    console.log(transformedPayload);
     console.log('submitting')
-    createFlow(transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b"))
+
+    try {
+      const response = await createFlow(transformedPayload);
+      if (response && response.cid) {
+        console.log('Flow created', response);
+        // Redirecting to another page, for example, a success page or dashboard
+        router.push(`/experiments/${response.cid}`);
+      } else {
+        console.log("something went wrong", response)
+      }
+    } catch (error) {
+      console.error('Failed to create flow', error);
+      // Handle error, maybe show message to user
+    }
   }
 
   return (
@@ -223,6 +178,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           <div className="grid grid-cols-3 gap-8">
             <div className="col-span-2">
               <Form {...form}>
+              <form id="task-form" onSubmit={form.handleSubmit(onSubmit.bind(this))} className="space-y-8">
                 <form id="task-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                   <Card>
                     <CardContent className="space-y-4">

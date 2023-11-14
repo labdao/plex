@@ -1,4 +1,5 @@
 # standard library imports
+import glob
 import os
 import time
 import signal
@@ -11,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
 import py3Dmol
+import yaml
 from google.colab import files
 from IPython.display import display # , HTML
 
@@ -302,9 +304,53 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
   return contigs, copies
 
 
+# Parse input params
+args = sys.argv[1:]  # Skip the script name
+if len(args) != 6:
+    print("Usage: main.py first_string 'string_array' first_number 'number_array' first_bool 'bool_array'")
+    sys.exit(1)
+
+# Extract arguments knowing their fixed positions
+target_chain = args[0].strip("'").strip('"')
+target_start_residue = int(args[1])
+target_end_residue = int(args[2])
+hotspot = args[3].strip("'").strip('"')
+binder_length = int(args[4])
+number_of_binders = int(args[5])
+
+files = glob.glob("inputs/target_protein/*.pdb")
+
+# Check if there's exactly one file
+if len(files) == 1:
+    target_protein_filepath = files[0]  # Assign the file path
+else:
+    # Raise an error if not exactly 1 file
+    raise ValueError("Expected exactly one protein PDB file, but found {}".format(len(files)))
+
+# Load the existing YAML configuration file
+with open('config.yaml', 'r') as stream:
+    config = yaml.safe_load(stream)
+
+# Update the YAML configuration with the provided arguments
+config['basic_settings']['pdb'] = target_protein_filepath
+config['basic_settings']['pdb_chain'] = target_chain
+config['basic_settings']['num_designs'] = number_of_binders
+config['basic_settings']['binder_length'] = binder_length
+config['advanced_settings']['pdb_start_residue'] = target_start_residue
+config['advanced_settings']['pdb_end_residue'] = target_end_residue
+
+# hack until we allow frontend to send empty string
+if hotspot == "none":
+  hotspot = ""
+config['advanced_settings']['hotspot'] = hotspot
+
+# Write the updated configuration back to the YAML file
+with open('config.yaml', 'w') as outfile:
+    yaml.dump(config, outfile, default_flow_style=False)
+
 # Initialize Hydra
 print("Initializing Hydra...")
-initialize(config_path="../inputs")
+initialize(config_path="./")
 cfg = compose(config_name="config.yaml")
 print(OmegaConf.to_yaml(cfg))
 

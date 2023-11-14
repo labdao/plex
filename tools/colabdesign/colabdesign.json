@@ -5,13 +5,13 @@
   "author": "",
   "baseCommand": ["/bin/bash", "-c"],
   "arguments": [
-    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/*.yaml /inputs/config.yaml;",
+    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml;",
     "ls /inputs;",
     "echo 'Attempting main.py...';",
     "python -u main.py;",
     "echo 'main.py complete!';"
   ],
-  "dockerPull": "quay.io/labdao/colabdesign:sha-adfe6d8@sha256:c01d09d5bb8989c3b5bce4777a34dc057fac164a771a482a35f20ce8531cf0af",
+  "dockerPull": "docker.io/openzyme/colabdesign@sha256:82a83c494cf91adc333cd5ed1f87b4a8fc5eadc39abd41348c58f931477b6d50",
   "gpuBool": true,
   "networkBool": true,
   "cpu": 3,
@@ -51,3 +51,9 @@
     }
   }
 }
+
+docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml; ls /inputs; echo 'Attempting main.py...'; python -u main.py; echo 'main.py complete';"
+
+docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/target_protein/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && cat /inputs/config.yaml"
+
+docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "cp /inputs/target_protein/*.pdb /inputs/target_protein.pdb && cp /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && python -u main.py && echo 'done'"

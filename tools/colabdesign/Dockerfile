@@ -60,6 +60,6 @@ RUN apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/cache /var/lib/log /var/lib/apt/lists/*
 
-# entrypoint
-ENTRYPOINT []
-CMD ["bash"]
+RUN pip install -r requirements.txt
+
+CMD ["python", "-u", "/app/main.py", "-h"]
