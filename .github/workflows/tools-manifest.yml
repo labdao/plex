@@ -30,7 +30,8 @@ concurrency:
 jobs:
   ################ TOOLS MANIFEST ###########################
   changes-tools:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    # runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
