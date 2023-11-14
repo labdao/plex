@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -129,7 +130,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("filename = ?", filename)
+			query = query.Where("filename LIKE ?", "%"+filename+"%")
 		}
 
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
@@ -159,6 +160,50 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(dataFiles); err != nil {
 			http.Error(w, "Error encoding datafiles to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var dataFile models.DataFile
+		if err := db.Where("cid = ?", cid).First(&dataFile).Error; err != nil {
+			utils.SendJSONError(w, "Data file not found", http.StatusNotFound)
+			return
+		}
+
+		ipfsPath := cid
+		if dataFile.WalletAddress != "" {
+			ipfsPath = cid + "/" + dataFile.Filename
+		}
+
+		tempFilePath, err := ipfs.DownloadFileToTemp(ipfsPath, dataFile.Filename)
+		if err != nil {
+			utils.SendJSONError(w, "Error downloading file from IPFS", http.StatusInternalServerError)
+			return
+		}
+		defer os.Remove(tempFilePath)
+
+		file, err := os.Open(tempFilePath)
+		if err != nil {
+			utils.SendJSONError(w, "Error opening downloaded file", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		w.Header().Set("Content-Disposition", "attachment; filename="+dataFile.Filename)
+		w.Header().Set("Content-Type", "application/octet-stream")
+
+		if _, err := io.Copy(w, file); err != nil {
+			utils.SendJSONError(w, "Error sending file", http.StatusInternalServerError)
 			return
 		}
 	}
