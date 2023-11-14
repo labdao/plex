@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
@@ -11,12 +12,23 @@ export default function ListDataFiles() {
     CID: string;
     WalletAddress: string;
     Filename: string;
+    Timestamp: string;
+  }
+
+  const shortenAddressOrCid = (addressOrCid: string) => {
+    if (addressOrCid.length) {
+      return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
+    } else {
+      return "";
+    }
   }
 
   const columns: ColumnDef<DataFile>[] = [
     {
       accessorKey: "Filename",
       header: "Filename",
+      enableSorting: true,
+      sortingFn: "alphanumeric",
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
@@ -31,19 +43,24 @@ export default function ListDataFiles() {
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {row.getValue("CID")}
+            {shortenAddressOrCid(row.getValue("CID"))}
           </a>
         );
       },
     },
     {
-      accessorKey: "WalletAddress",
-      header: "Uploader Wallet Address",
+      accessorKey: "Timestamp",
+      header: "Date",
+      enableSorting: true,
+      sortingFn: "datetime",
+      cell: ({ row }) => {
+        return format(new Date(row.getValue("Timestamp")), "yyyy-MM-dd HH:mm:ss")
+      }
     },
   ];
 
   const [datafiles, setDataFiles] = useState<DataFile[]>([]);
-  // const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState([{ id: "Timestamp", desc: true }]);
 
   useEffect(() => {
     fetch(`${backendUrl()}/datafiles`)
@@ -61,7 +78,7 @@ export default function ListDataFiles() {
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={datafiles} />
+      <DataTable columns={columns} data={datafiles} sorting={sorting} />
     </div>
   );
 }

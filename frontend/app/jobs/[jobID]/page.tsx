@@ -82,16 +82,16 @@ export default function JobDetail() {
               Error: <strong>{job.Error || "None"}</strong>
             </div>
             <div className="py-4 border-b">
-              Tool CID: <strong>
+              <strong>
                 <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.ToolID}/`}>
-                  {job.ToolID}
+                  🔬 Tool
                 </a>
               </strong>
             </div>
             <div className="py-4">
-              Flow Initial CID: <strong>
+              <strong>
                 <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.FlowID}/`}>
-                  {job.FlowID}
+                  🔍 Experimental Parameters
                 </a>
               </strong>
             </div>

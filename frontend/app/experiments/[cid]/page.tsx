@@ -32,26 +32,21 @@ export default function FlowDetail() {
   const columns: ColumnDef<Job>[] = [
     {
       accessorKey: "BacalhauJobID",
-      header: "Bacalhau ID",
+      header: "Job ID",
       cell: ({ row }) => {
         return <Link href={`/jobs/${row.getValue("BacalhauJobID")}/`}>{row.getValue("BacalhauJobID")}</Link>;
       },
     },
     {
-      accessorKey: "Tool.Name",
-      header: "Tool Name",
-    },
-    {
-      accessorKey: "Tool.CID",
-      accessorFn: (row) => row.Tool.CID,
-      header: "Tool CID",
-      cell: ({ cell }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}/${cell.getValue()}`}>
-            {cell.getValue() as string}
-          </a>
-        );
-      },
+      id: 'tool',
+      header: 'Model',
+      cell: ({ row }) => {
+        const toolName = row.original.Tool.Name;
+        const toolCID = row.original.Tool.CID;
+        const toolCIDUrl = `${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}/${toolCID}`;
+
+        return <a href={toolCIDUrl} target="_blank">{toolName}</a>; 
+      }
     },
     {
       accessorKey: "State",
