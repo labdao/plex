@@ -27,7 +27,6 @@ export default function PrivyProviderWrapper({
                     appearance: {
                         theme: "dark",
                         accentColor: "#6bdaad",
-                        logo: "https://imgur.com/6egHxy0.png"
                     }
                 }}
             >
