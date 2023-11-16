@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install required packages
 RUN apt-get update -y && \
-     apt-get install --no-install-recommends -y wget aria2 git zip unzip
+     apt-get install --no-install-recommends -y wget aria2 git zip unzip less nano build-essential
 
 # Install hydra-core
 RUN pip3 install --no-cache-dir hydra-core --upgrade
@@ -15,9 +15,6 @@ RUN set -ex; \
      pip3 install ipywidgets httplib2 && \
      pip3 install -U numpy && \
      pip3 install -U 'jax[cuda11_pip]' -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
-# Copy in Files
-COPY . /app
 
 WORKDIR /app
 
@@ -55,11 +52,18 @@ RUN set -ex; \
      unzip schedules.zip; rm schedules.zip && \
      touch params/done.txt
 
+# Install prodigy
+RUN git clone -q https://github.com/haddocking/prodigy && \
+     pip install -q prodigy/
+
 # Cleanup
 RUN apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/cache /var/lib/log /var/lib/apt/lists/*
 
-RUN pip install -r requirements.txt
+# Copy in Files
+COPY . /app
 
-CMD ["python", "-u", "/app/main.py", "-h"]
+# entrypoint
+ENTRYPOINT []
+CMD ["bash"]
