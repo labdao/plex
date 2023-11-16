@@ -100,7 +100,7 @@ services:
       POSTGRES_HOST: dbbackend
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
-      FRONTEND_URL: http://localhost:3000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     depends_on:
       dbbackend:
         condition: service_healthy
