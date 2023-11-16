@@ -147,6 +147,10 @@ services:
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/receptor:latest
+    x-develop:
+      watch:
+        - action: rebuild
+          path: ./receptor
     environment:
       PGHOST: dbreceptor
       PGUSER: labdao
