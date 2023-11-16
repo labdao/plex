@@ -69,6 +69,7 @@ services:
 
   dbbackend:
     image: "postgres:15.4"
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
     environment:
       POSTGRES_PASSWORD: labdao
       POSTGRES_USER: labdao
@@ -128,6 +129,7 @@ services:
 
   dbreceptor:
     image: "postgres:15.4"
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
     environment:
       POSTGRES_PASSWORD: labdao
       POSTGRES_USER: labdao
@@ -147,6 +149,10 @@ services:
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/receptor:latest
+    x-develop:
+      watch:
+        - action: rebuild
+          path: ./receptor
     environment:
       PGHOST: dbreceptor
       PGUSER: labdao
