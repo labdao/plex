@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/labdao/receptor/models"
 	"gorm.io/gorm/clause"
-	"log"
-	"net/http"
 )
 
 func main() {
@@ -26,15 +28,29 @@ func health(c *gin.Context) {
 }
 
 func judge(c *gin.Context) {
+	var requestPayload models.JobModel
 
-	// createa job row
-	job := models.Job{}
+	if err := c.BindJSON(&requestPayload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	// normally want to catch an err here, but for now we always want to return 200
-	c.BindJSON(&job)
+	// Extract Job.ID from the JSON data
+	var jobID struct{ ID string }
+	if err := json.Unmarshal(requestPayload.Spec, &jobID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	models.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&job)
+	// Create a new JobModel instance
+	jobModel := models.JobModel{
+		NodeID: requestPayload.NodeID,
+		Spec:   requestPayload.Spec,
+		JobID:  jobID.ID,
+	}
 
-	// the judge endpoint always returns status 200 to accept all jobs (for now)
+	// Create or update the record in the database
+	models.DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&jobModel)
+
 	c.JSON(http.StatusOK, gin.H{})
 }

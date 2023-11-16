@@ -5,11 +5,18 @@ import (
 	"gorm.io/gorm"
 )
 
-type Job struct {
+type JobModel struct {
 	gorm.Model
-	JobID string `json:"job_id" gorm:"uniqueIndex"`
-	Spec  `gorm:"embedded"`
+	NodeID string         `json:"NodeID"`
+	Spec   datatypes.JSON `json:"Job" gorm:"column:spec"`    // Store Job object in JSON format
+	JobID  string         `gorm:"column:job_id;uniqueIndex"` // Extracted Job.ID field
 }
-type Spec struct {
-	Spec datatypes.JSON `json:"Job"`
+
+type Tabler interface {
+	TableName() string
+}
+
+// TableName overrides the table name
+func (JobModel) TableName() string {
+	return "jobs"
 }
