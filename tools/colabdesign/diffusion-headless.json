@@ -11,8 +11,8 @@
         "-c"
     ],
     "arguments": [
-        "cp /inputs/$(inputs.parameters.filepath) conf/params/;",
-        "python -u main.py inputs=container outputs=container params=$(inputs.parameters.basename);"
+        "cp /inputs/parameters/*.yaml /app/conf/params/user.yaml;",
+        "python -u main.py inputs=container outputs=container params=user;"
     ],
     "dockerPull": "quay.io/labdao/colabdesign@sha256:e017072134bec6347ce03f9fe5f5bd3d3fc7abbbc6f93e644340aaf67d586dc6",
     "gpuBool": true,
