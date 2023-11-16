@@ -9,12 +9,12 @@ import string
 import re
 import json
 import numpy as np
-import matplotlib.pyplot as plt
-import ipywidgets as widgets
-import py3Dmol
+# import matplotlib.pyplot as plt
+# import ipywidgets as widgets
+# import py3Dmol
 import yaml
-from google.colab import files
-from IPython.display import display, HTML
+# from google.colab import files
+# from IPython.display import display, HTML
 
 print("Starting main.py...")
 
@@ -225,9 +225,9 @@ def run(command, steps, num_designs=1, visual="none"):
     else:
       return True
 
-  run_output = widgets.Output()
-  progress = widgets.FloatProgress(min=0, max=1, description='running', bar_style='info')
-  display(widgets.VBox([progress, run_output]))
+  # run_output = widgets.Output()
+  # progress = widgets.FloatProgress(min=0, max=1, description='running', bar_style='info')
+  # display(widgets.VBox([progress, run_output]))
 
   # clear previous run
   for n in range(steps):
@@ -235,61 +235,67 @@ def run(command, steps, num_designs=1, visual="none"):
       os.remove(f"/dev/shm/{n}.pdb")
 
   pid = run_command_and_get_pid(command)
-  try:
-    fail = False
-    for _ in range(num_designs):
-
-      # for each step check if output generated
-      for n in range(steps):
-        wait = True
-        while wait and not fail:
-          time.sleep(0.1)
-          if os.path.isfile(f"/dev/shm/{n}.pdb"):
-            pdb_str = open(f"/dev/shm/{n}.pdb").read()
-            if pdb_str[-3:] == "TER":
-              wait = False
-            elif not is_process_running(pid):
-              fail = True
+  fail = False
+  for i in range(num_designs):
+    # for each step check if output generated
+    for n in range(steps):
+      wait = True
+      while wait and not fail:
+        time.sleep(0.1)
+        if os.path.isfile(f"/dev/shm/{n}.pdb"):
+          pdb_str = open(f"/dev/shm/{n}.pdb").read()
+          print(f"current ending string in binder design is {pdb_str[-3:]}")
+          if pdb_str[-3:] == "TER":
+            wait = False
           elif not is_process_running(pid):
             fail = True
+        elif not is_process_running(pid):
+          fail = True
 
-        if fail:
-          progress.bar_style = 'danger'
-          progress.description = "failed"
-          break
-
-        else:
-          progress.value = (n+1) / steps
-          if visual != "none":
-            with run_output:
-              run_output.clear_output(wait=True)
-              if visual == "image":
-                xyz, bfact = get_ca(f"/dev/shm/{n}.pdb", get_bfact=True)
-                fig = plt.figure()
-                fig.set_dpi(100);fig.set_figwidth(6);fig.set_figheight(6)
-                ax1 = fig.add_subplot(111);ax1.set_xticks([]);ax1.set_yticks([])
-                plot_pseudo_3D(xyz, c=bfact, cmin=0.5, cmax=0.9, ax=ax1)
-                plt.show()
-              if visual == "interactive":
-                view = py3Dmol.view(js='https://3dmol.org/build/3Dmol.js')
-                view.addModel(pdb_str,'pdb')
-                view.setStyle({'cartoon': {'colorscheme': {'prop':'b','gradient': 'roygb','min':0.5,'max':0.9}}})
-                view.zoomTo()
-                view.show()
-        if os.path.exists(f"/dev/shm/{n}.pdb"):
-          os.remove(f"/dev/shm/{n}.pdb")
       if fail:
-        progress.bar_style = 'danger'
-        progress.description = "failed"
+        print(f"failed at step {n+1}, design {i}")
+        # progress.bar_style = 'danger'
+        # progress.description = "failed"
         break
+      else:
+        print(f"processing step {n+1} out of {steps} for design {i+1} out of {num_designs}")
+        # progress.value = (n+1) / steps
+        # if visual != "none":
+        #   with run_output:
+        #     run_output.clear_output(wait=True)
+        #     if visual == "image":
+        #       xyz, bfact = get_ca(f"/dev/shm/{n}.pdb", get_bfact=True)
+        #       fig = plt.figure()
+        #       fig.set_dpi(100);fig.set_figwidth(6);fig.set_figheight(6)
+        #       ax1 = fig.add_subplot(111);ax1.set_xticks([]);ax1.set_yticks([])
+        #       plot_pseudo_3D(xyz, c=bfact, cmin=0.5, cmax=0.9, ax=ax1)
+        #       plt.show()
+        #     if visual == "interactive":
+        #       view = py3Dmol.view(js='https://3dmol.org/build/3Dmol.js')
+        #       view.addModel(pdb_str,'pdb')
+        #       view.setStyle({'cartoon': {'colorscheme': {'prop':'b','gradient': 'roygb','min':0.5,'max':0.9}}})
+        #       view.zoomTo()
+        #       view.show()
+      if os.path.exists(f"/dev/shm/{n}.pdb"):
+        os.remove(f"/dev/shm/{n}.pdb")
+    if fail:
+      print(f"failed at design {i}")
+      # progress.bar_style = 'danger'
+      # progress.description = "failed"
+      break
 
-    while is_process_running(pid):
-      time.sleep(0.1)
-
-  except KeyboardInterrupt:
+  while is_process_running(pid):
+    print("designs finished will close pid in 10 seconds and return ")
+    time.sleep(10)
     os.kill(pid, signal.SIGTERM)
-    progress.bar_style = 'danger'
-    progress.description = "stopped"
+    break
+  print("finished run function")
+
+  # except KeyboardInterrupt:
+    # os.kill(pid, signal.SIGTERM)
+    # print(f"user stopped ${pid}")
+    # progress.bar_style = 'danger'
+    # progress.description = "stopped"
 
 def run_diffusion(contigs, path, pdb=None, iterations=50,
                   symmetry="none", order=1, hotspot=None,
@@ -400,11 +406,12 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
   print("contigs:", contigs)
 
   opts_str = " ".join(opts)
-  cmd = f"./RFdiffusion/run_inference.py {opts_str}"
+  cmd = f"python -u ./RFdiffusion/run_inference.py {opts_str}"
   print(cmd)
 
   # RUN
   run(cmd, iterations, num_designs, visual=visual)
+  print("Done with the run RFDiffusion script call") 
 
   # fix pdbs
   for n in range(num_designs):
@@ -564,7 +571,7 @@ def my_app(cfg : DictConfig) -> None:
         if use_solubleMPNN: opts.append("--use_soluble")
         opts = ' '.join(opts)
 
-        command_design = f"python colabdesign/rf/designability_test.py {opts}"
+        command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
         os.system(command_design)
 
         print("running Prodigy")

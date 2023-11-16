@@ -64,6 +64,8 @@ RUN apt-get clean autoclean \
 # Copy in Files
 COPY . /app
 
+ENV PYTHONUNBUFFERED=1
+
 # entrypoint
 ENTRYPOINT []
 CMD ["bash"]
