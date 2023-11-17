@@ -101,6 +101,6 @@ jobs:
         run: |
           set -xe
 
-          curl --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
+          curl --max-time 60 --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
           CID=$(cat output.json | jq -r '.cid'}
           echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
