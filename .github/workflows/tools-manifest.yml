@@ -61,7 +61,7 @@ jobs:
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
     runs-on:
       - self-hosted
-        # - "${{ matrix.backends.env }}"
+      - "${{ matrix.backends.env }}"
     steps:
       - uses: actions/checkout@v4
       - name: Version tool name
