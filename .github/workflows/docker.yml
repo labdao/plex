@@ -121,7 +121,7 @@ jobs:
       - name: Trigger deploy to stg
         id: deploy-to-ecs
         if: |
-          github.ref == 'ref/head/main' &&
+          github.ref == 'ref/heads/main' &&
           (inputs.name == 'backend' ||
           (inputs.name == 'frontend' && inputs.deploy-environment == 'stg'))
         env:
