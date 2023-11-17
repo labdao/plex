@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         backends: [
-          { env: stg, url: 'https://api.stg.labdao.xyz/tools'},
+          { env: stg, url: 'backend.stg.labdao.xyz:8080/tools'},
         ]
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
     runs-on:
