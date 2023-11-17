@@ -30,7 +30,6 @@ concurrency:
 jobs:
   ################ TOOLS MANIFEST ###########################
   changes-tools:
-    # runs-on: self-hosted
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -52,15 +51,17 @@ jobs:
 
   tools:
     needs: changes-tools
-    runs-on: ubuntu-latest
     if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:
+        backends: [
+          { env: stg, url: 'https://api.stg.labdao.xyz/tools'},
+        ]
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
-        endpoints:
-          - 'https://api.stg.labdao.xyz/tools'
-            # - 'https://api.prod.labdao.xyz/tools'
+    runs-on:
+      - self-hosted
+      - ${{ matrix.backend.env }}
     steps:
       - uses: actions/checkout@v4
       - name: Version tool name
@@ -101,6 +102,6 @@ jobs:
         run: |
           set -xe
 
-          curl --max-time 60 --fail "${{ matrix.endpoints }}" -X POST -d @/tmp/manifest.json | tee -a output.json
+          curl --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @/tmp/manifest.json | tee -a output.json
           CID=$(cat output.json | jq -r '.cid'}
           echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
