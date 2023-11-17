@@ -14,7 +14,7 @@
         "cp /inputs/$(inputs.parameters.filepath) conf/params/;",
         "python -u main.py inputs=container outputs=container params=$(inputs.parameters.basename);"
     ],
-    "dockerPull": "quay.io/labdao/colabdesign@sha256:e017072134bec6347ce03f9fe5f5bd3d3fc7abbbc6f93e644340aaf67d586dc6",
+    "dockerPull": "quay.io/labdao/colabdesign@sha256:126168233da9a39e89101703f0f42a258420b7d05f5bd157a5e3a5ae530b58e6",
     "gpuBool": true,
     "networkBool": true,
     "cpu": 3,
