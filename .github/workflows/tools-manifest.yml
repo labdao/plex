@@ -30,8 +30,8 @@ concurrency:
 jobs:
   ################ TOOLS MANIFEST ###########################
   changes-tools:
-    runs-on: self-hosted
-    # runs-on: ubuntu-latest
+    # runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
@@ -89,6 +89,13 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat /tmp/manifest.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: upload manifest
+        uses: actions/upload-artifact@v3
+        with:
+          name: tool-manifest
+          path: |
+            /tmp/manifest.json
 
       - name: POST Manifest to environment
         run: |
