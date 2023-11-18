@@ -111,13 +111,6 @@ jobs:
     if: |
       ${{ needs.changes-tools.outputs.tools != '' &&
       toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} &&
-      (
-       "${{ matrix.backends.env }}" == 'stg' ||
-        (
-         "${{ matrix.backends.env }}" == 'prod' &&
-         github.ref == 'ref/heads/main'
-        )
-      )
     strategy:
       fail-fast: false
       matrix:
@@ -131,12 +124,26 @@ jobs:
       - self-hosted
       - "${{ matrix.backends.env }}"
     steps:
+      - name: Condition
+        id: upload-condition
+        run: echo "Continue" 
+        if: |
+         (
+          "${{ matrix.backends.env }}" == 'stg' ||
+           (
+            "${{ matrix.backends.env }}" == 'prod' &&
+            github.ref == 'ref/heads/main'
+           )
+         )
+
       - name: download manifest
+        if: job.steps.upload-condition.status == success()
         uses: actions/download-artifact@v3
         with:
           name: tool-manifest-${{ matrix.tools }}
 
       - name: POST Manifest to environment
+        if: job.steps.upload-condition.status == success()
         run: |
           set -xe
 
