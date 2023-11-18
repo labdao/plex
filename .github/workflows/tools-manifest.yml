@@ -112,9 +112,9 @@ jobs:
       ${{ needs.changes-tools.outputs.tools != '' &&
       toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} &&
       (
-       ${{ env.backends.env }} == 'stg' ||
+       ${{ matrix.backends.env }} == 'stg' ||
         (
-         ${{ env.backends.env }} == 'prod' &&
+         ${{ matrix.backends.env }} == 'prod' &&
          github.ref == 'ref/heads/main'
         )
       )
