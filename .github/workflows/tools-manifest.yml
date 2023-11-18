@@ -107,7 +107,7 @@ jobs:
     needs:
       - tools
       - changes-tools
-    # If tool isn't empty list and if env is stg or if env is prod and branch is main
+    # If tool isn't empty
     if: |
       ${{ needs.changes-tools.outputs.tools != '' &&
       toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} &&
@@ -129,7 +129,7 @@ jobs:
         run: echo "Continue" 
         if: |
          (
-          "${{ matrix.backends.env }}" == 'stg' ||
+          "${{ matrix.backends.env }}" == "stg" ||
            (
             "${{ matrix.backends.env }}" == 'prod' &&
             github.ref == 'ref/heads/main'
@@ -137,13 +137,13 @@ jobs:
          )
 
       - name: download manifest
-        if: job.steps.upload-condition.status == success()
+        if: steps.upload-condition.outcome == 'success'
         uses: actions/download-artifact@v3
         with:
           name: tool-manifest-${{ matrix.tools }}
 
       - name: POST Manifest to environment
-        if: job.steps.upload-condition.status == success()
+        if: steps.upload-condition.outcome == 'success'
         run: |
           set -xe
 
