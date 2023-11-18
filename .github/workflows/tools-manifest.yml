@@ -78,7 +78,17 @@ jobs:
           TOOL_NAME_VERSIONED: "${{ env.TOOL_NAME }}-${{ env.NORMALIZED_GIT_REF }}-${{ env.GIT_SHORT_SHA }}"
         run: |
           echo "TOOL_NAME_VERSIONED=${{ env.TOOL_NAME_VERSIONED }}" >> $GITHUB_ENV
-          echo "TOOL_NAME_VERSIONED=${{ env.TOOL_NAME_VERSIONED }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Params
+        run: |
+          echo "## Params" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter Name NAME | Parameter VALUE |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|"  >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_NAME | ${{ env.TOOL_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GITHUB_REF | ${{ env.GITHUB_REF }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| NORMALIZED_GIT_REF | ${{ env.NORMALIZED_GIT_REF }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GIT_SHORT_SHA | ${{ env.GIT_SHORT_SHA }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_NAME_VERSIONED | ${{ env.TOOL_NAME_VERSIONED }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Dump updated manifest file to be POSTed
         run: |
