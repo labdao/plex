@@ -55,13 +55,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        backends: [
-          { env: stg, url: 'backend.stg.labdao.xyz:8080/tools'},
-        ]
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
-    runs-on:
-      - self-hosted
-      - "${{ matrix.backends.env }}"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Version tool name
@@ -104,13 +99,35 @@ jobs:
       - name: upload manifest
         uses: actions/upload-artifact@v3
         with:
-          name: tool-manifest
+          name: tool-manifest-${{ matrix.tools }}
           path: |
             /tmp/manifest.json
+
+  tools-upload:
+    needs: tools
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        backends: [
+          { env: stg, url: 'backend.stg.labdao.xyz:8080/tools'},
+        ]
+        tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
+    runs-on:
+      - self-hosted
+      - "${{ matrix.backends.env }}"
+    steps:
+
+      - name: download manifest
+        uses: actions/upload-artifact@v3
+        with:
+          name: tool-manifest-${{ matrix.tools }}
 
       - name: POST Manifest to environment
         run: |
           set -xe
+
+          ls -ltra
 
           curl --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @/tmp/manifest.json | tee -a output.json
           CID=$(cat output.json | jq -r '.cid')
