@@ -128,8 +128,6 @@ jobs:
         run: |
           set -xe
 
-          ls -ltra
-
           curl --silent --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @manifest.json | tee -a output.json
           CID=$(cat output.json | jq -r '.cid')
           echo "TOOL CID: `${CID}`" >> $GITHUB_STEP_SUMMARY
