@@ -80,9 +80,9 @@ jobs:
           echo "| Parameter Name NAME | Parameter VALUE |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|"  >> $GITHUB_STEP_SUMMARY
           echo "| TOOL_NAME | ${{ env.TOOL_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| GITHUB_REF | ${{ env.GITHUB_REF }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GITHUB_REF | $GITHUB_REF |" >> $GITHUB_STEP_SUMMARY
           echo "| NORMALIZED_GIT_REF | ${{ env.NORMALIZED_GIT_REF }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| GIT_SHORT_SHA | ${{ env.GIT_SHORT_SHA }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GIT_SHORT_SHA | $GIT_SHORT_SHA |" >> $GITHUB_STEP_SUMMARY
           echo "| TOOL_NAME_VERSIONED | ${{ env.TOOL_NAME_VERSIONED }} |" >> $GITHUB_STEP_SUMMARY
 
       - name: Dump updated manifest file to be POSTed
@@ -104,7 +104,9 @@ jobs:
             /tmp/manifest.json
 
   tools-upload:
-    needs: tools
+    needs:
+      - tools
+      - changes-tools
     if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
@@ -117,7 +119,6 @@ jobs:
       - self-hosted
       - "${{ matrix.backends.env }}"
     steps:
-
       - name: download manifest
         uses: actions/upload-artifact@v3
         with:
