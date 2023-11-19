@@ -126,15 +126,17 @@ jobs:
     steps:
       - name: Condition
         id: upload-condition
-        run: echo "Continue" 
-        if: |
-         (
-          "${{ matrix.backends.env }}" == "stg" ||
-           (
-            "${{ matrix.backends.env }}" == 'prod' &&
-            github.ref_name == 'main'
-           )
-         )
+        run: echo "Continue"
+        if: >-
+          ${{
+            (
+             matrix.backends.env == "stg" ||
+              (
+               matrix.backends.env == 'prod' &&
+               github.ref_name == 'main'
+              )
+            )
+          }}
 
       - name: download manifest
         if: steps.upload-condition.outcome == 'success'

@@ -120,10 +120,16 @@ jobs:
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
-        if: |
-          github.ref_name == 'main' &&
-          (inputs.name == 'backend' ||
-          (inputs.name == 'frontend' && inputs.deploy-environment == 'stg'))
+        if: >-
+          ${{
+            github.ref_name == 'main' &&
+            (
+              inputs.name == 'backend' ||
+                (
+                  inputs.name == 'frontend' && inputs.deploy-environment == 'stg'
+                )
+            )
+          }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
