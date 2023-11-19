@@ -132,7 +132,7 @@ jobs:
           "${{ matrix.backends.env }}" == "stg" ||
            (
             "${{ matrix.backends.env }}" == 'prod' &&
-            github.ref == 'ref/heads/main'
+            github.ref_name == 'main'
            )
          )
 
@@ -147,6 +147,7 @@ jobs:
         run: |
           set -xe
 
-          curl --silent --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @manifest.json | tee -a output.json
-          CID=$(cat output.json | jq -r '.cid')
-          echo "TOOL CID: ${CID}" >> $GITHUB_STEP_SUMMARY
+          echo "ASD"
+          # curl --silent --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @manifest.json | tee -a output.json
+          # CID=$(cat output.json | jq -r '.cid')
+          # echo "TOOL CID: ${CID}" >> $GITHUB_STEP_SUMMARY
