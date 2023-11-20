@@ -25,7 +25,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-data
+/data
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -327,3 +327,6 @@ gateway/gorm.db
 *zinc*
 *AF-*
 tools/tmp*
+
+# Ignore docker stuff
+docker/.env.tunnel

@@ -1,0 +1,84 @@
+---
+
+services:
+  cloudflared-frontend:
+    image: "cloudflare/cloudflared"
+    command: "tunnel --url http://localhost:3000 --metrics localhost:40000"
+    hostname: cloudflared-frontend
+    network_mode: host
+
+  # sidecar container for cloudflared health
+  cloudflared-frontend-health:
+    image: "alpine"
+    command: sh -c 'apk add curl && sleep infinity'
+    network_mode: host
+    depends_on:
+      cloudflared-frontend:
+        condition: service_started
+    healthcheck:
+      test: curl -f http://localhost:40000/ready
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+
+  cloudflared-backend:
+    image: "cloudflare/cloudflared"
+    command: "tunnel --url http://localhost:8080 --metrics localhost:50000"
+    hostname: cloudflared-backend
+    network_mode: host
+
+  # sidecar container for cloudflared health
+  cloudflared-backend-health:
+    image: "alpine"
+    command: sh -c 'apk add curl && sleep infinity'
+    network_mode: host
+    depends_on:
+      cloudflared-backend:
+        condition: service_started
+    healthcheck:
+      test: curl -f http://localhost:50000/ready
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+
+  cloudflared-ipfs:
+    image: "cloudflare/cloudflared"
+    command: "tunnel --url http://localhost:8888 --metrics localhost:60000"
+    hostname: cloudflared-ipfs
+    network_mode: host
+
+  # sidecar container for cloudflared health
+  cloudflared-ipfs-health:
+    image: "alpine"
+    command: sh -c 'apk add curl && sleep infinity'
+    network_mode: host
+    depends_on:
+      cloudflared-ipfs:
+        condition: service_started
+    healthcheck:
+      test: curl -f http://localhost:60000/ready
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
+
+  cloudflared_post_setup:
+    image: "alpine"
+    network_mode: host
+    command: >
+      sh -c "
+      apk add --no-cache curl jq &&
+      echo FRONTEND_URL=https://$(curl -s localhost:40000/quicktunnel | jq -r '.hostname') > /opt/env &&
+      echo NEXT_PUBLIC_BACKEND_URL=https://$(curl -s localhost:50000/quicktunnel | jq -r '.hostname') >> /opt/env &&
+      echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env"
+    volumes:
+      - ./docker/.env.tunnel:/opt/env
+    depends_on:
+      cloudflared-frontend-health:
+        condition: service_healthy
+      cloudflared-backend-health:
+        condition: service_healthy
+      cloudflared-ipfs-health:
+        condition: service_healthy

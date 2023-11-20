@@ -1,0 +1,127 @@
+# Workflow to build containers
+---
+
+name: containers
+
+on:
+  push:
+    branches: ["main"]
+    # Pattern matched against refs/tags
+    tags:
+      - '**'
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - 'docs/**'
+      - 'infrastructure/**'
+
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ########## Backend container ##################################
+  backend:
+    uses: ./.github/workflows/docker.yml
+    with:
+      name: backend
+      deploy-environment: 'stg'
+    secrets: inherit
+
+  ########## IPFS container ##################################
+  changes-ipfs:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.ipfs }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          ipfs:
+            - 'docker/images/ipfs/**'
+            - '.github/workflows/containers.yml'
+            - '.github/workflows/docker.yml'
+
+  ipfs:
+    needs: changes-ipfs
+    if: ${{ needs.changes-ipfs.outputs.changes == 'true' }}
+    uses: ./.github/workflows/docker.yml
+    with:
+      name: ipfs
+      context: docker/images/ipfs
+    secrets: inherit
+
+  ########## Receptor container ##################################
+  changes-receptor:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.receptor }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          receptor:
+            - 'receptor/**'
+            - '.github/workflows/containers.yml'
+            - '.github/workflows/docker.yml'
+
+  receptor:
+    needs: changes-receptor
+    if: ${{ needs.changes-receptor.outputs.changes == 'true' }}
+    uses: ./.github/workflows/docker.yml
+    with:
+      name: receptor
+      context: receptor
+    secrets: inherit
+
+  ################ Frontend container ##############################
+  changes-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.frontend }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          frontend:
+            - 'frontend/**'
+            - '.github/workflows/containers.yml'
+            - '.github/workflows/docker.yml'
+  frontend:
+    needs: changes-frontend
+    if: ${{ needs.changes-frontend.outputs.changes == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        backends: [
+          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},
+          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'},
+          { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
+        ]
+    uses: ./.github/workflows/docker.yml
+    with:
+      name: frontend
+      context: frontend
+      tag-suffix: -${{ matrix.backends.env }}
+      build-args: |
+        NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
+      deploy-environment: ${{ matrix.backend.env }}
+    secrets: inherit

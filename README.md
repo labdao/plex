@@ -94,36 +94,33 @@ go build
 
 # Setup
 
-## Frontend Development Only
+## Setting up tunnel to allow remote connectivity (Optional)
+Perform this setup only if you want to allow others to connect to your local environment over the internet.
+
 ```
-$ export NEXT_PUBLIC_BACKEND_URL=https://api.prod.labdao.xyz
-$ export NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=http://bacalhau.prod.labdao.xyz:8080/ipfs/
-$ cd frontend
-$ npm install
-$ npm run dev
+# Required, create empty file for tunnel info
+touch docker/.env.tunnel
+
+# Bring up tunnel compose
+docker compose  -f docker-compose.tunnel.yml up -d --wait
 ```
 
-* Install [docker](https://docs.docker.com/engine/install/)
-* Define necessary env variables
+Once compose is running, you should be able to view the URLs.
 ```
-NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
-FRONTEND_URL=http://localhost:3000
-POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
-POSTGRES_USER=labdao
-POSTGRES_DB=labdao
-POSTGRES_HOST=localhost
+cat docker/.env.tunnel
 ```
-* Recommended: Install [direnv](https://direnv.net/). With it installed you can create `.env` file with the above environment variables and have them automagically set when you descend into the folder.
 
-# Running complete stack locally
+## Running the Complete Stack Locally
 We have `docker-compose` files available to bring up the stack locally.
 
 Note:
 * Only `amd64` architecture is currently supported.
 * New docker installation include docker compose, older installations required you install docker-compose separately and run `docker-compose up -d`
 
-## Running
 ```
+# Optional step, Source Tunnelling urls
+source docker/.env.tunnel
+
 # Optionally, build in parallel before running
 docker compose build --parallel
 
@@ -133,45 +130,54 @@ docker compose up -d --wait
 
 To run `plex` cli against local environment simply set `BACALHAU_API_HOST=127.0.0.1`
 
-
 ## Running with private IPFS
-> Requirement to have `ipfs` available locally.
 
 ```
+# Optional step, Source Tunnelling urls
+source docker/.env.tunnel
+
+# Build and bring up the private IPFS stack
 docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 ```
-To run `plex` cli against local private environment `export` the following params to your shell before executing `plex` commands:
+
+Once environment is up, set `BACALHAU_API_HOST=127.0.0.1` environment variable to point `plex` cli to the local environment.
+
+## Full Stack Development
+* Define necessary env variables
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+FRONTEND_URL=http://localhost:3000
+POSTGRES_PASSWORD=labdao
+POSTGRES_USER=labdao
+POSTGRES_DB=backend
+POSTGRES_HOST=localhost
 ```
 
-# using temp directory for ipfs repo
-export IPFS_PATH=$(mktemp -d)
-
-# Initialize IPFS repo
-ipfs init -e
-
-# Copy over swarm key and config
-cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-
-export BACALHAU_API_HOST="127.0.0.1"
-export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
-export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-```
-
-## Running backend database only
+Bring up the database only
 ```
 docker compose up -d dbbackend --wait
-```
-
-
-# Start the Frontend React App
-
-```
-npm --prefix ./frontend run dev
 ```
 
 # Start the Backend Go App
 ```
 go run main.go web
+```
+
+# Start the Frontend React App
+```
+$ cd /frontend
+$ npm install
+$ npm run dev
+```
+
+## Frontend Development Only
+Instead of running the backend locally, you can point the frontend to our cloud deployment.
+```
+$ export NEXT_PUBLIC_BACKEND_URL=https://api.prod.labdao.xyz
+$ export NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=http://bacalhau.prod.labdao.xyz:8080/ipfs/
+$ cd frontend
+$ npm install
+$ npm run dev
 ```
 
 ### Running a compute node

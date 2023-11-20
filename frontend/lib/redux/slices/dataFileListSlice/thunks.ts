@@ -1,29 +1,29 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
-import { setDataFileListError, setDataFileListSuccess, setDataFileList } from './slice'
-import { listDataFiles } from './asyncActions'
 
+import { listDataFiles } from './asyncActions'
+import { setDataFileList,setDataFileListError, setDataFileListSuccess } from './slice'
 
 export const dataFileListThunk = createAppAsyncThunk(
   'datafiles/listDataFiles',
-  async (_, { dispatch }) => {
+  async (globPatterns: string[] | undefined, { dispatch }) => {
     try {
-      const response = await listDataFiles()
+      const response = await listDataFiles(globPatterns);
       if (response) {
-        dispatch(setDataFileListSuccess(true))
-        dispatch(setDataFileList(response))
+        dispatch(setDataFileListSuccess(true));
+        dispatch(setDataFileList(response));
       } else {
-        console.log('Failed to list DataFiles.', response)
-        dispatch(setDataFileListError('Failed to list DataFiles.'))
+        console.log('Failed to list DataFiles.', response);
+        dispatch(setDataFileListError('Failed to list DataFiles.'));
       }
-      return response
+      return response;
     } catch (error: unknown) {
-      console.log('Failed to list DataFiles.', error)
+      console.log('Failed to list DataFiles.', error);
       if (error instanceof Error) {
-        dispatch(setDataFileListError(error.message))
+        dispatch(setDataFileListError(error.message));
       } else {
-        dispatch(setDataFileListError('Failed to list DataFiles.'))
+        dispatch(setDataFileListError('Failed to list DataFiles.'));
       }
-      return false
+      return false;
     }
   }
 )

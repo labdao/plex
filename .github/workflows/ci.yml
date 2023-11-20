@@ -5,6 +5,18 @@
 name: CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      preview-enabled:
+        description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
+        required: false
+        type: bool
+        default: true
+      preview-timeout:
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        required: false
+        type: string
+        default: "300m"
   push:
     branches: ["main"]
     paths-ignore:
@@ -18,95 +30,40 @@ on:
 
 # Only run one at a time
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
-  go:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-            # - macos-13
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - uses: actions/checkout@v3
+  # # Only downloading cli for macos
+  # ci-setup-compose:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [macos-13]
+  #   runs-on: ${{ matrix.os }}
+  #   environment: ci
+  #   steps:
+  #     - name: Download docker compose
+  #       run: |
+  #         # Download docker-compose plugin
+  #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.3
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Build
-        run: go build
-
-      - name: upload plex binary to be used by other jobs
-        uses: actions/upload-artifact@v3
-        with:
-          name: plex-binary-${{matrix.os}}
-          path: ./plex
-
-      - name: Test
-        run: go test ./... -v
-
-          # # Only downloading cli for macos
-          # ci-setup-compose:
-          #   strategy:
-          #     matrix:
-          #       os: [macos-13]
-          #   runs-on: ${{ matrix.os }}
-          #   environment: ci
-          #   steps:
-          #     - name: Download docker compose
-          #       run: |
-          #         # Download docker-compose plugin
-          #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
-
-          #     - name: upload docker-compose plugin to be used later
-          #       uses: actions/upload-artifact@v3
-          #       with:
-          #         name: docker-compose-plugin-${{matrix.os}}
-          #         path: ./docker-compose
-
-  ci-setup-ipfs:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-            # - macos-13
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - name: Download and extract ipfs binary tarball
-        run: |
-          # Download ipfs binary
-          # Download docker-compose plugin
-          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_linux-amd64.tar.gz -o kubo.tgz
-          elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/ipfs/kubo/releases/download/v0.18.0/kubo_v0.18.0_darwin-arm64.tar.gz -o kubo.tgz
-          fi
-          tar -zxvf kubo.tgz
-
-      - name: upload ipfs binary to be used later
-        uses: actions/upload-artifact@v3
-        with:
-          name: ipfs-binary-${{matrix.os}}
-          path: ./kubo/ipfs
+  #     - name: upload docker-compose plugin to be used later
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: docker-compose-plugin-${{ matrix.os }}
+  #         path: ./docker-compose
 
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
+          - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -123,25 +80,28 @@ jobs:
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: ./bacalhau
 
-  ci-public:
+  ci:
     needs:
-      - go
-        # - ci-setup-compose
+      # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
+          - 1.1.4
+        network_mode:
+          - public
+          - private
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
+      BACALHAU_VERSION: ${{ matrix.bacalhau_version }}
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
       LOG_LEVEL: trace
@@ -149,15 +109,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: download plex binary
-        uses: actions/download-artifact@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          name: plex-binary-${{matrix.os}}
+          go-version: 1.20.3
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build
+
+      - name: Upload plex binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: plex-binary-${{ matrix.network_mode }}-${{ matrix.os }}-${{ matrix.bacalhau_version }}
+          path: ./plex
 
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
 
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
@@ -181,29 +154,68 @@ jobs:
           docker version
           docker compose version
 
+      - name: Bring tunnel for previewing environment
+        if: inputs.preview-enabled == 'true'
+        run: |
+          # Create empty file to avoid issues
+          touch ./docker/.env.tunnel
+
+          # Setup docker compose tunnel
+          docker compose -f docker-compose.tunnel.yml up -d --wait
+
+          # Dump file contents
+          cat ./docker/.env.tunnel
+
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
+        run: |
+          cat ./docker/.env.tunnel
+
       - name: docker compose build
         run: |
-          # Build in parallel
-          docker compose build --parallel
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
 
-      - name: Bring up the stack
+          # Build compose
+          docker compose build --parallel
+
+      - name: Bring up the public stack
+        if: matrix.network_mode == 'public'
         run: |
-          # Setup docker compose
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
           docker compose -f docker-compose.yml up -d --wait
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+
+      - name: Bring up the private stack
+        if: matrix.network_mode == 'private'
+        run: |
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
           # Inspect number of running containers
           docker compose ps
 
-      - name: Run Equibind
+      - name: fix permissions
+        if: always()
         run: |
+          set -x
+
           # Execute permission
           chmod +x ./bacalhau ./plex
+
+      - name: Go Test
+        run: go test ./... -v
+
+      - name: Run Equibind
+        run: |
+          set -x
 
           # Dump BACALHAU_API_HOST
           echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
@@ -218,8 +230,11 @@ jobs:
           ./bacalhau node list
 
           # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | tee -a plex_run_output.log
+          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
+
+          # Get equibind job id
+          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
 
           # chdir for outputs
           cd "$result_dir/entry-0/outputs"
@@ -236,11 +251,17 @@ jobs:
         # run always even when
         if: always()
         run: |
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
+          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
+
+      - name: Test log streaming
+        # run always even when
+        if: always()
+        run: |
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          cat /tmp/output.log
 
       - name: Run docker compose logs
         # run always even when
@@ -260,171 +281,17 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: ci-${{ matrix.network_mode }}-output-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: |
             plex_run_output.log
             job-*
             jobs/
 
-  ci-private:
-    needs:
-      - go
-        # - ci-setup-compose
-      - ci-setup-ipfs
-      - ci-setup-bacalhau
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-          # -  macos-13
-        bacalhau_version:
-          - 1.1.2
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
-      # Setting it at workflow level to be used by all the steps
-      BACALHAU_API_HOST: "127.0.0.1"
-      LOG_LEVEL: trace
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: download plex binary
-        uses: actions/download-artifact@v3
-        with:
-          name: plex-binary-${{matrix.os}}
-
-      - name: download ipfs binary
-        uses: actions/download-artifact@v3
-        with:
-          name: ipfs-binary-${{matrix.os}}
-
-      - name: download bacalhau binary
-        uses: actions/download-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
-
-      - name: Setup docker (missing on MacOS)
-        if: runner.os == 'macos'
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
         run: |
-          brew install colima docker docker-compose
-          colima start
+          cat ./docker/.env.tunnel
 
-          # For testcontainers to find the Colima socket
-          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
-          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
-
-          mkdir -p ~/.docker/cli-plugins
-          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-          docker version
-          docker compose version
-
-      - name: Setup docker compose plugin
-        if: runner.os != 'macos'
-        run: |
-          # Output version info
-          docker version
-          docker compose version
-
-      - name: docker compose build
-        run: |
-          # Build in parallel
-          docker compose build --parallel
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Bring up the stack
-        run: |
-          # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Run docker compose ps
-        run: |
-          # Inspect number of running containers
-          docker compose ps
-
-      - name: Run Equibind
-        # turn back on once baclahau docker in docker job launcher is fixed
-        run: |
-          set -x
-
-          # Execute permission
-          chmod +x ./bacalhau ./plex ./ipfs
-
-          # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
-
-          # Create bacalhau config file
-          ./bacalhau version
-
-          # Pull equibind image before running the job to get better idea of job run
-          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
-
-          # Get node list
-          ./bacalhau node list
-
-          # Run tests against it
-          # using temp directory for ipfs stuff
-          export IPFS_PATH=$(mktemp -d)
-
-          # Initialize IPFS repo
-          ./ipfs init -e
-
-          # Copy over swarm key and config
-          cp -rav $(pwd)/docker/ipfs_data/* "${IPFS_PATH}/"
-
-          export BACALHAU_SERVE_IPFS_PATH="${IPFS_PATH}"
-          export BACALHAU_IPFS_SWARM_ADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-          export BACALHAU_NODE_IPFS_SWARMADDRESSES="/ip4/127.0.0.1/tcp/4001/p2p/12D3KooWLpoHJCGxxKozRaUK1e1m2ocyVPB9dzbsU2cydujYBCD7"
-
-          # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a ci | tee -a plex_run_output.log
-          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-
-          cd "$result_dir/entry-0/outputs"
-          ls -ltraR
-          cat exitCode stderr stderr log.txt || true
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
-
-      - name: Run bacalhau describe
-        # run always even when
-        if: always()
-        run: |
-          JOB_ID=$(./bacalhau list --output json | jq -r '.[0].State.JobID')
-          ./bacalhau describe ${JOB_ID}
-
-      - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-tests
-
-      - name: Run docker compose logs
-        # run always even when
-        if: always()
-        run: |
-          docker compose logs
-
-      - name: Run docker logs to get additional logs
-        # run always even when
-        if: always()
-        run: |
-          docker ps -a
-          for container in $(docker ps -qa); do echo ${container};docker logs ${container};done
-
-      - name: upload outputs
-        # run always even when
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-private-output-${{matrix.os}}-${{matrix.bacalhau_version}}
-          path: |
-            plex_run_output.log
-            job-*
-            jobs/
+      - name: Sleep for preview-timeout
+        if: inputs.preview-enabled == 'true'
+        run: sleep ${{ inputs.preview-timeout }}

@@ -14,9 +14,17 @@ import (
 )
 
 type ToolInput struct {
-	Type    string   `json:"type"`
-	Glob    []string `json:"glob"`
-	Default string   `json:"default"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	Array       bool     `json:"array"`
+	Glob        []string `json:"glob"`
+	Default     string   `json:"default"`
+	Min         string   `json:"min"`
+	Max         string   `json:"max"`
+	Example     string   `json:"example"`
+	Grouping    string   `json:"grouping"`
+	Position    string   `json:"position"`
+	Required    bool     `json:"required"`
 }
 
 type ToolOutput struct {
@@ -29,6 +37,9 @@ type Tool struct {
 	Name        string                `json:"name"`
 	Description string                `json:"description"`
 	Author      string                `json:"author"`
+	GitHub      string                `json:"github"`
+	Paper       string                `json:"paper"`
+	Task        string                `json:"task"`
 	BaseCommand []string              `json:"baseCommand"`
 	Arguments   []string              `json:"arguments"`
 	DockerPull  string                `json:"dockerPull"`
