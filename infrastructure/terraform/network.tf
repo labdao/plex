@@ -43,10 +43,10 @@ resource "aws_security_group" "allow_metabase_postgres" {
 }
 
 resource "aws_security_group_rule" "ingress_allow_metabase_postgres" {
-  type              = "ingress"
-  from_port         = 5432
-  to_port           = 5432
-  protocol          = "tcp"
+  type      = "ingress"
+  from_port = 5432
+  to_port   = 5432
+  protocol  = "tcp"
   # https://www.metabase.com/docs/latest/cloud/ip-addresses-to-whitelist
   cidr_blocks       = ["18.207.81.126/32", "3.211.20.157/32", "50.17.234.169/32"]
   security_group_id = aws_security_group.allow_metabase_postgres.id
