@@ -9,10 +9,12 @@ import string
 import re
 import json
 import numpy as np
+import subprocess
 # import matplotlib.pyplot as plt
 # import ipywidgets as widgets
 # import py3Dmol
 import yaml
+import logging
 # from google.colab import files
 # from IPython.display import display, HTML
 
@@ -209,21 +211,21 @@ def run_ananas(pdb_str, path, outputs_directory, sym=None):
 def run(command, steps, num_designs=1, visual="none"):
   print("Running command:", command)
 
-  def run_command_and_get_pid(command):
-    pid_file = '/dev/shm/pid'
-    os.system(f'nohup {command} & echo $! > {pid_file}')
-    with open(pid_file, 'r') as f:
-      pid = int(f.read().strip())
-    os.remove(pid_file)
-    return pid
+  # def run_command_and_get_pid(command):
+  #   pid_file = '/dev/shm/pid'
+  #   os.system(f'nohup {command} & echo $! > {pid_file}')
+  #   with open(pid_file, 'r') as f:
+  #     pid = int(f.read().strip())
+  #   os.remove(pid_file)
+  #   return pid
   
-  def is_process_running(pid):
-    try:
-      os.kill(pid, 0)
-    except OSError:
-      return False
-    else:
-      return True
+  # def is_process_running(pid):
+  #   try:
+  #     os.kill(pid, 0)
+  #   except OSError:
+  #     return False
+  #   else:
+  #     return True
 
   # run_output = widgets.Output()
   # progress = widgets.FloatProgress(min=0, max=1, description='running', bar_style='info')
@@ -234,62 +236,87 @@ def run(command, steps, num_designs=1, visual="none"):
     if os.path.isfile(f"/dev/shm/{n}.pdb"):
       os.remove(f"/dev/shm/{n}.pdb")
 
-  pid = run_command_and_get_pid(command)
-  fail = False
-  for i in range(num_designs):
-    # for each step check if output generated
-    for n in range(steps):
-      wait = True
-      while wait and not fail:
-        time.sleep(0.1)
-        if os.path.isfile(f"/dev/shm/{n}.pdb"):
-          pdb_str = open(f"/dev/shm/{n}.pdb").read()
-          print(f"current ending string in binder design is {pdb_str[-3:]}")
-          if pdb_str[-3:] == "TER":
-            wait = False
-          elif not is_process_running(pid):
-            fail = True
-        elif not is_process_running(pid):
-          fail = True
 
-      if fail:
-        print(f"failed at step {n+1}, design {i}")
-        # progress.bar_style = 'danger'
-        # progress.description = "failed"
-        break
-      else:
-        print(f"processing step {n+1} out of {steps} for design {i+1} out of {num_designs}")
-        # progress.value = (n+1) / steps
-        # if visual != "none":
-        #   with run_output:
-        #     run_output.clear_output(wait=True)
-        #     if visual == "image":
-        #       xyz, bfact = get_ca(f"/dev/shm/{n}.pdb", get_bfact=True)
-        #       fig = plt.figure()
-        #       fig.set_dpi(100);fig.set_figwidth(6);fig.set_figheight(6)
-        #       ax1 = fig.add_subplot(111);ax1.set_xticks([]);ax1.set_yticks([])
-        #       plot_pseudo_3D(xyz, c=bfact, cmin=0.5, cmax=0.9, ax=ax1)
-        #       plt.show()
-        #     if visual == "interactive":
-        #       view = py3Dmol.view(js='https://3dmol.org/build/3Dmol.js')
-        #       view.addModel(pdb_str,'pdb')
-        #       view.setStyle({'cartoon': {'colorscheme': {'prop':'b','gradient': 'roygb','min':0.5,'max':0.9}}})
-        #       view.zoomTo()
-        #       view.show()
-      if os.path.exists(f"/dev/shm/{n}.pdb"):
-        os.remove(f"/dev/shm/{n}.pdb")
-    if fail:
-      print(f"failed at design {i}")
-      # progress.bar_style = 'danger'
-      # progress.description = "failed"
-      break
+  # pid = run_command_and_get_pid(command)
 
-  while is_process_running(pid):
-    print("designs finished will close pid in 10 seconds and return ")
-    time.sleep(10)
-    os.kill(pid, signal.SIGTERM)
-    break
-  print("finished run function")
+  with subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+      logging.info("here two")
+      exit_code = 0
+      try:
+          # Read output line by line as it is produced
+          for line in process.stdout:
+              logging.info(line.strip())
+
+          # Wait for the subprocess to finish and get the exit code
+          process.communicate()
+          exit_code = process.returncode
+          logging.info(f"Finished script with return code {exit_code}")
+
+          if exit_code != 0:
+              # If subprocess failed, log the stderr
+              error_message = process.stderr.read()
+              logging.error(f"Command failed with exit code {exit_code}")
+              logging.error(f"Error message: {error_message}")
+
+      except Exception as e:
+          logging.error(f"Error while running command: {e}")
+          exit(exit_code)
+
+  # fail = False
+  # for i in range(num_designs):
+  #   # for each step check if output generated
+  #   for n in range(steps):
+  #     wait = True
+  #     while wait and not fail:
+  #       time.sleep(0.1)
+  #       if os.path.isfile(f"/dev/shm/{n}.pdb"):
+  #         pdb_str = open(f"/dev/shm/{n}.pdb").read()
+  #         print(f"current ending string in binder design is {pdb_str[-3:]}")
+  #         if pdb_str[-3:] == "TER":
+  #           wait = False
+  #         elif not is_process_running(pid):
+  #           fail = True
+  #       elif not is_process_running(pid):
+  #         fail = True
+
+  #     if fail:
+  #       print(f"failed at step {n+1}, design {i}")
+  #       # progress.bar_style = 'danger'
+  #       # progress.description = "failed"
+  #       break
+  #     else:
+  #       print(f"processing step {n+1} out of {steps} for design {i+1} out of {num_designs}")
+  #       # progress.value = (n+1) / steps
+  #       # if visual != "none":
+  #       #   with run_output:
+  #       #     run_output.clear_output(wait=True)
+  #       #     if visual == "image":
+  #       #       xyz, bfact = get_ca(f"/dev/shm/{n}.pdb", get_bfact=True)
+  #       #       fig = plt.figure()
+  #       #       fig.set_dpi(100);fig.set_figwidth(6);fig.set_figheight(6)
+  #       #       ax1 = fig.add_subplot(111);ax1.set_xticks([]);ax1.set_yticks([])
+  #       #       plot_pseudo_3D(xyz, c=bfact, cmin=0.5, cmax=0.9, ax=ax1)
+  #       #       plt.show()
+  #       #     if visual == "interactive":
+  #       #       view = py3Dmol.view(js='https://3dmol.org/build/3Dmol.js')
+  #       #       view.addModel(pdb_str,'pdb')
+  #       #       view.setStyle({'cartoon': {'colorscheme': {'prop':'b','gradient': 'roygb','min':0.5,'max':0.9}}})
+  #       #       view.zoomTo()
+  #       #       view.show()
+  #     if os.path.exists(f"/dev/shm/{n}.pdb"):
+  #       os.remove(f"/dev/shm/{n}.pdb")
+  #   if fail:
+  #     print(f"failed at design {i}")
+  #     # progress.bar_style = 'danger'
+  #     # progress.description = "failed"
+  #     break
+
+  # while is_process_running(pid):
+  #   print("designs finished will close pid in 10 seconds and return ")
+  #   time.sleep(10)
+  #   os.kill(pid, signal.SIGTERM)
+  #   break
+  # print("finished run function")
 
   # except KeyboardInterrupt:
     # os.kill(pid, signal.SIGTERM)
@@ -411,6 +438,8 @@ def run_diffusion(contigs, path, pdb=None, iterations=50,
 
   # RUN
   run(cmd, iterations, num_designs, visual=visual)
+
+
   print("Done with the run RFDiffusion script call") 
 
   # fix pdbs
@@ -449,7 +478,7 @@ def prodigy_run(csv_path, pdb_path):
     df.to_csv(f"{csv_path}",index=None)
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def my_app(cfg : DictConfig) -> None:
+def main(cfg : DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
 
