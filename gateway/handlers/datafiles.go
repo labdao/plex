@@ -77,6 +77,17 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		var uploadedTag models.Tag
+		if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
+			utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
+			return
+		}
+
+		if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error adding tag to datafile: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		utils.SendJSONResponseWithCID(w, dataFile.CID)
 	}
 }
@@ -207,4 +218,25 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
+	var dataFile models.DataFile
+	if err := db.Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
+		return fmt.Errorf("Data file not found: %v", err)
+	}
+
+	for _, tagName := range tagNames {
+		var tag models.Tag
+		if err := db.Where("name = ?", tagName).First(&tag).Error; err != nil {
+			return fmt.Errorf("Tag %s not found: %v", tagName, err)
+		}
+		dataFile.Tags = append(dataFile.Tags, tag)
+	}
+
+	if err := db.Save(&dataFile).Error; err != nil {
+		return fmt.Errorf("Error saving datafile: %v", err)
+	}
+
+	return nil
 }

@@ -10,6 +10,16 @@ import (
 	"strings"
 )
 
+func SendJSONResponse(w http.ResponseWriter, response interface{}) {
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		SendJSONError(w, fmt.Sprintf("Error encoding response to JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
 func SendJSONError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

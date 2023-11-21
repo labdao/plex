@@ -130,6 +130,12 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						// If file is not in DataFile table then save it to the table
 						dataFile.CID = fileEntry["CID"]
 						dataFile.Filename = fileEntry["filename"]
+
+						if err := AddTagsToDataFile(db, dataFile.CID, []string{"generated"}); err != nil {
+							http.Error(w, fmt.Sprintf("Error adding tags to datafile: %v", err), http.StatusInternalServerError)
+							return
+						}
+
 						if err := db.Create(&dataFile).Error; err != nil {
 							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
 							return
