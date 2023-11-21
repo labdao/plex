@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign gateway v0.2",
+  "name": "colabdesign gateway v0.4",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "docker.io/openzyme/colabdesign-gateway@sha256:f15ab4528a5e2c4370cae694541cd311f3b667bab0b06cd3ae8620df9902c7ff",
+  "dockerPull": "docker.io/openzyme/colabdesign-gateway@sha256:0b452233b0fa39e7a220c3f1be9f31010d175595207b91c62349d690aff38626",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,

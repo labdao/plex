@@ -65,8 +65,8 @@ RUN apt-get clean autoclean \
 COPY . /app
 
 ENV PYTHONUNBUFFERED=1
+ENV HYDRA_FULL_ERROR=1
+
 
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
-
-CMD ["bash"]

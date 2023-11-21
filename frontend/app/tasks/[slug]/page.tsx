@@ -50,8 +50,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       name: "protein design",
       slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
       default_tool: {
-        //CID: "QmXHQhZG8PSNY9g8MAcsHjGYWSrbZpPjaoPPk9QoRZCT3w",
-        CID: "QmbxyLKaZg73PvnREPdVitKziw2xTDjTp268VNy1hMkR5E",
+        CID: "QmS4M7MCgSEy44DuiyYhogfF2EyMopbUNUGkkPMqhxhirx",
       },
     }),
     []

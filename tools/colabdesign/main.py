@@ -35,7 +35,7 @@ if not os.path.isdir("params"):
 if not os.path.isdir("RFdiffusion"):
     print("installing RFdiffusion...")
     os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
-    os.system("pip -q install jedi omegaconf icecream pyrsistent")
+    os.system("pip -q install jedi omegaconf hydra-core icecream pyrsistent")
     os.system(
         "pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html"
     )
@@ -66,6 +66,9 @@ if "RFdiffusion" not in sys.path:
 
 
 # third party imports
+import hydra
+from hydra import compose, initialize
+from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 from inference.utils import parse_pdb
 from colabdesign.rf.utils import get_ca
@@ -76,7 +79,7 @@ from colabdesign.shared.plot import plot_pseudo_3D
 
 def get_plex_job_inputs():
     # Retrieve the environment variable
-    json_str = os.getenv('PLEX_JOB_INPUTS')
+    json_str = os.getenv("PLEX_JOB_INPUTS")
 
     # Check if the environment variable is set
     if json_str is None:
@@ -121,7 +124,7 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
     return df_results
 
 
-def enricher(multirun_path):
+def enricher(multirun_path, cfg):
     # Find the scores file in multirun_path
     results_csv_path = None
     for file_name in os.listdir(f"{multirun_path}/"):
@@ -138,11 +141,11 @@ def enricher(multirun_path):
     df_results = pd.read_csv(results_csv_path)
 
     # Extract and add the deepest level keys and values to df_results
-    # deepest_keys_values = extract_deepest_keys(OmegaConf.to_container(cfg))
+    deepest_keys_values = extract_deepest_keys(OmegaConf.to_container(cfg))
 
-    # df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
+    df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
 
-    # print('enriched results', df_results)
+    print("enriched results", df_results)
 
     df_results.to_csv(results_csv_path, index=False)
 
@@ -441,144 +444,187 @@ def prodigy_run(csv_path, pdb_path):
     df.to_csv(f"{csv_path}", index=None)
 
 
-def main() -> None:
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def my_app(cfg: DictConfig) -> None:
     user_inputs = get_plex_job_inputs()
+    print(f"user inputs from plex: {user_inputs}")
 
-    print(f"user inputs from plex are {user_inputs}")
-    start_time = time.time()
+    # Override Hydra default params with user supplied params
+    OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspot"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binders"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
 
-    name = "default"
-    pdb = user_inputs["target_protein"]
-    hotspot = user_inputs["hotspot"]
-    iterations = 50
-    num_designs = user_inputs["number_of_binders"]
-    use_beta_model = False
-    visual = None
-    symmetry = None
-    order = 1
-    chains = ""
-    add_potential = True
-    binder_length = user_inputs["binder_length"]
-    pdb_chain = user_inputs["target_chain"]
-    pdb_start_residue = user_inputs["target_start_residue"]
-    pdb_end_residue = user_inputs["target_end_residue"]
-    min_binder_length = None
-    max_binder_length = None
-    contigs_override = user_inputs.get("contigs_override", "")
-    num_seqs = 8
-    initial_guess = True
-    num_recycles = 3
-    use_multimer = False
-    rm_aa = "C"
-    mpnn_sampling_temp = 0.1
-    use_solubleMPNN = True
+    print(OmegaConf.to_yaml(cfg))
+    print(f"Working directory : {os.getcwd()}")
 
-    outputs_directory = "/outputs"
+    # defining output directory
+    if cfg.outputs.directory is None:
+        outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+    else:
+        outputs_directory = cfg.outputs.directory
+    print(f"Output directory : {outputs_directory}")
 
-    # binder length
-    if min_binder_length != None and max_binder_length != None:
-        binder_length_constructed = (
-            str(min_binder_length) + "-" + str(max_binder_length)
+    # defining input files
+    if user_inputs.get("target_protein"):
+        input_target_path = user_inputs["target_protein"]
+    else:
+        input_target_path = get_files_from_directory(cfg.inputs.target_directory, ".pdb")
+
+        if cfg.inputs.target_pattern is not None:
+            input_target_path = [
+                file for file in input_target_path if cfg.inputs.target_pattern in file
+            ]
+
+    if not isinstance(input_target_path, list):
+        input_target_path = [input_target_path]
+    print("Identified Targets : ", input_target_path)
+
+    # running design for every input target file
+    for target_path in input_target_path:
+        start_time = time.time()
+
+        name = cfg.params.basic_settings.experiment_name
+        pdb = target_path  # cfg.basic_settings.pdb
+        hotspot = cfg.params.advanced_settings.hotspot.replace(" ", "")
+        iterations = cfg.params.expert_settings.RFDiffusion_Binder.iterations
+        num_designs = cfg.params.basic_settings.num_designs
+        use_beta_model = cfg.params.advanced_settings.use_beta_model
+        visual = cfg.params.expert_settings.RFDiffusion_Binder.visual
+
+        # symmetry settings
+        symmetry = cfg.params.expert_settings.RFDiffusion_Symmetry.symmetry
+        order = cfg.params.expert_settings.RFDiffusion_Symmetry.order
+        chains = cfg.params.expert_settings.RFDiffusion_Symmetry.chains
+        add_potential = cfg.params.expert_settings.RFDiffusion_Symmetry.add_potential
+
+        # contig assembly
+        ##TODO: simplify load contig parameters
+        binder_length = cfg.params.basic_settings.binder_length
+        pdb_chain = cfg.params.basic_settings.pdb_chain
+        pdb_start_residue = cfg.params.advanced_settings.pdb_start_residue
+        pdb_end_residue = cfg.params.advanced_settings.pdb_end_residue
+        min_binder_length = cfg.params.advanced_settings.min_binder_length
+        max_binder_length = cfg.params.advanced_settings.max_binder_length
+        contigs_override = (
+            cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
-    else:
-        binder_length_constructed = str(binder_length) + "-" + str(binder_length)
 
-    # residue start
-    if pdb_start_residue != None and pdb_end_residue != None:
-        residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
-    else:
-        residue_constructed = ""
+        ## binder length
+        if min_binder_length != None and max_binder_length != None:
+            binder_length_constructed = (
+                str(min_binder_length) + "-" + str(max_binder_length)
+            )
+        else:
+            binder_length_constructed = str(binder_length) + "-" + str(binder_length)
 
-    # contig assembly
-    contigs_constructed = (
-        pdb_chain + residue_constructed + "/0: " + binder_length_constructed
-    )
-    if contigs_override == "":
-        contigs = contigs_constructed
-    else:
-        contigs = contigs_override
+        ## residue start
+        if pdb_start_residue != None and pdb_end_residue != None:
+            residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
+        else:
+            residue_constructed = ""
 
-    # determine where to save
-    path = name
-    while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
-        path = (
-            name
-            + "_"
-            + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
+        ## contig assembly
+        contigs_constructed = (
+            pdb_chain + residue_constructed + "/0: " + binder_length_constructed
+        )
+        if contigs_override == "":
+            contigs = contigs_constructed
+        else:
+            contigs = contigs_override
+
+        # determine where to save
+        path = name
+        while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
+            path = (
+                name
+                + "_"
+                + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
+            )
+
+        flags = {
+            "contigs": contigs,
+            "pdb": pdb,
+            "order": order,
+            "iterations": iterations,
+            "symmetry": symmetry,
+            "hotspot": hotspot,
+            "path": path,
+            "chains": chains,
+            "add_potential": add_potential,
+            "num_designs": num_designs,
+            "use_beta_model": use_beta_model,
+            "visual": visual,
+            "outputs_directory": outputs_directory,
+        }
+
+        for k, v in flags.items():
+            if isinstance(v, str):
+                flags[k] = v.replace("'", "").replace('"', "")
+
+        contigs, copies = run_diffusion(**flags)
+
+        num_seqs = cfg.params.expert_settings.ProteinMPNN.num_seqs
+        initial_guess = cfg.params.expert_settings.ProteinMPNN.initial_guess
+        num_recycles = cfg.params.expert_settings.Alphafold.num_recycles
+        use_multimer = cfg.params.expert_settings.Alphafold.use_multimer
+        rm_aa = cfg.params.expert_settings.ProteinMPNN.rm_aa
+        mpnn_sampling_temp = cfg.params.expert_settings.ProteinMPNN.mpnn_sampling_temp
+        use_solubleMPNN = cfg.params.expert_settings.ProteinMPNN.use_solubleMPNN
+
+        if not os.path.isfile("params/done.txt"):
+            print("downloading AlphaFold params...")
+            while not os.path.isfile("params/done.txt"):
+                time.sleep(5)
+
+        contigs_str = ":".join(contigs)
+        opts = [
+            f"--pdb={outputs_directory}/{path}_0.pdb",
+            f"--loc={outputs_directory}/{path}",
+            f"--contig={contigs_str}",
+            f"--copies={copies}",
+            f"--num_seqs={num_seqs}",
+            f"--num_recycles={num_recycles}",
+            f"--rm_aa={rm_aa}",
+            f"--mpnn_sampling_temp={mpnn_sampling_temp}",
+            f"--num_designs={num_designs}",
+        ]
+        if initial_guess:
+            opts.append("--initial_guess")
+        if use_multimer:
+            opts.append("--use_multimer")
+        if use_solubleMPNN:
+            opts.append("--use_soluble")
+        opts = " ".join(opts)
+
+        command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
+        os.system(command_design)
+
+        print("running Prodigy")
+        prodigy_run(
+            f"{outputs_directory}/{path}/mpnn_results.csv",
+            f"{outputs_directory}/{path}/all_pdb",
         )
 
-    flags = {
-        "contigs": contigs,
-        "pdb": pdb,
-        "order": order,
-        "iterations": iterations,
-        "symmetry": symmetry,
-        "hotspot": hotspot,
-        "path": path,
-        "chains": chains,
-        "add_potential": add_potential,
-        "num_designs": num_designs,
-        "use_beta_model": use_beta_model,
-        "visual": visual,
-        "outputs_directory": outputs_directory,
-    }
+        command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
+        command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
+        command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
+        os.system(command_mv)
+        os.system(command_zip)
+        os.system(command_collect)
 
-    for k, v in flags.items():
-        if isinstance(v, str):
-            flags[k] = v.replace("'", "").replace('"', "")
+        # enrich and summarise run and results information and write to csv file
+        print("running enricher")
+        enricher(outputs_directory, cfg)
 
-    contigs, copies = run_diffusion(**flags)
-
-    if not os.path.isfile("params/done.txt"):
-        print("downloading AlphaFold params...")
-        while not os.path.isfile("params/done.txt"):
-            time.sleep(5)
-
-    contigs_str = ":".join(contigs)
-    opts = [
-        f"--pdb={outputs_directory}/{path}_0.pdb",
-        f"--loc={outputs_directory}/{path}",
-        f"--contig={contigs_str}",
-        f"--copies={copies}",
-        f"--num_seqs={num_seqs}",
-        f"--num_recycles={num_recycles}",
-        f"--rm_aa={rm_aa}",
-        f"--mpnn_sampling_temp={mpnn_sampling_temp}",
-        f"--num_designs={num_designs}",
-    ]
-    if initial_guess:
-        opts.append("--initial_guess")
-    if use_multimer:
-        opts.append("--use_multimer")
-    if use_solubleMPNN:
-        opts.append("--use_soluble")
-    opts = " ".join(opts)
-
-    command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
-    os.system(command_design)
-
-    print("running Prodigy")
-    prodigy_run(
-        f"{outputs_directory}/{path}/mpnn_results.csv",
-        f"{outputs_directory}/{path}/all_pdb",
-    )
-
-    command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
-    command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
-    command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
-    os.system(command_mv)
-    os.system(command_zip)
-    os.system(command_collect)
-
-    # enrich and summarise run and results information and write to csv file
-    print("running enricher")
-    enricher(outputs_directory)
-
-    print("design complete...")
-    end_time = time.time()
-    duration = end_time - start_time
-    print(f"executed in {duration:.2f} seconds.")
+        print("design complete...")
+        end_time = time.time()
+        duration = end_time - start_time
+        print(f"executed in {duration:.2f} seconds.")
 
 
 if __name__ == "__main__":
-    main()
+    my_app()
