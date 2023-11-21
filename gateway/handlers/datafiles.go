@@ -108,7 +108,7 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var dataFile models.DataFile
-		result := db.Where("cid = ?", cid).First(&dataFile)
+		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -163,7 +163,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var dataFiles []models.DataFile
-		if result := query.Find(&dataFiles); result.Error != nil {
+		if result := query.Preload("Tags").Find(&dataFiles); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
