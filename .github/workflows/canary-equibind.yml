@@ -54,7 +54,7 @@ jobs:
           # chdir for outputs
           cd "$result_dir/entry-0/outputs"
 
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
+          if [ "$(find . -ame '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
             echo "No docked files found"
             exit 1
           else
