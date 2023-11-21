@@ -82,35 +82,35 @@ export default function JobDetail() {
               Error: <strong>{job.Error || "None"}</strong>
             </div>
             <div className="py-4 border-b">
-              Tool CID: <strong>
+              <strong>
                 <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.ToolID}/`}>
-                  {job.ToolID}
+                  🔬 Tool
                 </a>
               </strong>
             </div>
             <div className="py-4">
-              Flow Initial CID: <strong>
+              <strong>
                 <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${job.FlowID}/`}>
-                  {job.FlowID}
+                  🔍 Experimental Parameters
                 </a>
               </strong>
             </div>
           </CardContent>
         </Card>
         <Card className="mt-4">
-          <div className="p-4 font-medium uppercase">Logs</div>
+          <div className="p-4 font-bold uppercase">Logs</div>
           <div className="bg-gray-50 px-4 pb-6">
             <LogViewer />
           </div>
         </Card>
         <Card className="mt-4">
-          <div className="p-4 font-medium uppercase">Inputs</div>
+          <div className="p-4 font-bold uppercase">Inputs</div>
           <div className="bg-gray-50">
             <DataTable columns={columns} data={job.Inputs} />
           </div>
         </Card>
         <Card className="mt-4">
-          <div className="p-4 font-medium uppercase">Outputs</div>
+          <div className="p-4 font-bold uppercase">Outputs</div>
           <div className="bg-gray-50">
             <DataTable columns={columns} data={job.Outputs} />
           </div>

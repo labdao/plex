@@ -20,11 +20,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 import Logo from "./Logo";
 import { NavLink } from "./NavLink";
+import { Button } from "../ui/button";
 
 const navItems = [
   {
-    title: "Models",
-    href: "/models",
+    title: "Tasks",
+    href: "/tasks",
   },
   {
     title: "Experiments",
@@ -60,24 +61,27 @@ export default function Header() {
   };
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-background border-b">
-      <Link href="/" className="flex items-center gap-4 font-bold uppercase text-lg">
-        <Logo className="h-8 w-auto" /> Lab Exchange
+    <nav className="flex items-center justify-between p-4 border-b bg-background">
+      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase font-heading">
+        <Logo className="w-auto h-8" /> Lab Exchange
       </Link>
       {authenticated && (
         <>
           <div className="flex gap-8 ml-16 mr-auto">
             {navItems.map((navItem, idx) => (
-              <NavLink key={idx} href={navItem.href} className="font-medium uppercase">
+              <NavLink key={idx} href={navItem.href} className="font-mono font-bold uppercase">
                 {navItem.title}
               </NavLink>
             ))}
           </div>
+          <Button asChild className="mr-4">
+            <Link href="/tasks/protein-design">Run Experiment</Link>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <User />
             </DropdownMenuTrigger>
-            <DropdownMenuContent collisionPadding={10}>
+            <DropdownMenuContent collisionPadding={10} className="font-mono tracking-wider uppercase">
               {user?.email?.address && (
                 <>
                   <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
@@ -87,8 +91,8 @@ export default function Header() {
 
               {walletAddress && (
                 <>
-                  <DropdownMenuLabel>
-                    Wallet: <em className="font-normal">{walletAddress}</em>
+                  <DropdownMenuLabel className="font-normal truncate w-72">
+                    Wallet: <em>{walletAddress}</em>
                   </DropdownMenuLabel>
 
                   <TooltipProvider>

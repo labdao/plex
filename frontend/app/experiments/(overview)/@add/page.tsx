@@ -36,7 +36,7 @@ import {
   setFlowAddTool,
   toolListThunk,
 } from "@/lib/redux";
-import { DataFile } from '@/lib/redux/slices/dataFileListSlice/slice';
+import { DataFile } from "@/lib/redux/slices/dataFileListSlice/slice";
 
 export default function AddGraph() {
   const dispatch = useDispatch<AppDispatch>();
@@ -61,7 +61,7 @@ export default function AddGraph() {
     if (cid !== "") {
       dispatch(setFlowAddSuccess(false));
       dispatch(setFlowAddKwargs({}));
-      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {} } }));
+      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}));
       dispatch(setFlowAddError(null));
       dispatch(setFlowAddName(""));
       dispatch(setFlowAddCid(""));
@@ -76,18 +76,18 @@ export default function AddGraph() {
     const selectedTool = tools[parseInt(value)];
     dispatch(setFlowAddTool(selectedTool));
     setSelectedToolIndex(value);
-  
+
     const newInputDataFiles: Record<string, DataFile[]> = {};
-  
+
     for (const inputKey in selectedTool.ToolJson.inputs) {
       const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[] }>)[inputKey];
-      if (typeof input === 'object' && input !== null && 'glob' in input) {
+      if (typeof input === "object" && input !== null && "glob" in input) {
         const globPatterns = input.glob;
-        const action = await dispatch(dataFileListThunk(globPatterns)) as PayloadAction<DataFile[]>;
+        const action = (await dispatch(dataFileListThunk(globPatterns))) as PayloadAction<DataFile[]>;
         newInputDataFiles[inputKey] = action.payload;
       }
     }
-  
+
     setInputDataFiles(newInputDataFiles);
   };
 
@@ -164,14 +164,9 @@ export default function AddGraph() {
                   <div key={key}>
                     <Label>
                       {key}
-                      {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(', ')})`}
+                      {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(", ")})`}
                     </Label>
-                    <DataFileSelect 
-                      onSelect={(value) => handleKwargsChange(value, key)} 
-                      value={kwargs[key]?.[0]} 
-                      dataFiles={inputDataFiles[key] ? inputDataFiles[key] : []} 
-                      label={key} 
-                    />
+                    <DataFileSelect onChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
                   </div>
                 );
               })}

@@ -13,6 +13,14 @@ export default function ListToolFiles() {
     WalletAddress: string;
   }
 
+  const shortenAddressOrCid = (addressOrCid: string) => {
+    if (addressOrCid.length) {
+      return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
+    } else {
+      return "";
+    }
+  }
+
   const columns: ColumnDef<Tool>[] = [
     {
       accessorKey: "Name",
@@ -24,18 +32,23 @@ export default function ListToolFiles() {
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {row.getValue("CID")}
+            {shortenAddressOrCid(row.getValue("CID"))}
           </a>
         );
       },
     },
     {
       accessorKey: "WalletAddress",
-      header: "Wallet Address",
+      header: "User",
+      cell: ({ row }) => {
+        return shortenAddressOrCid(row.getValue("WalletAddress"));
+      }
     },
   ];
 
   const [tools, setTools] = useState<Tool[]>([]);
+
+  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
 
   useEffect(() => {
     fetch(`${backendUrl()}/tools`)
@@ -56,7 +69,7 @@ export default function ListToolFiles() {
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={tools} />
+      <DataTable columns={columns} data={tools} sorting={sorting}/>
     </div>
   );
 }

@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-
-	"github.com/labdao/plex/internal/ipfs"
 )
 
 func updateIOWithError(ioJsonPath string, index int, err error, fileMutex *sync.Mutex) error {
@@ -98,82 +96,4 @@ func findMatchingFilesForPatterns(outputDirPath string, patterns []string) ([]st
 	}
 
 	return matchingFiles, nil
-}
-
-func updateIOWithResult(ioJsonPath string, toolConfig Tool, index int, outputDirPath string, fileMutex *sync.Mutex) error {
-	fileMutex.Lock()
-	defer fileMutex.Unlock()
-
-	ioList, err := ReadIOList(ioJsonPath)
-	if err != nil {
-		return fmt.Errorf("error reading IO list: %w", err)
-	}
-
-	var outputsWithNoData []string
-
-	for outputKey, output := range toolConfig.Outputs {
-		matchingFiles, err := findMatchingFilesForPatterns(outputDirPath, output.Glob)
-		if err != nil {
-			return fmt.Errorf("error matching output files: %w", err)
-		}
-
-		if len(matchingFiles) == 0 {
-			outputsWithNoData = append(outputsWithNoData, outputKey)
-			continue
-		}
-
-		if output.Type == "File" {
-			filePath := matchingFiles[0]
-
-			// Update IO entry
-			cid, err := ipfs.WrapAndPinFile(filePath)
-			if err != nil {
-				return fmt.Errorf("error generating file IPFS cid: %w", err)
-			}
-
-			ioList[index].Outputs[outputKey] = FileOutput{
-				Class:    "File",
-				FilePath: filepath.Base(filePath),
-				IPFS:     cid,
-			}
-		} else if output.Type == "Array" && output.Item == "File" {
-			var files []FileOutput
-			for _, filePath := range matchingFiles {
-				cid, err := ipfs.PinFile(filePath)
-				if err != nil {
-					return fmt.Errorf("error generating file IPFS cid: %w", err)
-				}
-
-				files = append(files, FileOutput{
-					Class:    "File",
-					FilePath: filepath.Base(filePath),
-					IPFS:     cid,
-				})
-			}
-
-			ioList[index].Outputs[outputKey] = ArrayFileOutput{
-				Class: "Array",
-				Files: files,
-			}
-		} else {
-			return fmt.Errorf("unsupported output Type and Item combination: Type=%s, Item=%s", output.Type, output.Item)
-		}
-	}
-
-	if len(outputsWithNoData) > 0 {
-		ioList[index].State = "failed"
-	} else {
-		ioList[index].State = "completed"
-	}
-
-	err = WriteIOList(ioJsonPath, ioList)
-	if err != nil {
-		return fmt.Errorf("error writing updated IO list: %w", err)
-	}
-
-	if len(outputsWithNoData) > 0 {
-		return fmt.Errorf("no output data found for: %v", outputsWithNoData)
-	}
-
-	return nil
 }

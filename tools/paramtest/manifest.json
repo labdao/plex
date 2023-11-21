@@ -1,0 +1,130 @@
+{
+    "class": "",
+    "name": "paramtest 0.2",
+    "description": "test all possible param types",
+    "author": "",
+    "baseCommand": ["python", "-u", "/app/main.py"],
+    "arguments": [
+        "$(inputs.first_string.value)",
+        "$(inputs.string_array.value)",
+        "$(inputs.first_number.value)",
+        "$(inputs.number_array.value)",
+        "$(inputs.first_bool.value)",
+        "$(inputs.bool_array.value)"
+    ],
+    "dockerPull": "docker.io/openzyme/paramtest@sha256:6a083271e60fd94a54c1e8fb7c2246b00169d20d0a95aef7cc0f0a219d475908",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "first_file": {
+            "type": "file",
+            "description": "First file to have contents added to result.",
+            "array": false,
+            "glob": ["example_first_file.txt"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        },
+        "file_array": {
+            "type": "file",
+            "array": true,
+            "description": "Rest of the files to have contents added to result.",
+            "glob": ["*.txt"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "2",
+            "required": true
+        },
+        "first_string": {
+            "type": "string",
+            "array": false,
+            "description": "First string to add to result.",
+            "glob": [""],
+            "default": "example first string",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "3",
+            "required": true
+        },
+        "string_array": {
+            "type": "string",
+            "array": true,
+            "description": "Rest of strings to add to result.",
+            "glob": [""],
+            "default": ["string 1", "string 2", "string 3"],
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "4",
+            "required": true
+        },
+        "first_number": {
+            "type": "number",
+            "array": false,
+            "description": "First number to add to result. Will also multiply with sum of number_array.",
+            "glob": [""],
+            "default": 3,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Number Params",
+            "position": "5",
+            "required": true
+        },
+        "number_array": {
+            "type": "number",
+            "array": true,
+            "description": "Rest of numbers to add to result. Sum will also multiply with first_number.",
+            "glob": [""],
+            "default": [2,4,8],
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Number Params",
+            "position": "6",
+            "required": true
+        },
+        "first_bool": {
+            "type": "bool",
+            "array": false,
+            "description": "First bool to add to result.",
+            "glob": [""],
+            "default": true,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Bool Params",
+            "position": "7",
+            "required": true
+        },
+        "bool_array": {
+            "type": "bool",
+            "array": true,
+            "description": "Rest of bools to add to result.",
+            "glob": [""],
+            "default": [false, true, false],
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Bool Params",
+            "position": "8",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["result.txt"]
+        }
+    }
+}
