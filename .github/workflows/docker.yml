@@ -47,6 +47,7 @@ on:
 jobs:
   container-build-and-push:
     runs-on: ubuntu-latest
+    environment: "${{ inputs.deploy-environment }}"
     steps:
       - name: Inputs
         id: docker-build-and-push-inputs
