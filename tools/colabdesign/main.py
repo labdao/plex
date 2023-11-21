@@ -1,6 +1,5 @@
 import glob
 import os
-import logging
 import time
 import signal
 import sys
@@ -78,6 +77,23 @@ from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
 
 
+def get_plex_job_inputs():
+    # Retrieve the environment variable
+    json_str = os.getenv("PLEX_JOB_INPUTS")
+
+    # Check if the environment variable is set
+    if json_str is None:
+        raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
+
+    # Convert the JSON string to a Python dictionary
+    try:
+        data = json.loads(json_str)
+        return data
+    except json.JSONDecodeError:
+        # Handle the case where the string is not valid JSON
+        raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
+
+
 def extract_deepest_keys(nested_dict, current_path="", deepest_keys=None):
     if deepest_keys is None:
         deepest_keys = {}
@@ -129,7 +145,7 @@ def enricher(multirun_path, cfg):
 
     df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
 
-    # print('enriched results', df_results)
+    print("enriched results", df_results)
 
     df_results.to_csv(results_csv_path, index=False)
 
@@ -362,26 +378,25 @@ def run_diffusion(
     with subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     ) as process:
-        logging.info("here two")
         exit_code = 0
         try:
             # Read output line by line as it is produced
             for line in process.stdout:
-                logging.info(line.strip())
+                print(line.strip())
 
             # Wait for the subprocess to finish and get the exit code
             process.communicate()
             exit_code = process.returncode
-            logging.info(f"Finished script with return code {exit_code}")
+            print(f"Finished script with return code {exit_code}")
 
             if exit_code != 0:
                 # If subprocess failed, log the stderr
                 error_message = process.stderr.read()
-                logging.error(f"Command failed with exit code {exit_code}")
-                logging.error(f"Error message: {error_message}")
+                print(f"Command failed with exit code {exit_code}")
+                print(f"Error message: {error_message}")
 
         except Exception as e:
-            logging.error(f"Error while running command: {e}")
+            print(f"Error while running command: {e}")
             exit(exit_code)
 
     print("Done with the run RFDiffusion script call")
@@ -430,7 +445,19 @@ def prodigy_run(csv_path, pdb_path):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg: DictConfig) -> None:
+def my_app(cfg: DictConfig) -> None:
+    user_inputs = get_plex_job_inputs()
+    print(f"user inputs from plex: {user_inputs}")
+
+    # Override Hydra default params with user supplied params
+    OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspot"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binders"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
+
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
 
@@ -439,22 +466,25 @@ def main(cfg: DictConfig) -> None:
         outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     else:
         outputs_directory = cfg.outputs.directory
-    print(f"Output directory  : {outputs_directory}")
+    print(f"Output directory : {outputs_directory}")
 
     # defining input files
-    input_target_path = get_files_from_directory(cfg.inputs.target_directory, ".pdb")
-    if cfg.inputs.target_pattern is not None:
-        input_target_path = [
-            file for file in input_target_path if cfg.inputs.target_pattern in file
-        ]
+    if user_inputs.get("target_protein"):
+        input_target_path = user_inputs["target_protein"]
+    else:
+        input_target_path = get_files_from_directory(cfg.inputs.target_directory, ".pdb")
+
+        if cfg.inputs.target_pattern is not None:
+            input_target_path = [
+                file for file in input_target_path if cfg.inputs.target_pattern in file
+            ]
+
     if not isinstance(input_target_path, list):
         input_target_path = [input_target_path]
     print("Identified Targets : ", input_target_path)
 
     # running design for every input target file
     for target_path in input_target_path:
-        # for binder_path in input_binder_path:
-
         start_time = time.time()
 
         name = cfg.params.basic_settings.experiment_name
@@ -472,7 +502,7 @@ def main(cfg: DictConfig) -> None:
         add_potential = cfg.params.expert_settings.RFDiffusion_Symmetry.add_potential
 
         # contig assembly
-        # TODO: simplify load contig parameters
+        ##TODO: simplify load contig parameters
         binder_length = cfg.params.basic_settings.binder_length
         pdb_chain = cfg.params.basic_settings.pdb_chain
         pdb_start_residue = cfg.params.advanced_settings.pdb_start_residue
@@ -483,7 +513,7 @@ def main(cfg: DictConfig) -> None:
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
 
-        # binder length
+        ## binder length
         if min_binder_length != None and max_binder_length != None:
             binder_length_constructed = (
                 str(min_binder_length) + "-" + str(max_binder_length)
@@ -491,13 +521,13 @@ def main(cfg: DictConfig) -> None:
         else:
             binder_length_constructed = str(binder_length) + "-" + str(binder_length)
 
-        # residue start
+        ## residue start
         if pdb_start_residue != None and pdb_end_residue != None:
             residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
         else:
             residue_constructed = ""
 
-        # contig assembly
+        ## contig assembly
         contigs_constructed = (
             pdb_chain + residue_constructed + "/0: " + binder_length_constructed
         )
@@ -597,4 +627,4 @@ def main(cfg: DictConfig) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    my_app()

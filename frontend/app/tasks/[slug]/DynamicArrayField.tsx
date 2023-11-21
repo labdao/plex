@@ -47,7 +47,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
               <div>
                 <FormControl>
                   <>
-                    {input.type === "File" && (
+                    {(input.type === "File" || input.type === "file") && (
                       <DataFileSelect
                         onChange={field.onChange}
                         value={field.value}
@@ -56,7 +56,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                       />
                     )}
                     {input.type === "string" && <Input placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
-                    {input.type === "int" && <Input type="number" {...field} />}
+                    {(input.type === "number" || input.type === "int") && <Input type="number" {...field} />}
                   </>
                 </FormControl>
               </div>

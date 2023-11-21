@@ -1,6 +1,6 @@
 # Minimal compose for gpu setup
 # To bring up network in gpu mode use:
-# docker compose -f docker-compose.yml -f docker-compose-gpu.yml up -d
+# docker compose -f docker-compose.yml -f docker-compose-gpu.yml up -d --wait --build
 
 ---
 
