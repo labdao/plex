@@ -3,7 +3,7 @@ name: Equibind Canary
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 * * * *'
+    - cron: '*/10 * * * *'
 
 jobs:
   canary:
@@ -23,15 +23,13 @@ jobs:
         run: |
           # use the GitHub CLI to download the latest release
           gh release download --repo labdao/plex --pattern "*linux_amd64.tar.gz"
-          # extract the package
-          tar -xf *.tar.gz
+          tar -zxvf plex*.tar.gz
 
       - name: Download Bacalhau release
         run: |
           # use the GitHub CLI to download the latest release
           gh release download "v${BACALHAU_VERSION}" --repo bacalhau-project/bacalhau --pattern "*linux_amd64.tar.gz"
-          # extract the package
-          tar -xf *.tar.gz
+          tar -zxvf bacalhau*.tar.gz
 
       - name: Run Equibind
         run: |
@@ -41,13 +39,14 @@ jobs:
           echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
 
           # Create bacalhau config file
-          bacalhau version
+          ./bacalhau version
 
           # Get node list
-          bacalhau node list
+          ./bacalhau node list
 
           # Run the job
-          plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
+          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true -a test -a canary | tee -a plex_run_output.log
+
           result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
 
           # Get equibind job id
@@ -72,7 +71,7 @@ jobs:
         # run always even when
         if: always()
         run: |
-          bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
+          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
 
       - name: upload outputs
         # run always even when
