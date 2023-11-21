@@ -14,6 +14,8 @@ import subprocess
 import pandas as pd
 import yaml
 
+import prompt_generator
+
 print("Starting main.py...")
 
 # setup
@@ -513,112 +515,123 @@ def my_app(cfg: DictConfig) -> None:
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
 
-        ## binder length
-        if min_binder_length != None and max_binder_length != None:
-            binder_length_constructed = (
-                str(min_binder_length) + "-" + str(max_binder_length)
-            )
-        else:
-            binder_length_constructed = str(binder_length) + "-" + str(binder_length)
+        # reference_protein_complex = 'summary/UROK_HUMAN_1-133.pdb'
+        binder_chain = 'B' # 'B'
+        target_chain = pdb_chain # 'A'
+        cutoff = 5.0 # distance to define inter-protein contacts (in Angstrom)
+        n_samples = 1 # total number of prompts generated
+        p_masking_contact_domain = 0.6 # probability of masking a contact domain
+        p_masking_noncontact_domain = .1 # probability of masking a non-contact domain
+        domain_distance_threshold = 6 # definition of constitutes separate domains (in units of residues)
+        full_prompts = prompt_generator.generate_full_prompts(pdb_path, binder_chain, target_chain, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_threshold)
+        print(full_prompts)
 
-        ## residue start
-        if pdb_start_residue != None and pdb_end_residue != None:
-            residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
-        else:
-            residue_constructed = ""
+        # ## binder length
+        # if min_binder_length != None and max_binder_length != None:
+        #     binder_length_constructed = (
+        #         str(min_binder_length) + "-" + str(max_binder_length)
+        #     )
+        # else:
+        #     binder_length_constructed = str(binder_length) + "-" + str(binder_length)
 
-        ## contig assembly
-        contigs_constructed = (
-            pdb_chain + residue_constructed + "/0: " + binder_length_constructed
-        )
-        if contigs_override == "":
-            contigs = contigs_constructed
-        else:
-            contigs = contigs_override
+        # ## residue start
+        # if pdb_start_residue != None and pdb_end_residue != None:
+        #     residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
+        # else:
+        #     residue_constructed = ""
 
-        # determine where to save
-        path = name
-        while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
-            path = (
-                name
-                + "_"
-                + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
-            )
+        # ## contig assembly
+        # contigs_constructed = (
+        #     pdb_chain + residue_constructed + "/0: " + binder_length_constructed
+        # )
+        # if contigs_override == "":
+        #     contigs = contigs_constructed
+        # else:
+        #     contigs = contigs_override
 
-        flags = {
-            "contigs": contigs,
-            "pdb": pdb,
-            "order": order,
-            "iterations": iterations,
-            "symmetry": symmetry,
-            "hotspot": hotspot,
-            "path": path,
-            "chains": chains,
-            "add_potential": add_potential,
-            "num_designs": num_designs,
-            "use_beta_model": use_beta_model,
-            "visual": visual,
-            "outputs_directory": outputs_directory,
-        }
+        # # determine where to save
+        # path = name
+        # while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
+        #     path = (
+        #         name
+        #         + "_"
+        #         + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
+        #     )
 
-        for k, v in flags.items():
-            if isinstance(v, str):
-                flags[k] = v.replace("'", "").replace('"', "")
+        # flags = {
+        #     "contigs": contigs,
+        #     "pdb": pdb,
+        #     "order": order,
+        #     "iterations": iterations,
+        #     "symmetry": symmetry,
+        #     "hotspot": hotspot,
+        #     "path": path,
+        #     "chains": chains,
+        #     "add_potential": add_potential,
+        #     "num_designs": num_designs,
+        #     "use_beta_model": use_beta_model,
+        #     "visual": visual,
+        #     "outputs_directory": outputs_directory,
+        # }
 
-        contigs, copies = run_diffusion(**flags)
+        # for k, v in flags.items():
+        #     if isinstance(v, str):
+        #         flags[k] = v.replace("'", "").replace('"', "")
 
-        num_seqs = cfg.params.expert_settings.ProteinMPNN.num_seqs
-        initial_guess = cfg.params.expert_settings.ProteinMPNN.initial_guess
-        num_recycles = cfg.params.expert_settings.Alphafold.num_recycles
-        use_multimer = cfg.params.expert_settings.Alphafold.use_multimer
-        rm_aa = cfg.params.expert_settings.ProteinMPNN.rm_aa
-        mpnn_sampling_temp = cfg.params.expert_settings.ProteinMPNN.mpnn_sampling_temp
-        use_solubleMPNN = cfg.params.expert_settings.ProteinMPNN.use_solubleMPNN
+        # contigs, copies = run_diffusion(**flags)
 
-        if not os.path.isfile("params/done.txt"):
-            print("downloading AlphaFold params...")
-            while not os.path.isfile("params/done.txt"):
-                time.sleep(5)
+        # num_seqs = cfg.params.expert_settings.ProteinMPNN.num_seqs
+        # initial_guess = cfg.params.expert_settings.ProteinMPNN.initial_guess
+        # num_recycles = cfg.params.expert_settings.Alphafold.num_recycles
+        # use_multimer = cfg.params.expert_settings.Alphafold.use_multimer
+        # rm_aa = cfg.params.expert_settings.ProteinMPNN.rm_aa
+        # mpnn_sampling_temp = cfg.params.expert_settings.ProteinMPNN.mpnn_sampling_temp
+        # use_solubleMPNN = cfg.params.expert_settings.ProteinMPNN.use_solubleMPNN
 
-        contigs_str = ":".join(contigs)
-        opts = [
-            f"--pdb={outputs_directory}/{path}_0.pdb",
-            f"--loc={outputs_directory}/{path}",
-            f"--contig={contigs_str}",
-            f"--copies={copies}",
-            f"--num_seqs={num_seqs}",
-            f"--num_recycles={num_recycles}",
-            f"--rm_aa={rm_aa}",
-            f"--mpnn_sampling_temp={mpnn_sampling_temp}",
-            f"--num_designs={num_designs}",
-        ]
-        if initial_guess:
-            opts.append("--initial_guess")
-        if use_multimer:
-            opts.append("--use_multimer")
-        if use_solubleMPNN:
-            opts.append("--use_soluble")
-        opts = " ".join(opts)
+        # if not os.path.isfile("params/done.txt"):
+        #     print("downloading AlphaFold params...")
+        #     while not os.path.isfile("params/done.txt"):
+        #         time.sleep(5)
 
-        command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
-        os.system(command_design)
+        # contigs_str = ":".join(contigs)
+        # opts = [
+        #     f"--pdb={outputs_directory}/{path}_0.pdb",
+        #     f"--loc={outputs_directory}/{path}",
+        #     f"--contig={contigs_str}",
+        #     f"--copies={copies}",
+        #     f"--num_seqs={num_seqs}",
+        #     f"--num_recycles={num_recycles}",
+        #     f"--rm_aa={rm_aa}",
+        #     f"--mpnn_sampling_temp={mpnn_sampling_temp}",
+        #     f"--num_designs={num_designs}",
+        # ]
+        # if initial_guess:
+        #     opts.append("--initial_guess")
+        # if use_multimer:
+        #     opts.append("--use_multimer")
+        # if use_solubleMPNN:
+        #     opts.append("--use_soluble")
+        # opts = " ".join(opts)
 
-        print("running Prodigy")
-        prodigy_run(
-            f"{outputs_directory}/{path}/mpnn_results.csv",
-            f"{outputs_directory}/{path}/all_pdb",
-        )
+        # command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
+        # os.system(command_design)
 
-        command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
-        command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
-        command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
-        os.system(command_mv)
-        os.system(command_zip)
-        os.system(command_collect)
+        # print("running Prodigy")
+        # prodigy_run(
+        #     f"{outputs_directory}/{path}/mpnn_results.csv",
+        #     f"{outputs_directory}/{path}/all_pdb",
+        # )
 
-        # enrich and summarise run and results information and write to csv file
-        print("running enricher")
-        enricher(outputs_directory, cfg)
+        # command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
+        # command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
+        # command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
+        # os.system(command_mv)
+        # os.system(command_zip)
+        # os.system(command_collect)
+
+        # # enrich and summarise run and results information and write to csv file
+        # print("running enricher")
+        # enricher(outputs_directory, cfg)
 
         print("design complete...")
         end_time = time.time()
