@@ -26,7 +26,33 @@ concurrency:
 
 jobs:
   ########## Backend container ##################################
+  changes-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.backend }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'go.mod'
+            - 'go.sum'
+            - 'main.go'
+            - 'Dockerfile'
+            - 'gateway/**'
+            - 'cmd/**'
+            - 'internal/**'
+            - 'pkg/**'
+            - 'backend/**'
+            - '.github/workflows/containers.yml'
+            - '.github/workflows/docker.yml'
   backend:
+    needs: changes-backend
+    if: ${{ needs.changes-backend.outputs.changes == 'true' }}
     uses: ./.github/workflows/docker.yml
     with:
       name: backend
