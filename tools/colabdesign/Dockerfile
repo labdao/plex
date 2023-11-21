@@ -67,5 +67,6 @@ COPY . /app
 ENV PYTHONUNBUFFERED=1
 
 # entrypoint
-ENTRYPOINT []
+ENTRYPOINT ["python", "-u", "main.py"]
+
 CMD ["bash"]

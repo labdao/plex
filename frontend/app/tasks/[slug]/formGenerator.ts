@@ -10,7 +10,7 @@ const inputsToSchema = (inputs: InputType) => {
   const schema: { [key: string]: z.ZodArray<z.ZodObject<{ value: z.ZodString | z.ZodNumber }>> } = {};
   for (var key in inputs) {
     const input = inputs[key];
-    if (input.type === "File") {
+    if (input.type === "File" || input.type === "file") {
       schema[key] = z.array(
         z.object({
           value: z.string().min(input.required ? 1 : 0, { message: "File is required" }),
@@ -22,7 +22,7 @@ const inputsToSchema = (inputs: InputType) => {
           value: z.string().min(input.required ? 1 : 0, { message: "Field is required" }),
         })
       );
-    } else if (input.type === "int") {
+    } else if (input.type === "int" || input.type === "number") {
       // @TODO: depending on API updates parseInt may not be necessary
       // May be a better way of setting no min/max than SAFE_INTEGER
       const min = parseInt(input.min) || Number.MIN_SAFE_INTEGER;

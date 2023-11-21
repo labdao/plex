@@ -208,3 +208,13 @@ sudo sysctl -w net.core.rmem_max=2500000
 PRs are welcome! Please consider our [Contribute Guidelines](https://docs.labdao.xyz/about-us/contributer_policy) when joining.
 
 From time to time, we also post ```help-wanted``` bounty issues - please consider our [Bounty Policy](https://docs.labdao.xyz/about-us/bounty_policy) when engaging with LabDAO.
+
+
+docker run -it --gpus=all -v /home/ubuntu/plex/tools/inputs:/inputs -v /home/ubuntu/plex/tools/outputs:/outputs quay.io/labdao/colabdesign@sha256:ff81dec483ab4f3d59e7ff0888da7b8a62845b8a9e2bbf5cfa6203b9b7a5936b bash
+
+root@25c73eba1658:/app# python -u main.py inputs=container outputs=container params=VTNCparams1
+
+docker run -it --gpus=all -v /home/ubuntu/plex/tools/colabdesign/inputs:/inputs -v /home/ubuntu/plex/tools/colabdesign/conf/params:/app/conf/params -v /home/ubuntu/plex/tools/outputs:/outputs quay.io/labdao/colabdesign@sha256:ff81dec483ab4f3d59e7ff0888da7b8a62845b8a9e2bbf5cfa6203b9b7a5936b bash
+
+
+root@25c73eba1658:/app# python -u main.py inputs=container outputs=container params=VTNCparams1

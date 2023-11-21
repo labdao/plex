@@ -1,7 +1,7 @@
 basic_settings:
   experiment_name: default
   binder_length: 50
-  pdb_chain: A
+  pdb_chain: B
   num_designs: 2
 advanced_settings:
   pdb_start_residue: 50

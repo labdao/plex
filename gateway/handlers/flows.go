@@ -131,6 +131,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		/*
 		for key, value := range kwargs {
 			if len(value) == 0 || value[0] == "" {
 				log.Printf("Invalid or missing value for key '%s' in kwargs", key)
@@ -138,6 +139,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 		}
+		*/
 
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
 		if err != nil {

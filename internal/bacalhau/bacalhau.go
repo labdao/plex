@@ -2,6 +2,7 @@ package bacalhau
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -26,22 +27,12 @@ func GetBacalhauApiHost() string {
 	}
 }
 
-func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string][]string, container, selector string, baseCmd, params []string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
-	log.Println("Creating job inside v2 function")
+func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
+	fmt.Println("CreatebacalhauJob")
+	fmt.Println(inputs)
 	job, err = model.NewJobWithSaneProductionDefaults()
 	if err != nil {
 		return nil, err
-	}
-	fmt.Println("container baseCmd", baseCmd)
-	fmt.Println("container params", params)
-	if len(baseCmd) > 0 && len(params) > 0 {
-		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEntrypoint(baseCmd...).WithParameters(params...).Build()
-	} else if len(baseCmd) > 0 {
-		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEntrypoint(baseCmd...).Build()
-	} else if len(params) > 0 {
-		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithParameters(params...).Build()
-	} else {
-		job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).Build()
 	}
 
 	job.Spec.PublisherSpec = model.PublisherSpec{
@@ -69,49 +60,90 @@ func CreateBacalhauJob(fileInputs map[string]string, fileArrayInputs map[string]
 		job.Spec.Network = model.NetworkConfig{Type: model.NetworkFull}
 	}
 	job.Spec.Inputs = []model.StorageSpec{}
-	for key, input := range fileInputs {
-		// Split the string on the "/" character to separate the CID and filename
-		parts := strings.Split(input, "/")
-		if len(parts) != 2 {
-			fmt.Println("here input file")
-			fmt.Println(input)
-			return nil, fmt.Errorf("not a valid cid path")
-		}
 
-		cid, _ := parts[0], parts[1]
+	// same data as IO.Inputs except it has local paths instead of CID paths for files
+	localJobInputs := map[string]interface{}{}
 
-		job.Spec.Inputs = append(job.Spec.Inputs,
-			model.StorageSpec{
-				StorageSource: model.StorageSourceIPFS,
-				CID:           cid,
-				Path:          "/inputs/" + key,
-			})
-	}
+	for key, input := range inputs {
+		fmt.Println("going thru inputs with new code")
+		fmt.Println(input)
+		switch value := input.(type) {
+		case string:
+			if strings.HasPrefix(value, "Qm") {
+				fmt.Println("found file input")
+				// Split the string on the "/" character to separate the CID and filename
+				parts := strings.Split(value, "/")
+				if len(parts) != 2 {
+					fmt.Println("here input file")
+					fmt.Println(value)
+					return nil, fmt.Errorf("not a valid cid path")
+				}
 
-	for key, inputs := range fileArrayInputs {
-		for i, input := range inputs {
-			// Split the string on the "/" character to separate the CID and filename
-			parts := strings.Split(input, "/")
-			if len(parts) != 2 {
-				fmt.Println("here input file array")
-				fmt.Println(i)
-				fmt.Println(input)
-				return nil, fmt.Errorf("not a valid cid path")
+				cid, filename := parts[0], parts[1]
+				localDir := "/inputs/" + key
+				localPath := localDir + "/" + filename
+				job.Spec.Inputs = append(job.Spec.Inputs,
+					model.StorageSpec{
+						StorageSource: model.StorageSourceIPFS,
+						CID:           cid,
+						Path:          localDir,
+					})
+				localJobInputs[key] = localPath
+			} else {
+				fmt.Println("input is a string but does not have 'Qm' prefix")
+				localJobInputs[key] = value
 			}
+		case []interface{}: // Changed from []string to []interface{}
+			fmt.Println("found slice, checking each for 'Qm' prefix")
+			var stringArray []string
+			allValid := true
+			for _, elem := range value {
+				str, ok := elem.(string)
+				if !ok || !strings.HasPrefix(str, "Qm") {
+					allValid = false
+					fmt.Println("element is not a string or does not have 'Qm' prefix:", elem)
+					break
+				}
+				stringArray = append(stringArray, str)
+			}
+			if allValid && len(stringArray) > 0 {
+				fmt.Println("found file array")
+				var localFilePaths []string
+				for i, elem := range value {
+					str, _ := elem.(string)
+					// Split the string on the "/" character to separate the CID and filename
+					parts := strings.Split(str, "/")
+					cid, filename := parts[0], parts[1]
 
-			cid, _ := parts[0], parts[1]
+					// Construct the path with the key and index 'i'
+					indexedDir := fmt.Sprintf("/inputs/%s/%d", key, i)
+					indexedPath := indexedDir + "/" + filename
 
-			// Construct the path with the key and index 'i'
-			indexedPath := fmt.Sprintf("/inputs/%s/%d", key, i)
-
-			job.Spec.Inputs = append(job.Spec.Inputs,
-				model.StorageSpec{
-					StorageSource: model.StorageSourceIPFS,
-					CID:           cid,
-					Path:          indexedPath,
-				})
+					job.Spec.Inputs = append(job.Spec.Inputs,
+						model.StorageSpec{
+							StorageSource: model.StorageSourceIPFS,
+							CID:           cid,
+							Path:          indexedDir,
+						})
+					localFilePaths = append(localFilePaths, indexedPath)
+				}
+				localJobInputs[key] = localFilePaths
+			} else {
+				localJobInputs[key] = input
+			}
+		default:
+			localJobInputs[key] = input
 		}
 	}
+	jsonBytes, err := json.Marshal(localJobInputs)
+	if err != nil {
+		log.Fatalf("Error marshaling JSON: %v", err)
+	}
+
+	jsonString := string(jsonBytes)
+	envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString)
+
+	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVar).Build()
 
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	log.Println("returning job")

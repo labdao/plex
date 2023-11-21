@@ -1,31 +1,22 @@
 {
-  "name": "colabdesign interactive v0.18",
+  "name": "colabdesign gateway v0.2",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
   "paper": "https://www.nature.com/articles/s41586-023-06415-8",
   "task": "protein design",
   "baseCommand": [
-    "python",
-    "-u",
-    "main.py"
   ],
   "arguments": [
-    "$(inputs.target_chain.value)",
-    "$(inputs.target_start_residue.value)",
-    "$(inputs.target_end_residue.value)",
-    "$(inputs.hotspot.value)",
-    "$(inputs.binder_length.value)",
-    "$(inputs.number_of_binders.value)"
   ],
-  "dockerPull": "docker.io/openzyme/colabdesign@sha256:0fb1681ca79bf5c2090ad346da761fff03023a13949fafa4d26e22089dd6f562",
+  "dockerPull": "docker.io/openzyme/colabdesign-gateway@sha256:f15ab4528a5e2c4370cae694541cd311f3b667bab0b06cd3ae8620df9902c7ff",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
   "networkBool": true,
   "inputs": {
     "binder_length": {
-      "type": "int",
+      "type": "number",
       "description": "The length of the protein binder that is being designed",
       "array": false,
       "glob": [
@@ -52,10 +43,10 @@
       "example": "A30,A33,A34",
       "grouping": "target",
       "position": "105",
-      "required": true
+      "required": false
     },
     "number_of_binders": {
-      "type": "int",
+      "type": "number",
       "description": "The number of protein binders to be designed",
       "array": false,
       "glob": [
@@ -85,7 +76,7 @@
       "required": true
     },
     "target_end_residue": {
-      "type": "int",
+      "type": "number",
       "description": "The end residue of the target protein.",
       "array": false,
       "glob": [
@@ -100,7 +91,7 @@
       "required": true
     },
     "target_protein": {
-      "type": "File",
+      "type": "file",
       "description": "The target protein to design against.",
       "array": false,
       "glob": [
@@ -115,7 +106,7 @@
       "required": true
     },
     "target_start_residue": {
-      "type": "int",
+      "type": "number",
       "description": "The start residue of the target protein.",
       "array": false,
       "glob": [
@@ -128,6 +119,15 @@
       "grouping": "target",
       "position": "103",
       "required": true
+    },
+    "contigs_override": {
+      "type": "string",
+      "default": "",
+      "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
+      "example": "A1-283:B1-6/1/B8-20/22/B43-47",
+      "grouping": "_advanced",
+      "position": "301",
+      "required": false
     }
   },
   "outputs": {
