@@ -23,15 +23,13 @@ jobs:
         run: |
           # use the GitHub CLI to download the latest release
           gh release download --repo labdao/plex --pattern "*linux_amd64.tar.gz"
+          tar -zxvf plex*.tar.gz
 
       - name: Download Bacalhau release
         run: |
           # use the GitHub CLI to download the latest release
           gh release download "v${BACALHAU_VERSION}" --repo bacalhau-project/bacalhau --pattern "*linux_amd64.tar.gz"
-
-      - name: Extract packages
-        run: |
-          tar -xvf *.tar.gz
+          tar -zxvf bacalhau*.tar.gz
 
       - name: Run Equibind
         run: |
