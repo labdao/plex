@@ -7,7 +7,10 @@ on:
 
 jobs:
   canary:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - "prod"
     environment: ci
     env:
       GH_TOKEN: ${{ github.token }}
