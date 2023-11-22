@@ -7,11 +7,15 @@ on:
 
 jobs:
   canary:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - "prod"
     environment: ci
     env:
       GH_TOKEN: ${{ github.token }}
-      BACALHAU_API_HOST: "bacalhau.prod.labdao.xyz"
+      BACALHAU_API_HOST: "requester.prod.labdao.xyz"
+      IPFS_API_HOST: "ipfs.prod.labdao.xyz"
       BACALHAU_VERSION: "1.1.2"
       HEII_ON_CALL_INBOUND_TRIGGER_ID: 90126187-9e79-4486-a273-49ade88ba079
     steps:
