@@ -1,10 +1,11 @@
 basic_settings:
   experiment_name: default
   binder_length: 50
+  pdb: /inputs/target_protein.pdb
   pdb_chain: A
   num_designs: 2
 advanced_settings:
-  pdb_start_residue: 50
+  pdb_start_residue: 41
   pdb_end_residue: 200
   hotspot: ''
   min_binder_length: null
@@ -13,6 +14,7 @@ advanced_settings:
 expert_settings:
   RFDiffusion_Binder:
     contigs_override: ''
+    # the contigs_override completely overrules all other contig related settings. Make sure it is '' if you do not want to overwrite settings.
     iterations: 50
     visual: none
   RFDiffusion_Symmetry:

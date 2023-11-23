@@ -8,7 +8,7 @@
     "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml;",
     "ls /inputs;",
     "echo 'Attempting main.py...';",
-    "python -u main.py;",
+    "python -u main.py",
     "echo 'main.py complete!';"
   ],
   "dockerPull": "docker.io/openzyme/colabdesign@sha256:82a83c494cf91adc333cd5ed1f87b4a8fc5eadc39abd41348c58f931477b6d50",
@@ -56,4 +56,4 @@
 
 // docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/target_protein/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && cat /inputs/config.yaml"
 
-// docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "cp /inputs/target_protein/*.pdb /inputs/target_protein.pdb && cp /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && python -u main.py && echo 'done'"
+// docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "cp /inputs/target_protein/*.pdb /inputs/target_protein.pdb && cp /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && python3 -u main.py && echo 'done'"
