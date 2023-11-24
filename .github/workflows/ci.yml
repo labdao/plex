@@ -18,12 +18,16 @@ on:
         type: string
         default: "300m"
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'
