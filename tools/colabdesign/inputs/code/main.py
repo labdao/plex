@@ -125,8 +125,7 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
     return df_results
 
-
-# def enricher(multirun_path, cfg):
+# def enrich_and_collect(multirun_path, cfg):
 #     # Find the scores file in multirun_path
 #     results_csv_path = None
 #     for file_name in os.listdir(f"{multirun_path}/"):
@@ -151,32 +150,7 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
 #     df_results.to_csv(results_csv_path, index=False)
 
-def enrich_and_collect(multirun_path, cfg):
-    # Find the scores file in multirun_path
-    results_csv_path = None
-    for file_name in os.listdir(f"{multirun_path}/"):
-        if file_name.endswith("_scores.csv"):
-            results_csv_path = os.path.join(multirun_path, file_name)
-            break
-
-    # Check if the mpnn_results.csv file is found
-    if results_csv_path is None:
-        print("No scores file found in the specified directory.")
-        return
-
-    # Read the scores csv into a DataFrame
-    df_results = pd.read_csv(results_csv_path)
-
-    # Extract and add the deepest level keys and values to df_results
-    deepest_keys_values = extract_deepest_keys(OmegaConf.to_container(cfg))
-
-    df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
-
-    print("enriched results", df_results)
-
-    df_results.to_csv(results_csv_path, index=False)
-
-def enrich_and_collect(multirun_path, cfg):
+def enrich_and_collect(multirun_path, path, cfg):
     # Find the scores file in multirun_path
     results_csv_path = None
     for file_name in os.listdir(f"{multirun_path}/"):
@@ -198,7 +172,7 @@ def enrich_and_collect(multirun_path, cfg):
     df_new_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_new_results)
 
     # Check if the existing output CSV file exists
-    output_csv_path = os.path.join(multirun_path, "collected_scores.csv")
+    output_csv_path = os.path.join(multirun_path, f"{path}_collected_scores.csv")
     if os.path.exists(output_csv_path):
         # Read existing data
         df_existing_results = pd.read_csv(output_csv_path)
@@ -211,6 +185,30 @@ def enrich_and_collect(multirun_path, cfg):
     df_combined_results.to_csv(output_csv_path, index=False)
     print("Updated results written to", results_csv_path)
 
+def condense(multirun_path, path, cfg, user_inputs):
+    # Read the combined results CSV into a DataFrame
+    combined_csv_path = os.path.join(multirun_path, f"{path}_collected_scores.csv")
+    df_combined_results = pd.read_csv(combined_csv_path)
+
+    # Columns to process
+    columns = ['mpnn', 'plddt', 'ptm', 'pae', 'rmsd']
+
+    # Creating a dictionary to store min and max values
+    condensed_data = {}
+    for col in columns:
+        condensed_data[f"{col}_min"] = [df_combined_results[col].min()]
+        condensed_data[f"{col}_max"] = [df_combined_results[col].max()]
+
+    # Create a new DataFrame for condensed results
+    df_condensed = pd.DataFrame(condensed_data)
+
+    # Insert the n_samples column as the first column
+    df_condensed.insert(0, 'n_samples', len(df_combined_results))
+
+    # Write the condensed data to the CSV file
+    condensed_csv_path = os.path.join(multirun_path, f"{path}_condensed_scores.csv")
+    df_condensed.to_csv(condensed_csv_path, index=False)
+    print("Condensed results written to", condensed_csv_path)
 
 
 def get_files_from_directory(root_dir, extension, max_depth=3):
@@ -576,21 +574,31 @@ def my_app(cfg: DictConfig) -> None:
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
 
-        # reference_protein_complex = 'summary/UROK_HUMAN_1-133.pdb'
-        binder_chain = 'B' # 'B'
+        # # reference_protein_complex = 'summary/UROK_HUMAN_1-133.pdb'
+        # binder_chain = 'B' # 'B'
+        # target_chain = pdb_chain # 'A'
+        # cutoff = 5.0 # distance to define inter-protein contacts (in Angstrom)
+        # n_samples = 1 # total number of prompts generated
+        # p_masking_contact_domain = .6 # probability of masking a contact domain
+        # p_masking_noncontact_domain = 0.1 # probability of masking a non-contact domain
+        # domain_distance_threshold = 6 # definition of constitutes separate domains (in units of residues)
+
+        binder_chain = user_inputs["binder_chain"] # 'B'
         target_chain = pdb_chain # 'A'
-        cutoff = 5.0 # distance to define inter-protein contacts (in Angstrom)
-        n_samples = 2 # total number of prompts generated
-        p_masking_contact_domain = .6 # probability of masking a contact domain
-        p_masking_noncontact_domain = 0.1 # probability of masking a non-contact domain
-        domain_distance_threshold = 6 # definition of constitutes separate domains (in units of residues)
+        cutoff = user_inputs["cutoff"] # distance to define inter-protein contacts (in Angstrom)
+        n_samples = user_inputs["n_samples"] # total number of prompts generated
+        p_masking_contact_domain = user_inputs["p_masking_contact_domain"] # probability of masking a contact domain
+        p_masking_noncontact_domain = user_inputs["p_masking_noncontact_domain"] # probability of masking a non-contact domain
+        domain_distance_threshold = user_inputs["domain_distance_threshold"] # definition of constitutes separate domains (in units of residues)
         full_prompts = prompt_generator.generate_full_prompts(target_path, binder_chain, target_chain, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_distance_threshold)
         print(full_prompts)
 
+        prompt_counter = 0
         for prompt in full_prompts:
 
             contigs_override = prompt
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override = contigs_override
+            prompt_counter += 1
             print("promt: ", contigs_override)
             
             ## binder length
@@ -691,7 +699,7 @@ def my_app(cfg: DictConfig) -> None:
 
             command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
             command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
-            command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
+            command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_prompt{prompt_counter}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
             os.system(command_mv)
             os.system(command_zip)
             os.system(command_collect)
@@ -699,7 +707,9 @@ def my_app(cfg: DictConfig) -> None:
             # enrich and summarise run and results information and write to csv file
             print("running enricher")
             # enricher(outputs_directory, cfg)
-            enrich_and_collect(outputs_directory,cfg)
+            enrich_and_collect(outputs_directory, path, cfg)
+        
+        condense(outputs_directory, path, cfg, user_inputs)
 
         print("design complete...")
         end_time = time.time()

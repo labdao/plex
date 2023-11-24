@@ -157,6 +157,13 @@
       "glob": [
         "*_scores.csv"
       ]
+    },
+    "collected_scores": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*_collected_scores.csv"
+      ]
     }
   }
 }
