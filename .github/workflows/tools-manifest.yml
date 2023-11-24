@@ -4,6 +4,7 @@
 name: tools manifests
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
     # Pattern matched against refs/tags
@@ -47,7 +48,6 @@ jobs:
         filters: |
           colabdesign:
             - 'tools/colabdesign/colabdesign.json'
-            - '.github/workflows/tools-manifest.yml'
 
   tools:
     needs: changes-tools
