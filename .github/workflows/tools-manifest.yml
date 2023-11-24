@@ -1,0 +1,158 @@
+# Workflow to upload tool manifests
+---
+
+name: tools manifests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+      - "staging"
+    # Pattern matched against refs/tags
+    tags:
+      - '**'
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-manifest.yml'
+
+  pull_request:
+    branches:
+      - "main"
+      - "staging"
+    paths:
+      - 'tools/**'
+      - '.github/workflows/tools-manifest.yml'
+
+env:
+  TOOLS_WALLET_ADDRESS: "0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4"
+
+# Only run one at a time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ################ TOOLS MANIFEST ###########################
+  changes-tools:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      tools: ${{ steps.filter.outputs.changes }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        # Only run when tool's directory or workflow files have changed
+        ###############################################################
+        ################## Add new tools here #########################
+        ###############################################################
+        filters: |
+          colabdesign:
+            - 'tools/colabdesign/colabdesign.json'
+
+  tools:
+    needs: changes-tools
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Version tool name
+        run: |
+          echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
+          echo "NORMALIZED_GIT_REF=$(echo $GITHUB_REF | sed 's/refs\///g' | sed 's/heads\///g' | sed 's/\/merge//g' | sed 's/\//-/g')" >> $GITHUB_ENV
+          echo "GIT_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: debug
+        run: |
+          echo "::debug::Set the Octocat variable"
+
+      - name: Versionined tool name
+        env:
+          TOOL_NAME_VERSIONED: "${{ env.TOOL_NAME }}-${{ env.NORMALIZED_GIT_REF }}-${{ env.GIT_SHORT_SHA }}"
+        run: |
+          echo "TOOL_NAME_VERSIONED=${{ env.TOOL_NAME_VERSIONED }}" >> $GITHUB_ENV
+
+      - name: Params
+        run: |
+          echo "## Params" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter Name NAME | Parameter VALUE |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|"  >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_NAME | ${{ env.TOOL_NAME }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GITHUB_REF | $GITHUB_REF |" >> $GITHUB_STEP_SUMMARY
+          echo "| NORMALIZED_GIT_REF | ${{ env.NORMALIZED_GIT_REF }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GIT_SHORT_SHA | $GIT_SHORT_SHA |" >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_NAME_VERSIONED | ${{ env.TOOL_NAME_VERSIONED }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Dump updated manifest file to be POSTed
+        run: |
+          jq --arg toolname "${{ env.TOOL_NAME_VERSIONED }}" '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"} | .toolJson.name |= $toolname'  tools/colabdesign/colabdesign.json > /tmp/manifest.json
+
+      - name: Dump Manifest json
+        run: |
+          echo '### Tool config' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/manifest.json >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: upload manifest
+        uses: actions/upload-artifact@v3
+        with:
+          name: tool-manifest-${{ matrix.tools }}
+          path: |
+            /tmp/manifest.json
+
+  tools-upload:
+    needs:
+      - tools
+      - changes-tools
+    # If tool isn't empty
+    if: |
+      ${{ needs.changes-tools.outputs.tools != '' &&
+      toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} &&
+    strategy:
+      fail-fast: false
+      matrix:
+        backends:
+          - env: stg
+            url: 'backend.stg.labdao.xyz:8080/tools'
+          - env: prod
+            url: 'backend.prod.labdao.xyz:8080/tools'
+        tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
+    runs-on:
+      - self-hosted
+      - "${{ matrix.backends.env }}"
+    steps:
+      - name: Condition
+        id: upload-condition
+        run: echo "Continue"
+        if: >-
+          ${{
+            (
+             matrix.backends.env == 'stg' ||
+              (
+               matrix.backends.env == 'prod' &&
+               github.ref_name == 'main'
+              )
+            )
+          }}
+
+      - name: download manifest
+        if: steps.upload-condition.outcome == 'success'
+        uses: actions/download-artifact@v3
+        with:
+          name: tool-manifest-${{ matrix.tools }}
+
+      - name: POST Manifest to environment
+        if: steps.upload-condition.outcome == 'success'
+        run: |
+          set -xe
+
+          curl --silent --max-time 60 --fail "${{ matrix.backends.url }}" -X POST -d @manifest.json | tee -a output.json
+          CID=$(cat output.json | jq -r '.cid')
+          echo "TOOL CID: ${CID}" >> $GITHUB_STEP_SUMMARY
