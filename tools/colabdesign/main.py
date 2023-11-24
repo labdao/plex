@@ -125,31 +125,6 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
     return df_results
 
-# def enrich_and_collect(multirun_path, cfg):
-#     # Find the scores file in multirun_path
-#     results_csv_path = None
-#     for file_name in os.listdir(f"{multirun_path}/"):
-#         if file_name.endswith("_scores.csv"):
-#             results_csv_path = os.path.join(multirun_path, file_name)
-#             break
-
-#     # Check if the mpnn_results.csv file is found
-#     if results_csv_path is None:
-#         print("No scores file found in the specified directory.")
-#         return
-
-#     # Read the scores csv into a DataFrame
-#     df_results = pd.read_csv(results_csv_path)
-
-#     # Extract and add the deepest level keys and values to df_results
-#     deepest_keys_values = extract_deepest_keys(OmegaConf.to_container(cfg))
-
-#     df_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_results)
-
-#     print("enriched results", df_results)
-
-#     df_results.to_csv(results_csv_path, index=False)
-
 def enrich_and_collect(multirun_path, path, cfg):
     # Find the scores file in multirun_path
     results_csv_path = None
@@ -191,7 +166,7 @@ def condense(multirun_path, path, cfg, user_inputs):
     df_combined_results = pd.read_csv(combined_csv_path)
 
     # Columns to process
-    columns = ['mpnn', 'plddt', 'ptm', 'pae', 'rmsd']
+    columns = ['plddt', 'ptm', 'pae', 'rmsd', 'affinity']
 
     # Creating a dictionary to store min and max values
     condensed_data = {}
@@ -691,11 +666,11 @@ def my_app(cfg: DictConfig) -> None:
             command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
             os.system(command_design)
 
-            # print("running Prodigy")
-            # prodigy_run(
-            #     f"{outputs_directory}/{path}/mpnn_results.csv",
-            #     f"{outputs_directory}/{path}/all_pdb",
-            # )
+            print("running Prodigy")
+            prodigy_run(
+                f"{outputs_directory}/{path}/mpnn_results.csv",
+                f"{outputs_directory}/{path}/all_pdb",
+            )
 
             command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
             command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
