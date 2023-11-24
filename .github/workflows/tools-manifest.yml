@@ -4,6 +4,7 @@
 name: tools manifests
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
     # Pattern matched against refs/tags
@@ -47,11 +48,10 @@ jobs:
         filters: |
           colabdesign:
             - 'tools/colabdesign/colabdesign.json'
-            - '.github/workflows/tools-manifest.yml'
 
   tools:
     needs: changes-tools
-    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} || ${{ github.event_name == 'workflow_dispatch' }}
     strategy:
       fail-fast: false
       matrix:

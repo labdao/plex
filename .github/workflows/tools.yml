@@ -4,6 +4,7 @@
 name: tools
 
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
     # Pattern matched against refs/tags
@@ -46,20 +47,14 @@ jobs:
         filters: |
           colabdesign:
             - 'tools/colabdesign/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
           colabfold:
             - 'tools/colabfold/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
           oddt:
             - 'tools/oddt/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
 
   tools:
     needs: changes-tools
-    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }} || ${{ github.event_name == 'workflow_dispatch' }}
     strategy:
       fail-fast: false
       matrix:
