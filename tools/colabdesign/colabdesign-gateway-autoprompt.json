@@ -15,94 +15,19 @@
   "cpu": 3,
   "networkBool": true,
   "inputs": {
-    "p_contact_domain_masking": {
-      "type": "number",
-      "description": "Probability of masking a contact domain",
+    "target_protein": {
+      "type": "file",
+      "description": "The target protein to design against.",
       "array": false,
       "glob": [
-        ""
+        "*.pdb"
       ],
-      "default": ".6",
-      "min": "0",
-      "max": "1",
-      "example": ".6",
-      "grouping": "auto prompt parameters",
-      "position": "103",
-      "required": true
-    },
-    "p_noncontact_domain_masking": {
-      "type": "number",
-      "description": "Probability of masking a non-contact domain",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": ".1",
-      "min": "0",
-      "max": "1",
-      "example": ".1",
-      "grouping": "auto prompt parameters",
-      "position": "104",
-      "required": true
-    },
-    "cutoff": {
-      "type": "number",
-      "description": "Distance cutoff to define inter-protein contact residues [Angstrom]",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "5.0",
-      "min": "0",
-      "max": "20",
-      "example": "5.0",
-      "grouping": "auto prompt parameters",
-      "position": "105",
-      "required": true
-    },
-    "n_samples": {
-      "type": "number",
-      "description": "Number of auto prompts generated",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "16",
-      "min": "1",
-      "max": "64",
-      "example": "16",
-      "grouping": "auto prompt parameters",
-      "position": "106",
-      "required": true
-    },
-    "domain_distance_threshold": {
-      "type": "number",
-      "description": "Minimum number of residues separating distinct domains",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "6",
-      "min": "0",
-      "max": "20",
-      "example": "6",
-      "grouping": "auto prompt parameters",
-      "position": "107",
-      "required": true
-    },
-    "number_of_binders": {
-      "type": "number",
-      "description": "The number of protein binders to be designed",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "1",
-      "max": "32",
-      "example": "2",
-      "grouping": "binder",
-      "position": "202",
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "my_target_protein.pdb",
+      "grouping": "target",
+      "position": "101",
       "required": true
     },
     "target_chain": {
@@ -120,19 +45,94 @@
       "position": "102",
       "required": true
     },
-    "target_protein": {
-      "type": "file",
-      "description": "The target protein to design against.",
+    "cutoff": {
+      "type": "number",
+      "description": "Distance cutoff to define inter-protein contact residues [Angstrom]",
       "array": false,
       "glob": [
-        "*.pdb"
+        ""
       ],
-      "default": "",
-      "min": "",
-      "max": "",
-      "example": "my_target_protein.pdb",
-      "grouping": "target",
-      "position": "101",
+      "default": "5.0",
+      "min": "0",
+      "max": "20",
+      "example": "5.0",
+      "grouping": "auto prompt parameters",
+      "position": "201",
+      "required": true
+    },
+    "domain_distance_threshold": {
+      "type": "number",
+      "description": "Minimum number of residues separating distinct domains",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "6",
+      "min": "0",
+      "max": "20",
+      "example": "6",
+      "grouping": "auto prompt parameters",
+      "position": "202",
+      "required": true
+    },
+    "p_contact_domain_masking": {
+      "type": "number",
+      "description": "Probability of masking a contact domain",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": ".6",
+      "min": "0",
+      "max": "1",
+      "example": ".6",
+      "grouping": "auto prompt parameters",
+      "position": "203",
+      "required": true
+    },
+    "p_noncontact_domain_masking": {
+      "type": "number",
+      "description": "Probability of masking a non-contact domain",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": ".1",
+      "min": "0",
+      "max": "1",
+      "example": ".1",
+      "grouping": "auto prompt parameters",
+      "position": "204",
+      "required": true
+    },
+    "n_samples": {
+      "type": "number",
+      "description": "Number of auto prompts generated",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "16",
+      "min": "1",
+      "max": "64",
+      "example": "16",
+      "grouping": "binder",
+      "position": "301",
+      "required": true
+    },
+    "number_of_binders": {
+      "type": "number",
+      "description": "The number of protein binders to be designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "2",
+      "min": "1",
+      "max": "32",
+      "example": "2",
+      "grouping": "binder",
+      "position": "302",
       "required": true
     }
   },
