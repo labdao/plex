@@ -147,7 +147,7 @@ def enrich_and_collect(multirun_path, path, cfg):
     df_new_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_new_results)
 
     # Check if the existing output CSV file exists
-    output_csv_path = os.path.join(multirun_path, f"{path}_collected_scores.csv")
+    output_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
     if os.path.exists(output_csv_path):
         # Read existing data
         df_existing_results = pd.read_csv(output_csv_path)
@@ -158,11 +158,11 @@ def enrich_and_collect(multirun_path, path, cfg):
 
     # Write the combined data to the CSV file
     df_combined_results.to_csv(output_csv_path, index=False)
-    print("Updated results written to", results_csv_path)
+    print("Enriched results and conditions tables written to", results_csv_path)
 
 def condense(multirun_path, path, cfg, user_inputs):
     # Read the combined results CSV into a DataFrame
-    combined_csv_path = os.path.join(multirun_path, f"{path}_collected_scores.csv")
+    combined_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
     df_combined_results = pd.read_csv(combined_csv_path)
 
     # Columns to process
@@ -178,12 +178,12 @@ def condense(multirun_path, path, cfg, user_inputs):
     df_condensed = pd.DataFrame(condensed_data)
 
     # Insert the n_samples column as the first column
-    df_condensed.insert(0, 'n_samples', len(df_combined_results))
+    df_condensed.insert(0, 'n_designs', len(df_combined_results))
 
     # Write the condensed data to the CSV file
-    condensed_csv_path = os.path.join(multirun_path, f"{path}_condensed_scores.csv")
+    condensed_csv_path = os.path.join(multirun_path, f"{path}_conditions_table.csv")
     df_condensed.to_csv(condensed_csv_path, index=False)
-    print("Condensed results written to", condensed_csv_path)
+    print("Conditions table written to", condensed_csv_path)
 
 
 def get_files_from_directory(root_dir, extension, max_depth=3):
@@ -561,7 +561,7 @@ def my_app(cfg: DictConfig) -> None:
         binder_chain = user_inputs["binder_chain"] # 'B'
         target_chain = pdb_chain # 'A'
         cutoff = user_inputs["cutoff"] # distance to define inter-protein contacts (in Angstrom)
-        n_samples = user_inputs["n_samples"] # total number of prompts generated
+        n_samples = user_inputs["n_prompts"] # total number of prompts generated
         p_masking_contact_domain = user_inputs["p_masking_contact_domain"] # probability of masking a contact domain
         p_masking_noncontact_domain = user_inputs["p_masking_noncontact_domain"] # probability of masking a non-contact domain
         domain_distance_threshold = user_inputs["domain_distance_threshold"] # definition of constitutes separate domains (in units of residues)

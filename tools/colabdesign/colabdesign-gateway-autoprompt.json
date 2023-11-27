@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign gateway v0.4 automatic",
+  "name": "colabdesign gateway automatic v0.2",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
@@ -15,9 +15,9 @@
   "cpu": 3,
   "networkBool": true,
   "inputs": {
-    "target_protein": {
+    "protein_complex": {
       "type": "file",
-      "description": "The target protein to design against.",
+      "description": "Protein complex defining the design problem.",
       "array": false,
       "glob": [
         "*.pdb"
@@ -26,7 +26,7 @@
       "min": "",
       "max": "",
       "example": "my_target_protein.pdb",
-      "grouping": "target",
+      "grouping": "protein complex",
       "position": "101",
       "required": true
     },
@@ -41,8 +41,23 @@
       "min": "",
       "max": "",
       "example": "A",
-      "grouping": "target",
+      "grouping": "protein complex",
       "position": "102",
+      "required": true
+    },
+    "binder_chain": {
+      "type": "string",
+      "description": "The chain of binder template.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "B",
+      "min": "",
+      "max": "",
+      "example": "B",
+      "grouping": "protein complex",
+      "position": "103",
       "required": true
     },
     "cutoff": {
@@ -53,8 +68,8 @@
         ""
       ],
       "default": "5.0",
-      "min": "0",
-      "max": "20",
+      "min": "0.0",
+      "max": "20.0",
       "example": "5.0",
       "grouping": "auto prompt parameters",
       "position": "201",
@@ -82,10 +97,10 @@
       "glob": [
         ""
       ],
-      "default": ".6",
-      "min": "0",
-      "max": "1",
-      "example": ".6",
+      "default": "0.6",
+      "min": "0.0",
+      "max": "1.0",
+      "example": "0.6",
       "grouping": "auto prompt parameters",
       "position": "203",
       "required": true
@@ -97,15 +112,15 @@
       "glob": [
         ""
       ],
-      "default": ".1",
-      "min": "0",
-      "max": "1",
-      "example": ".1",
+      "default": "0.1",
+      "min": "0.0",
+      "max": "1.0",
+      "example": "0.1",
       "grouping": "auto prompt parameters",
       "position": "204",
       "required": true
     },
-    "n_samples": {
+    "n_prompts": {
       "type": "number",
       "description": "Number of auto prompts generated",
       "array": false,
@@ -116,13 +131,13 @@
       "min": "1",
       "max": "64",
       "example": "16",
-      "grouping": "binder",
-      "position": "301",
+      "grouping": "auto prompt parameters",
+      "position": "205",
       "required": true
     },
-    "number_of_binders": {
+    "number_of_binder_designs": {
       "type": "number",
-      "description": "The number of protein binders to be designed",
+      "description": "Number of protein binders to be designed per prompt",
       "array": false,
       "glob": [
         ""
@@ -132,7 +147,7 @@
       "max": "32",
       "example": "2",
       "grouping": "binder",
-      "position": "302",
+      "position": "301",
       "required": true
     }
   },
@@ -158,11 +173,18 @@
         "*_scores.csv"
       ]
     },
-    "collected_scores": {
+    "sample_table": {
       "type": "File",
       "item": "",
       "glob": [
-        "*_collected_scores.csv"
+        "*_samples_table.csv"
+      ]
+    },
+    "condition_table": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*_conditions_table.csv"
       ]
     }
   }
