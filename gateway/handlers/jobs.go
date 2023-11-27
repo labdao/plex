@@ -122,24 +122,30 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 
-				// Else, check if file is in DataFile table
+				log.Println("Attempting to find DataFile in DB with CID: ", fileEntry["CID"])
+
 				var dataFile models.DataFile
 				result := db.Where("cid = ?", fileEntry["CID"]).First(&dataFile)
 				if result.Error != nil {
 					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						// If file is not in DataFile table then save it to the table
+						log.Println("DataFile not found in DB, creating new record with CID: ", fileEntry["CID"])
+
 						dataFile.CID = fileEntry["CID"]
 						dataFile.Filename = fileEntry["filename"]
 
+						log.Println("Adding tags to new DataFile with CID:", dataFile.CID)
 						if err := AddTagsToDataFile(db, dataFile.CID, []string{"generated"}); err != nil {
 							http.Error(w, fmt.Sprintf("Error adding tags to datafile: %v", err), http.StatusInternalServerError)
 							return
 						}
 
+						log.Println("Saving new DataFile to DB with CID:", dataFile.CID)
 						if err := db.Create(&dataFile).Error; err != nil {
 							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
 							return
 						}
+
+						log.Println("DataFile successfully saved to DB:", dataFile)
 					} else {
 						http.Error(w, fmt.Sprintf("Error querying DataFile table: %v", result.Error), http.StatusInternalServerError)
 						return
@@ -147,7 +153,9 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 				}
 
 				// Then add the DataFile to the Job.Outputs
+				log.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
 				job.Outputs = append(job.Outputs, dataFile)
+				log.Println("Updated Job.Outputs:", job.Outputs)
 			}
 
 			// Update job in the database with new Outputs (this may need adjustment depending on your ORM)
