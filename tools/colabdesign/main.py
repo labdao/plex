@@ -562,8 +562,17 @@ def my_app(cfg: DictConfig) -> None:
         target_chain = pdb_chain # 'A'
         cutoff = user_inputs["cutoff"] # distance to define inter-protein contacts (in Angstrom)
         n_samples = user_inputs["n_prompts"] # total number of prompts generated
+
         p_masking_contact_domain = user_inputs["p_masking_contact_domain"] # probability of masking a contact domain
         p_masking_noncontact_domain = user_inputs["p_masking_noncontact_domain"] # probability of masking a non-contact domain
+        p_masking_contact_domain = float(p_masking_contact_domain)
+        p_masking_noncontact_domain = float(p_masking_noncontact_domain)
+        # Check if the the p's are within the interval [0.0, 1.0]
+        if (0.0 <= p_masking_contact_domain <= 1.0) and (0.0 <= p_masking_noncontact_domain <= 1.0):
+            pass
+        else:
+            raise ValueError(f"p_masking_contact or p_masking_noncontact is not in the interval [0.0, 1.0].")
+        
         domain_distance_threshold = user_inputs["domain_distance_threshold"] # definition of constitutes separate domains (in units of residues)
         full_prompts = prompt_generator.generate_full_prompts(target_path, binder_chain, target_chain, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_distance_threshold)
         print(full_prompts)
