@@ -54,24 +54,6 @@ func AddTagHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// func ListTagsHandler(db *gorm.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		if err := utils.CheckRequestMethod(r, http.MethodGet); err != nil {
-// 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		var tags []models.Tag
-// 		result := db.Find(&tags)
-// 		if result.Error != nil {
-// 			utils.SendJSONError(w, fmt.Sprintf("Error fetching tags: %v", result.Error), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		utils.SendJSONResponse(w, tags)
-// 	}
-// }
-
 func ListTagsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
