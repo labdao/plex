@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/labdao/plex/internal/ipfs"
@@ -115,50 +114,4 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	toolInfo.Name = tool.Name
 
 	return tool, toolInfo, nil
-}
-
-func toolToCmd(toolConfig Tool, ioEntry IO) ([]string, error) {
-	var arguments []string
-
-	for _, arg := range toolConfig.Arguments {
-		placeholderRegex := regexp.MustCompile(`\$\((inputs\.[a-zA-Z0-9_]+)(\.value)?\)`)
-		matches := placeholderRegex.FindAllStringSubmatch(arg, -1)
-
-		for _, match := range matches {
-			placeholder := match[0]
-			inputKey := strings.TrimPrefix(match[1], "inputs.")
-
-			inputValue, ok := ioEntry.Inputs[inputKey]
-			if !ok {
-				return nil, fmt.Errorf("input key %s not found in IO entry", inputKey)
-			}
-
-			var replacement string
-			// Determine the type of inputValue and process accordingly
-			switch v := inputValue.(type) {
-			case []interface{}:
-				// Directly marshal to JSON, as we're already asserting types on insertion
-				jsonBytes, err := json.Marshal(v)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal array for key %s: %s", inputKey, err)
-				}
-				replacement = string(jsonBytes)
-			case string, bool, float64, int: // Add other types as needed
-				// Single values are not JSON arrays, so marshal directly to JSON
-				jsonBytes, err := json.Marshal(v)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal value for key %s: %s", inputKey, err)
-				}
-				replacement = string(jsonBytes)
-			default:
-				return nil, fmt.Errorf("unsupported type for key %s", inputKey)
-			}
-
-			arg = strings.Replace(arg, placeholder, replacement, -1)
-		}
-
-		arguments = append(arguments, arg)
-	}
-
-	return arguments, nil
 }
