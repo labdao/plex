@@ -67,6 +67,7 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
@@ -98,6 +99,7 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
         network_mode:
           - public
@@ -261,8 +263,7 @@ jobs:
         uses: ./.github/actions/gateway-tests
 
       - name: Test log streaming
-        # run always even when
-        if: always()
+        if: matrix.bacalhau_version == '1.1.4'
         run: |
           ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
           cat /tmp/output.log
