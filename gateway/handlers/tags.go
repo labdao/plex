@@ -53,3 +53,45 @@ func AddTagHandler(db *gorm.DB) http.HandlerFunc {
 		utils.SendJSONResponse(w, map[string]string{"message": fmt.Sprintf("Tag %s created successfully", tag.Name)})
 	}
 }
+
+// func ListTagsHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		if err := utils.CheckRequestMethod(r, http.MethodGet); err != nil {
+// 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		var tags []models.Tag
+// 		result := db.Find(&tags)
+// 		if result.Error != nil {
+// 			utils.SendJSONError(w, fmt.Sprintf("Error fetching tags: %v", result.Error), http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		utils.SendJSONResponse(w, tags)
+// 	}
+// }
+
+func ListTagsHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
+			return
+		}
+
+		var tags []models.Tag
+
+		result := db.Preload("DataFiles").Find(&tags)
+		if result.Error != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error fetching tags: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(tags); err != nil {
+			http.Error(w, "Error encoding tags to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}

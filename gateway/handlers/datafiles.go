@@ -20,7 +20,7 @@ import (
 
 func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received request at /create-datafile")
+		log.Println("Received request to add datafile")
 
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
@@ -77,16 +77,16 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// var uploadedTag models.Tag
-		// if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
-		// 	utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
-		// 	return
-		// }
+		var uploadedTag models.Tag
+		if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
+			utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
+			return
+		}
 
-		// if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
-		// 	utils.SendJSONError(w, fmt.Sprintf("Error adding tag to datafile: %v", err), http.StatusInternalServerError)
-		// 	return
-		// }
+		if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error adding tag to datafile: %v", err), http.StatusInternalServerError)
+			return
+		}
 
 		utils.SendJSONResponseWithCID(w, dataFile.CID)
 	}
@@ -122,7 +122,6 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// List datafiles based on multiple parameters
 func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
