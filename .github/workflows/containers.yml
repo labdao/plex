@@ -5,7 +5,9 @@ name: containers
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     # Pattern matched against refs/tags
     tags:
       - '**'
@@ -14,7 +16,9 @@ on:
       - 'infrastructure/**'
 
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'

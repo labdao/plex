@@ -5,7 +5,9 @@ name: tools
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     # Pattern matched against refs/tags
     tags:
       - '**'
@@ -15,7 +17,9 @@ on:
       - '.github/workflows/docker.yml'
 
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths:
       - 'tools/**'
       - '.github/workflows/tools.yml'
