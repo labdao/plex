@@ -45,6 +45,36 @@
       "position": "102",
       "required": true
     },
+    "target_start_residue": {
+      "type": "number",
+      "description": "First resiude consider on target chain.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "1",
+      "min": "1",
+      "max": "",
+      "example": "1",
+      "grouping": "protein complex",
+      "position": "103",
+      "required": true
+    },
+    "target_end_residue": {
+      "type": "number",
+      "description": "Last resiude consider on target chain.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "200",
+      "min": "2",
+      "max": "",
+      "example": "283",
+      "grouping": "protein complex",
+      "position": "104",
+      "required": true
+    },
     "binder_chain": {
       "type": "string",
       "description": "The chain of binder template.",
@@ -57,7 +87,7 @@
       "max": "",
       "example": "B",
       "grouping": "protein complex",
-      "position": "103",
+      "position": "105",
       "required": true
     },
     "cutoff": {

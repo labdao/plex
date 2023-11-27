@@ -131,21 +131,21 @@ def generate_combinations(contact_flags, n_samples, p_masking_contact_domain, p_
         bool_lists.append(bool_list)
     return bool_lists
 
-def generate_full_prompts(pdb_path, binder_chain, target_chain, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_threshold):
+def generate_full_prompts(pdb_path, binder_chain, target_chain, target_start_residue, target_end_residue, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_threshold):
     """
     Computes the inter-protein contact domains. Generates an alphabet of domain tokens. Randomly masks contact and non-contact domains according to preset probabilities.
     """
     interactions = find_interacting_residues(pdb_path, cutoff)
     domains, contact_flag = identify_domains(pdb_path, interactions, binder_chain, domain_threshold)
     token_alphabet = prompt_tokens(domains, contact_flag, binder_chain)
-    # print('prompt data', token_alphabet)
+    # print('alphabet of tokens', token_alphabet)
 
     contact_flags = [token['contact'] for token in token_alphabet]
     domain_lengths = [token['domain_length'] for token in token_alphabet]
     domains = [token['domain'] for token in token_alphabet]
 
-    start_residue, end_residue = find_chain_residue_range(pdb_path, target_chain)
-    target_binder_range = f"{target_chain}{start_residue}-{end_residue}"
+    # target_start_residue, target_end_residue = find_chain_residue_range(pdb_path, target_chain)
+    target_binder_range = f"{target_chain}{target_start_residue}-{target_end_residue}"
 
     masking_charts = generate_combinations(contact_flag, n_samples, p_masking_contact_domain, p_masking_noncontact_domain)
     # print('masking charts', masking_charts)

@@ -486,13 +486,13 @@ def my_app(cfg: DictConfig) -> None:
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
-    OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspot"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binders"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_length", "", merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.hotspot", "", merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binder_designs"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", "", merge=False)
 
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
@@ -549,17 +549,8 @@ def my_app(cfg: DictConfig) -> None:
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
 
-        # # reference_protein_complex = 'summary/UROK_HUMAN_1-133.pdb'
-        # binder_chain = 'B' # 'B'
-        # target_chain = pdb_chain # 'A'
-        # cutoff = 5.0 # distance to define inter-protein contacts (in Angstrom)
-        # n_samples = 1 # total number of prompts generated
-        # p_masking_contact_domain = .6 # probability of masking a contact domain
-        # p_masking_noncontact_domain = 0.1 # probability of masking a non-contact domain
-        # domain_distance_threshold = 6 # definition of constitutes separate domains (in units of residues)
-
-        binder_chain = user_inputs["binder_chain"] # 'B'
-        target_chain = pdb_chain # 'A'
+        binder_chain = user_inputs["binder_chain"]
+        target_chain = pdb_chain
         cutoff = user_inputs["cutoff"] # distance to define inter-protein contacts (in Angstrom)
         n_samples = user_inputs["n_prompts"] # total number of prompts generated
 
@@ -567,14 +558,13 @@ def my_app(cfg: DictConfig) -> None:
         p_masking_noncontact_domain = user_inputs["p_masking_noncontact_domain"] # probability of masking a non-contact domain
         p_masking_contact_domain = float(p_masking_contact_domain)
         p_masking_noncontact_domain = float(p_masking_noncontact_domain)
-        # Check if the the p's are within the interval [0.0, 1.0]
-        if (0.0 <= p_masking_contact_domain <= 1.0) and (0.0 <= p_masking_noncontact_domain <= 1.0):
+        if (0.0 <= p_masking_contact_domain <= 1.0) and (0.0 <= p_masking_noncontact_domain <= 1.0): # Check if the the p's are within the interval [0.0, 1.0]
             pass
         else:
             raise ValueError(f"p_masking_contact or p_masking_noncontact is not in the interval [0.0, 1.0].")
         
         domain_distance_threshold = user_inputs["domain_distance_threshold"] # definition of constitutes separate domains (in units of residues)
-        full_prompts = prompt_generator.generate_full_prompts(target_path, binder_chain, target_chain, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_distance_threshold)
+        full_prompts = prompt_generator.generate_full_prompts(target_path, binder_chain, target_chain, pdb_start_residue, pdb_end_residue, cutoff, n_samples, p_masking_contact_domain, p_masking_noncontact_domain, domain_distance_threshold)
         print(full_prompts)
 
         prompt_counter = 0
@@ -703,3 +693,14 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
+
+
+# #OLD CODE
+# # reference_protein_complex = 'summary/UROK_HUMAN_1-133.pdb'
+# binder_chain = 'B' # 'B'
+# target_chain = pdb_chain # 'A'
+# cutoff = 5.0 # distance to define inter-protein contacts (in Angstrom)
+# n_samples = 1 # total number of prompts generated
+# p_masking_contact_domain = .6 # probability of masking a contact domain
+# p_masking_noncontact_domain = 0.1 # probability of masking a non-contact domain
+# domain_distance_threshold = 6 # definition of constitutes separate domains (in units of residues)
