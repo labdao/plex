@@ -4,6 +4,7 @@
 name: containers
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
@@ -30,7 +31,31 @@ concurrency:
 
 jobs:
   ########## Backend container ##################################
+  changes-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.backend }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'go.mod'
+            - 'go.sum'
+            - 'main.go'
+            - 'Dockerfile'
+            - 'gateway/**'
+            - 'cmd/**'
+            - 'internal/**'
+            - 'pkg/**'
+            - 'backend/**'
   backend:
+    needs: changes-backend
+    if: ${{ needs.changes-backend.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker.yml
     with:
       name: backend
@@ -52,12 +77,10 @@ jobs:
         filters: |
           ipfs:
             - 'docker/images/ipfs/**'
-            - '.github/workflows/containers.yml'
-            - '.github/workflows/docker.yml'
 
   ipfs:
     needs: changes-ipfs
-    if: ${{ needs.changes-ipfs.outputs.changes == 'true' }}
+    if: ${{ needs.changes-ipfs.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker.yml
     with:
       name: ipfs
@@ -79,12 +102,10 @@ jobs:
         filters: |
           receptor:
             - 'receptor/**'
-            - '.github/workflows/containers.yml'
-            - '.github/workflows/docker.yml'
 
   receptor:
     needs: changes-receptor
-    if: ${{ needs.changes-receptor.outputs.changes == 'true' }}
+    if: ${{ needs.changes-receptor.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
     uses: ./.github/workflows/docker.yml
     with:
       name: receptor
@@ -106,12 +127,11 @@ jobs:
         filters: |
           frontend:
             - 'frontend/**'
-            - '.github/workflows/containers.yml'
-            - '.github/workflows/docker.yml'
   frontend:
     needs: changes-frontend
-    if: ${{ needs.changes-frontend.outputs.changes == 'true' }}
+    if: ${{ needs.changes-frontend.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
     strategy:
+      fail-fast: false
       matrix:
         backends: [
           { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},

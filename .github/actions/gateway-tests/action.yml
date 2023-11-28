@@ -18,14 +18,16 @@ runs:
       run: |
         # upload first file
         response=$(curl --silent -X POST \
-                          -F "file=@testdata/binding/abl/7n9g.pdb;filename=7n9g.pdb" \
-                          -F "filename=7n9g.pdb" \
+                          -F "file=@testdata/ipfs_test/haiku2.txt;filename=haiku2.txt" \
+                          -F "filename=haiku2.txt" \
                           -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
                           http://localhost:8080/datafiles)
         if echo "$response" | jq -e '.cid' > /dev/null; then
           echo "File upload test passed"
         else
           echo "File upload test failed: 'cid' key not found in the response"
+          echo "response was:"
+          echo "$response"
           exit 1
         fi
 
@@ -39,6 +41,8 @@ runs:
           echo "File upload test passed"
         else
           echo "File upload test failed: 'cid' key not found in the response"
+          echo "response was:"
+          echo "$response"
           exit 1
         fi
       shell: bash
@@ -52,13 +56,15 @@ runs:
            echo "Datafiles test passed"
         else
            echo "Datafiles test failed: Expected length of 2 but got '$length'"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash
 
     - name: Test add Tool Endpoint
       run: |
-        TOOL_JSON_CONTENT=$(jq -c . < tools/equibind/equibind_gateway.json)
+        TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
         json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
         response=$(curl -s -X POST "http://localhost:8080/tools" \
                -H "Content-Type: application/json" \
@@ -66,10 +72,12 @@ runs:
 
         cid_value=$(echo "$response" | jq -r '.cid')
 
-        if [ "$cid_value" == "QmXo2fd6Wzv6FEzSjKUUQNa4dVvB2M439zCrYLUfmwLTq3" ]; then
+        if [ "$cid_value" == "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb" ]; then
            echo "Add Tool upload test passed"
         else
-           echo "Add Tool upload test failed: Expected 'QmXo2fd6Wzv6FEzSjKUUQNa4dVvB2M439zCrYLUfmwLTq3' but got '$cid_value'"
+           echo "Add Tool upload test failed: Expected 'QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb' but got '$cid_value'"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash
@@ -82,6 +90,8 @@ runs:
         if [ "$length" -eq 1 ]; then
            echo "List Tools test passed"
         else
+           echo "response was:"
+           echo "$response"
            echo "List Tools test failed: Expected length of 1 but got '$length'"
            exit 1
         fi
@@ -92,11 +102,12 @@ runs:
         payload='{
           "name": "testFlow",
           "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-          "toolCid": "QmXo2fd6Wzv6FEzSjKUUQNa4dVvB2M439zCrYLUfmwLTq3",
+          "toolCid": "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb",
           "scatteringMethod": "dotProduct",
           "kwargs": {
-            "protein": ["QmUWCBTqbRaKkPXQ3M14NkUuM4TEwfhVfrqLNoBB7syyyd/7n9g.pdb"],
-            "small_molecule": ["QmV6qVzdQLNM6SyEDB3rJ5R5BYJsQwQTn1fjmPzvCCkCYz/ZINC000003986735.sdf"]
+            "file_example": ["QmV1e4ZoBrHuPJ1cqbzhkp9g4trte4N21fGLNrQxQpXgK6/haiku2.txt"],
+            "string_example": ["hello world"],
+            "number_example": [196883]
           }
         }'
 
@@ -115,6 +126,8 @@ runs:
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash

@@ -51,9 +51,3 @@
     }
   }
 }
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml; ls /inputs; echo 'Attempting main.py...'; python -u main.py; echo 'main.py complete';"
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/target_protein/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && cat /inputs/config.yaml"
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "cp /inputs/target_protein/*.pdb /inputs/target_protein.pdb && cp /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && python -u main.py && echo 'done'"

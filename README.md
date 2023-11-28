@@ -34,6 +34,7 @@ Plex is a full web stack for distributed computational biology.
 Plex is built with [Bacalhau](https://www.bacalhau.org/) and [IPFS](https://ipfs.tech/).
 
 ## Running the App Locally
+
 We have `docker-compose` files available to bring up the stack locally.
 
 Note:
