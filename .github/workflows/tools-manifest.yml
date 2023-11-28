@@ -70,10 +70,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setting tool related envs
         run: |
           echo "TOOL_DIR=$(echo ${{ matrix.tools }} | cut -d '_' -f1)" >> $GITHUB_ENV
           echo "TOOL_FILE=$(echo ${{ matrix.tools }} | cut -d '_' -f2-)" >> $GITHUB_ENV
+
+      - name: Setting tool file path
+        run: |
           echo "TOOL_FILE_PATH=tools/${{ env.TOOL_DIR }}/${{ env.TOOL_FILE }}.json" >> $GITHUB_ENV
 
       - name: Setting some more tool related envs
