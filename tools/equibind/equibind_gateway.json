@@ -1,13 +1,9 @@
 {
   "class": "CommandLineTool",
-  "name": "equibind gateway v0.2",
+  "name": "equibind gateway v0.3",
   "description": "Docking of small molecules to a protein",
   "author": "HannesStark",
-  "baseCommand": [
-    "/bin/bash",
-     "-c",
-    "mkdir -p /tmp-inputs/tmp; mkdir -p /tmp-outputs/tmp; cp /inputs/protein/* /tmp-inputs/tmp/; cp /inputs/small_molecule/* /tmp-inputs/tmp/; ls /tmp-inputs/tmp; cd /src && python /src/inference.py --config=/src/configs_clean/bacalhau.yml; mv /tmp-outputs/tmp/* /outputs/; mv /tmp-inputs/tmp/*.pdb /outputs/;"
-  ],
+  "baseCommand": [],
   "arguments": [],
   "dockerPull": "ghcr.io/labdao/equibind:main@sha256:21a381d9ab1ff047565685044569c8536a55e489c9531326498b28d6b3cc244f",
   "gpuBool": false,
