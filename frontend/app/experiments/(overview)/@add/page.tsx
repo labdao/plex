@@ -36,7 +36,7 @@ import {
   setFlowAddTool,
   toolListThunk,
 } from "@/lib/redux";
-import { DataFile } from '@/lib/redux/slices/dataFileListSlice/slice';
+import { DataFile } from "@/lib/redux/slices/dataFileListSlice/slice";
 
 export default function AddGraph() {
   const dispatch = useDispatch<AppDispatch>();
@@ -76,7 +76,7 @@ export default function AddGraph() {
     if (cid !== "") {
       dispatch(setFlowAddSuccess(false));
       dispatch(setFlowAddKwargs({}));
-      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {} } }));
+      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}));
       dispatch(setFlowAddError(null));
       dispatch(setFlowAddName(""));
       dispatch(setFlowAddCid(""));
@@ -87,48 +87,23 @@ export default function AddGraph() {
     dispatch(dataFileListThunk());
   }, [cid, dispatch, router]);
 
-  // const handleToolChange = async (value: string) => {
-  //   const selectedTool = tools[parseInt(value)];
-  //   dispatch(setFlowAddTool(selectedTool));
-  //   setSelectedToolIndex(value);
-  
-  //   const newInputDataFiles: Record<string, DataFile[]> = {};
-  
-  //   for (const inputKey in selectedTool.ToolJson.inputs) {
-  //     const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[] }>)[inputKey];
-  //     if (typeof input === 'object' && input !== null && 'glob' in input) {
-  //       const globPatterns = input.glob;
-  //       const action = await dispatch(dataFileListThunk(globPatterns)) as PayloadAction<DataFile[]>;
-  //       newInputDataFiles[inputKey] = action.payload;
-  //     }
-  //   }
-  
-  //   setInputDataFiles(newInputDataFiles);
-  // };
-
   const handleToolChange = async (value: string) => {
     const selectedTool = tools[parseInt(value)];
     dispatch(setFlowAddTool(selectedTool));
     setSelectedToolIndex(value);
-  
+
     const newInputDataFiles: Record<string, DataFile[]> = {};
-    const newKwargs = { ...kwargs };
-  
+
     for (const inputKey in selectedTool.ToolJson.inputs) {
-      const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[]; type: string; default: string }>)[inputKey];
-      if (input.type === 'File') {
-        if (typeof input === 'object' && input !== null && 'glob' in input) {
-          const globPatterns = input.glob;
-          const action = await dispatch(dataFileListThunk(globPatterns)) as PayloadAction<DataFile[]>;
-          newInputDataFiles[inputKey] = action.payload;
-        }
-      } else {
-        newKwargs[inputKey] = [input.default];
+      const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[] }>)[inputKey];
+      if (typeof input === "object" && input !== null && "glob" in input) {
+        const globPatterns = input.glob;
+        const action = (await dispatch(dataFileListThunk(globPatterns))) as PayloadAction<DataFile[]>;
+        newInputDataFiles[inputKey] = action.payload;
       }
     }
-  
+
     setInputDataFiles(newInputDataFiles);
-    dispatch(setFlowAddKwargs(newKwargs));
   };
 
   const handleKwargsChange = (value: string, key: string) => {
@@ -163,9 +138,6 @@ export default function AddGraph() {
 
   return (
     <Dialog>
-      {/* <DialogTrigger>
-        <Button size="lg">Add Experiment</Button>
-      </DialogTrigger> */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Experiment</DialogTitle>
@@ -197,12 +169,6 @@ export default function AddGraph() {
 
               {Object.keys(selectedTool.ToolJson.inputs)
                 .sort((a, b) => {
-                  // // @ts-ignore
-                  // const positionA = parseInt(selectedTool.ToolJson.inputs[a].position);
-                  // // @ts-ignore
-                  // const positionB = parseInt(selectedTool.ToolJson.inputs[b].position);
-                  // console.log("some sorting happening....", positionA, positionB)
-                  // return positionA - positionB;
                   // @ts-ignore
                   const positionA = parseInt(a[1].position, 10);
                   // @ts-ignore
@@ -216,22 +182,9 @@ export default function AddGraph() {
                   <div key={key}>
                     <Label>
                       {key}
-                      {inputDetail.glob && ` (${inputDetail.glob.join(', ')})`}
-                      {` (${inputDetail.type})`}
+                      {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(", ")})`}
                     </Label>
-                  {inputDetail.type === 'File' ? (
-                    <DataFileSelect 
-                      onSelect={(value) => handleKwargsChange(value, key)} 
-                      value={kwargs[key]?.[0]} 
-                      dataFiles={inputDataFiles[key] || []} 
-                      label={key} 
-                    />
-                  ) : (
-                    <Input 
-                      value={kwargs[key]?.[0]} 
-                      onChange={(e) => handleKwargsChange(e.target.value, key)} 
-                    />
-                  )}
+                    <DataFileSelect onChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
                   </div>
                 );
               })}
@@ -247,81 +200,4 @@ export default function AddGraph() {
       </DialogContent>
     </Dialog>
   );
-  // return (
-  //   <Dialog>
-  //     <DialogTrigger>
-  //       <Button size="lg">Add Experiment</Button>
-  //     </DialogTrigger>
-  //     <DialogContent>
-  //       <DialogHeader>
-  //         <DialogTitle>Add Experiment</DialogTitle>
-  //         <DialogDescription>
-  //           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-  //             <div>
-  //               <Label>Name</Label>
-  //               <Input value={name} onChange={(e) => dispatch(setFlowAddName(e.target.value))} />
-  //             </div>
-  //             <div>
-  //               <Label>Tool</Label>
-  //               <Select onValueChange={handleToolChange} defaultValue={selectedToolIndex}>
-  //                 <SelectTrigger>
-  //                   <SelectValue placeholder="Select a tool" />
-  //                 </SelectTrigger>
-  //                 <SelectContent>
-  //                   <SelectGroup>
-  //                     {tools.map((tool, index) => (
-  //                       <SelectItem key={index} value={index.toString()}>
-  //                         {tool.Name}
-  //                       </SelectItem>
-  //                     ))}
-  //                   </SelectGroup>
-  //                 </SelectContent>
-  //               </Select>
-  //             </div>
-  
-  //             {Object.entries(selectedTool.ToolJson.inputs)
-  //               .sort((a, b) => {
-  //                 // @ts-ignore
-  //                 const positionA = parseInt(a[1].position, 10);
-  //                 // @ts-ignore
-  //                 const positionB = parseInt(b[1].position, 10);
-  //                 console.log("some sorting happening....", positionA, positionB)
-  //                 return positionA - positionB;
-  //               })
-  //               .map(([key, inputDetail]) => (
-  //                 <div key={key}>
-  //                   <Label>
-  //                     {key}
-  //                     {inputDetail.glob && ` (${inputDetail.glob.join(', ')})`}
-  //                     {` (${inputDetail.type})`}
-  //                   </Label>
-  //                   {inputDetail.type === 'File' ? (
-  //                     <DataFileSelect 
-  //                       onSelect={(value) => handleKwargsChange(value, key)} 
-  //                       value={kwargs[key]?.[0]} 
-  //                       dataFiles={inputDataFiles[key] || []} 
-  //                       label={key} 
-  //                     />
-  //                   ) : (
-  //                     <Input 
-  //                       value={kwargs[key]?.[0]} 
-  //                       onChange={(e) => handleKwargsChange(e.target.value, key)} 
-  //                     />
-  //                   )}
-  //                 </div>
-  //               ))}
-  
-  //             <Button type="submit" disabled={loading || !isValidForm()}>
-  //               {loading ? "Submitting..." : "Submit"}
-  //             </Button>
-  //             {error && <Alert variant="destructive">{error}</Alert>}
-  //             {toolListError && <Alert variant="destructive">{toolListError}</Alert>}
-  //             {dataFileListError && <Alert variant="destructive">{dataFileListError}</Alert>}
-  //           </form>
-  //         </DialogDescription>
-  //       </DialogHeader>
-  //     </DialogContent>
-  //   </Dialog>
-  // );
-  
 }

@@ -1,1 +1,0 @@
-{"app": "diffdock", "inputs": [{"field": "protein", "filetypes": [".pdb"]}, {"field": "ligand", "filetypes": [".sdf", ".mol2"]}], "outputs": [".pdb", ".sdf", ".npy"]}
