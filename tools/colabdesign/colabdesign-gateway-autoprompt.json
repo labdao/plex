@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "docker.io/openzyme/colabdesign-gateway@sha256:0b452233b0fa39e7a220c3f1be9f31010d175595207b91c62349d690aff38626",
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:ba13658a9a06f5606c8b808c005eee8b40c392c2f671e72a39ac08c5db8b86b5",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -53,7 +53,7 @@
         ""
       ],
       "default": "",
-      "min": "1",
+      "min": "",
       "max": "",
       "example": "1",
       "grouping": "protein complex",
@@ -68,7 +68,7 @@
         ""
       ],
       "default": "",
-      "min": "2",
+      "min": "",
       "max": "",
       "example": "100",
       "grouping": "protein complex",
