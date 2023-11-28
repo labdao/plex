@@ -554,8 +554,8 @@ def my_app(cfg: DictConfig) -> None:
         cutoff = user_inputs["cutoff"] # distance to define inter-protein contacts (in Angstrom)
         n_samples = user_inputs["n_prompts"] # total number of prompts generated
 
-        p_masking_contact_domain = user_inputs["p_masking_contact_domain"] # probability of masking a contact domain
-        p_masking_noncontact_domain = user_inputs["p_masking_noncontact_domain"] # probability of masking a non-contact domain
+        p_masking_contact_domain = user_inputs["p_contact_domain_masking"] # probability of masking a contact domain
+        p_masking_noncontact_domain = user_inputs["p_noncontact_domain_masking"] # probability of masking a non-contact domain
         p_masking_contact_domain = float(p_masking_contact_domain)
         p_masking_noncontact_domain = float(p_masking_noncontact_domain)
         if (0.0 <= p_masking_contact_domain <= 1.0) and (0.0 <= p_masking_noncontact_domain <= 1.0): # Check if the the p's are within the interval [0.0, 1.0]

@@ -47,7 +47,7 @@
     },
     "target_start_residue": {
       "type": "number",
-      "description": "First resiude consider on target chain.",
+      "description": "First residue consider on target chain.",
       "array": false,
       "glob": [
         ""
