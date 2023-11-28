@@ -77,6 +77,23 @@ from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
+from Bio import PDB
+
+def find_chain_residue_range(pdb_path, chain_id):
+    """
+    Finds the start and end residue sequence indices for a given chain in a PDB file.
+    """
+    parser = PDB.PDBParser(QUIET=True)
+    structure = parser.get_structure('protein', pdb_path)
+    for model in structure:
+        for chain in model:
+            if chain.id == chain_id:
+                residues = list(chain)
+                if residues:
+                    start_residue = residues[0].id[1]
+                    end_residue = residues[-1].id[1]
+                    return start_residue, end_residue
+    return None, None
 
 
 def get_plex_job_inputs():
@@ -490,8 +507,8 @@ def my_app(cfg: DictConfig) -> None:
     OmegaConf.update(cfg, "params.advanced_settings.hotspot", "", merge=False)
     OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binder_designs"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
-    OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
-    OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
+    # OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
+    # OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", "", merge=False)
 
     print(OmegaConf.to_yaml(cfg))
@@ -518,6 +535,16 @@ def my_app(cfg: DictConfig) -> None:
     if not isinstance(input_target_path, list):
         input_target_path = [input_target_path]
     print("Identified Targets : ", input_target_path)
+
+    first_residue_target_chain, last_residue_target_chain = find_chain_residue_range(input_target_path[0], user_inputs["target_chain"])
+    if isinstance(user_inputs["target_start_residue"], int) and user_inputs["target_start_residue"] > 0:
+        OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
+    else: OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", first_residue_target_chain, merge=False)
+    
+    if isinstance(user_inputs["target_end_residue"], int) and user_inputs["target_end_residue"] > 0:
+        OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
+    else: OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", last_residue_target_chain, merge=False)
+
 
     # running design for every input target file
     for target_path in input_target_path:

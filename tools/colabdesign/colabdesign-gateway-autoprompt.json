@@ -52,7 +52,7 @@
       "glob": [
         ""
       ],
-      "default": "1",
+      "default": "",
       "min": "1",
       "max": "",
       "example": "1",
@@ -67,10 +67,10 @@
       "glob": [
         ""
       ],
-      "default": "200",
+      "default": "",
       "min": "2",
       "max": "",
-      "example": "283",
+      "example": "100",
       "grouping": "protein complex",
       "position": "104",
       "required": true

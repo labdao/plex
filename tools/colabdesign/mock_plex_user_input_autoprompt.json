@@ -5,12 +5,12 @@
   "number_of_binder_designs": 1,
   "protein_complex": "target/UROK_HUMAN_1-133.pdb",
   "target_chain": "A",
-  "target_start_residue": 41,
-  "target_end_residue": 200,
+  "target_start_residue": "",
+  "target_end_residue": "",
   "binder_chain" : "B",
   "cutoff" : 5.0,
   "n_prompts" : 2,
-  "p_masking_contact_domain" : 0.6,
-  "p_masking_noncontact_domain" : 0.1,
+  "p_contact_domain_masking" : 0.6,
+  "p_noncontact_domain_masking" : 0.1,
   "domain_distance_threshold" : 6
 }
