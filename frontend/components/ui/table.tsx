@@ -10,7 +10,7 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
 Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("bg-background [&_tr]:border-b", className)} {...props} />
+  <thead ref={ref} className={cn("font-mono bg-background [&_tr]:border-b", className)} {...props} />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -20,7 +20,7 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes
 TableBody.displayName = "TableBody";
 
 const TableFooter = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ className, ...props }, ref) => (
-  <tfoot ref={ref} className={cn("bg-primary font-medium text-primary-foreground", className)} {...props} />
+  <tfoot ref={ref} className={cn("bg-primary font-bold text-primary-foreground", className)} {...props} />
 ));
 TableFooter.displayName = "TableFooter";
 
@@ -32,7 +32,7 @@ TableRow.displayName = "TableRow";
 const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => (
   <th
     ref={ref}
-    className={cn("h-12 px-4 text-left align-middle uppercase font-medium text-foreground [&:has([role=checkbox])]:pr-0", className)}
+    className={cn("h-12 px-4 text-left align-middle uppercase font-bold text-foreground [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ));

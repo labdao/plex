@@ -2,7 +2,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export interface DataFile {
   Filename: string
-  CID: string // Content Identifier in IPFS
+  CID: string
+  Tags: Tag[]
+}
+
+interface Tag {
+  Name: string;
+  Type: string;
 }
 
 interface DataFileListSliceState {

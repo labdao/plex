@@ -51,10 +51,8 @@ jobs:
         filters: |
           colabdesign:
             - 'tools/colabdesign/**'
-          colabfold:
-            - 'tools/colabfold/**'
-          oddt:
-            - 'tools/oddt/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
 
   tools:
     needs: changes-tools

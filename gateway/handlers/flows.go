@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -48,6 +49,26 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	}
 
 	return cid, nil
+}
+
+// extractCidIfPossible checks if the input is a string that contains a '/'
+// and starts with 'Qm'. It returns the CID if these conditions are met.
+func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
+	// Check if input is a string.
+	strInput, ok := input.(string)
+	if !ok {
+		return "", false, errors.New("input is not a string")
+	}
+
+	// Check if the string contains '/' and starts with 'Qm'.
+	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+		split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+		cid = split[0]                            // The CID is the first part of the split.
+		return cid, true, nil
+	}
+
+	// If the string doesn't meet the conditions, return ok as false.
+	return "", false, nil
 }
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
@@ -96,14 +117,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var kwargs map[string][]string
-
 		kwargsRaw, ok := requestData["kwargs"]
 		if !ok {
 			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
 			return
 		}
 
+		var kwargs map[string][]interface{}
 		err = json.Unmarshal(kwargsRaw, &kwargs)
 		if err != nil {
 			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
@@ -111,6 +131,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		/*
 		for key, value := range kwargs {
 			if len(value) == 0 || value[0] == "" {
 				log.Printf("Invalid or missing value for key '%s' in kwargs", key)
@@ -118,6 +139,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 		}
+		*/
 
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
 		if err != nil {
@@ -174,24 +196,53 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			for _, input := range job.Inputs {
-				var dataFile models.DataFile
-				// Lookup DataFile with CID corresponding to input.IPFS
-				result := db.First(&dataFile, "cid = ?", input.IPFS)
-				if result.Error != nil {
-					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						// Handle the case where no matching DataFile is found if necessary
-						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", input.IPFS), http.StatusInternalServerError)
-						return
-					} else {
-						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
-						return
+				var cidsToAdd []string
+				switch v := input.(type) {
+				case string:
+					strInput, ok := input.(string)
+					if !ok {
+						continue
 					}
+					// Check if the string contains '/' and starts with 'Qm'.
+					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+						split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+						cid := split[0]                           // The CID is the first part of the split.
+						cidsToAdd = append(cidsToAdd, cid)
+					}
+				case []interface{}: // Changed from []string to []interface{}
+					fmt.Println("found slice, checking each for 'Qm' prefix")
+					for _, elem := range v {
+						strInput, ok := elem.(string)
+						if !ok {
+							continue
+						}
+						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+							split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
+							cid := split[0]                           // The CID is the first part of the split.
+							cidsToAdd = append(cidsToAdd, cid)
+						}
+					}
+				default:
+					continue
 				}
-
-				// Append found DataFile to jobEntry's Inputs
-				jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+				for _, cid := range cidsToAdd {
+					var dataFile models.DataFile
+					// Lookup DataFile with CID corresponding to input.IPFS
+					result := db.First(&dataFile, "cid = ?", cid)
+					if result.Error != nil {
+						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							// Handle the case where no matching DataFile is found if necessary
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							return
+						} else {
+							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							return
+						}
+					}
+					// Append found DataFile to jobEntry's Inputs
+					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+				}
 			}
-
 			// Save jobEntry with related inputs
 			result = db.Save(&jobEntry)
 			if result.Error != nil {
@@ -199,7 +250,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 		}
-
 		utils.SendJSONResponseWithCID(w, submittedIoListCid)
 	}
 }
