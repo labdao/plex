@@ -146,8 +146,8 @@ def enrich_and_collect(multirun_path, path, cfg):
     # Find the scores file in multirun_path
     results_csv_path = None
     for file_name in os.listdir(f"{multirun_path}/"):
-        if file_name.endswith("_scores.csv"):
-            # results_csv_path = os.path.join(multirun_path, file_name)
+        # if file_name.endswith("_scores.csv"):
+        if file_name.endswith(f"{path}_scores.csv"):
             results_csv_path = os.path.join(multirun_path, file_name)
             break
 
@@ -164,7 +164,8 @@ def enrich_and_collect(multirun_path, path, cfg):
     df_new_results = add_deepest_keys_to_dataframe(deepest_keys_values, df_new_results)
 
     # Check if the existing output CSV file exists
-    output_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
+    # output_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
+    output_csv_path = os.path.join(multirun_path, f"summary_samples_table.csv")
     if os.path.exists(output_csv_path):
         # Read existing data
         df_existing_results = pd.read_csv(output_csv_path)
@@ -179,7 +180,8 @@ def enrich_and_collect(multirun_path, path, cfg):
 
 def create_conditions_table(multirun_path, path, cfg, user_inputs):
     # Read the combined results CSV into a DataFrame
-    combined_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
+    # combined_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
+    combined_csv_path = os.path.join(multirun_path, f"summary_samples_table.csv")
     df_combined_results = pd.read_csv(combined_csv_path)
 
     # Columns to process
@@ -198,7 +200,8 @@ def create_conditions_table(multirun_path, path, cfg, user_inputs):
     df_condensed.insert(0, 'n_designs', len(df_combined_results))
 
     # Write the condensed data to the CSV file
-    condensed_csv_path = os.path.join(multirun_path, f"{path}_conditions_table.csv")
+    # condensed_csv_path = os.path.join(multirun_path, f"{path}_conditions_table.csv")
+    condensed_csv_path = os.path.join(multirun_path, f"summary_conditions_table.csv")
     df_condensed.to_csv(condensed_csv_path, index=False)
     print("Conditions table written to", condensed_csv_path)
 

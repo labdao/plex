@@ -7,21 +7,21 @@ from os.path import splitext
 import itertools
 import random
 
-# def find_chain_residue_range(pdb_path, chain_id):
-#     """
-#     Finds the start and end residue sequence indices for a given chain in a PDB file.
-#     """
-#     parser = PDB.PDBParser(QUIET=True)
-#     structure = parser.get_structure('protein', pdb_path)
-#     for model in structure:
-#         for chain in model:
-#             if chain.id == chain_id:
-#                 residues = list(chain)
-#                 if residues:
-#                     start_residue = residues[0].id[1]
-#                     end_residue = residues[-1].id[1]
-#                     return start_residue, end_residue
-#     return None, None
+def find_chain_residue_range(pdb_path, chain_id):
+    """
+    Finds the start and end residue sequence indices for a given chain in a PDB file.
+    """
+    parser = PDB.PDBParser(QUIET=True)
+    structure = parser.get_structure('protein', pdb_path)
+    for model in structure:
+        for chain in model:
+            if chain.id == chain_id:
+                residues = list(chain)
+                if residues:
+                    start_residue = residues[0].id[1]
+                    end_residue = residues[-1].id[1]
+                    return start_residue, end_residue
+    return None, None
 
 def find_interacting_residues(pdb_path, cutoff):
     """
