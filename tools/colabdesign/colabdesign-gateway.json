@@ -5,10 +5,8 @@
   "github": "https://github.com/sokrypton/ColabDesign",
   "paper": "https://www.nature.com/articles/s41586-023-06415-8",
   "task": "protein design",
-  "baseCommand": [
-  ],
-  "arguments": [
-  ],
+  "baseCommand": [],
+  "arguments": [],
   "dockerPull": "docker.io/openzyme/colabdesign-gateway@sha256:0b452233b0fa39e7a220c3f1be9f31010d175595207b91c62349d690aff38626",
   "gpuBool": true,
   "memoryGB": 12,
