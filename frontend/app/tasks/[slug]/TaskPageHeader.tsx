@@ -28,12 +28,12 @@ export default function TaskPageHeader({ tool, task }: TaskPageHeaderProps) {
       {(github || paper) && (
         <div className="flex gap-2 mt-4">
           {github && (
-            <a href={github} target="_blank" className={badgeVariants({ variant: "muted", size: "lg" })}>
+            <a href={github} target="_blank" className={badgeVariants({ variant: "references", size: "lg" })}>
               github <GithubIcon className="ml-2" size={20} />
             </a>
           )}
           {paper && (
-            <a href={paper} target="_blank" className={badgeVariants({ variant: "muted", size: "lg" })}>
+            <a href={paper} target="_blank" className={badgeVariants({ variant: "references", size: "lg" })}>
               paper <BookOpenIcon className="ml-2" size={20} />
             </a>
           )}
