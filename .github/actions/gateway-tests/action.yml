@@ -26,6 +26,8 @@ runs:
           echo "File upload test passed"
         else
           echo "File upload test failed: 'cid' key not found in the response"
+          echo "response was:"
+          echo "$response"
           exit 1
         fi
 
