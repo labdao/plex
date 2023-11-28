@@ -50,6 +50,13 @@ export default function ListFlowFiles() {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
       }
     },
+    // {
+    //   accessorKey: "Tags",
+    //   header: "Tags",
+    //   cell: ({ row }) => {
+    //     return row.getValue("Tags").join(', ');
+    //   }
+    // },
   ];
 
   const dispatch = useDispatch<AppDispatch>();
