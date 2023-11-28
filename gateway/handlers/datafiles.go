@@ -219,24 +219,61 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+// func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
+// 	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
+
+// 	var dataFile models.DataFile
+// 	if err := db.Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
+// 		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
+// 		return fmt.Errorf("Data file not found: %v", err)
+// 	}
+
+// 	log.Println("DataFile found, adding tags:", tagNames)
+// 	for _, tagName := range tagNames {
+// 		var tag models.Tag
+// 		if err := db.Where("name = ?", tagName).First(&tag).Error; err != nil {
+// 			log.Printf("Error finding Tag %s: %v\n", tagName, err)
+// 			return fmt.Errorf("Tag %s not found: %v", tagName, err)
+// 		}
+// 		dataFile.Tags = append(dataFile.Tags, tag)
+// 		log.Printf("Tag %s added to DataFile CID %s\n", tagName, dataFileCID)
+// 	}
+
+// 	log.Println("Saving DataFile with new tags to DB")
+// 	if err := db.Save(&dataFile).Error; err != nil {
+// 		log.Printf("Error saving DataFile with CID %s: %v\n", dataFileCID, err)
+// 		return fmt.Errorf("Error saving datafile: %v", err)
+// 	}
+
+// 	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
+// 	return nil
+// }
+
 func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
 	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
 
 	var dataFile models.DataFile
-	if err := db.Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
+	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
 		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
 		return fmt.Errorf("Data file not found: %v", err)
 	}
 
-	log.Println("DataFile found, adding tags:", tagNames)
-	for _, tagName := range tagNames {
-		var tag models.Tag
-		if err := db.Where("name = ?", tagName).First(&tag).Error; err != nil {
-			log.Printf("Error finding Tag %s: %v\n", tagName, err)
-			return fmt.Errorf("Tag %s not found: %v", tagName, err)
+	var tags []models.Tag
+	if err := db.Where("name IN ?", tagNames).Find(&tags).Error; err != nil {
+		log.Printf("Error finding tags: %v\n", err)
+		return fmt.Errorf("Error finding tags: %v", err)
+	}
+
+	existingTagMap := make(map[string]bool)
+	for _, tag := range dataFile.Tags {
+		existingTagMap[tag.Name] = true
+	}
+
+	log.Println("Adding tags:", tagNames)
+	for _, tag := range tags {
+		if !existingTagMap[tag.Name] {
+			dataFile.Tags = append(dataFile.Tags, tag)
 		}
-		dataFile.Tags = append(dataFile.Tags, tag)
-		log.Printf("Tag %s added to DataFile CID %s\n", tagName, dataFileCID)
 	}
 
 	log.Println("Saving DataFile with new tags to DB")

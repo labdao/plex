@@ -115,10 +115,17 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 				existingOutputs[output.CID] = struct{}{}
 			}
 
+			log.Printf("Number of output files: %d\n", len(outputFileEntries))
+			fileNames := make([]string, 0, len(outputFileEntries))
 			for _, fileEntry := range outputFileEntries {
-				// Check if fileEntry is already in Job.Outputs
+				fileNames = append(fileNames, fileEntry["filename"])
+			}
+			log.Printf("Output file names: %v\n", fileNames)
+
+			for _, fileEntry := range outputFileEntries {
+				log.Printf("Processing fileEntry with CID: %s, Filename: %s", fileEntry["CID"], fileEntry["filename"])
+
 				if _, exists := existingOutputs[fileEntry["CID"]]; exists {
-					// Skip if the file is already in the Job.Outputs
 					continue
 				}
 
@@ -130,20 +137,36 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 						log.Println("DataFile not found in DB, creating new record with CID: ", fileEntry["CID"])
 
-						dataFile.CID = fileEntry["CID"]
-						dataFile.Filename = fileEntry["filename"]
-
-						log.Println("Adding tags to new DataFile with CID:", dataFile.CID)
-						if err := AddTagsToDataFile(db, dataFile.CID, []string{"generated"}); err != nil {
-							http.Error(w, fmt.Sprintf("Error adding tags to datafile: %v", err), http.StatusInternalServerError)
+						var generatedTag models.Tag
+						if err := db.Where("name = ?", "generated").First(&generatedTag).Error; err != nil {
+							http.Error(w, fmt.Sprintf("Error finding generated tag: %v", err), http.StatusInternalServerError)
 							return
 						}
 
-						log.Println("Saving new DataFile to DB with CID:", dataFile.CID)
+						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
+
+						dataFile = models.DataFile{
+							CID:      fileEntry["CID"],
+							Filename: fileEntry["filename"],
+							Tags:     []models.Tag{generatedTag},
+						}
+
 						if err := db.Create(&dataFile).Error; err != nil {
 							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
 							return
 						}
+
+						// log.Println("Adding tags to new DataFile with CID:", dataFile.CID)
+						// if err := AddTagsToDataFile(db, dataFile.CID, []string{"generated"}); err != nil {
+						// 	http.Error(w, fmt.Sprintf("Error adding tags to datafile: %v", err), http.StatusInternalServerError)
+						// 	return
+						// }
+
+						// log.Println("Saving new DataFile to DB with CID:", dataFile.CID)
+						// if err := db.Create(&dataFile).Error; err != nil {
+						// 	http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
+						// 	return
+						// }
 
 						log.Println("DataFile successfully saved to DB:", dataFile)
 					} else {
