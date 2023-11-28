@@ -41,6 +41,8 @@ runs:
           echo "File upload test passed"
         else
           echo "File upload test failed: 'cid' key not found in the response"
+          echo "response was:"
+          echo "$response"
           exit 1
         fi
       shell: bash
@@ -54,6 +56,8 @@ runs:
            echo "Datafiles test passed"
         else
            echo "Datafiles test failed: Expected length of 2 but got '$length'"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash
@@ -72,6 +76,8 @@ runs:
            echo "Add Tool upload test passed"
         else
            echo "Add Tool upload test failed: Expected 'QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb' but got '$cid_value'"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash
@@ -84,6 +90,8 @@ runs:
         if [ "$length" -eq 1 ]; then
            echo "List Tools test passed"
         else
+           echo "response was:"
+           echo "$response"
            echo "List Tools test failed: Expected length of 1 but got '$length'"
            exit 1
         fi
@@ -118,6 +126,8 @@ runs:
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"
+           echo "response was:"
+           echo "$response"
            exit 1
         fi
       shell: bash
