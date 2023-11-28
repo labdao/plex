@@ -59,6 +59,8 @@ jobs:
           #   - 'tools/mytool/mytool_config_file.json'
           colabdesign_colabdesign:
             - 'tools/colabdesign/colabdesign.json'
+          colabdesign_colabdesign-gateway:
+            - 'tools/colabdesign/colabdesign-gateway.json'
 
   tools:
     needs: changes-tools
