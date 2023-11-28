@@ -3,7 +3,10 @@
   "name": "colabdesign-dev",
   "description": "one-pot design of protein backbones and sequences",
   "author": "",
-  "baseCommand": ["/bin/bash", "-c"],
+  "baseCommand": [
+    "/bin/bash",
+    "-c"
+  ],
   "arguments": [
     "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml;",
     "ls /inputs;",
@@ -20,34 +23,46 @@
     "protein": {
       "type": "File",
       "item": "",
-      "glob": ["*.pdb"]
+      "glob": [
+        "*.pdb"
+      ]
     },
     "config": {
       "type": "File",
       "item": "",
-      "glob": ["*.yaml"]
+      "glob": [
+        "*.yaml"
+      ]
     }
   },
   "outputs": {
     "best_design": {
       "type": "File",
       "item": "",
-      "glob": ["best.pdb"]
+      "glob": [
+        "best.pdb"
+      ]
     },
     "design_scores": {
       "type": "File",
       "item": "",
-      "glob": ["mpnn_results.csv"]
+      "glob": [
+        "mpnn_results.csv"
+      ]
     },
     "design_sequences": {
       "type": "File",
       "item": "",
-      "glob": ["design.fasta"]
+      "glob": [
+        "design.fasta"
+      ]
     },
     "compressed_designs": {
       "type": "Array",
       "item": "File",
-      "glob": ["*.zip"]
+      "glob": [
+        "*.zip"
+      ]
     }
   }
 }
