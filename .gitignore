@@ -327,3 +327,6 @@ gateway/gorm.db
 *zinc*
 *AF-*
 tools/tmp*
+
+# Ignore docker stuff
+docker/.env.tunnel

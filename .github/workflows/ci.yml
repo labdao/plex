@@ -5,6 +5,18 @@
 name: CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      preview-enabled:
+        description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
+        required: false
+        type: bool
+        default: true
+      preview-timeout:
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        required: false
+        type: string
+        default: "300m"
   push:
     branches:
       - "main"
@@ -22,7 +34,7 @@ on:
 
 # Only run one at a time
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -60,11 +72,13 @@ jobs:
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
@@ -82,25 +96,29 @@ jobs:
       - name: upload bacalhau plugin to be used later
         uses: actions/upload-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: ./bacalhau
 
-  ci-public:
+  ci:
     needs:
-      - go
-        # - ci-setup-compose
+      # - ci-setup-compose
       - ci-setup-bacalhau
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
+        network_mode:
+          - public
+          - private
     runs-on: ${{ matrix.os }}
     environment: ci
     env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
+      BACALHAU_VERSION: ${{ matrix.bacalhau_version }}
       # Setting it at workflow level to be used by all the steps
       BACALHAU_API_HOST: "127.0.0.1"
       LOG_LEVEL: trace
@@ -108,15 +126,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: download plex binary
-        uses: actions/download-artifact@v3
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          name: plex-binary-${{matrix.os}}
+          go-version: 1.20.3
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build
+
+      - name: Upload plex binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: plex-binary-${{ matrix.network_mode }}-${{ matrix.os }}-${{ matrix.bacalhau_version }}
+          path: ./plex
 
       - name: download bacalhau binary
         uses: actions/download-artifact@v3
         with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: bacalhau-binary-${{ matrix.os }}-${{ matrix.bacalhau_version }}
 
       - name: Setup docker (missing on MacOS)
         if: runner.os == 'macos'
@@ -140,19 +171,48 @@ jobs:
           docker version
           docker compose version
 
+      - name: Bring tunnel for previewing environment
+        if: inputs.preview-enabled == 'true'
+        run: |
+          # Create empty file to avoid issues
+          touch ./docker/.env.tunnel
+
+          # Setup docker compose tunnel
+          docker compose -f docker-compose.tunnel.yml up -d --wait
+
+          # Dump file contents
+          cat ./docker/.env.tunnel
+
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
+        run: |
+          cat ./docker/.env.tunnel
+
       - name: docker compose build
         run: |
-          # Build in parallel
-          docker compose build --parallel
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
 
-      - name: Bring up the stack
+          # Build compose
+          docker compose build --parallel
+
+      - name: Bring up the public stack
+        if: matrix.network_mode == 'public'
         run: |
-          # Setup docker compose
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
           docker compose -f docker-compose.yml up -d --wait
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+
+      - name: Bring up the private stack
+        if: matrix.network_mode == 'private'
+        run: |
+          # Source tunnel URL file
+          source ./docker/.env.tunnel || true
+
+          # Compose up
+          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
       - name: Run docker compose ps
         run: |
@@ -160,11 +220,15 @@ jobs:
           docker compose ps
 
       - name: fix permissions
+        if: always()
         run: |
           set -x
 
           # Execute permission
           chmod +x ./bacalhau ./plex
+      
+      - name: Go Test
+        run: go test ./... -v
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
@@ -200,85 +264,16 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ci-public-output-${{matrix.os}}-${{matrix.bacalhau_version}}
+          name: ci-${{ matrix.network_mode }}-output-${{ matrix.os }}-${{ matrix.bacalhau_version }}
           path: |
             plex_run_output.log
             job-*
             jobs/
 
-  ci-private:
-    needs:
-      - go
-        # - ci-setup-compose
-      - ci-setup-bacalhau
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-          # -  macos-13
-        bacalhau_version:
-          - 1.1.4
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    env:
-      BACALHAU_VERSION: ${{matrix.bacalhau_version}}
-      # Setting it at workflow level to be used by all the steps
-      BACALHAU_API_HOST: "127.0.0.1"
-      LOG_LEVEL: trace
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: download plex binary
-        uses: actions/download-artifact@v3
-        with:
-          name: plex-binary-${{matrix.os}}
-
-      - name: download bacalhau binary
-        uses: actions/download-artifact@v3
-        with:
-          name: bacalhau-binary-${{matrix.os}}-${{matrix.bacalhau_version}}
-
-      - name: Setup docker (missing on MacOS)
-        if: runner.os == 'macos'
+      - name: Tunnel URLs
+        if: inputs.preview-enabled == 'true'
         run: |
-          brew install colima docker docker-compose
-          colima start
-
-          # For testcontainers to find the Colima socket
-          # https://github.com/abiosoft/colima/blob/main/docs/FAQ.md#cannot-connect-to-the-docker-daemon-at-unixvarrundockersock-is-the-docker-daemon-running
-          sudo ln -sf $HOME/.colima/default/docker.sock /var/run/docker.sock
-
-          mkdir -p ~/.docker/cli-plugins
-          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
-          docker version
-          docker compose version
-
-      - name: Setup docker compose plugin
-        if: runner.os != 'macos'
-        run: |
-          # Output version info
-          docker version
-          docker compose version
-
-      - name: docker compose build
-        run: |
-          # Build in parallel
-          docker compose build --parallel
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Bring up the stack
-        run: |
-          # Setup docker compose private
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-        env:
-          NEXT_PUBLIC_PRIVY_APP_ID: ${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-
-      - name: Run docker compose ps
-        run: |
-          # Inspect number of running containers
-          docker compose ps
+          cat ./docker/.env.tunnel
 
       - name: fix permissions
         run: |
@@ -326,3 +321,8 @@ jobs:
             plex_run_output.log
             job-*
             jobs/
+
+      - name: Sleep for preview-timeout
+        if: inputs.preview-enabled == 'true'
+        run: sleep ${{ inputs.preview-timeout }}
+
