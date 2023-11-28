@@ -1,0 +1,58 @@
+{
+    "class": "",
+    "name": "labsay 0.5",
+    "description": "simple hello world that plex stack is working",
+    "author": "labdao",
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "docker.io/openzyme/labsay@sha256:d7e7cd753fcc15aee9b45c07e30f69c475b4e4078322d42ae053c28b1b1a6274",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "file_example": {
+            "type": "file",
+            "description": "File to have contents added to output result file.",
+            "array": false,
+            "glob": ["*.txt"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        },
+        "string_example": {
+            "type": "string",
+            "array": false,
+            "description": "String to append to output result file.",
+            "glob": [""],
+            "default": "hello world",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "2",
+            "required": true
+        },
+        "number_example": {
+            "type": "number",
+            "array": false,
+            "description": "Number will get multipled by len of (string_example) and added to the output result file.",
+            "glob": [""],
+            "default": 196883,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Number Params",
+            "position": "3",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["result.txt"]
+        }
+    }
+}
