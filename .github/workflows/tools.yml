@@ -52,14 +52,6 @@ jobs:
             - 'tools/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          colabfold:
-            - 'tools/colabfold/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          oddt:
-            - 'tools/oddt/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
 
   tools:
     needs: changes-tools

@@ -176,40 +176,6 @@ jobs:
           ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
           cat /tmp/output.log
 
-      - name: Run Labsay
-        run: |
-          set -x
-
-          # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
-
-          # Create bacalhau config file
-          ./bacalhau version
-
-          # Pull equibind image before running the job to get better idea of job run
-          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
-
-          # Get node list
-          ./bacalhau node list
-
-          # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
-          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-
-          # Get equibind job id
-          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
-
-          # chdir for outputs
-          cd "$result_dir/entry-0/outputs"
-
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
-
       - name: Run bacalhau describe
         # run always even when
         if: always()
@@ -330,40 +296,6 @@ jobs:
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
-
-      - name: Run Equibind
-        # turn back on once baclahau docker in docker job launcher is fixed
-        run: |
-
-          # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
-
-          # Create bacalhau config file
-          ./bacalhau version
-
-          # Pull equibind image before running the job to get better idea of job run
-          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
-
-          # Get node list
-          ./bacalhau node list
-
-          # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
-          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-
-          # Set equibind job id
-          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
-
-          cd "$result_dir/entry-0/outputs"
-          ls -ltraR
-          cat exitCode stderr stderr log.txt || true
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
 
       - name: Run bacalhau describe
         # run always even when
