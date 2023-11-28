@@ -62,8 +62,7 @@ def display_logo():
 
     for char in logo:
         print(char, end="", flush=True)
-        if char == " ":
-            time.sleep(0.0005)
+        time.sleep(0.05)
 
 
 def main():

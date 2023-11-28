@@ -57,25 +57,6 @@ jobs:
       - name: Test
         run: go test ./... -v
 
-          # # Only downloading cli for macos
-          # ci-setup-compose:
-          #   strategy:
-          #     matrix:
-          #       os: [macos-13]
-          #   runs-on: ${{ matrix.os }}
-          #   environment: ci
-          #   steps:
-          #     - name: Download docker compose
-          #       run: |
-          #         # Download docker-compose plugin
-          #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
-
-          #     - name: upload docker-compose plugin to be used later
-          #       uses: actions/upload-artifact@v3
-          #       with:
-          #         name: docker-compose-plugin-${{matrix.os}}
-          #         path: ./docker-compose
-
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
@@ -185,7 +166,17 @@ jobs:
           # Execute permission
           chmod +x ./bacalhau ./plex
 
-      - name: Run Equibind
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
+      - name: Test log streaming
+        # run always even when
+        if: always()
+        run: |
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          cat /tmp/output.log
+
+      - name: Run Labsay
         run: |
           set -x
 
@@ -224,16 +215,6 @@ jobs:
         if: always()
         run: |
           ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
-
-      - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-tests
-
-      - name: Test log streaming
-        # run always even when
-        if: always()
-        run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
-          cat /tmp/output.log
 
       - name: Run docker compose logs
         # run always even when
@@ -340,6 +321,16 @@ jobs:
           # Execute permission
           chmod +x ./bacalhau ./plex
 
+      - name: Test log streaming
+        # run always even when
+        if: always()
+        run: |
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          cat /tmp/output.log
+
+      - name: Run Gateway Integration Tests
+        uses: ./.github/actions/gateway-tests
+
       - name: Run Equibind
         # turn back on once baclahau docker in docker job launcher is fixed
         run: |
@@ -379,16 +370,6 @@ jobs:
         if: always()
         run: |
           ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
-
-      - name: Test log streaming
-        # run always even when
-        if: always()
-        run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
-          cat /tmp/output.log
-
-      - name: Run Gateway Integration Tests
-        uses: ./.github/actions/gateway-tests
 
       - name: Run docker compose logs
         # run always even when
