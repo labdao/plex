@@ -1,6 +1,6 @@
 {
-  "name": "colabdesign gateway automatic v0.2",
-  "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
+  "name": "colabdesign gateway automatic v0.3",
+  "description": "RFdiffusion with automatic prompt generation, based on masking of contact and non-contact regions of the protein binder template.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
   "paper": "https://www.nature.com/articles/s41586-023-06415-8",
@@ -62,7 +62,7 @@
     },
     "target_end_residue": {
       "type": "number",
-      "description": "Last resiude consider on target chain.",
+      "description": "Last residue consider on target chain.",
       "array": false,
       "glob": [
         ""

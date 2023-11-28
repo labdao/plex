@@ -160,7 +160,7 @@ def enrich_and_collect(multirun_path, path, cfg):
     df_combined_results.to_csv(output_csv_path, index=False)
     print("Enriched results and conditions tables written to", results_csv_path)
 
-def condense(multirun_path, path, cfg, user_inputs):
+def create_conditions_table(multirun_path, path, cfg, user_inputs):
     # Read the combined results CSV into a DataFrame
     combined_csv_path = os.path.join(multirun_path, f"{path}_samples_table.csv")
     df_combined_results = pd.read_csv(combined_csv_path)
@@ -505,8 +505,8 @@ def my_app(cfg: DictConfig) -> None:
     print(f"Output directory : {outputs_directory}")
 
     # defining input files
-    if user_inputs.get("target_protein"):
-        input_target_path = user_inputs["target_protein"]
+    if user_inputs.get("protein_complex"):
+        input_target_path = user_inputs["protein_complex"]
     else:
         input_target_path = get_files_from_directory(cfg.inputs.target_directory, ".pdb")
 
@@ -683,7 +683,7 @@ def my_app(cfg: DictConfig) -> None:
             # enricher(outputs_directory, cfg)
             enrich_and_collect(outputs_directory, path, cfg)
         
-        condense(outputs_directory, path, cfg, user_inputs)
+        create_conditions_table(outputs_directory, path, cfg, user_inputs)
 
         print("design complete...")
         end_time = time.time()
