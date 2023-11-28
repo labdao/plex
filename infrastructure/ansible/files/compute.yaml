@@ -57,7 +57,7 @@ Node:
             Locality: anywhere
             RejectStatelessJobs: false
             AcceptNetworkedJobs: true
-            ProbeHTTP: ""
+            ProbeHTTP: "{{ receptor_url }}"
             ProbeExec: ""
         Queue:
             ExecutorBufferBackoffDuration: 50ms
