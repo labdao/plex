@@ -9,7 +9,7 @@
   "target_end_residue": "",
   "binder_chain" : "B",
   "cutoff" : 5.0,
-  "n_prompts" : 2,
+  "n_prompts" : 1,
   "p_contact_domain_masking" : 0.6,
   "p_noncontact_domain_masking" : 0.1,
   "domain_distance_threshold" : 6
