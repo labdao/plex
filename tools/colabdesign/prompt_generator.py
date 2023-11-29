@@ -7,7 +7,7 @@ from os.path import splitext
 import itertools
 import random
 
-def find_chain_residue_range(pdb_path, chain_id):
+def find_first_and_last_resiude(pdb_path, chain_id):
     """
     Finds the start and end residue sequence indices for a given chain in a PDB file.
     """
@@ -97,7 +97,7 @@ def identify_domains(pdb_path, interactions, binder_chain, domain_threshold):
 
     contacts = interactions[binder_chain]
     contact_domains = create_contact_domains(contacts, domain_threshold)
-    _, chain_length = find_chain_residue_range(pdb_path, binder_chain)
+    _, chain_length = find_first_and_last_resiude(pdb_path, binder_chain)
     domains, contact_flag = create_sublists(contact_domains, chain_length)
 
     return domains, contact_flag
@@ -144,7 +144,7 @@ def generate_full_prompts(pdb_path, binder_chain, target_chain, target_start_res
     domain_lengths = [token['domain_length'] for token in token_alphabet]
     domains = [token['domain'] for token in token_alphabet]
 
-    # target_start_residue, target_end_residue = find_chain_residue_range(pdb_path, target_chain)
+    # target_start_residue, target_end_residue = find_first_and_last_resiude(pdb_path, target_chain)
     target_binder_range = f"{target_chain}{target_start_residue}-{target_end_residue}"
 
     masking_charts = generate_combinations(contact_flag, n_samples, p_masking_contact_domain, p_masking_noncontact_domain)
