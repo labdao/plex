@@ -2,7 +2,7 @@
   "binder_length": "",
   "contigs_override": "",
   "hotspot": "",
-  "number_of_binder_designs": 1,
+  "number_of_binder_designs": 2,
   "protein_complex": "target/UROK_HUMAN_1-133.pdb",
   "target_chain": "A",
   "target_start_residue": "",
