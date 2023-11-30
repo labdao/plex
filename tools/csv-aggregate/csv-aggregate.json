@@ -1,0 +1,32 @@
+{
+    "class": "",
+    "name": "csv-aggregate 0.5",
+    "description": "Aggregate's many CSVs with the same headers into a single CSV",
+    "author": "labdao",
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "docker.io/openzyme/csv-aggregate@sha256:f355d11d455292cb49df233eb09398a54cc69f7a3e1603af6acbd903e2e2c7d5",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "input_csvs": {
+            "type": "File",
+            "description": "Array of CSV files to append into a single CSV",
+            "array": true,
+            "glob": ["*.csv"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["aggregated_results.csv"]
+        }
+    }
+}

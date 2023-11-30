@@ -113,26 +113,28 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function transformJson(
-    originalJson: any,
-    walletAddress: string
-  ): TransformedJSON {
-    const { name, tool, ...dynamicKeys } = originalJson;
-
-    // Define the transformation for the dynamic keys using a more specific type
-    // @ts-ignore
+  function transformJson(originalJson: any, walletAddress: string): TransformedJSON {
+    const { name, tool: toolCid, ...dynamicKeys } = originalJson;
+  
     const kwargs = Object.fromEntries(
       // @ts-ignore
-      Object.entries<DynamicKeys>(dynamicKeys).map(([key, valueArray]: [string, JsonValueArray]) => [
-        key,
-        valueArray.map((valueObject) => valueObject.value),
-      ])
+      Object.entries(dynamicKeys).map(([key, valueArray]: [string, JsonValueArray]) => {
+        // @ts-ignore
+        const isArray = tool.ToolJson.inputs[key]?.array;
+  
+        if (isArray) {
+          // If isArray is true, nest the values in an additional array
+          return [key, [valueArray.map(valueObject => valueObject.value)]];
+        } else {
+          // If isArray is false, map values as before
+          return [key, valueArray.map(valueObject => valueObject.value)];
+        }
+      })
     );
 
-    // Return the transformed JSON
     return {
       name: name,
-      toolCid: tool,
+      toolCid: toolCid,
       walletAddress: walletAddress,
       scatteringMethod: "crossProduct",
       kwargs: kwargs,
