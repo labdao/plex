@@ -1,4 +1,4 @@
-# plex 🧫×🧬→💊
+# Lab Exchange 🧫×🧬→💊
 ⚡ **Run highly reproducible computational biology applications on top of a decentralised compute and storage network.** ⚡
 
 <p align="left">
@@ -26,9 +26,9 @@
 </p>
 
 Plex is a full web stack for distributed computational biology.
-* 🌎 **Build once, run anywhere:** Plex is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.
+* 🌎 **Build once, run anywhere:** The Lab Exchange is using distributed compute and storage to run containers on a public network. Need GPUs? We got you covered.
 * 🔍 **Content-addressed by default:** Every file processed by plex has a deterministic address based on its content. Keep track of your files and always share the right results with other scientists.
-* 🪙 **Ownernship tracking built-in** Every compute event on plex is mintable as an on-chain token that grants the holder rights over the newly generated data.
+* 🪙 **Records: authorship tracking built-in** Every compute event on Lab Exchange is mintable as an on-chain token that grants the holder rights over the newly generated data.
 * 🔗 **Strictly composable:** Every tool in plex has declared inputs and outputs. Plugging together tools by other authors should be easy.
 
 Plex is built with [Bacalhau](https://www.bacalhau.org/) and [IPFS](https://ipfs.tech/).
