@@ -4,6 +4,7 @@
 name: tools
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - "main"
@@ -52,17 +53,10 @@ jobs:
             - 'tools/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          colabfold:
-            - 'tools/colabfold/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          oddt:
-            - 'tools/oddt/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
 
   tools:
     needs: changes-tools
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:

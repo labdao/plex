@@ -1,10 +1,15 @@
 basic_settings:
   experiment_name: default
   binder_length: 50
+<<<<<<< HEAD:tools/colabdesign-autoprompt/config/config.yaml
+  pdb: /inputs/target_protein.pdb
+  pdb_chain: A
+=======
   pdb_chain: B
+>>>>>>> origin/main:tools/colabdesign/conf/params/default.yaml
   num_designs: 2
 advanced_settings:
-  pdb_start_residue: 50
+  pdb_start_residue: 41
   pdb_end_residue: 200
   hotspot: ''
   min_binder_length: null
