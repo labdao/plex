@@ -1,7 +1,7 @@
 {
   "walletAddress": "0xE1123f915C52BE6Eda191A4aB3Cdd0112Ca064F3",
   "toolJson": {
-  "name": "colabdesign gateway automatic - XXX",
+  "name": "colabdesign gateway automatic - XXXX",
   "description": "RFdiffusion with automatic prompt generation, based on masking of contact and non-contact regions of the protein binder template.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
@@ -11,7 +11,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign@sha256:09ac5fd0782e34b4e39aebadc75d556a46e497696ec9c27e579070e1461a7855",
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:2e1385fe416ac453406f6f5b1a42887140b9dc63e66950a8e0ac11106b886e5c",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
