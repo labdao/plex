@@ -1,0 +1,53 @@
+{
+    "class": "CommandLineTool",
+    "name": "colabdesign-dev",
+    "description": "one-pot design of protein backbones and sequences",
+    "author": "",
+    "baseCommand": ["/bin/bash", "-c"],
+    "arguments": [
+      "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml;",
+      "ls /inputs;",
+      "echo 'Attempting main.py...';",
+      "python -u main.py;",
+      "echo 'main.py complete!';"
+    ],
+    "dockerPull": "docker.io/openzyme/colabdesign@sha256:82a83c494cf91adc333cd5ed1f87b4a8fc5eadc39abd41348c58f931477b6d50",
+    "gpuBool": true,
+    "networkBool": true,
+    "cpu": 3,
+    "memoryGB": 12,
+    "inputs": {
+      "protein": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.pdb"]
+      },
+      "config": {
+        "type": "File",
+        "item": "",
+        "glob": ["*.yaml"]
+      }
+    },
+    "outputs": {
+      "best_design": {
+        "type": "File",
+        "item": "",
+        "glob": ["best.pdb"]
+      },
+      "design_scores": {
+        "type": "File",
+        "item": "",
+        "glob": ["mpnn_results.csv"]
+      },
+      "design_sequences": {
+        "type": "File",
+        "item": "",
+        "glob": ["design.fasta"]
+      },
+      "compressed_designs": {
+        "type": "Array",
+        "item": "File",
+        "glob": ["*.zip"]
+      }
+    }
+  }
