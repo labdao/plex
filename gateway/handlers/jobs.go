@@ -33,7 +33,7 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		bacalhauJobID := params["bacalhauJobID"]
 
 		var job models.Job
-		if result := db.Preload("Outputs").Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("Outputs.Tags").Preload("Inputs.Tags").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
