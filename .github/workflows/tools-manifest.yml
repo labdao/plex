@@ -61,6 +61,8 @@ jobs:
             - 'tools/colabdesign/colabdesign.json'
           colabdesign_colabdesign-gateway:
             - 'tools/colabdesign/colabdesign-gateway.json'
+          colabdesign-autoprompt_colabdesign-gateway:
+            - 'tools/colabdesign-autoprompt/colabdesign-gateway.json'
 
   tools:
     needs: changes-tools
