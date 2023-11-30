@@ -3,7 +3,7 @@ basic_settings:
   binder_length: 50
   pdb: /inputs/target_protein.pdb
   pdb_chain: A
-  num_designs: 1
+  num_designs: 2
 advanced_settings:
   pdb_start_residue: 41
   pdb_end_residue: 200
