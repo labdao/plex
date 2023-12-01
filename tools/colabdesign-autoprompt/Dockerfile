@@ -1,4 +1,3 @@
-# FROM us-docker.pkg.dev/colab-images/public/runtime
 FROM docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 ENV DEBIAN_FRONTEND=noninteractive_autoprompt
