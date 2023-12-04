@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign@sha256:62657fcfce665309ee715d433121c7fbd500cfd5c58321eb484e58ec0bfc7c79",
+  "dockerPull": "quay.io/labdao/colabdesign-autoprompt@sha256:057ea360fdd26cdb098ed451dd03fd58a1de35c1e4508701f37f69587f501291",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
