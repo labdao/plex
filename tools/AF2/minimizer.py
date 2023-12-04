@@ -10,6 +10,7 @@ import openmm as mm
 from openmm.app import PDBFile
 from openmm.unit import *
 
+#TODO test with different forcefields and implicit solvent models - http://docs.openmm.org/latest/userguide/application/02_running_sims.html#implicit-solvent 
 @dataclass
 class Config:
     pdb_files: list = field(default_factory=list)
