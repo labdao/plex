@@ -1,0 +1,5 @@
+# TODO integrate AF2 into the pipeline
+output_dir: "/inputs"
+pdb_files: 
+ - "/inputs/1CGI_l_b.pdb"
+ - "/inputs/AF-Q03405-F1-model_v4.pdb"
