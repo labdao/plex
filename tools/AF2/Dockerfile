@@ -4,10 +4,7 @@ FROM rapidsai/mambaforge-cuda:cuda${CUDA_VERSION}-base-ubuntu22.04-py3.9
 
 # colabfold
 RUN apt-get update && apt-get install -y wget cuda-nvcc-$(echo $CUDA_VERSION | cut -d'.' -f1,2 | tr '.' '-') --no-install-recommends --no-install-suggests && rm -rf /var/lib/apt/lists/* && \
-    #wget -qnc https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh && \
-    #bash Mambaforge-Linux-x86_64.sh -bfp /usr/local && \
     mamba config --set auto_update_conda false && \
-    #rm -f Mambaforge-Linux-x86_64.sh && \
     CONDA_OVERRIDE_CUDA=$(echo $CUDA_VERSION | cut -d'.' -f1,2) mamba install -y -c conda-forge -c bioconda colabfold=$COLABFOLD_VERSION jaxlib==*=cuda* && \
     mamba clean -afy
 
@@ -17,7 +14,10 @@ VOLUME cache
 ENV MPLCONFIGDIR /cache
 ENV XDG_CACHE_HOME /cache
 
-# openmm
+# download weights
+RUN python -m colabfold.download
+
+# openmm, pdbfixer, and additional Python packages
 RUN mamba install -y openmm pdbfixer && \
     mamba clean -afy
-RUN pip install hydra-core omegaconf pandas
+RUN pip install hydra-core omegaconf pandas biopython pyyaml
