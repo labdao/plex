@@ -155,7 +155,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		log.Println("Submitting IO List")
-		submittedIoList := ipwl.SubmitIoList(ioList, "", 60, []string{})
+		submittedIoList := ipwl.SubmitIoList(ioList, "", 60 * 24, []string{})
 		log.Println("pinning submitted IO List")
 		submittedIoListCid, err := pinIoList(submittedIoList)
 		if err != nil {
