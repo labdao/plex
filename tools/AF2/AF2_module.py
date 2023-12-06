@@ -2,7 +2,7 @@ import subprocess
 import os
 
 class AF2Runner:
-    def __init__(self, fasta_file, output_dir=None):
+    def __init__(self, fasta_file, output_dir):
         self.cache_dir = os.path.join(os.getcwd(), 'cache')
         self.input_file = fasta_file
         self.output_dir = output_dir if output_dir else os.path.join(os.getcwd(), 'output')
@@ -44,15 +44,14 @@ class AF2Runner:
             subprocess.run(["python", "-m", "colabfold.download"], check=True)
 
     def run_prediction(self):
+        
         print("Running prediction job...")
         work_dir = os.path.dirname(self.input_file)
         if not work_dir:
             work_dir = os.getcwd()  # Default to current directory if no directory is part of the input file path
         
-        # some command to execute the batchmode
         # colabfold_batch_command = "colabfold_batch", f"/inputs/{os.path.basename(self.input_file)}", "/work/output"
-        colabfold_batch_command = "colabfold_batch", f"{self.input_file}", "/work/output"
-
+        colabfold_batch_command = "colabfold_batch", f"{self.input_file}", f"{self.output_dir}"
 
         subprocess.run(colabfold_batch_command, check=True)
         print(f"Prediction job complete. Results are in {self.output_dir}")

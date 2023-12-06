@@ -1,40 +1,50 @@
-import glob
+# import glob
 import os
 import time
-import signal
-import sys
-import random
-import string
-import subprocess
-import re
-import json
-# import numpy as np
+import pandas as pd
 
-import subprocess
-from folding import AF2Runner
+from AF2_module import AF2Runner
 import hydra
 from hydra import compose, initialize
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
-# import pandas as pd
-import yaml
+from agent import Agent
+from oracle import Oracle
 
-def seq_to_struc(fasta_file, cfg):
 
-    # # check whether input_seqs is a fasta or a sequence. If fasta, then extract the sequences
+def find_fasta_file(directory_path):
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            if file.endswith(".fasta"):
+                return os.path.abspath(os.path.join(root, file))
+    return None  # Return None if no .fasta file is found in the directory
 
-    # folded_seqs = [] # save as a fasta and overwrite in the 
-    # run loop over the sequences
-    af2_runner = AF2Runner(fasta_file, cfg.outputs.directory)
-    af2_runner.run()
 
-        # produce n AF2 model in a for loop
-        # write add the seq, pdb file identifier (absolute path), and metrics to a csv file
-        # extract sequences from pdb and append to fasta 
-        # append pdbs file identifier to list of pdbs
+def load_fasta_to_dataframe(fasta_file):
+    sequences = []
+    with open(fasta_file, 'r') as file:
+        seq_num = 1
+        for line in file:
+            if line.startswith('>'):
+                sequences.append({'sequence_number': seq_num, 'seq': ''})
+                seq_num += 1
+            else:
+                sequences[-1]['seq'] += line.strip()
+
+    return pd.DataFrame(sequences)
+
+
+def step(df, outputs_directory, cfg):
+
+    # run oracle
+    oracle_runner = Oracle(df, outputs_directory, cfg)
+    oracle_runner.run()
+
+    # run reward
+    reward = 0
     
-    # call sequence_to_structure recursively seq_to_struc([], )
+    return df, reward
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config_seq2struc")
@@ -50,14 +60,19 @@ def my_app(cfg: DictConfig) -> None:
         outputs_directory = cfg.outputs.directory
     print(f"Output directory : {outputs_directory}")
 
-    fasta_file = cfg.inputs.directory
-    
-    # load fasta file with list of sequences
+    fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
+    df = load_fasta_to_dataframe(fasta_file)
+
     start_time = time.time()
 
-    # sequence to structure function
+    reward = 0
+    for t in range(3):
+        print("starting iteraction number ", t)
+        # observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
+        df_new, reward_new = step(Agent(df, reward), outputs_directory, cfg)
+        df = df_new
+        reward = reward_new
 
-    seq_to_struc(fasta_file, cfg)
 
     print("sequence to structure complete...")
     end_time = time.time()
@@ -66,6 +81,7 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
+
 
 ## goal definition
 # df with sequences to compare within the benchmark
