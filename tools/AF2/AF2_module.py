@@ -50,7 +50,6 @@ class AF2Runner:
         if not work_dir:
             work_dir = os.getcwd()  # Default to current directory if no directory is part of the input file path
         
-        # colabfold_batch_command = "colabfold_batch", f"/inputs/{os.path.basename(self.input_file)}", "/work/output"
         colabfold_batch_command = "colabfold_batch", f"{self.input_file}", f"{self.output_dir}"
 
         subprocess.run(colabfold_batch_command, check=True)
