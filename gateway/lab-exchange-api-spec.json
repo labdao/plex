@@ -9,7 +9,7 @@
             "url": "https://api.prod.labdao.xyz/"
         },
         {
-            "url": "https://stg.prod.labdao.xyz/"
+            "url": "https://api.stg.labdao.xyz/"
         }
     ],
     "paths": {
