@@ -13,8 +13,11 @@ echo "Output directory is $OUTPUT_DIR"
 # -v $PWD/testdata/VTNCparams1.yaml:/app/conf/params/VTNCparams1.yaml \
 # -v "$PWD/$OUTPUT_DIR":/outputs colabdesign-noninteractive python -u main.py inputs=container outputs=container params=VTNCparams1
 
+# This is an advanced overide example that can be used instead
+# -e PLEX_JOB_INPUTS='{"binder_length":50,"hotspot":"","number_of_binders":2,"target_chain":"B","target_start_residue":50,"target_end_residue":200,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
+
 docker run --gpus=all \
--e PLEX_JOB_INPUTS='{"binder_length":50,"hotspot":"","number_of_binders":2,"target_chain":"B","target_start_residue":50,"target_end_residue":200,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
+-e PLEX_JOB_INPUTS='{"binder_length":80,"hotspot":"B58,B80,B139","number_of_binders":2,"target_chain":"B","target_start_residue":17,"target_end_residue":209,"target_protein":"/inputs/target_protein/3di3.pdb","contigs_override":""}' \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs colabdesign-noninteractive
 

@@ -299,6 +299,8 @@ def run_diffusion(
     else:
         mode = "free"
 
+    print(f"mode: {mode}, symmetry: {symmetry}, chains: {chains}")
+
     # fix input contigs
     if mode in ["partial", "fixed"]:
         pdb_str = pdb_to_string(get_pdb(pdb), chains=chains)
@@ -333,12 +335,15 @@ def run_diffusion(
         opts.append(f"inference.input_pdb={pdb_filename}")
         if mode in ["partial"]:
             iterations = int(80 * (iterations / 200))
+            print("setting diffuser.partial_T to", iterations)
             opts.append(f"diffuser.partial_T={iterations}")
             contigs = fix_partial_contigs(contigs, parsed_pdb)
         else:
+            print("setting diffuser.T to", iterations)
             opts.append(f"diffuser.T={iterations}")
             contigs = fix_contigs(contigs, parsed_pdb)
     else:
+        print("setting diffuser.T to", iterations)
         opts.append(f"diffuser.T={iterations}")
         parsed_pdb = None
         contigs = fix_contigs(contigs, parsed_pdb)
@@ -371,7 +376,12 @@ def run_diffusion(
     print("output:", full_path)
     print("contigs:", contigs)
 
+    # set noise for binder to design to as reccomended for binder design [https://github.com/RosettaCommons/RFdiffusion/blob/main/examples/design_ppi.sh]
+    opts.append("denoiser.noise_scale_ca=0")
+    opts.append("denoiser.noise_scale_frame=0")
+
     opts_str = " ".join(opts)
+
     command = f"python -u ./RFdiffusion/run_inference.py {opts_str}"
     print(command)
 
