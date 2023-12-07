@@ -21,25 +21,42 @@ def find_fasta_file(directory_path):
     return None  # Return None if no .fasta file is found in the directory
 
 
+# def load_fasta_to_dataframe(fasta_file):
+#     sequences = []
+#     with open(fasta_file, 'r') as file:
+#         seq_num = 1
+#         for line in file:
+#             if line.startswith('>'):
+#                 sequences.append({'sequence_number': seq_num, 'seq': ''})
+#                 seq_num += 1
+#             else:
+#                 sequences[-1]['seq'] += line.strip()
+
+#     return pd.DataFrame(sequences)
+
 def load_fasta_to_dataframe(fasta_file):
     sequences = []
     with open(fasta_file, 'r') as file:
         seq_num = 1
         for line in file:
             if line.startswith('>'):
-                sequences.append({'sequence_number': seq_num, 'seq': ''})
+                # Add an entry for a new sequence, including the 'step' column set to 0
+                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': ''})
                 seq_num += 1
             else:
+                # Add sequence data to the most recently added sequence entry
                 sequences[-1]['seq'] += line.strip()
 
     return pd.DataFrame(sequences)
 
 
-def step(df, outputs_directory, cfg):
+def step(df, df_action, outputs_directory, cfg):
 
     # run oracle
-    oracle_runner = Oracle(df, outputs_directory, cfg)
+    oracle_runner = Oracle(df_action, outputs_directory, cfg)
     oracle_runner.run()
+
+    # need to complete df with orcale info here
 
     # run reward
     reward = 0
@@ -47,7 +64,7 @@ def step(df, outputs_directory, cfg):
     return df, reward
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config_seq2struc")
+@hydra.main(version_base=None, config_path="conf", config_name="config_sequence-optimizer")
 def my_app(cfg: DictConfig) -> None:
 
     print(OmegaConf.to_yaml(cfg))
@@ -61,18 +78,24 @@ def my_app(cfg: DictConfig) -> None:
     print(f"Output directory : {outputs_directory}")
 
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    df = load_fasta_to_dataframe(fasta_file)
+    df_0 = load_fasta_to_dataframe(fasta_file)
 
     start_time = time.time()
 
     reward = 0
-    for t in range(3):
+    for t in range(cfg.params.basic_settings.number_of_evo_cycles):
         print("starting iteraction number ", t)
         # observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
-        df_new, reward_new = step(Agent(df, reward), outputs_directory, cfg)
-        df = df_new
-        reward = reward_new
+        if t==0:
+            df, reward_step = step(df_0, df_0, outputs_directory, cfg)
+        else:
+            agent = Agent(t, df, reward, policy_flag=cfg.params.basic_settings.policy_flag)
+            df, df_action = agent.policy()
+            df, reward_step = step(df, df_action, outputs_directory, cfg)
 
+        reward = reward_step
+
+    print('df', df)
 
     print("sequence to structure complete...")
     end_time = time.time()
