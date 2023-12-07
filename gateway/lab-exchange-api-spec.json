@@ -1,0 +1,887 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Lab Exchange API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://api.prod.labdao.xyz/"
+        },
+        {
+            "url": "https://api.stg.labdao.xyz/"
+        }
+    ],
+    "paths": {
+        "/healthcheck": {
+            "get": {
+                "operationId": "getHealthCheck",
+                "summary": "Health Check Endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Healthy"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "post": {
+                "operationId": "addUser",
+                "summary": "Add User",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "walletAddress": {
+                                        "type": "string",
+                                        "example": "0x1234567890abcdef1234567890abcdef12345678"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "User created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as invalid wallet address or incorrect request format"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/tools": {
+            "post": {
+                "operationId": "addTool",
+                "summary": "Add Tool",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "walletAddress": {
+                                        "type": "string",
+                                        "example": "0x1234567890abcdef1234567890abcdef12345678"
+                                    },
+                                    "toolJson": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "walletAddress",
+                                    "toolJson"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tool created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cid": {
+                                            "type": "string",
+                                            "example": "QmExampleCid"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as invalid JSON format or missing fields"
+                    },
+                    "409": {
+                        "description": "Conflict, tool with the same CID already exists"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "listTools",
+                "summary": "List Tools",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "walletAddress",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of tools",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tool"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/tools/{cid}": {
+            "get": {
+                "operationId": "getToolByCid",
+                "summary": "Get Tool",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tool data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tool"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/datafiles": {
+            "post": {
+                "operationId": "addDataFile",
+                "summary": "Add Data File",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "walletAddress": {
+                                        "type": "string",
+                                        "format": "varchar",
+                                        "example": "0x1234567890abcdef1234567890abcdef12345678"
+                                    },
+                                    "filename": {
+                                        "type": "string",
+                                        "format": "varchar",
+                                        "example": "example_file.txt"
+                                    },
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "required": [
+                                    "walletAddress",
+                                    "filename",
+                                    "file"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Data file uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cid": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as missing fields or parsing error"
+                    },
+                    "409": {
+                        "description": "Conflict, data file with the same CID already exists"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "listDataFiles",
+                "summary": "List Data Files",
+                "responses": {
+                    "200": {
+                        "description": "List of data files",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DataFile"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/datafiles/{cid}": {
+            "get": {
+                "operationId": "getDataFileByCid",
+                "summary": "Get Data File",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data file data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DataFile"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/datafiles/{cid}/download": {
+            "get": {
+                "operationId": "downloadDataFile",
+                "summary": "Download Data File",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Data file downloaded successfully",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "Content-Disposition header with the filename of the downloaded file.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as missing CID parameter"
+                    },
+                    "404": {
+                        "description": "Data file not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/flows": {
+            "post": {
+                "operationId": "addFlow",
+                "summary": "Add Flow",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "walletAddress": {
+                                        "type": "string",
+                                        "example": "0x1234567890abcdef1234567890abcdef12345678"
+                                    },
+                                    "toolCid": {
+                                        "type": "string",
+                                        "example": "Qm..."
+                                    },
+                                    "scatteringMethod": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "kwargs": {
+                                        "type": "object"
+                                    }
+                                },
+                                "required": [
+                                    "walletAddress",
+                                    "toolCid",
+                                    "scatteringMethod",
+                                    "name",
+                                    "kwargs"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Flow created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cid": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as missing fields or invalid data"
+                    },
+                    "409": {
+                        "description": "Conflict, flow with the same CID already exists"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "listFlows",
+                "summary": "List Flows",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "walletAddress",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of flows",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Flow"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/flows/{cid}": {
+            "get": {
+                "operationId": "getFlowByCid",
+                "summary": "Get Flow",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Flow data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Flow"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "updateFlow",
+                "summary": "Update Flow",
+                "parameters": [
+                    {
+                        "name": "cid",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Flow updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Flow"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/jobs/{bacalhauJobID}": {
+            "get": {
+                "operationId": "getJobByBacalhauJobID",
+                "summary": "Get Job",
+                "parameters": [
+                    {
+                        "name": "bacalhauJobID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Job"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Job not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "updateJob",
+                "summary": "Update Job",
+                "parameters": [
+                    {
+                        "name": "bacalhauJobID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Job"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Job not found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/jobs/{bacalhauJobID}/logs": {
+            "get": {
+                "operationId": "streamJobLogs",
+                "summary": "Stream Job Logs",
+                "parameters": [
+                    {
+                        "name": "bacalhauJobID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols. WebSocket connection established for streaming logs.",
+                        "headers": {
+                            "Upgrade": {
+                                "description": "Upgrade header specifying the WebSocket protocol.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "Connection": {
+                                "description": "Connection header specifying 'upgrade'.",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as missing or invalid bacalhauJobID."
+                    },
+                    "500": {
+                        "description": "Internal Server Error. Error in setting up WebSocket connection or executing command to fetch logs."
+                    }
+                }
+            }
+        },
+        "/tags": {
+            "post": {
+                "operationId": "addTag",
+                "summary": "Add Tag",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "example-tag"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "example-type"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "type"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tag created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, such as missing fields or invalid data"
+                    },
+                    "409": {
+                        "description": "Conflict, tag with the same name already exists"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "get": {
+                "operationId": "listTags",
+                "summary": "List Tags",
+                "responses": {
+                    "200": {
+                        "description": "List of tags",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Tag"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "walletAddress": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Tool": {
+                "type": "object",
+                "properties": {
+                    "cid": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "walletAddress": {
+                        "type": "string"
+                    },
+                    "toolJson": {
+                        "type": "object"
+                    }
+                }
+            },
+            "DataFile": {
+                "type": "object",
+                "properties": {
+                    "cid": {
+                        "type": "string"
+                    },
+                    "walletAddress": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "jobInputs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Job"
+                        }
+                    },
+                    "jobOutputs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Job"
+                        }
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tag"
+                        }
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Flow": {
+                "type": "object",
+                "properties": {
+                    "cid": {
+                        "type": "string"
+                    },
+                    "jobs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Job"
+                        }
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "walletAddress": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Job": {
+                "type": "object",
+                "properties": {
+                    "bacalhauJobID": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "walletAddress": {
+                        "type": "string"
+                    },
+                    "toolID": {
+                        "type": "string"
+                    },
+                    "tool": {
+                        "$ref": "#/components/schemas/Tool"
+                    },
+                    "flowID": {
+                        "type": "string"
+                    },
+                    "flow": {
+                        "$ref": "#/components/schemas/Flow"
+                    },
+                    "inputs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DataFile"
+                        }
+                    },
+                    "outputs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DataFile"
+                        }
+                    }
+                }
+            },
+            "Tag": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "dataFiles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DataFile"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
