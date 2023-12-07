@@ -7,6 +7,9 @@
     "servers": [
         {
             "url": "https://api.prod.labdao.xyz/"
+        },
+        {
+            "url": "https://stg.prod.labdao.xyz/"
         }
     ],
     "paths": {
