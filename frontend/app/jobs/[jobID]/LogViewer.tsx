@@ -41,7 +41,7 @@ const LogViewer = () => {
   }, [job])
 
   return (
-    <pre>
+    <pre style={{overflowX: 'auto'}}>
       {logs}
     </pre>
   )

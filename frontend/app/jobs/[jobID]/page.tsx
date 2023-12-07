@@ -24,19 +24,62 @@ export default function JobDetail() {
   interface File {
     CID: string;
     Filename: string;
+    Tags: Tag[];
+  }
+
+  interface Tag {
+    Name: string;
+    Type: string;
+  }
+
+  const shortenAddressOrCid = (addressOrCid: string) => {
+    if (addressOrCid) {
+      if (addressOrCid.length) {
+        return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
+      } else {
+        return "";
+      }
+    }
   }
 
   const columns: ColumnDef<File>[] = [
     {
       accessorKey: "Filename",
       header: "Filename",
-      cell: ({ row }) => {
-        return (
+      enableSorting: true,
+      sortingFn: "alphanumeric",
+      cell: ({ row }) => (
+        <div>
           <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
             {row.getValue("Filename")}
           </a>
-        );
-      },
+          <div style={{ fontSize: 'smaller', marginTop: '4px' }}>
+            <a 
+              target="_blank" 
+              href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}
+              style={{ color: 'gray', textDecoration: 'none' }}
+            >
+              {row.getValue("CID")}
+            </a>
+          </div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "Tags",
+      header: "Tags",
+      cell: ({ row }) => {
+        const tags: Tag[] = row.getValue("Tags") as Tag[];
+        if (tags && tags.length > 0) {
+          return (
+            <div>
+              {tags.map((tag, index) => (
+                <div key={index}>{tag.Name}</div>
+              ))}
+            </div>
+          );
+        }
+      }
     },
     {
       accessorKey: "CID",
@@ -44,7 +87,7 @@ export default function JobDetail() {
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {row.getValue("CID")}
+            {shortenAddressOrCid(row.getValue("CID"))}
           </a>
         );
       },
