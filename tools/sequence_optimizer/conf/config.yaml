@@ -1,0 +1,15 @@
+# TODO integrate AF2 into the pipeline
+output_dir: "/inputs"
+pdb_files: 
+ - "/inputs/1CGI_l_b.pdb"
+ - "/inputs/AF-Q03405-F1-model_v4.pdb"
+forcefield_model:
+ - "amber99sbildn.xml"
+ #- "amber14-all.xml"
+ #- "amber03.xml"
+ #- "charmm36.xml"
+implicit_solvent_model: # in the same order as forcefield_model - a 1:1 mapping
+ - "amber99_obc.xml"
+# - "implicit/obc1.xml"
+# - "amber03_obc.xml"
+# - "implicit/obc1.xml"
