@@ -53,15 +53,10 @@ jobs:
             - 'tools/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          colabdesign-autoprompt:
-            - 'tools/colabdesign-autoprompt/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
           AF2:
             - 'tools/AF2/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-
 
   tools:
     needs: changes-tools
