@@ -2,8 +2,8 @@
     "name": "AF2 v0.1",
     "description": "Create structure from sequence with AF2.",
     "author": "sokrypton",
-    "github": "https://github.com/sokrypton/ColabDesign",
-    "paper": "https://www.nature.com/articles/s41586-023-06415-8",
+    "github": "https://github.com/sokrypton/ColabFold",
+    "paper": "https://www.nature.com/articles/s41592-022-01488-1",
     "task": "sequence folding",
     "baseCommand": [
     ],
