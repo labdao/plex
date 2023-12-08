@@ -76,6 +76,7 @@ class Agent:
         if self.policy_flag == 'proximal_exploration':
 
             # load the wild-type sequence and its score f(wt) from the first row (zeroth iteration entry) of df.
+            # nb: may want to move the code for df_action above into the policies where it is relevant.
 
             for index, row in df_action.iterrows():
 
