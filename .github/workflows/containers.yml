@@ -148,3 +148,28 @@ jobs:
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
       deploy-environment: ${{ matrix.backend.env }}
     secrets: inherit
+
+  ########## LILYPAD container ##################################
+  changes-lilypad:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      changes: ${{ steps.filter.outputs.lilypad }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          lilypad:
+            - 'docker/images/lilypad/**'
+
+  lilypad:
+    needs: changes-lilypad
+    if: ${{ needs.changes-lilypad.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
+    uses: ./.github/workflows/docker.yml
+    with:
+      name: lilypad
+      context: docker/images/lilypad
+    secrets: inherit
