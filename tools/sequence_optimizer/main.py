@@ -20,20 +20,6 @@ def find_fasta_file(directory_path):
                 return os.path.abspath(os.path.join(root, file))
     return None  # Return None if no .fasta file is found in the directory
 
-
-# def load_fasta_to_dataframe(fasta_file):
-#     sequences = []
-#     with open(fasta_file, 'r') as file:
-#         seq_num = 1
-#         for line in file:
-#             if line.startswith('>'):
-#                 sequences.append({'sequence_number': seq_num, 'seq': ''})
-#                 seq_num += 1
-#             else:
-#                 sequences[-1]['seq'] += line.strip()
-
-#     return pd.DataFrame(sequences)
-
 def load_fasta_to_dataframe(fasta_file):
     sequences = []
     with open(fasta_file, 'r') as file:
