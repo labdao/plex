@@ -9,7 +9,7 @@ class Agent:
         self.reward = reward
         self.policy_flag = policy_flag
 
-    def policy(self):
+    def apply_policy(self):
         if self.policy_flag == 'random_mutation':
             # Filter df_action based on the value of 't'
             if self.t == 0:
@@ -63,6 +63,10 @@ class Agent:
                 if len(seq) > 1:  # Ensure there is at least one residue to delete
                     deletion_pos = random.randint(0, len(seq) - 1)  # Select random position
 
+                    original_residue = seq[deletion_pos]
+                    original_seq_for_printing = ''.join(seq[:deletion_pos]) + '[' + original_residue + ']' + ''.join(seq[deletion_pos + 1:])
+                    seq_after_delete_for_printing = ''.join(seq[:deletion_pos]) + ''.join(seq[deletion_pos + 1:])
+
                     # Perform the deletion
                     del seq[deletion_pos]
 
@@ -70,7 +74,7 @@ class Agent:
                     df_action.at[index, 'seq'] = ''.join(seq)
 
                     # Optional: Print the sequence before and after deletion
-                    print(f"Sequence before deletion: {row['seq']} -> Sequence after deletion: {''.join(seq)}")
+                    print(f"Sequence before deletion: {original_seq_for_printing} -> Sequence after deletion: {seq_after_delete_for_printing}")
 
             # Update the 't' column in df_action to the current value of self.t
             df_action['t'] = self.t
@@ -79,13 +83,7 @@ class Agent:
             result_df = pd.concat([self.df, df_action])
 
             return result_df, df_action
-
-
-
-
-
-
-
+        
 
 
 

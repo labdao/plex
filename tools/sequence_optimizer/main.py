@@ -50,13 +50,11 @@ def load_fasta_to_dataframe(fasta_file):
     return pd.DataFrame(sequences)
 
 
-def step(df, df_action, outputs_directory, cfg):
+def step(t, df, df_action, outputs_directory, cfg):
 
     # run oracle
-    oracle_runner = Oracle(df_action, outputs_directory, cfg)
-    oracle_runner.run()
-
-    # need to complete df with orcale info here
+    oracle_runner = Oracle(t, df, df_action, outputs_directory, cfg)
+    df = oracle_runner.run()
 
     # run reward
     reward = 0
@@ -81,21 +79,21 @@ def my_app(cfg: DictConfig) -> None:
     df_0 = load_fasta_to_dataframe(fasta_file)
 
     start_time = time.time()
+    print("sequence to structure complete...")
 
     reward = 0
+    df, reward_step = step(0, df_0, df_0, outputs_directory, cfg)
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
         print("starting iteraction number ", t)
-        # observation, reward, terminated, truncated, info = env.step(env.action_space.sample())
-        if t==0:
-            df, reward_step = step(df_0, df_0, outputs_directory, cfg)
-        else:
-            agent = Agent(t, df, reward, policy_flag=cfg.params.basic_settings.policy_flag)
-            df, df_action = agent.policy()
-            df, reward_step = step(df, df_action, outputs_directory, cfg)
+
+        agent = Agent(t+1, df, reward, policy_flag=cfg.params.basic_settings.policy_flag)
+        df, df_action = agent.apply_policy()
+        df, reward_step = step(t+1, df, df_action, outputs_directory, cfg)
 
         reward = reward_step
 
     print('df', df)
+    df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
     print("sequence to structure complete...")
     end_time = time.time()
