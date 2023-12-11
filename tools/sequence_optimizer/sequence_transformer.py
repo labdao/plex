@@ -61,7 +61,7 @@ class ESM2Runner:
         
         return log_likelihoods
     
-    def _compute_likelihood_ratio_and_pseudolikelihood(self, protein_sequence, start_pos = 1, end_pos = None):
+    def _compute_likelihood_ratio_and_pseudolikelihood_matrix(self, protein_sequence, start_pos = 1, end_pos = None):
         """
         the entries are the log likelihood for every token conditioned on all others subtracted from the wt identity
         positive values indicate that a substitution is increasing the likelihood, negative values indicate that a substitution is decreasing the likelihood
@@ -82,12 +82,12 @@ class ESM2Runner:
             # Get the log probability of the wild-type residue
             if position != 0:
                 logger.debug("Moving to next position")
-            logger.debug(f"WT identity: {protein_sequence[position - 1]}, WT index: {self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)}")
-            wt_residue = self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)[0] -4
-            logger.debug(wt_residue)
-            log_prob_wt = log_likelihoods[wt_residue, position - start_pos]
+            logger.debug(f"Reference residue identity: {protein_sequence[position - 1]}, WT index: {self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)}")
+            reference_residue = self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)[0] -4
+            logger.debug(reference_residue)
+            log_prob_wt = log_likelihoods[reference_residue, position - start_pos]
             pseudolikelihood.append(log_prob_wt)
-            logger.debug(f"Position: {position}, wt_residue token ID: {wt_residue}, log_likelihoods shape: {log_likelihoods.shape}, log_likelihood_wt: {log_prob_wt}")
+            logger.debug(f"Position: {position}, reference_residue token ID: {reference_residue}, log_likelihoods shape: {log_likelihoods.shape}, log_likelihood_wt: {log_prob_wt}")
             
             
             # Calculate LLR for each variant
@@ -101,10 +101,18 @@ class ESM2Runner:
         return log_likelihood_ratios, pseudolikelihood
 
     def token_masked_marginal_log_likelihood_ratio_matrix(self, protein_sequence):
-        log_likelihood_ratios, pseudolikelihood = self._compute_likelihood_ratio_and_pseudolikelihood(protein_sequence)
+        log_likelihood_ratios, pseudolikelihood = self._compute_likelihood_ratio_and_pseudolikelihood_matrix(protein_sequence)
         return log_likelihood_ratios
 
+    def sequence_pseudo_log_likelihoods_scalar(self, protein_sequence):
+        log_likelihood_ratios, pseudolikelihood = self._compute_likelihood_ratio_and_pseudolikelihood_matrix(protein_sequence)
+        return sum(pseudolikelihood)
+
     def sequence_average_log_likelihood_scalar(self, protein_sequence):
+        """
+        returns a scalar
+        loss * number of residues
+        """
         # Tokenize the input sequence, including special tokens
         input_ids = self.tokenizer.encode(protein_sequence, return_tensors="pt")
         labels = input_ids.clone()  # The labels are the input ids themselves
@@ -125,8 +133,8 @@ class ESM2Runner:
 
     def sequence_scaled_average_log_likelihood_scalar(self, protein_sequence):
         """
-        # returns a scalar
-        # aka loss * number of residues
+        returns a scalar
+        loss * number of residues
         """
         # estimate the average log likelihood of the sequence
         average_log_likelihood = self.sequence_average_log_likelihood(protein_sequence)
@@ -134,10 +142,6 @@ class ESM2Runner:
         scaled_average_log_likelihood = average_log_likelihood * len(protein_sequence)
 
         return scaled_average_log_likelihood
-
-    def sequence_pseudo_log_likelihoods_scalar(self, protein_sequence):
-        log_likelihood_ratios, pseudolikelihood = self._compute_likelihood_ratio_and_pseudolikelihood(protein_sequence)
-        return sum(pseudolikelihood)
 
 if __name__ == "__main__":
     # Example protein sequence
