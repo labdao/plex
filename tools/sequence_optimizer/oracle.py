@@ -58,36 +58,39 @@ def supplement_dataframe(t, df, directory_path):
 
     return df
 
-# def supplement_dataframe(t, df, directory_path):
-#     # Adding new columns only if they don't already exist
-#     for col in ['top rank json', 'top rank pdb', 'plddt', 'max_pae', 'ptm']:
-#         if col not in df.columns:
-#             df[col] = np.nan
+import random
 
-#     for index, row in df.iterrows():
-#         if row['t'] == t:
-#             sequence_number = row['sequence_number']
+def sampling_set(t, df, cfg):
 
-#             # Search for the matching json and pdb files
-#             json_pattern = os.path.join(directory_path, f'seq_{sequence_number}_t_{t}_scores_rank_001*.json')
-#             pdb_pattern = os.path.join(directory_path, f'seq_{sequence_number}_t_{t}_unrelaxed_rank_001*.pdb')
+    k = cfg.params.basic_settings.k # max number of samples
 
-#             json_files = glob.glob(json_pattern)
-#             pdb_files = glob.glob(pdb_pattern)
+    # Iterate over rows where 't' column value is t
+    for index, row in df[df['t'] == t].iterrows():
+        action_ranking = row['action_score']
+        length_of_ranking = len(action_ranking)
 
-#             # Assuming the first match is the desired file
-#             if json_files:
-#                 df.at[index, 'top rank json'] = json_files[0]
-#                 with open(json_files[0], 'r') as file:
-#                     data = json.load(file)
-#                     df.at[index, 'plddt'] = np.mean(data['plddt'])
-#                     df.at[index, 'max_pae'] = data['max_pae']
-#                     df.at[index, 'ptm'] = data['ptm']
+        if k >= length_of_ranking:
+            # Set all elements in the seed list to True
+            seed_values = [True] * length_of_ranking
+        else:
+            # Randomly sample k indices from the action_ranking list
+            sampled_indices = random.sample(range(length_of_ranking), k)
 
-#             if pdb_files:
-#                 df.at[index, 'top rank pdb'] = pdb_files[0]
+            # Set seed values to True for sampled indices and False for others
+            seed_values = [index in sampled_indices for index in range(length_of_ranking)]
 
-#     return df
+        # Update the 'seed' column with the list of seed values
+        df.at[index, 'seed'] = seed_values
+
+    return df
+
+def action_selection(t, df, cfg):
+
+    # df_set = pareto(t, df) # set a pareto flag for each sequence
+    if t>0:
+        df = sampling_set(t, df, cfg)
+
+    return df
 
 class Oracle:
     def __init__(self, t, df, df_action, outputs_directory, cfg):
@@ -100,16 +103,20 @@ class Oracle:
 
     def run(self):
 
-        # prepare input sequences as fastas and run AF2 K-times
-        seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
+        ### Action selection minimal example and set a separate column (use as seed) with True/False values
+        df = action_selection(self.t, self.df, self.cfg)
 
-        K = self.cfg.params.basic_settings.AF2_repeats_per_seq
-        for n in range(K):
-            print("starting repeat number ", n)
-            af2_runner = AF2Runner(seq_input_dir, self.outputs_directory)
-            af2_runner.run()
+        ### AF2 Runner
+        # # prepare input sequences as fastas and run AF2 K-times
+        # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
 
-        # complete df data frame with info
-        supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
+        # K = self.cfg.params.basic_settings.AF2_repeats_per_seq
+        # for n in range(K):
+        #     print("starting repeat number ", n)
+        #     af2_runner = AF2Runner(seq_input_dir, self.outputs_directory)
+        #     af2_runner.run()
 
-        return supplemented_dataframe
+        # # complete df data frame with info
+        # supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
+
+        return df
