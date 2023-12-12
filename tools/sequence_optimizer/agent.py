@@ -1,7 +1,9 @@
 import pandas as pd
+import numpy as np
 import random
 import sys
 import os
+import sequence_transformer, sequence_transformer_utils
 
 def exhaustive_deletion(t, df):
     # Iterate over rows where 't' column value is t-1
@@ -23,7 +25,7 @@ def exhaustive_deletion(t, df):
                         # Create a new sequence excluding the character at position n
                         new_sequence = ''.join(variant_seq_list[:n] + variant_seq_list[n+1:])
                         # Append a new row to the data frame
-                        new_row = pd.DataFrame({'t': [t], 'original_seq': original_seq, 'shortened_seq': [new_sequence]})
+                        new_row = pd.DataFrame({'t': [t], 'seed_seq': variant_seq, 'original_seq': original_seq, 'shortened_seq': [new_sequence]})
                         df = pd.concat([df, new_row], ignore_index=True)
 
     return df
@@ -45,6 +47,51 @@ def mutate_single_residue(t, df):
             mutated_seq = list(original_seq)
             permissible_aas = [aa for aa in alphabet if aa != mutated_seq[i]]
             mutated_seq[i] = random.choice(permissible_aas)
+            mutated_sequences.append(''.join(mutated_seq))
+
+        df.at[index, 'variant_seq'] = mutated_sequences
+
+    return df
+
+def greedy_choice_residue(runner, LGmatrix):
+    # Define the one-letter amino acid code
+    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+
+    # Check if the LGmatrix has 20 rows corresponding to the amino acids
+    if LGmatrix.shape[0] != len(amino_acid_code):
+        raise ValueError("The LGmatrix should have 20 rows, one for each amino acid.")
+
+    # Find the index of the maximum value in each column
+    max_indices = np.argmax(LGmatrix, axis=0)
+
+    # Map these indices to their corresponding amino acids
+    amino_acid_sequence = [amino_acid_code[index] for index in max_indices]
+
+    return amino_acid_sequence
+
+def likelihood_based_mutation(t, df):
+
+    # Initialize the ESM2Runner with the default model
+    runner = sequence_transformer.ESM2Runner()
+
+    # Iterate over rows where 't' column value is t
+    for index, row in df[df['t'] == t].iterrows():
+        shortened_seq = row['shortened_seq']
+        mutated_sequences = []
+
+        LGmatrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
+        print('LGMatrix', LGmatrix)
+        print('check sum', np.sum(np.exp(LGmatrix), axis=0))
+        greedy_mutations = greedy_choice_residue(runner, LGmatrix)
+
+        # Iterate over the length of the shortened_sequence
+        for i in range(len(shortened_seq)):
+
+            # Mutate only one residue at a time
+
+            mutated_seq = list(shortened_seq)
+
+            mutated_seq[i] = greedy_mutations[i]
             mutated_sequences.append(''.join(mutated_seq))
 
         df.at[index, 'variant_seq'] = mutated_sequences
@@ -92,8 +139,6 @@ def action_constraint(t, df):
 
     return df
 
-import numpy as np
-
 def action_ranking(t, df):
     # Ensure the 'action_score' column exists
     if 'action_score' not in df.columns:
@@ -134,7 +179,8 @@ class Agent:
                 self.df['original_seq'] = self.df['seq']
 
                 # Inserting an empty column named 'shortened_seq'
-                self.df.insert(2, 'shortened_seq', '')
+                self.df.insert(2, 'seed_seq', '')
+                self.df.insert(3, 'shortened_seq', '')
 
                 # Renaming the column 'seq' to 'variant_seq' and converting values to lists
                 self.df['seq'] = self.df['seq'].apply(lambda x: [x])
@@ -147,7 +193,8 @@ class Agent:
             # perform exhaustive deletion and return a list of shortened_sequences
             df = exhaustive_deletion(self.t, self.df)
 
-            df = mutate_single_residue(self.t, df) # to be replaced by greedy_sampling
+            # df = mutate_single_residue(self.t, df) # to be replaced by greedy_sampling
+            df = likelihood_based_mutation(self.t, df)
 
             df = action_constraint(self.t, df)
 

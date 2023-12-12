@@ -152,7 +152,7 @@ if __name__ == "__main__":
 
     # Calculate the average log likelihood for the example sequence
     #matrix = runner.token_masked_marginal_log_likelihood_ratio_matrix(example_sequence)
-    scalar = runner.sequence_pseudo_log_likelihoods(example_sequence)
+    scalar = runner.sequence_pseudo_log_likelihoods_scalar(example_sequence)
     # Print the result
     #print(f"Log Likelihood Matrix for the example sequence: {matrix}")
     print(f"Pseudolikelihood Scalar for the example sequence: {scalar}")
