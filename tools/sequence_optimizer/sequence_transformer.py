@@ -51,7 +51,7 @@ class ESM2Runner:
                 logits = self.model(masked_input_ids).logits
             
             # Calculate log probabilities
-            probabilities = torch.nn.functional.softmax(logits[0, position_index], dim=0)
+            probabilities = torch.nn.functional.softmax(logits[0, position], dim=0)
             log_probabilities = torch.log(probabilities)
             
             # Store log probabilities for each amino acid

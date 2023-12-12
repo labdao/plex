@@ -53,16 +53,16 @@ def mutate_single_residue(t, df):
 
     return df
 
-def greedy_choice_residue(runner, LGmatrix):
+def greedy_choice_residue(runner, LLmatrix):
     # Define the one-letter amino acid code
     amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
 
-    # Check if the LGmatrix has 20 rows corresponding to the amino acids
-    if LGmatrix.shape[0] != len(amino_acid_code):
-        raise ValueError("The LGmatrix should have 20 rows, one for each amino acid.")
+    # Check if the LLmatrix has 20 rows corresponding to the amino acids
+    if LLmatrix.shape[0] != len(amino_acid_code):
+        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
 
     # Find the index of the maximum value in each column
-    max_indices = np.argmax(LGmatrix, axis=0)
+    max_indices = np.argmax(LLmatrix, axis=0)
 
     # Map these indices to their corresponding amino acids
     amino_acid_sequence = [amino_acid_code[index] for index in max_indices]
@@ -79,10 +79,10 @@ def likelihood_based_mutation(t, df):
         shortened_seq = row['shortened_seq']
         mutated_sequences = []
 
-        LGmatrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
-        print('LGMatrix', LGmatrix)
-        print('check sum', np.sum(np.exp(LGmatrix), axis=0))
-        greedy_mutations = greedy_choice_residue(runner, LGmatrix)
+        LLmatrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
+        # print('LLMatrix', LLmatrix)
+        # print('check sum', np.sum(np.exp(LLmatrix), axis=0))
+        greedy_mutations = greedy_choice_residue(runner, LLmatrix)
 
         # Iterate over the length of the shortened_sequence
         for i in range(len(shortened_seq)):
