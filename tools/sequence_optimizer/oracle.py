@@ -1,5 +1,10 @@
 import os
 from AF2_module import AF2Runner
+import os
+import json
+# import pandas as pd
+# import numpy as np
+import glob
 
 def write_dataframe_to_fastas(t, dataframe, cfg):
     input_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
@@ -17,12 +22,6 @@ def write_dataframe_to_fastas(t, dataframe, cfg):
         with open(file_path, 'w') as file:
             file.write(f">{row['sequence_number']}\n{row['seq']}\n")
     return os.path.abspath(input_dir)
-
-import os
-import json
-import pandas as pd
-import numpy as np
-import glob
 
 def supplement_dataframe(t, df, directory_path):
     # Ensure DataFrame has a proper index
@@ -71,16 +70,16 @@ def sampling_set(t, df, cfg):
 
         if k >= length_of_ranking:
             # Set all elements in the seed list to True
-            seed_values = [True] * length_of_ranking
+            seed_flags = [True] * length_of_ranking
         else:
             # Randomly sample k indices from the action_ranking list
             sampled_indices = random.sample(range(length_of_ranking), k)
 
             # Set seed values to True for sampled indices and False for others
-            seed_values = [index in sampled_indices for index in range(length_of_ranking)]
+            seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
 
         # Update the 'seed' column with the list of seed values
-        df.at[index, 'seed'] = seed_values
+        df.at[index, 'seed_flag'] = seed_flags
 
     return df
 
@@ -106,7 +105,7 @@ class Oracle:
         ### Action selection minimal example and set a separate column (use as seed) with True/False values
         df = action_selection(self.t, self.df, self.cfg)
 
-        ### AF2 Runner
+        ### AF2 Runner ### 
         # # prepare input sequences as fastas and run AF2 K-times
         # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
 

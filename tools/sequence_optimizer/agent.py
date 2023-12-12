@@ -6,46 +6,48 @@ import os
 def exhaustive_deletion(t, df):
     # Iterate over rows where 't' column value is t-1
     for index, row in df[df['t'] == t-1].iterrows():
-        variant_seqs = row['variant seq']
-        seed_values = row['seed']
+        original_seq = row['original_seq']
+        variant_seqs = row['variant_seq']
+        seed_flags = row['seed_flag']
 
-        # Check if variant_seqs and seed_values are lists and have the same length
-        if isinstance(variant_seqs, list) and isinstance(seed_values, list) and len(variant_seqs) == len(seed_values):
+        # Check if variant_seqs and seed_flags are lists and have the same length
+        if isinstance(variant_seqs, list) and isinstance(seed_flags, list) and len(variant_seqs) == len(seed_flags):
             # Iterate over each sequence and its corresponding seed value
-            for variant_seq, seed in zip(variant_seqs, seed_values):
+            for variant_seq, seed in zip(variant_seqs, seed_flags):
                 # Process only if seed is True
                 if seed:
                     variant_seq_list = list(variant_seq)
 
-                    # Iterate over the length of the variant sequence
+                    # Iterate over the length of the variant_sequence
                     for n in range(len(variant_seq_list)):
                         # Create a new sequence excluding the character at position n
                         new_sequence = ''.join(variant_seq_list[:n] + variant_seq_list[n+1:])
                         # Append a new row to the data frame
-                        new_row = pd.DataFrame({'t': [t], 'original seq': [new_sequence]})
+                        new_row = pd.DataFrame({'t': [t], 'original_seq': original_seq, 'shortened_seq': [new_sequence]})
                         df = pd.concat([df, new_row], ignore_index=True)
 
     return df
 
 def mutate_single_residue(t, df):
     # Define the one-letter amino acid alphabet
-    amino_acids = 'ACDEFGHIKLMNPQRSTVWY'
+    alphabet = 'ACDEFGHIKLMNPQRSTVWY'
 
     # Iterate over rows where 't' column value is t
     for index, row in df[df['t'] == t].iterrows():
-        original_seq = row['original seq']
+        original_seq = row['shortened_seq']
         mutated_sequences = []
 
-        # Iterate over the length of the original sequence
+        # Iterate over the length of the shortened_sequence
         for i in range(len(original_seq)):
+
             # Mutate only one residue at a time
 
             mutated_seq = list(original_seq)
-            mutated_seq[i] = random.choice(amino_acids)
+            permissible_aas = [aa for aa in alphabet if aa != mutated_seq[i]]
+            mutated_seq[i] = random.choice(permissible_aas)
             mutated_sequences.append(''.join(mutated_seq))
 
-
-        df.at[index, 'variant seq'] = mutated_sequences
+        df.at[index, 'variant_seq'] = mutated_sequences
 
     return df
 
@@ -71,22 +73,22 @@ def levenshtein_distance(s1, s2):
 
 def action_constraint(t, df):
     # Ensure the 'action constraint' column exists
-    if 'action constraint' not in df.columns:
-        df['action constraint'] = None
+    if 'action_constraint' not in df.columns:
+        df['action_constraint'] = None
 
     # Iterate over rows where 't' column value is t
     for index, row in df[(df['t'] == t)].iterrows():
-        original_seq = row['original seq']
-        variant_seqs = row['variant seq']
+        shortened_seq = row['shortened_seq']
+        variant_seqs = row['variant_seq']
         levenshtein_distances = []
 
-        # Compute Levenshtein distance for each sequence in the variant seq list
+        # Compute Levenshtein distance for each sequence in the variant_seq list
         for variant_seq in variant_seqs:
-            distance = levenshtein_distance(original_seq, variant_seq)
+            distance = levenshtein_distance(shortened_seq, variant_seq)
             levenshtein_distances.append(distance)
 
-        # Update the 'action constraint' column with the list of distances
-        df.at[index, 'action constraint'] = levenshtein_distances
+        # Update the 'action_constraint' column with the list of distances
+        df.at[index, 'action_constraint'] = levenshtein_distances
 
     return df
 
@@ -99,7 +101,7 @@ def action_ranking(t, df):
 
     # Iterate over rows where 't' column value is t
     for index, row in df[df['t'] == t].iterrows():
-        variant_seqs = row['variant seq']
+        variant_seqs = row['variant_seq']
 
         # Generate a list of action scores
         action_scores = [-np.log(np.random.uniform(0, 1)) for _ in range(len(variant_seqs))]
@@ -126,19 +128,23 @@ class Agent:
 
             # read seq from data frame
             if self.t == 1:  # Adjust formatting of input data frame in the first iteration
-                # Inserting an empty column named 'original seq'
-                self.df.insert(2, 'original seq', '')
 
-                # Renaming the column 'seq' to 'variant seq' and converting values to lists
+                # renaming sequence_number column to original_sequence and write the values
+                self.df.rename(columns={'sequence_number': 'original_seq'}, inplace=True)
+                self.df['original_seq'] = self.df['seq']
+
+                # Inserting an empty column named 'shortened_seq'
+                self.df.insert(2, 'shortened_seq', '')
+
+                # Renaming the column 'seq' to 'variant_seq' and converting values to lists
                 self.df['seq'] = self.df['seq'].apply(lambda x: [x])
-                self.df.rename(columns={'seq': 'variant seq'}, inplace=True)
+                self.df.rename(columns={'seq': 'variant_seq'}, inplace=True)
 
-                # Adding a column 'seed' after 'variant seq' and setting its value to a list containing True
-                variant_seq_index = self.df.columns.get_loc('variant seq')
-                self.df.insert(variant_seq_index + 1, 'seed', [[True]] * len(self.df))
+                # Adding a column 'seed_flag' after 'variant_seq' and setting its value to a list containing True
+                variant_seq_index = self.df.columns.get_loc('variant_seq')
+                self.df.insert(variant_seq_index + 1, 'seed_flag', [[True]] * len(self.df))
 
-
-            # perform exhaustive deletion and return a list of shortened sequences
+            # perform exhaustive deletion and return a list of shortened_sequences
             df = exhaustive_deletion(self.t, self.df)
 
             df = mutate_single_residue(self.t, df) # to be replaced by greedy_sampling
@@ -310,27 +316,27 @@ class Agent:
 # def exhaustive_deletion(t, df):
 #     # Iterate over rows where 't' column value is t-1 and 'seed' is True
 #     for index, row in df[(df['t'] == t-1) & (df['seed'] == True)].iterrows():
-#         variant_seq = row['variant seq']
+#         variant_seq = row['variant_seq']
 #         variant_seq_list = list(variant_seq)
 
-#         # Iterate over the length of the variant sequence
+#         # Iterate over the length of the variant_sequence
 #         for n in range(len(variant_seq_list)):
 #             # Create a new sequence excluding the character at position n
 #             new_sequence = ''.join(variant_seq_list[:n] + variant_seq_list[n+1:])
 #             # Append a new row to the data frame
-#             new_row = pd.DataFrame({'t': [t], 'original seq': [new_sequence]})
+#             new_row = pd.DataFrame({'t': [t], 'shortened_seq': [new_sequence]})
 #             df = pd.concat([df, new_row], ignore_index=True)
 
 #     return df
 
             # if self.t == 1: # adjust formatting of input data frame in the first iteration
-            #     # Inserting an empty column named 'original seq'
-            #     self.df.insert(2, 'original seq', '')
+            #     # Inserting an empty column named 'shortened_seq'
+            #     self.df.insert(2, 'shortened_seq', '')
 
-            #     # Renaming the column 'seq' to 'variant seq'
-            #     self.df.rename(columns={'seq': 'variant seq'}, inplace=True)
+            #     # Renaming the column 'seq' to 'variant_seq'
+            #     self.df.rename(columns={'seq': 'variant_seq'}, inplace=True)
 
-            #     # Adding a column 'seed' after 'variant seq' and setting its value to True
-            #     variant_seq_index = self.df.columns.get_loc('variant seq')
+            #     # Adding a column 'seed' after 'variant_seq' and setting its value to True
+            #     variant_seq_index = self.df.columns.get_loc('variant_seq')
             #     # self.df.insert(variant_seq_index + 1, 'seed', True)
             #     self.df.insert(variant_seq_index + 1, 'seed', [[True]] * len(self.df))
