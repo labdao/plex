@@ -69,7 +69,7 @@ def my_app(cfg: DictConfig) -> None:
     reward = 0
     df, reward_step = step(0, df_0, df_0, outputs_directory, cfg)
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
-        print("starting iteraction number ", t)
+        print("starting iteration number ", t)
 
         agent = Agent(t+1, df, reward, cfg)
         df, df_action = agent.apply_policy()
