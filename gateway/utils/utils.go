@@ -39,6 +39,15 @@ func SendJSONResponseWithCID(w http.ResponseWriter, cid string) {
 	w.Write(jsonResponse)
 }
 
+func SendJSONResponseWithCIDs(w http.ResponseWriter, cids []string) {
+	response := map[string][]string{"cids": cids}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		SendJSONError(w, fmt.Sprintf("Error encoding response to JSON: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
 func CheckRequestMethod(r *http.Request, method string) error {
 	if r.Method != method {
 		return fmt.Errorf("only %s method is supported", method)

@@ -18,21 +18,31 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
+func AddDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received request to add datafile")
+		log.Println("Received request to add datafiles")
 
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err := r.ParseMultipartForm(10 << 20)
+		err := r.ParseMultipartForm(32 << 20)
 		if err != nil {
 			utils.SendJSONError(w, "Error parsing multipart form", http.StatusBadRequest)
 			return
 		}
-		log.Println("Parsed multipart form")
+
+		files := r.MultipartForm.File["files"]
+		walletAddress := r.FormValue("walletAddress")
+		var successfulCIDs []string
+
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			if err != nil {
+
+			}
+		}
 
 		file, _, err := r.FormFile("file")
 		if err != nil {
