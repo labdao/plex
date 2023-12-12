@@ -49,6 +49,7 @@ services:
       - 8546:8546
     volumes:
       - geth:/data/geth
+      - lilypad:/app/lilypad
 
   # lilypad-setup
   lilypad-setup:
