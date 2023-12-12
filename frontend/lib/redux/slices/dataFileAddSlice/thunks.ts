@@ -1,32 +1,37 @@
-import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
+import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk';
 
-import { saveDataFileToServer } from './actions'
-import { setCidDataSlice, setDataFileError,setFilenameDataSlice } from './dataSlice'
+import { saveDataFileToServer } from './actions';
+import { addCid, addFilename, setDataFileError } from './dataSlice';
 
 interface DataFilePayload {
-  file: File,
-  metadata: { [key: string]: any }
+  files: File[],
+  metadata: { [key: string]: any },
   handleSuccess: () => void
 }
 
-export const saveDataFileAsync = createAppAsyncThunk(
-  'dataFile/saveDataFile',
-  async ({ file, metadata, handleSuccess }: DataFilePayload, { dispatch }) => {
-    try {
-      const response = await saveDataFileToServer(file, metadata);
-      console.log("Response:", response)
-      if (response.cid) {
-        handleSuccess()
-      } else {
-        dispatch(setDataFileError('Failed to save data file.'))
+export const saveDataFilesAsync = createAppAsyncThunk(
+  'dataFile/saveDataFiles',
+  async ({ files, metadata, handleSuccess }: DataFilePayload, { dispatch }) => {
+    const responses = [];
+    for (const file of files) {
+      try {
+        const response = await saveDataFileToServer(file, metadata);
+        console.log("Response:", response);
+        if (response.cid) {
+          dispatch(addCid(response.cid));
+          dispatch(addFilename(response.filename));
+          responses.push(response);
+        } else {
+          dispatch(setDataFileError(`Failed to save data file: ${file.name}.`));
+        }
+      } catch (error: unknown) {
+        const errorMessage = (error as { message?: string }).message ?? `An error occurred while saving data file: ${file.name}.`;
+        dispatch(setDataFileError(errorMessage));
       }
-      return response;
-    } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' && error !== null && 'message' in error
-        ? (error as { message?: string }).message
-        : 'An error occurred while saving data file.';
-
-      dispatch(setDataFileError(errorMessage || 'An error occurred while saving data file.'));
     }
+    if (responses.length === files.length) {
+      handleSuccess();
+    }
+    return responses;
   }
-)
+);

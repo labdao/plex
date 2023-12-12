@@ -1,18 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-import { saveDataFileAsync } from './thunks'
+import { saveDataFilesAsync } from './thunks'
 
 interface DataFileSliceState {
-  filename: string
-  cid: string // Content Identifier in IPFS
+  filenames: string[]
+  cids: string[]
   isLoading: boolean
   error: string | null
   isUploaded: boolean
 }
 
 const initialState: DataFileSliceState = {
-  filename: '',
-  cid: '',
+  filenames: [],
+  cids: [],
   isLoading: false,
   error: null,
   isUploaded: false,
@@ -22,11 +22,11 @@ export const dataFileAddSlice = createSlice({
   name: 'dataFile',
   initialState,
   reducers: {
-    setFilenameDataSlice: (state, action: PayloadAction<string>) => {
-      state.filename = action.payload
+    addFilename: (state, action: PayloadAction<string>) => {
+      state.filenames.push(action.payload)
     },
-    setCidDataSlice: (state, action: PayloadAction<string>) => {
-      state.cid = action.payload
+    addCid: (state, action: PayloadAction<string>) => {
+      state.cids.push(action.payload)
     },
     setDataFileError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload
@@ -40,22 +40,31 @@ export const dataFileAddSlice = createSlice({
     setIsUploadedDataSlice: (state, action: PayloadAction<boolean>) => {
       state.isUploaded = action.payload
     },
+    resetDataFileSlice: (state) => {
+      state.filenames = []
+      state.cids = []
+      state.isLoading = false
+      state.error = null
+      state.isUploaded = false
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(saveDataFileAsync.pending, (state) => {
+      .addCase(saveDataFilesAsync.pending, (state) => {
         state.isLoading = true
         state.error = null
       })
-      .addCase(saveDataFileAsync.fulfilled, (state, action) => {
+      .addCase(saveDataFilesAsync.fulfilled, (state, action) => {
         state.isLoading = false
-        if (action.payload) {
-          state.cid = action.payload.cid
-          state.filename = action.payload.filename
+        if (action.payload && Array.isArray(action.payload)) {
+          for (const file of action.payload) {
+            state.cids.push(file.cid)
+            state.filenames.push(file.filename)
+          }
         }
         state.isUploaded = true
       })
-      .addCase(saveDataFileAsync.rejected, (state, action) => {
+      .addCase(saveDataFilesAsync.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.error.message || 'An error occurred while saving data file.'
       })
@@ -63,8 +72,8 @@ export const dataFileAddSlice = createSlice({
 })
 
 export const {
-  setFilenameDataSlice,
-  setCidDataSlice,
+  addFilename,
+  addCid,
   setDataFileError,
   startFileUploadDataSlice,
   endFileUploadDataSlice,

@@ -9,8 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import {
   endLoading,
-  saveDataFileAsync,
-  selectCID,
+  saveDataFilesAsync,
   selectDataFileError,
   selectDataFileIsLoading,
   selectWalletAddress,
@@ -30,12 +29,11 @@ export default function DataFileForm() {
   const isLoading = useSelector(selectDataFileIsLoading);
   const walletAddress = useSelector(selectWalletAddress);
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedFile = e.target.files && e.target.files[0];
-    if (uploadedFile) {
-      setFile(uploadedFile);
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files));
     }
   };
 
@@ -46,8 +44,8 @@ export default function DataFileForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (file === null) {
-      dispatch(setError("Please select a file"));
+    if (files.length === 0) {
+      dispatch(setError("Please select at least one file"));
       return;
     }
 
@@ -56,10 +54,10 @@ export default function DataFileForm() {
     const metadata = { walletAddress };
 
     try {
-      await dispatch(saveDataFileAsync({ file, metadata, handleSuccess }));
-      dispatch(endLoading());
+      await dispatch(saveDataFilesAsync({ files, metadata, handleSuccess }));
     } catch (error) {
-      dispatch(setError("Error uploading file"));
+      dispatch(setError("Error uploading files"));
+    } finally {
       dispatch(endLoading());
     }
   };
@@ -74,7 +72,7 @@ export default function DataFileForm() {
           <DialogTitle>Add Data</DialogTitle>
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input type="file" onChange={handleFileChange} />
+              <Input type="file" onChange={handleFileChange} multiple/>
               <Button type="submit">{isLoading ? "Submitting..." : "Submit"}</Button>
               {errorMessage && <Alert variant="destructive">{errorMessage}</Alert>}
             </form>
