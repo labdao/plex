@@ -14,7 +14,7 @@ const LogViewer = () => {
 
   useEffect(() => {
     const BacalhauJobId = job.BacalhauJobID || window.location.href.split("/").pop();
-    setLogs('Connecting to stream with Bacalhau Job Id ${BacalhauJobId}')
+    setLogs(`Connecting to stream with Bacalhau Job Id ${BacalhauJobId}`)
 
     let formattedBackendUrl = backendUrl().replace('http://', '').replace('https://', '');
     let wsProtocol = backendUrl().startsWith('https://') ? 'wss' : 'ws';
@@ -42,7 +42,7 @@ const LogViewer = () => {
   }, [job])
 
   return (
-    <pre>
+    <pre style={{overflowX: 'auto'}}>
       {logs}
     </pre>
   )
