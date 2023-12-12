@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectWalletAddress, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 import { useRouter } from "next/navigation";
 
 
@@ -63,6 +63,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
+  const walletAddress = useSelector(selectWalletAddress);
 
   // On page load fetch the default tool details
   useEffect(() => {
@@ -143,7 +144,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     console.log("===== Form Submitted =====", values);
 
     console.log('transformed payload')
-    const transformedPayload = transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b");
+    const transformedPayload = transformJson(values, walletAddress);
     console.log(transformedPayload);
     console.log('submitting')
 
