@@ -63,7 +63,7 @@ class ESM2Runner:
     
     def _compute_likelihood_ratio_and_pseudolikelihood_matrix(self, protein_sequence, start_pos = 1, end_pos = None):
         """
-        the entries are the log likelihood for every token conditioned on all others subtracted from the wt identity
+        the entries are the log likelihood for every token conditioned on all others subtracted from the wt identity;
         positive values indicate that a substitution is increasing the likelihood, negative values indicate that a substitution is decreasing the likelihood
         Initialize matrix for log likelihood ratios
         """

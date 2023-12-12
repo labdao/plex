@@ -53,21 +53,56 @@ def mutate_single_residue(t, df):
 
     return df
 
-def greedy_choice_residue(runner, LLmatrix):
+# def extract_max_values(LL_matrix, max_indices):
+#     # Initialize an empty list to store the maximum values
+#     max_values = []
+
+#     # Iterate over each column index and the corresponding row index in max_indices
+#     for column_index, row_index in enumerate(max_indices):
+#         # Extract the maximum value from the specified row and column in LL_matrix
+#         max_value = LL_matrix[row_index, column_index]
+#         # Append the extracted value to the max_values list
+#         max_values.append(max_value)
+
+#     return max_values
+
+def compute_log_likelihood(runner, mutated_sequence, LL_matrix):
+
+    # Ensure that the length of the mutated sequence matches the number of columns in LL_matrix
+    if len(mutated_sequence) != LL_matrix.shape[1]:
+        raise ValueError("Length of mutated_sequence must match the number of columns in LL_matrix.")
+    
     # Define the one-letter amino acid code
     amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
 
-    # Check if the LLmatrix has 20 rows corresponding to the amino acids
-    if LLmatrix.shape[0] != len(amino_acid_code):
-        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
+    # Initialize total log likelihood
+    total_log_likelihood = 0
+
+    # Compute the total log likelihood of the mutated sequence
+    for i, aa in enumerate(mutated_sequence):
+        # Find the row index for this amino acid
+        row_index = amino_acid_code.index(aa)
+        
+        # Add the log likelihood from the corresponding cell in LL_matrix
+        total_log_likelihood += LL_matrix[row_index, i]
+
+    return total_log_likelihood
+
+def greedy_choice_residue(runner, LL_matrix):
+    # Define the one-letter amino acid code
+    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+
+    # Check if the LL_matrix has 20 rows corresponding to the amino acids
+    if LL_matrix.shape[0] != len(amino_acid_code):
+        raise ValueError("The LL_matrix should have 20 rows, one for each amino acid.")
 
     # Find the index of the maximum value in each column
-    max_indices = np.argmax(LLmatrix, axis=0)
+    max_indices = np.argmax(LL_matrix, axis=0)
 
     # Map these indices to their corresponding amino acids
-    amino_acid_sequence = [amino_acid_code[index] for index in max_indices]
+    greedy_seq = [amino_acid_code[index] for index in max_indices]
 
-    return amino_acid_sequence
+    return greedy_seq
 
 def likelihood_based_mutation(t, df):
 
@@ -78,11 +113,12 @@ def likelihood_based_mutation(t, df):
     for index, row in df[df['t'] == t].iterrows():
         shortened_seq = row['shortened_seq']
         mutated_sequences = []
+        LL_mutated_sequence = []
 
-        LLmatrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
-        # print('LLMatrix', LLmatrix)
-        # print('check sum', np.sum(np.exp(LLmatrix), axis=0))
-        greedy_mutations = greedy_choice_residue(runner, LLmatrix)
+        LL_matrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
+        # print('LL_matrix', LL_matrix)
+        # print('check sum', np.sum(np.exp(LL_matrix), axis=0))
+        greedy_mutations = greedy_choice_residue(runner, LL_matrix)
 
         # Iterate over the length of the shortened_sequence
         for i in range(len(shortened_seq)):
@@ -94,7 +130,14 @@ def likelihood_based_mutation(t, df):
             mutated_seq[i] = greedy_mutations[i]
             mutated_sequences.append(''.join(mutated_seq))
 
+            LL_greedy = compute_log_likelihood(runner, mutated_seq, LL_matrix)
+            LL_mutated_sequence.append(LL_greedy)
+
         df.at[index, 'variant_seq'] = mutated_sequences
+        # Ensure the 'action_score' column exists
+        if 'action_score' not in df.columns:
+            df['action_score'] = None
+        df.at[index, 'action_score'] = LL_mutated_sequence # compute the 
 
     return df
 
@@ -193,13 +236,14 @@ class Agent:
             # perform exhaustive deletion and return a list of shortened_sequences
             df = exhaustive_deletion(self.t, self.df)
 
-            # df = mutate_single_residue(self.t, df) # to be replaced by greedy_sampling
+            # select mutation based on greedy sampling
             df = likelihood_based_mutation(self.t, df)
 
+            # compute the action constraint (Levenshtein distance)
             df = action_constraint(self.t, df)
 
-            ## action ranking
-            df = action_ranking(self.t, df)
+            # ## action ranking
+            # df = action_ranking(self.t, df)
         
             return df, pd.DataFrame.empty
         
