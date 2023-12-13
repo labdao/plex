@@ -28,7 +28,7 @@ class ESM2Runner:
 
     def token_masked_marginal_log_likelihood_matrix(self, protein_sequence, start_pos=1, end_pos=None):
 
-        # print('to gpu or not to gpu, that is the question', torch.cuda.is_available())
+        # print('gpu', torch.cuda.is_available())
 
         if end_pos is None:
             end_pos = len(protein_sequence)
@@ -79,7 +79,7 @@ class ESM2Runner:
             if position != 0:
                 logger.debug("Moving to next position")
             logger.debug(f"Reference residue identity: {protein_sequence[position - 1]}, WT index: {self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)}")
-            reference_residue = self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)[0] -4
+            reference_residue = self.tokenizer.encode(protein_sequence[position - 1], add_special_tokens=False)[0] - 4
             logger.debug(reference_residue)
             log_prob_wt = log_likelihoods[reference_residue, position - start_pos]
             pseudolikelihood.append(log_prob_wt)

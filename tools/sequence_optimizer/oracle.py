@@ -5,6 +5,7 @@ import json
 # import pandas as pd
 import numpy as np
 import glob
+import sequence_transformer
 
 def write_dataframe_to_fastas(t, dataframe, cfg):
     input_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
@@ -63,6 +64,12 @@ def modified_sampling_set(t, df, cfg):
     k = cfg.params.basic_settings.k  # max number of samples
     N = cfg.params.basic_settings.max_number_of_offspring_kept
 
+    runner = sequence_transformer.ESM2Runner()
+
+    # Check if the 'variant_pseudoLL' column exists in df, if not, create it
+    if 'variant_pseudoLL' not in df.columns:
+        df['variant_pseudoLL'] = None
+
     # Iterate over rows where 't' column value is t
     for index, row in df[df['t'] == t].iterrows():
         action_scores = row['action_score']
@@ -93,7 +100,119 @@ def modified_sampling_set(t, df, cfg):
         updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
         df.at[index, 'seed_flag'] = updated_seed_flags
 
+        # Initialize the pseudoLL list with None
+        variant_pseudoLL = [None] * len(variant_list)
+
+        # Compute pseudoLL for elements with True in updated_seed_flags
+        for i, (variant, flag) in enumerate(zip(variant_list, updated_seed_flags)):
+            if flag:
+                pseudoLL = runner.sequence_pseudo_log_likelihoods_scalar(variant)
+                variant_pseudoLL[i] = pseudoLL
+
+        # Update the DataFrame
+        df.at[index, 'variant_pseudoLL'] = variant_pseudoLL
+
+    # Find the k largest variant_pseudoLL values across all rows where df['t'] == t
+    t_rows = df[df['t'] == t]
+    all_pseudoLLs = t_rows['variant_pseudoLL'].explode().dropna()
+    top_k_indices = all_pseudoLLs.nlargest(k).index
+
+    # Update seed_flags based on the top k indices
+    for index, row in t_rows.iterrows():
+        updated_seed_flags = [True if (index, i) in top_k_indices else False for i, _ in enumerate(row['variant_seq'])]
+        df.at[index, 'seed_flag'] = updated_seed_flags
+
     return df
+
+# def modified_sampling_set(t, df, cfg):
+#     k = cfg.params.basic_settings.k  # max number of samples
+#     N = cfg.params.basic_settings.max_number_of_offspring_kept
+
+#     runner = sequence_transformer.ESM2Runner()
+
+#     # Check if the 'variant_pseudoLL' column exists in df, if not, create it
+#     if 'variant_pseudoLL' not in df.columns:
+#         df['variant_pseudoLL'] = None
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[df['t'] == t].iterrows():
+#         action_scores = row['action_score']
+#         variant_list = row['variant_seq']
+#         seed_flags = row['seed_flag']
+#         length_of_ranking = len(action_scores)
+
+#         # Determine the list of distinct strings in variant_list
+#         distinct_variants = list(set(variant_list))
+
+#         # Initialize seed_flags with all False
+#         seed_flags = [False] * len(variant_list)
+
+#         # Loop over variant_list and set one element in seed_flags to True for each distinct element
+#         for i, variant in enumerate(variant_list):
+#             if variant in distinct_variants:
+#                 seed_flags[i] = True
+#                 distinct_variants.remove(variant)
+
+#         # Filter and sort action scores based on seed_flags
+#         filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
+#         filtered_scores.sort(reverse=True, key=lambda x: x[0])
+
+#         # Select top N elements
+#         top_indices = {index for _, index in filtered_scores[:N]}
+
+#         # Update seed_flags: True if in top N, otherwise False
+#         updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
+#         df.at[index, 'seed_flag'] = updated_seed_flags
+
+#         # Initialize the pseudoLL list with None
+#         variant_pseudoLL = [None] * len(variant_list)
+
+#         # Compute pseudoLL for elements with True in updated_seed_flags
+#         for i, (variant, flag) in enumerate(zip(variant_list, updated_seed_flags)):
+#             if flag:
+#                 pseudoLL = runner.sequence_pseudo_log_likelihoods_scalar(variant)
+#                 variant_pseudoLL[i] = pseudoLL
+
+#         # Update the DataFrame
+#         df.at[index, 'variant_pseudoLL'] = variant_pseudoLL
+
+#     return df
+
+# def modified_sampling_set(t, df, cfg):
+#     k = cfg.params.basic_settings.k  # max number of samples
+#     N = cfg.params.basic_settings.max_number_of_offspring_kept
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[df['t'] == t].iterrows():
+#         action_scores = row['action_score']
+#         variant_list = row['variant_seq']
+#         seed_flags = row['seed_flag']
+#         length_of_ranking = len(action_scores)
+
+#         # Determine the list of distinct strings in variant_list
+#         distinct_variants = list(set(variant_list))
+
+#         # Initialize seed_flags with all False
+#         seed_flags = [False] * len(variant_list)
+
+#         # Loop over variant_list and set one element in seed_flags to True for each distinct element
+#         for i, variant in enumerate(variant_list):
+#             if variant in distinct_variants:
+#                 seed_flags[i] = True
+#                 distinct_variants.remove(variant)
+
+#         # Filter and sort action scores based on seed_flags
+#         filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
+#         filtered_scores.sort(reverse=True, key=lambda x: x[0])
+
+#         # Select top N elements
+#         top_indices = {index for _, index in filtered_scores[:N]}
+
+#         # Update seed_flags: True if in top N, otherwise False
+#         updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
+#         df.at[index, 'seed_flag'] = updated_seed_flags
+
+#     return df
 
 def action_selection(t, df, cfg):
 
