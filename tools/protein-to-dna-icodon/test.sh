@@ -4,7 +4,7 @@
 docker build -t protein-to-dna-icodon .
 
 # Create a unique output directory
-OUTPUT_DIR="outputs_$(date +%Y%m%d_%H%M%S)"
+OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
@@ -15,7 +15,7 @@ docker run \
 -v "$PWD/$OUTPUT_DIR":/outputs protein-to-dna-icodon
 
 # Create a unique output directory
-OUTPUT_DIR="outputs_$(date +%Y%m%d_%H%M%S)"
+OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 

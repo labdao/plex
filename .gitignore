@@ -334,5 +334,3 @@ docker/.env.tunnel
 
 #
 tools/*/test-runs/
-
-tools/protein-to-dna-icodon/outputs*

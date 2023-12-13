@@ -19,7 +19,7 @@
     ],
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/supraja968/protein-dna-icodon-4@sha256:43f14a88b1f7a2f4cb09a5240f8ddad5dff9fe0b5aced5b5d833e5c79a72fc79",
+    "dockerPull": "quay.io/labdao/protein-to-dna-icodon@sha256:496deb51b206fa20050f8a5461470f89ab6bf2f2a6844e3d03990f7902e683e3",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {

@@ -65,6 +65,8 @@ jobs:
             - 'tools/colabdesign-autoprompt/colabdesign-gateway.json'
           AF2_AF2-gateway:
             - 'tools/AF2/AF2-gateway.json' 
+          protein-to-dna-icodon_protein-to-dna-icodon:
+            - 'tools/protein-to-dna-icodon/protein-to-dna-icodon.json'
 
   tools:
     needs: changes-tools
