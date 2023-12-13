@@ -3,7 +3,7 @@ from AF2_module import AF2Runner
 import os
 import json
 # import pandas as pd
-# import numpy as np
+import numpy as np
 import glob
 
 def write_dataframe_to_fastas(t, dataframe, cfg):
@@ -59,38 +59,16 @@ def supplement_dataframe(t, df, directory_path):
 
 import random
 
-# def sampling_set(t, df, cfg):
-
-#     k = cfg.params.basic_settings.k # max number of samples
-
-#     # Iterate over rows where 't' column value is t
-#     for index, row in df[df['t'] == t].iterrows():
-#         action_ranking = row['action_score']
-#         length_of_ranking = len(action_ranking)
-
-#         if k >= length_of_ranking:
-#             # Set all elements in the seed list to True
-#             seed_flags = [True] * length_of_ranking
-#         else:
-#             # Randomly sample k indices from the action_ranking list
-#             sampled_indices = random.sample(range(length_of_ranking), k)
-
-#             # Set seed values to True for sampled indices and False for others
-#             seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
-
-#         # Update the 'seed' column with the list of seed values
-#         df.at[index, 'seed_flag'] = seed_flags
-
-#     return df
-
-def sampling_set(t, df, cfg):
+def modified_sampling_set(t, df, cfg):
     k = cfg.params.basic_settings.k  # max number of samples
+    N = cfg.params.basic_settings.max_number_of_offspring_kept
 
     # Iterate over rows where 't' column value is t
     for index, row in df[df['t'] == t].iterrows():
-        action_ranking = row['action_score']
+        action_scores = row['action_score']
         variant_list = row['variant_seq']
-        length_of_ranking = len(action_ranking)
+        seed_flags = row['seed_flag']
+        length_of_ranking = len(action_scores)
 
         # Determine the list of distinct strings in variant_list
         distinct_variants = list(set(variant_list))
@@ -104,17 +82,16 @@ def sampling_set(t, df, cfg):
                 seed_flags[i] = True
                 distinct_variants.remove(variant)
 
-        df.at[index, 'seed_flag'] = seed_flags
+        # Filter and sort action scores based on seed_flags
+        filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
+        filtered_scores.sort(reverse=True, key=lambda x: x[0])
 
-        # # Handling action_ranking as in your original function
-        # if k < length_of_ranking:
-        #     sampled_indices = random.sample(range(length_of_ranking), k)
-        #     action_seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
-        #     # Combine the two seed flags
-        #     combined_seed_flags = [sf and asf for sf, asf in zip(seed_flags, action_seed_flags)]
-        #     df.at[index, 'seed_flag'] = combined_seed_flags
-        # else:
-        #     df.at[index, 'seed_flag'] = seed_flags
+        # Select top N elements
+        top_indices = {index for _, index in filtered_scores[:N]}
+
+        # Update seed_flags: True if in top N, otherwise False
+        updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
+        df.at[index, 'seed_flag'] = updated_seed_flags
 
     return df
 
@@ -122,7 +99,7 @@ def action_selection(t, df, cfg):
 
     # df_set = pareto(t, df) # set a pareto flag for each sequence
     if t>0:
-        df = sampling_set(t, df, cfg)
+        df = modified_sampling_set(t, df, cfg)
 
     return df
 
@@ -167,3 +144,40 @@ class Oracle:
         # supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
 
         return df
+    
+
+### OLD CODE SNIPPETS ###
+# def sampling_set(t, df, cfg):
+#     k = cfg.params.basic_settings.k  # max number of samples
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[df['t'] == t].iterrows():
+#         action_ranking = row['action_score']
+#         variant_list = row['variant_seq']
+#         length_of_ranking = len(action_ranking)
+
+#         # Determine the list of distinct strings in variant_list
+#         distinct_variants = list(set(variant_list))
+
+#         # Initialize seed_flags with all False
+#         seed_flags = [False] * len(variant_list)
+
+#         # Loop over variant_list and set one element in seed_flags to True for each distinct element
+#         for i, variant in enumerate(variant_list):
+#             if variant in distinct_variants:
+#                 seed_flags[i] = True
+#                 distinct_variants.remove(variant)
+
+#         df.at[index, 'seed_flag'] = seed_flags
+
+#         # # Handling action_ranking as in your original function
+#         # if k < length_of_ranking:
+#         #     sampled_indices = random.sample(range(length_of_ranking), k)
+#         #     action_seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
+#         #     # Combine the two seed flags
+#         #     combined_seed_flags = [sf and asf for sf, asf in zip(seed_flags, action_seed_flags)]
+#         #     df.at[index, 'seed_flag'] = combined_seed_flags
+#         # else:
+#         #     df.at[index, 'seed_flag'] = seed_flags
+
+#     return df

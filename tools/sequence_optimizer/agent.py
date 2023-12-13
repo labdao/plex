@@ -112,8 +112,10 @@ def likelihood_based_mutation(t, df):
             # Mutate only one residue at a time
 
             mutated_seq = list(shortened_seq)
-
+            # print('original seq', mutated_seq)
             mutated_seq[i] = greedy_mutations[i]
+            # print('mutated seq', mutated_seq)
+            # print('')
             mutated_sequences.append(''.join(mutated_seq))
 
             LL_greedy = compute_log_likelihood(runner, mutated_seq, LL_matrix)
@@ -179,7 +181,6 @@ class Agent:
         self.cfg = cfg
 
     def apply_policy(self):   
-
 
         if self.policy_flag == 'delete_and_mutate_ESM':
 
