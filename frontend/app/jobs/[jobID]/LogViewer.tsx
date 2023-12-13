@@ -13,13 +13,14 @@ const LogViewer = () => {
   const job = useSelector(selectJobDetail)
 
   useEffect(() => {
-    setLogs('')
+    const BacalhauJobId = job.BacalhauJobID || window.location.href.split("/").pop();
+    setLogs(`Connecting to stream with Bacalhau Job Id ${BacalhauJobId}`)
 
     let formattedBackendUrl = backendUrl().replace('http://', '').replace('https://', '');
     let wsProtocol = backendUrl().startsWith('https://') ? 'wss' : 'ws';
   
     console.log(formattedBackendUrl)
-    const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${job.BacalhauJobID}/logs`)
+    const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${BacalhauJobId}/logs`)
 
     ws.onopen = () => {
       console.log('connected')
