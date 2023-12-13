@@ -330,3 +330,6 @@ tools/tmp*
 
 # Ignore docker stuff
 docker/.env.tunnel
+
+#
+tools/*/test-runs/
