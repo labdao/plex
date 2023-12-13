@@ -331,4 +331,8 @@ tools/tmp*
 # Ignore docker stuff
 docker/.env.tunnel
 
+
+#
+tools/*/test-runs/
+
 tools/protein-to-dna-icodon/outputs*
