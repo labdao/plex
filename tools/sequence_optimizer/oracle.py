@@ -59,27 +59,62 @@ def supplement_dataframe(t, df, directory_path):
 
 import random
 
-def sampling_set(t, df, cfg):
+# def sampling_set(t, df, cfg):
 
-    k = cfg.params.basic_settings.k # max number of samples
+#     k = cfg.params.basic_settings.k # max number of samples
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[df['t'] == t].iterrows():
+#         action_ranking = row['action_score']
+#         length_of_ranking = len(action_ranking)
+
+#         if k >= length_of_ranking:
+#             # Set all elements in the seed list to True
+#             seed_flags = [True] * length_of_ranking
+#         else:
+#             # Randomly sample k indices from the action_ranking list
+#             sampled_indices = random.sample(range(length_of_ranking), k)
+
+#             # Set seed values to True for sampled indices and False for others
+#             seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
+
+#         # Update the 'seed' column with the list of seed values
+#         df.at[index, 'seed_flag'] = seed_flags
+
+#     return df
+
+def sampling_set(t, df, cfg):
+    k = cfg.params.basic_settings.k  # max number of samples
 
     # Iterate over rows where 't' column value is t
     for index, row in df[df['t'] == t].iterrows():
         action_ranking = row['action_score']
+        variant_list = row['variant_seq']
         length_of_ranking = len(action_ranking)
 
-        if k >= length_of_ranking:
-            # Set all elements in the seed list to True
-            seed_flags = [True] * length_of_ranking
-        else:
-            # Randomly sample k indices from the action_ranking list
-            sampled_indices = random.sample(range(length_of_ranking), k)
+        # Determine the list of distinct strings in variant_list
+        distinct_variants = list(set(variant_list))
 
-            # Set seed values to True for sampled indices and False for others
-            seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
+        # Initialize seed_flags with all False
+        seed_flags = [False] * len(variant_list)
 
-        # Update the 'seed' column with the list of seed values
+        # Loop over variant_list and set one element in seed_flags to True for each distinct element
+        for i, variant in enumerate(variant_list):
+            if variant in distinct_variants:
+                seed_flags[i] = True
+                distinct_variants.remove(variant)
+
         df.at[index, 'seed_flag'] = seed_flags
+
+        # # Handling action_ranking as in your original function
+        # if k < length_of_ranking:
+        #     sampled_indices = random.sample(range(length_of_ranking), k)
+        #     action_seed_flags = [index in sampled_indices for index in range(length_of_ranking)]
+        #     # Combine the two seed flags
+        #     combined_seed_flags = [sf and asf for sf, asf in zip(seed_flags, action_seed_flags)]
+        #     df.at[index, 'seed_flag'] = combined_seed_flags
+        # else:
+        #     df.at[index, 'seed_flag'] = seed_flags
 
     return df
 
@@ -90,6 +125,17 @@ def action_selection(t, df, cfg):
         df = sampling_set(t, df, cfg)
 
     return df
+
+def print_rows_with_t(t, df):
+    """
+    This function prints all rows of the DataFrame 'df' 
+    where the 't'-column has the value t.
+    """
+    # Filter the DataFrame based on the condition
+    filtered_df = df[df['t'] == t]
+    
+    # Print the filtered DataFrame
+    print(filtered_df)
 
 class Oracle:
     def __init__(self, t, df, df_action, outputs_directory, cfg):
@@ -102,8 +148,10 @@ class Oracle:
 
     def run(self):
 
-        ### Action selection minimal example and set a separate column (use as seed) with True/False values
+        ### likelihood based evolution ### 
         df = action_selection(self.t, self.df, self.cfg)
+
+        print_rows_with_t(self.t, df)
 
         ### AF2 Runner ### 
         # # prepare input sequences as fastas and run AF2 K-times

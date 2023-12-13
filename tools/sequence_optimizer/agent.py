@@ -3,7 +3,7 @@ import numpy as np
 import random
 import sys
 import os
-import sequence_transformer, sequence_transformer_utils
+import sequence_transformer
 
 def exhaustive_deletion(t, df):
     # Iterate over rows where 't' column value is t-1
@@ -52,19 +52,6 @@ def mutate_single_residue(t, df):
         df.at[index, 'variant_seq'] = mutated_sequences
 
     return df
-
-# def extract_max_values(LL_matrix, max_indices):
-#     # Initialize an empty list to store the maximum values
-#     max_values = []
-
-#     # Iterate over each column index and the corresponding row index in max_indices
-#     for column_index, row_index in enumerate(max_indices):
-#         # Extract the maximum value from the specified row and column in LL_matrix
-#         max_value = LL_matrix[row_index, column_index]
-#         # Append the extracted value to the max_values list
-#         max_values.append(max_value)
-
-#     return max_values
 
 def compute_log_likelihood(runner, mutated_sequence, LL_matrix):
 
@@ -116,8 +103,7 @@ def likelihood_based_mutation(t, df):
         LL_mutated_sequence = []
 
         LL_matrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
-        # print('LL_matrix', LL_matrix)
-        # print('check sum', np.sum(np.exp(LL_matrix), axis=0))
+        # print('check sum', np.sum(np.exp(LL_matrix), axis=0)) # convert to probabilities and compute sum for each column
         greedy_mutations = greedy_choice_residue(runner, LL_matrix)
 
         # Iterate over the length of the shortened_sequence
@@ -137,7 +123,7 @@ def likelihood_based_mutation(t, df):
         # Ensure the 'action_score' column exists
         if 'action_score' not in df.columns:
             df['action_score'] = None
-        df.at[index, 'action_score'] = LL_mutated_sequence # compute the 
+        df.at[index, 'action_score'] = LL_mutated_sequence
 
     return df
 
@@ -179,23 +165,6 @@ def action_constraint(t, df):
 
         # Update the 'action_constraint' column with the list of distances
         df.at[index, 'action_constraint'] = levenshtein_distances
-
-    return df
-
-def action_ranking(t, df):
-    # Ensure the 'action_score' column exists
-    if 'action_score' not in df.columns:
-        df['action_score'] = None
-
-    # Iterate over rows where 't' column value is t
-    for index, row in df[df['t'] == t].iterrows():
-        variant_seqs = row['variant_seq']
-
-        # Generate a list of action scores
-        action_scores = [-np.log(np.random.uniform(0, 1)) for _ in range(len(variant_seqs))]
-
-        # Update the 'action_score' column with the list of scores
-        df.at[index, 'action_score'] = action_scores
 
     return df
 
@@ -324,7 +293,38 @@ class Agent:
             return result_df, df_action
         
 
-### some old code snippets
+### some old code snippets ###
+
+# def action_ranking(t, df): # function to generate faked NNL scores
+#     # Ensure the 'action_score' column exists
+#     if 'action_score' not in df.columns:
+#         df['action_score'] = None
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[df['t'] == t].iterrows():
+#         variant_seqs = row['variant_seq']
+
+#         # Generate a list of action scores
+#         action_scores = [-np.log(np.random.uniform(0, 1)) for _ in range(len(variant_seqs))]
+
+#         # Update the 'action_score' column with the list of scores
+#         df.at[index, 'action_score'] = action_scores
+
+#     return df
+
+# def extract_max_values(LL_matrix, max_indices):
+#     # Initialize an empty list to store the maximum values
+#     max_values = []
+
+#     # Iterate over each column index and the corresponding row index in max_indices
+#     for column_index, row_index in enumerate(max_indices):
+#         # Extract the maximum value from the specified row and column in LL_matrix
+#         max_value = LL_matrix[row_index, column_index]
+#         # Append the extracted value to the max_values list
+#         max_values.append(max_value)
+
+#     return max_values
+
             # ## some pseudo code:
             # # replacing landscape, alphabet, starting_sequence = get_landscape(args):
             # alphabet = 'ACDEFGHIKLMNPQRSTVWY'

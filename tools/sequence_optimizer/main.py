@@ -77,7 +77,7 @@ def my_app(cfg: DictConfig) -> None:
 
         reward = reward_step
 
-        print('df', df)
+    print('df', df)
     df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
     print("sequence to structure complete...")
@@ -87,7 +87,6 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
-
 
 ## goal definition
 # df with sequences to compare within the benchmark
