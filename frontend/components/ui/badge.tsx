@@ -13,6 +13,7 @@ const badgeVariants = cva(
         muted: "border-transparent bg-muted-foreground text-muted hover:bg-muted/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        references: "border-transparent bg-[#e3e3e3] text-[#808080] hover:text-[#4c4c4c]",
       },
       size: {
         default: "px-3 py-0.5 text-xs",

@@ -48,6 +48,19 @@ export default function AddGraph() {
   const error = useSelector(selectFlowAddError);
   const kwargs = useSelector(selectFlowAddKwargs);
   const cid = useSelector(selectFlowAddCid);
+
+  interface ToolInput {
+    position?: string;
+    glob?: string[];
+    type: string;
+    default?: string;
+  }
+
+  interface ToolJson {
+    inputs: Record<string, ToolInput>;
+  }
+  
+
   const selectedTool = useSelector(selectFlowAddTool);
   const toolListError = useSelector(selectToolListError);
   const dataFileListError = useSelector(selectDataFileListError);
@@ -56,6 +69,8 @@ export default function AddGraph() {
 
   const [selectedToolIndex, setSelectedToolIndex] = useState("");
   const [inputDataFiles, setInputDataFiles] = useState<Record<string, DataFile[]>>({});
+
+  
 
   useEffect(() => {
     if (cid !== "") {
@@ -92,8 +107,6 @@ export default function AddGraph() {
   };
 
   const handleKwargsChange = (value: string, key: string) => {
-    console.log(value);
-    console.log(key);
     const updatedKwargs = { ...kwargs, [key]: [value] };
     dispatch(setFlowAddKwargs(updatedKwargs));
   };
@@ -125,9 +138,6 @@ export default function AddGraph() {
 
   return (
     <Dialog>
-      <DialogTrigger>
-        <Button size="lg">Add Experiment</Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Experiment</DialogTitle>
@@ -157,7 +167,15 @@ export default function AddGraph() {
                 </Select>
               </div>
 
-              {Object.keys(selectedTool.ToolJson.inputs).map((key) => {
+              {Object.keys(selectedTool.ToolJson.inputs)
+                .sort((a, b) => {
+                  // @ts-ignore
+                  const positionA = parseInt(a[1].position, 10);
+                  // @ts-ignore
+                  const positionB = parseInt(b[1].position, 10);
+                  return positionA - positionB;
+                })
+                .map((key) => {
                 // @ts-ignore
                 const inputDetail = selectedTool.ToolJson.inputs[key];
                 return (
