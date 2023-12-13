@@ -3,7 +3,7 @@
 # Build the Docker image
 docker build -t colabdesign-noninteractive-autoprompt .
 
-OUTPUT_DIR="outputs"
+OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
