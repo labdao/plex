@@ -37,7 +37,7 @@
         "item": "File",
         "glob": [
           "*.pdb"
-        ]
+        ],
       },
       "json_structures": {
         "type": "File",
