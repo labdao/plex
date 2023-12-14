@@ -186,10 +186,53 @@ def modified_sampling_set_pseudoLLSelection(t, df, cfg):
     # Find the k largest variant_pseudoLL values
     top_k_values = all_pseudoLLs.nlargest(k)
 
-    # Update seed_flags based on the top k values
+    # # Extract the variant sequences of with the k-largest pseudoLL values
+    # top_k_variants = []
+    # for index, row in t_rows.iterrows():
+    #     idx = 0 
+    #     for val in row['variant_pseudoLL']:
+    #         if val in top_k_values.values:
+    #             # variant_list = df.at[index, 'variant_seq']
+    #             # print(variant_list)
+    #             top_k_variants.append(df.at[index, 'variant_seq'][idx])
+    #         idx += 1
+    # print('top-k variants', top_k_variants)
+
+    # # Update seed_flags based on the top k values
+    # for index, row in t_rows.iterrows():
+    #     seed_flags = [True if val in top_k_values.values else False for val in row['variant_pseudoLL']]
+    #     df.at[index, 'seed_flag'] = seed_flags
+
+    # Extract the variant sequences of with the k-largest pseudoLL values
+    top_k_variants = []
     for index, row in t_rows.iterrows():
-        seed_flags = [True if val in top_k_values.values else False for val in row['variant_pseudoLL']]
+        for idx, val in enumerate(row['variant_pseudoLL']):
+            if val in top_k_values.values:
+                variant = df.at[index, 'variant_seq'][idx]
+                top_k_variants.append(variant)
+
+    # Compute the list of unique top variants
+    unique_top_variants = list(set(top_k_variants))
+    print('Unique top-k variants:', unique_top_variants)
+
+    # Update seed_flags based on the unique top variants
+    for index, row in t_rows.iterrows():
+        seed_flags = row['seed_flag']
+        for idx, variant in enumerate(row['variant_seq']):
+            if variant in unique_top_variants:
+                seed_flags[idx] = True
+                unique_top_variants.remove(variant)  # Remove the variant as it's already used
+            else:
+                seed_flags[idx] = False  # Ensure other flags are set to False
         df.at[index, 'seed_flag'] = seed_flags
+
+    # Print the corresponding variant_seqs along with their seed_flag and pseudoLL
+    print("\nTop", k, "variants:")
+    for index, row in t_rows.iterrows():
+        for variant, flag, pseudoLL in zip(row['variant_seq'], row['seed_flag'], row['variant_pseudoLL']):
+            if pseudoLL in top_k_values.values:
+                print(f"Variant: {variant}, Seed Flag: {flag}, pseudoLL: {pseudoLL}")
+
 
     return df
 
