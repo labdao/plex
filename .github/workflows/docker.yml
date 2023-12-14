@@ -62,6 +62,11 @@ jobs:
           echo "| registry | ${{ inputs.registry }} |" >> $GITHUB_STEP_SUMMARY
           echo "| registry-org-name | ${{ inputs.registry-org-name }} |" >> $GITHUB_STEP_SUMMARY
 
+      - name: Set some env
+        id: docker-build-and-push-env
+        run: |
+          echo "DOCKER_IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}" | tr '[[:uppercase:]]' '[[:lowercase:]]' >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -79,7 +84,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}
+          images: ${{ env.DOCKER_IMAGE }}
           tags: |
             type=ref,suffix=${{ inputs.tag-suffix }},event=branch
             type=ref,suffix=${{ inputs.tag-suffix }},event=pr
@@ -111,10 +116,9 @@ jobs:
         id: docker-build-and-push-outputs
         env:
           DOCKER_IMAGE_NAME: "${{ inputs.name }}"
-          DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
         run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
-          echo '**${{ env.DOCKER_IMAGE_NAME }}** image available at:' >>  $GITHUB_STEP_SUMMARY
+          echo '**${{ inputs.name }}** image available at:' >>  $GITHUB_STEP_SUMMARY
           echo '`${{ env.DOCKER_IMAGE }}`' >>  $GITHUB_STEP_SUMMARY
           echo 'IMAGE=${{ env.DOCKER_IMAGE }}' >> $GITHUB_OUTPUT
 
