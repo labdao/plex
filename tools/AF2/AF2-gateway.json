@@ -9,7 +9,7 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/af2@sha256:0475b93a559f21c0e93a62c694ca167543c0ec475a8f34ed02d2e98954b8916c",
+    "dockerPull": "quay.io/labdao/AF2@sha256:de50e9b416620d8193aa10704a0ec54b5bedb25342c6f9d0c0231257119faa7b",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
@@ -37,7 +37,7 @@
         "item": "File",
         "glob": [
           "*.pdb"
-        ]
+        ],
       },
       "json_structures": {
         "type": "File",
