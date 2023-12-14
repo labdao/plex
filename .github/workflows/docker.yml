@@ -117,11 +117,12 @@ jobs:
         id: docker-build-and-push-outputs
         env:
           DOCKER_IMAGE_NAME: "${{ inputs.name }}"
+          DOCKER_IMAGE_WITH_DIGEST: "${{ env.DOCKER_IMAGE }}@${{ steps.build-and-push.outputs.digest }}"
         run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
           echo '**${{ inputs.name }}** image available at:' >>  $GITHUB_STEP_SUMMARY
-          echo '`${{ env.DOCKER_IMAGE }}`' >>  $GITHUB_STEP_SUMMARY
-          echo 'IMAGE=${{ env.DOCKER_IMAGE }}' >> $GITHUB_OUTPUT
+          echo '`${{ env.DOCKER_IMAGE_WITH_DIGEST }}`' >>  $GITHUB_STEP_SUMMARY
+          echo 'IMAGE=${{ env.DOCKER_IMAGE_WITH_DIGEST }}' >> $GITHUB_OUTPUT
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
