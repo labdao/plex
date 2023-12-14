@@ -34,26 +34,44 @@ class ESM2Runner:
             end_pos = len(protein_sequence)
 
         log_likelihoods = np.zeros((20, end_pos - start_pos + 1))
+        # print('log_likelihoods shape', log_likelihoods.shape)
 
+        # print('protein seq length', len(protein_sequence))
+        # print('protein seq', protein_sequence)
         input_ids = self.tokenizer.encode(protein_sequence, return_tensors="pt").to(self.device)
-        sequence_length = input_ids.shape[1] - 2
+        # print('input_ids', input_ids)
+        # print('input_ids shape', input_ids.shape)
 
         for position in range(start_pos, end_pos + 1):
-            position_index = position + 1
+            # # position_index = position + 1 # part of original version
+            # print('position', position)
 
             masked_input_ids = input_ids.clone()
-            # masked_input_ids[0, position_index] = self.tokenizer.mask_token_id
+            # # masked_input_ids[0, position_index] = self.tokenizer.mask_token_id # part of original version
+            # print('before masking masked_input_ids[0, position]', masked_input_ids[0, position].item())
             masked_input_ids[0, position] = self.tokenizer.mask_token_id
+            # print('after masking masked_input_ids[0, position]', masked_input_ids[0, position].item())
+            # print('masked_input_ids shape', masked_input_ids.shape)
+            # print('after masking masked_input_ids', masked_input_ids[0,:])
+            # print('after masking masked_input_ids full', masked_input_ids)
 
             with torch.no_grad():
                 logits = self.model(masked_input_ids).logits
 
+            # # probabilities = torch.nn.functional.softmax(logits[0, position_index], dim=0) # part of original version
+            # print('logits', logits)
+            # print('logits[0, position]', logits[0, position])
             probabilities = torch.nn.functional.softmax(logits[0, position], dim=0)
+            # print('probabilities', probabilities)
+            # print('probabilities checksum', probabilities.sum())
             log_probabilities = torch.log(probabilities)
 
             for i, amino_acid in enumerate(self.amino_acids):
+                # print('i', i)
+                # print('position - start_pos', position - start_pos)
                 aa_token_id = self.tokenizer.convert_tokens_to_ids(amino_acid)
                 log_likelihoods[i, position - start_pos] = log_probabilities[aa_token_id].item()
+        # print('')
 
         return log_likelihoods
 
