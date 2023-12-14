@@ -65,7 +65,8 @@ jobs:
       - name: Set some env
         id: docker-build-and-push-env
         run: |
-          echo "DOCKER_IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}" | tr '[[:uppercase:]]' '[[:lowercase:]]' >> $GITHUB_ENV
+          export INPUT_NAME_LOWERCASE=$(echo ${{ inputs.name }} | tr "[[:upper:]]" "[[:lower:]]")
+          echo "DOCKER_IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${INPUT_NAME_LOWERCASE}" >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v4
