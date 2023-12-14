@@ -2,7 +2,8 @@ import os
 from AF2_module import AF2Runner
 import os
 import json
-# import pandas as pd
+import random
+import pandas as pd
 import numpy as np
 import glob
 import sequence_transformer
@@ -57,75 +58,6 @@ def supplement_dataframe(t, df, directory_path):
                 df.at[index, 'top rank pdb'] = pdb_files[0]
 
     return df
-
-import random
-
-# def modified_sampling_set_pseudoLLSelection(t, df, cfg):
-#     k = cfg.params.basic_settings.k  # max number of samples
-#     N = cfg.params.basic_settings.max_number_of_offspring_kept
-
-#     runner = sequence_transformer.ESM2Runner()
-
-#     # Check if the 'variant_pseudoLL' column exists in df, if not, create it
-#     if 'variant_pseudoLL' not in df.columns:
-#         df['variant_pseudoLL'] = None
-
-#     # Iterate over rows where 't' column value is t
-#     for index, row in df[df['t'] == t].iterrows():
-#         action_scores = row['action_score']
-#         variant_list = row['variant_seq']
-#         seed_flags = row['seed_flag']
-
-#         # Determine the list of distinct strings in variant_list
-#         distinct_variants = list(set(variant_list))
-
-#         # Initialize seed_flags with all False
-#         seed_flags = [False] * len(variant_list)
-
-#         # Loop over variant_list and set one element in seed_flags to True for each distinct element
-#         for i, variant in enumerate(variant_list):
-#             if variant in distinct_variants:
-#                 seed_flags[i] = True
-#                 distinct_variants.remove(variant)
-
-#         # Filter and sort action scores based on seed_flags
-#         filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
-#         filtered_scores.sort(reverse=True, key=lambda x: x[0])
-
-#         # Select top N elements
-#         top_indices = {index for _, index in filtered_scores[:N]}
-
-#         # Update seed_flags: True if in top N, otherwise False
-#         updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
-#         df.at[index, 'seed_flag'] = updated_seed_flags
-
-#         # Initialize the pseudoLL list with None
-#         variant_pseudoLL = [None] * len(variant_list)
-
-#         # Compute pseudoLL for elements with True in updated_seed_flags
-#         for i, (variant, flag) in enumerate(zip(variant_list, updated_seed_flags)):
-#             if flag:
-#                 pseudoLL = runner.sequence_pseudo_log_likelihoods_scalar(variant)
-#                 variant_pseudoLL[i] = pseudoLL
-
-#         # Update the DataFrame
-#         df.at[index, 'variant_pseudoLL'] = variant_pseudoLL
-
-#     # Find the k largest variant_pseudoLL values across all rows where df['t'] == t
-#     t_rows = df[df['t'] == t]
-#     # all_pseudoLLs = t_rows['variant_pseudoLL'].explode().dropna()
-#     all_pseudoLLs = t_rows['variant_pseudoLL'].explode().replace({None: np.nan}).dropna()
-#     top_k_indices = all_pseudoLLs.nlargest(k).index
-
-#     # Update seed_flags based on the top k indices
-#     for index, row in t_rows.iterrows():
-#         updated_seed_flags = [True if (index, i) in top_k_indices else False for i, _ in enumerate(row['variant_seq'])]
-#         df.at[index, 'seed_flag'] = updated_seed_flags
-
-#     return df
-
-import pandas as pd
-import numpy as np
 
 def modified_sampling_set_pseudoLLSelection(t, df, cfg):
     N = cfg.params.basic_settings.max_number_of_offspring_kept # number of same-seed offspring kept
@@ -185,23 +117,6 @@ def modified_sampling_set_pseudoLLSelection(t, df, cfg):
 
     # Find the k largest variant_pseudoLL values
     top_k_values = all_pseudoLLs.nlargest(k)
-
-    # # Extract the variant sequences of with the k-largest pseudoLL values
-    # top_k_variants = []
-    # for index, row in t_rows.iterrows():
-    #     idx = 0 
-    #     for val in row['variant_pseudoLL']:
-    #         if val in top_k_values.values:
-    #             # variant_list = df.at[index, 'variant_seq']
-    #             # print(variant_list)
-    #             top_k_variants.append(df.at[index, 'variant_seq'][idx])
-    #         idx += 1
-    # print('top-k variants', top_k_variants)
-
-    # # Update seed_flags based on the top k values
-    # for index, row in t_rows.iterrows():
-    #     seed_flags = [True if val in top_k_values.values else False for val in row['variant_pseudoLL']]
-    #     df.at[index, 'seed_flag'] = seed_flags
 
     # Extract the variant sequences of with the k-largest pseudoLL values
     top_k_variants = []
@@ -325,7 +240,6 @@ def modified_sampling_set(t, df, cfg):
 
 def action_selection(t, df, cfg):
 
-    # df_set = pareto(t, df) # set a pareto flag for each sequence
     if t>0:
         # df = modified_sampling_set(t, df, cfg)
         # df = modified_sampling_set_pseudoLL(t, df, cfg)
@@ -357,7 +271,6 @@ class Oracle:
 
         ### likelihood based evolution ### 
         df = action_selection(self.t, self.df, self.cfg)
-
         print_rows_with_t(self.t, df)
 
         ### AF2 Runner ### 
