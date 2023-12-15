@@ -1,5 +1,5 @@
 {
-    "name": "AF2 v0.1",
+    "name": "AF2 v0.2",
     "description": "Create structure from sequence with AF2.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -26,7 +26,7 @@
         "min": "",
         "max": "",
         "example": "input_sequence.fasta",
-        "grouping": "Input sequences",
+        "grouping": "input sequences",
         "position": "101",
         "required": true
       }
