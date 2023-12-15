@@ -76,9 +76,10 @@ def my_app(cfg: DictConfig) -> None:
         df, reward_step = step(t+1, df, df_action, outputs_directory, cfg)
 
         reward = reward_step
+        df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
     print('df', df)
-    df.to_csv(f"{outputs_directory}/summary.csv", index=False)
+    # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
     print("sequence to structure complete...")
     end_time = time.time()
