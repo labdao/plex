@@ -1,4 +1,4 @@
-FROM supraja968/my_r_base_image@sha256:13627cc37a9554b86d7562d4853aa31cca5ce01b92ad7d2f2e4f1f1a44fdf24b
+FROM quay.io/labdao/r-base-with-icodon@sha256:dd0b68b6bd07b8830559098b1116b190f04ba46ecfc20866364d1eaea862ab58
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
