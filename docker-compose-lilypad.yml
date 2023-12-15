@@ -169,7 +169,7 @@ services:
     command: solver
     environment:
       SERVER_PORT: 8080
-      SERVER_URL: http://localhost:8080
+      SERVER_URL: http://lilypad-solver:8080
       WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
       BACALHAU_API_HOST: requester
     ports:
