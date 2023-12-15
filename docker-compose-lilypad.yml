@@ -54,6 +54,7 @@ services:
       # LOG_LEVEL: trace
       LOG_LEVEL: info
       DOCKER_DEFAULT_PLATFORM: linux/amd64
+      BACALHAU_SERVE_IPFS_PATH: /tmp/lilypad/data/ipfs
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
@@ -104,33 +105,76 @@ services:
     image: "public.ecr.aws/docker/library/node:20"
     command: >
       sh -x -c '
+
       if [ -f /app/lilypad/done ]; then exit;fi &&
+
       apt-get -q update && apt-get -q -y install sudo &&
+
       rm -rf /tmp/lilypad/lilypad /tmp/geth &&
+
       wget --no-verbose https://gethstore.blob.core.windows.net/builds/geth-linux-amd64-${GETH_VERSION:-1.13.5-916d6a44}.tar.gz -O geth.tgz &&
       tar -zxvf geth.tgz &&
       mv geth-linux-amd64-${GETH_VERSION:-1.13.5-916d6a44}/geth /usr/local/bin/ &&
-      mkdir -p /tmp/lilypad &&
+
+      mkdir -p /tmp/lilypad/data &&
+      chmod -R 777 /tmp/lilypad/data &&
+
       cd /tmp/lilypad/ &&
       git clone https://github.com/bacalhau-project/lilypad --branch ${LILYPAD_VERSION:-v2.0.0-e5c38d5} &&
       cd lilypad &&
+
       sed -i "s/localhost/geth/g" hardhat/hardhat.config.ts &&
       (cd hardhat && yarn install) &&
       ./stack print-env > .env &&
+
       echo "export WEB3_RPC_URL=ws://geth:8546" >> .env &&
       echo "export LOG_LEVEL=info" >> .env &&
+      echo "export WEB3_CONTROLLER_ADDRESS=0x59b670e9fA9D0A427751Af201D676719a970857b" >> .env &&
+      echo "export BACALHAU_API_HOST=requester" >> .env &&
+
       cp -rav .env /app/lilypad/.env &&
       . ./.env &&
+
       /usr/local/bin/geth --exec "eth.sendTransaction({from: eth.coinbase, to: \"$${ADMIN_ADDRESS}\", value: new web3.BigNumber(eth.getBalance(eth.coinbase)).minus(web3.toWei(1, \"ether\"))  })" attach "http://geth:8545" &&
       bash -x ./stack fund-services-ether &&
       bash -x ./stack deploy &&
       bash -x ./stack fund-services-tokens &&
       bash -x ./stack balances &&
-      touch /app/lilypad/done'
+      touch /app/lilypad/done &&
+
+      cp -rav /app/lilypad/.env /app/solver/.env &&
+      echo export WEB3_PRIVATE_KEY=$$SOLVER_PRIVATE_KEY >> /app/solver/.env &&
+      echo export JOB_CREATOR_ADDRESS=$$JOB_CREATOR_ADDRESS >> /app/solver/.env &&
+      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS >> /app/solver/.env &&
+
+      cp -rav /app/lilypad/.env /app/mediator/.env &&
+      echo export WEB3_PRIVATE_KEY=$$MEDIATOR_PRIVATE_KEY >> /app/mediator/.env &&
+      echo export WEB3_DIRECTORY_ADDRESS=$$DIRECTORY_ADDRESS >> /app/mediator/.env &&
+      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS >> /app/mediator/.env &&
+
+      cp -rav /app/lilypad/.env /app/resource-provider/.env &&
+      echo export WEB3_PRIVATE_KEY=$$RESOURCE_PROVIDER_PRIVATE_KEY  >> /app/resource-provider/.env &&
+      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS  >> /app/resource-provider/.env &&
+      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS  >> /app/resource-provider/.env &&
+
+      cp -rav /app/lilypad/.env /app/jobcreator/.env &&
+      echo export WEB3_PRIVATE_KEY=$$SOLVER_PRIVATE_KEY >> /app/jobcreator/.env &&
+      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS >> /app/jobcreator/.env &&
+      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS >> /app/jobcreator/.env
+
+      echo export SERVICE_SOLVER=$${SOLVER_ADDRESS} >> .env &&
+      echo export SERVICE_MEDIATORS=$${MEDIATOR_ADDRESS} >> .env &&
+      echo export WEB3_PRIVATE_KEY=$${ADMIN_PRIVATE_KEY} >> .env &&
+      echo export WEB3_RPC_URL=ws://localhost:8546 >> .env'
+
     environment:
       USER: root
     volumes:
       - lilypad:/app/lilypad
+      - solver:/app/solver
+      - mediator:/app/mediator
+      - resource-provider:/app/resource-provider
+      - jobcreator:/app/jobcreator
       - /usr/bin/docker:/usr/bin/docker
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/lilypad:/tmp/lilypad
@@ -139,24 +183,6 @@ services:
         condition: service_healthy
 
   # solver
-  solver-setup:
-    image: "public.ecr.aws/docker/library/alpine:latest"
-    command: >
-      sh -c '
-      . /app/lilypad/.env &&
-      cp -rav /app/lilypad/.env /app/solver/.env &&
-      echo export WEB3_PRIVATE_KEY=$$SOLVER_PRIVATE_KEY >> /app/solver/.env &&
-      echo export JOB_CREATOR_ADDRESS=$$JOB_CREATOR_ADDRESS >> /app/solver/.env &&
-      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS >> /app/solver/.env'
-    volumes:
-      - lilypad:/app/lilypad
-      - solver:/app/solver/
-    depends_on:
-      geth:
-        condition: service_healthy
-      lilypad-setup:
-        condition: service_completed_successfully
-
   lilypad-solver:
     build:
       context: ./docker/images/lilypad
@@ -170,8 +196,6 @@ services:
     environment:
       SERVER_PORT: 8080
       SERVER_URL: http://lilypad-solver:8080
-      WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
-      BACALHAU_API_HOST: requester
     ports:
       - 8080:8080
     volumes:
@@ -179,28 +203,10 @@ services:
     depends_on:
       geth:
         condition: service_healthy
-      solver-setup:
-        condition: service_completed_successfully
-
-  # mediator
-  mediator-setup:
-    image: "public.ecr.aws/docker/library/alpine:latest"
-    command: >
-      sh -c '
-      . /app/lilypad/.env &&
-      cp -rav /app/lilypad/.env /app/mediator/.env &&
-      echo export WEB3_PRIVATE_KEY=$$MEDIATOR_PRIVATE_KEY >> /app/mediator/.env &&
-      echo export WEB3_DIRECTORY_ADDRESS=$$DIRECTORY_ADDRESS >> /app/mediator/.env &&
-      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS >> /app/mediator/.env'
-    volumes:
-      - lilypad:/app/lilypad
-      - mediator:/app/mediator/
-    depends_on:
-      geth:
-        condition: service_healthy
       lilypad-setup:
         condition: service_completed_successfully
 
+  # mediator
   lilypad-mediator:
     build:
       context: ./docker/images/lilypad
@@ -211,9 +217,6 @@ services:
         LILYPAD_VERSION: ${LILYPAD_VERSION:-v2.0.0-e5c38d5}
     hostname: lilypad-mediator
     command: mediator
-    environment:
-      WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
-      BACALHAU_API_HOST: requester
     volumes:
       - mediator:/app/lilypad
     depends_on:
@@ -221,28 +224,10 @@ services:
         condition: service_healthy
       lilypad-solver:
         condition: service_started
-      mediator-setup:
-        condition: service_completed_successfully
-
-  # resource-provider
-  resource-provider-setup:
-    image: "public.ecr.aws/docker/library/alpine:latest"
-    command: >
-      sh -c '
-      . /app/lilypad/.env &&
-      cp -rav /app/lilypad/.env /app/resource-provider/.env &&
-      echo export WEB3_PRIVATE_KEY=$$RESOURCE_PROVIDER_PRIVATE_KEY  >> /app/resource-provider/.env &&
-      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS  >> /app/resource-provider/.env &&
-      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS  >> /app/resource-provider/.env'
-    volumes:
-      - lilypad:/app/lilypad
-      - resource-provider:/app/resource-provider/
-    depends_on:
-      geth:
-        condition: service_healthy
       lilypad-setup:
         condition: service_completed_successfully
 
+  # resource-provider
   lilypad-resource-provider:
     build:
       context: ./docker/images/lilypad
@@ -253,9 +238,6 @@ services:
         LILYPAD_VERSION: ${LILYPAD_VERSION:-v2.0.0-e5c38d5}
     hostname: lilypad-resource-provider
     command: resource-provider
-    environment:
-      WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
-      BACALHAU_API_HOST: requester
     volumes:
       - resource-provider:/app/lilypad
     depends_on:
@@ -265,28 +247,10 @@ services:
         condition: service_started
       lilypad-mediator:
         condition: service_started
-      resource-provider-setup:
-        condition: service_completed_successfully
-
-  # jobcreator
-  jobcreator-setup:
-    image: "public.ecr.aws/docker/library/alpine:latest"
-    command: >
-      sh -c '
-      . /app/lilypad/.env &&
-      cp -rav /app/lilypad/.env /app/jobcreator/.env &&
-      echo export WEB3_PRIVATE_KEY=$$SOLVER_PRIVATE_KEY >> /app/jobcreator/.env &&
-      echo export SERVICE_SOLVER=$$SOLVER_ADDRESS >> /app/jobcreator/.env &&
-      echo export SERVICE_MEDIATORS=$$MEDIATOR_ADDRESS >> /app/jobcreator/.env'
-    volumes:
-      - lilypad:/app/lilypad
-      - jobcreator:/app/jobcreator/
-    depends_on:
-      geth:
-        condition: service_healthy
       lilypad-setup:
         condition: service_completed_successfully
 
+  # jobcreator
   lilypad-jobcreator:
     build:
       context: ./docker/images/lilypad
@@ -297,9 +261,6 @@ services:
         LILYPAD_VERSION: ${LILYPAD_VERSION:-v2.0.0-e5c38d5}
     hostname: lilypad-jobcreator
     command: jobcreator
-    environment:
-      WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
-      BACALHAU_API_HOST: requester
     volumes:
       - jobcreator:/app/lilypad
     depends_on:
@@ -311,7 +272,7 @@ services:
         condition: service_started
       lilypad-resource-provider:
         condition: service_started
-      jobcreator-setup:
+      lilypad-setup:
         condition: service_completed_successfully
 
   ipfs:
