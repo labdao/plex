@@ -16,14 +16,23 @@ RUN git clone https://github.com/bacalhau-project/lilypad.git --branch ${LILYPAD
 # Build
 RUN cd lilypad && CGO_ENABLED=0 go build -o /go/bin/lilypad
 
-FROM public.ecr.aws/docker/library/busybox:1.31.1-glibc
+# Bacalhau
+# For bacalhau cli
+FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.0.3} as bacalhau
 
+#Final
+FROM public.ecr.aws/docker/library/busybox:1.32.0-glibc
+
+# COPY from builder
 COPY --from=builder /go/bin/lilypad /usr/local/bin/lilypad
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
+# COPY bacalhau cli
+COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
+
 COPY run.sh /run.sh
 
-RUN chmod +x /usr/local/bin/lilypad /run.sh
+RUN chmod +x /usr/local/bin/lilypad /run.sh /usr/local/bin/bacalhau
 
 RUN mkdir -p /var/tmp/
 
