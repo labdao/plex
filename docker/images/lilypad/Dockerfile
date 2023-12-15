@@ -25,5 +25,7 @@ COPY run.sh /run.sh
 
 RUN chmod +x /usr/local/bin/lilypad /run.sh
 
+RUN mkdir -p /var/tmp/
+
 ENV PATH="/usr/local/bin:/usr/bin"
 ENTRYPOINT ["/run.sh"]
