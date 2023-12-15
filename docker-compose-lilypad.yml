@@ -169,6 +169,9 @@ services:
       SERVER_PORT: 8080
       SERVER_URL: http://lilypad-solver:8080
       WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
+      BACALHAU_API_HOST: requester
+    ports:
+      - 8080:8080
     volumes:
       - solver:/app/lilypad
     depends_on:
@@ -208,6 +211,7 @@ services:
     command: mediator
     environment:
       WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
+      BACALHAU_API_HOST: requester
     volumes:
       - mediator:/app/lilypad
     depends_on:
@@ -249,6 +253,7 @@ services:
     command: resource-provider
     environment:
       WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
+      BACALHAU_API_HOST: requester
     volumes:
       - resource-provider:/app/lilypad
     depends_on:
@@ -292,6 +297,7 @@ services:
     command: jobcreator
     environment:
       WEB3_CONTROLLER_ADDRESS: 0x59b670e9fA9D0A427751Af201D676719a970857b
+      BACALHAU_API_HOST: requester
     volumes:
       - jobcreator:/app/lilypad
     depends_on:
