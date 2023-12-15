@@ -3,7 +3,7 @@
 services:
   # sidecar container for setting up required key material
   requester-setup:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: >
       sh -c '
       mkdir -p /home/nonroot/.bacalhau &&
@@ -33,7 +33,7 @@ services:
 
   # sidecar container for requester healthcheck
   requester-health:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: sh -c 'apk add curl && sleep infinity'
     depends_on:
       requester:
@@ -67,7 +67,7 @@ services:
 
   # sidecar container for compute healthcheck
   compute-health:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: sh -c 'apk add curl && sleep infinity'
     depends_on:
       compute:
@@ -101,7 +101,7 @@ services:
 
   # lilypad-setup
   lilypad-setup:
-    image: "node:20"
+    image: "public.ecr.aws/docker/library/node:20"
     command: >
       sh -x -c '
       if [ -f /app/lilypad/done ]; then exit;fi &&
@@ -140,7 +140,7 @@ services:
 
   # solver
   solver-setup:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: >
       sh -c '
       . /app/lilypad/.env &&
@@ -184,7 +184,7 @@ services:
 
   # mediator
   mediator-setup:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: >
       sh -c '
       . /app/lilypad/.env &&
@@ -226,7 +226,7 @@ services:
 
   # resource-provider
   resource-provider-setup:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: >
       sh -c '
       . /app/lilypad/.env &&
@@ -270,7 +270,7 @@ services:
 
   # jobcreator
   jobcreator-setup:
-    image: "alpine"
+    image: "public.ecr.aws/docker/library/alpine:latest"
     command: >
       sh -c '
       . /app/lilypad/.env &&

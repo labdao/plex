@@ -1,4 +1,4 @@
-FROM golang:1.20-buster as builder
+FROM public.ecr.aws/docker/library/golang:1.20-buster as builder
 
 # Install deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,7 @@ RUN git clone https://github.com/bacalhau-project/lilypad.git --branch ${LILYPAD
 # Build
 RUN cd lilypad && CGO_ENABLED=0 go build -o /go/bin/lilypad
 
-FROM busybox:1.31.1-glibc
+FROM public.ecr.aws/docker/library/busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/lilypad /usr/local/bin/lilypad
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
