@@ -41,7 +41,7 @@ class AF2Runner:
         # downloads weights
         if not os.listdir(self.cache_dir):
             print("Downloading AlphaFold2 weights...")
-            subprocess.run(["python", "-m", "colabfold.download"], check=True)
+            subprocess.run(["python3", "-m", "colabfold.download"], check=True)
 
     def run_prediction(self):
         

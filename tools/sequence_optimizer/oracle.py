@@ -1,12 +1,12 @@
 import os
 from AF2_module import AF2Runner
-import os
 import json
 import random
 import pandas as pd
 import numpy as np
 import glob
 import sequence_transformer
+import shutil
 
 def write_dataframe_to_fastas(t, dataframe, cfg):
     input_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
@@ -269,25 +269,48 @@ class Oracle:
 
     def run(self):
 
-        ### likelihood based evolution ### 
+        ### run likelihood-based evolution ### 
         df = action_selection(self.t, self.df, self.cfg)
         print_rows_with_t(self.t, df)
 
-        ### AF2 Runner ### 
+        ### run AF2 ### 
         # # prepare input sequences as fastas and run AF2
         # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
 
-        if self.t==...:
+        # if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
+        if self.t>=1:
 
-            # loop over the sequences which have seed_flag==True at time t, clear the seqs_to_fold directory in the outputs directory, and then write fastas for each most likely sequence, and run the AF2. Then supplement the data frame with metrics and path the pdbs.
-            # write them to a separate csv in which contains only the most likely sequences use is an id to the identify also the AF2 results folder.  
+            # Before the loop, clear the sequence_to_fold directory
+            folder = 'sequence_to_fold'
+            if os.path.exists(folder):
+                shutil.rmtree(folder)
+            os.makedirs(folder, exist_ok=True)
 
-            print("starting repeat number ", n)
-            af2_runner = AF2Runner(seq_input_dir, self.outputs_directory)
-            af2_runner.run()
+            for index, row in df[df['t'] == self.t].iterrows():
+                variant_list = row['variant_seq']
+                seed_flags = row['seed_flag']
 
-            # # complete df data frame with info
-            supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
+                # Check if there are any True entries in seed_flags
+                for i, flag in enumerate(seed_flags):
+                    if flag:
+                        # Extract corresponding string sequence
+                        sequence = variant_list[i]
+
+                        # Write into a fasta file in sequence_to_fold directory
+                        fasta_file_path = os.path.join(self.outputs_directory, folder)
+                        print('fasta_file_path', fasta_file_path)
+                        fasta_filename = os.path.join(folder, f"sequence_{index}_{i}.fasta")
+                        with open(fasta_filename, 'w') as fasta_file:
+                            fasta_file.write(f">1\n{sequence}\n") 
+
+                        print("starting AF2")
+                        af2_runner = AF2Runner(folder, self.outputs_directory)
+                        af2_runner.run()
+
+                        print("done folding")
+
+                        # # complete df data frame with info
+                        # supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
 
         return df
     
