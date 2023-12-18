@@ -34,71 +34,71 @@ func AddDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		files := r.MultipartForm.File["files"]
+		if files == nil {
+			utils.SendJSONError(w, "No files found in request", http.StatusBadRequest)
+			return
+		}
+
 		walletAddress := r.FormValue("walletAddress")
 		var successfulCIDs []string
 
-		for _, fileHeader := range files {
+		for i, fileHeader := range files {
+			log.Printf("Processing file %d: %s\n", i, fileHeader.Filename)
+
 			file, err := fileHeader.Open()
 			if err != nil {
-
+				log.Printf("Error opening file %s: %v", fileHeader.Filename, err)
+				continue
 			}
-		}
 
-		file, _, err := r.FormFile("file")
-		if err != nil {
-			utils.SendJSONError(w, "Error retrieving file from multipart form", http.StatusBadRequest)
-			return
-		}
-		defer file.Close()
-
-		walletAddress := r.FormValue("walletAddress")
-		filename := r.FormValue("filename")
-
-		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
-
-		tempFile, err := utils.CreateAndWriteTempFile(file, filename)
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
-			return
-		}
-		defer os.Remove(filename)
-
-		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-		if err != nil {
-			utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
-			return
-		}
-
-		dataFile := models.DataFile{
-			CID:           cid,
-			WalletAddress: walletAddress,
-			Filename:      filename,
-			Timestamp:     time.Now(),
-		}
-
-		result := db.Create(&dataFile)
-		if result.Error != nil {
-			log.Println("error saving to DB")
-			if utils.IsDuplicateKeyError(result.Error) {
-				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
-			} else {
-				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+			tempFile, err := utils.CreateAndWriteTempFile(file, fileHeader.Filename)
+			file.Close()
+			if err != nil {
+				log.Printf("Error creating temp file %s: %v", fileHeader.Filename, err)
+				continue
 			}
+
+			cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+			os.Remove(tempFile.Name())
+			if err != nil {
+				log.Printf("Error pinning file %s to IPFS: %v", fileHeader.Filename, err)
+				continue
+			}
+
+			dataFile := models.DataFile{
+				CID:           cid,
+				WalletAddress: walletAddress,
+				Filename:      fileHeader.Filename,
+				Timestamp:     time.Now(),
+			}
+
+			result := db.Create(&dataFile)
+			if result.Error != nil {
+				log.Printf("Error saving datafile %s to DB: %v", fileHeader.Filename, result.Error)
+				continue
+			}
+
+			var uploadedTag models.Tag
+			if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
+				log.Printf("Error finding tag 'uploaded': %v", err)
+				continue
+			}
+
+			if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
+				log.Printf("Error adding tag 'uploaded' to datafile %s: %v", fileHeader.Filename, err)
+				continue
+			}
+
+			successfulCIDs = append(successfulCIDs, cid)
+			log.Printf("Successfully processed file %s with CID %s", fileHeader.Filename, cid)
+		}
+
+		if len(successfulCIDs) == 0 {
+			utils.SendJSONError(w, "No files were successfully processed", http.StatusInternalServerError)
 			return
 		}
 
-		var uploadedTag models.Tag
-		if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
-			utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
-			return
-		}
-
-		if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error adding tag to datafile: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		utils.SendJSONResponseWithCID(w, dataFile.CID)
+		utils.SendJSONResponseWithCIDs(w, successfulCIDs)
 	}
 }
 

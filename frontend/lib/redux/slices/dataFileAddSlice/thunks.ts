@@ -1,4 +1,4 @@
-import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk';
+import { createAsyncThunk } from '@reduxjs/toolkit';
 
 import { saveDataFileToServer } from './actions';
 import { addCid, addFilename, setDataFileError } from './dataSlice';
@@ -9,29 +9,38 @@ interface DataFilePayload {
   handleSuccess: () => void
 }
 
-export const saveDataFilesAsync = createAppAsyncThunk(
+interface FileResponse {
+  filename: string;
+  cid: string;
+}
+
+interface ServerResponse {
+  cids: string[];
+}
+
+export const saveDataFilesAsync = createAsyncThunk<FileResponse[], DataFilePayload>(
   'dataFile/saveDataFiles',
-  async ({ files, metadata, handleSuccess }: DataFilePayload, { dispatch }) => {
-    const responses = [];
-    for (const file of files) {
-      try {
-        const response = await saveDataFileToServer(file, metadata);
-        console.log("Response:", response);
-        if (response.cid) {
-          dispatch(addCid(response.cid));
-          dispatch(addFilename(response.filename));
-          responses.push(response);
-        } else {
-          dispatch(setDataFileError(`Failed to save data file: ${file.name}.`));
-        }
-      } catch (error: unknown) {
-        const errorMessage = (error as { message?: string }).message ?? `An error occurred while saving data file: ${file.name}.`;
-        dispatch(setDataFileError(errorMessage));
-      }
-    }
-    if (responses.length === files.length) {
+  async ({ files, metadata, handleSuccess }, { dispatch }) => {
+    try {
+      const serverResponse = await saveDataFileToServer(files, metadata);
+      console.log("Server Response:", serverResponse);
+
+      // @ts-ignore
+      const fileResponses: FileResponse[] = serverResponse.cids.map((cid: string, index: number) => {
+        return { cid: cid, filename: files[index].name };
+      });
+
+      fileResponses.forEach(fileResponse => {
+        dispatch(addCid(fileResponse.cid));
+        dispatch(addFilename(fileResponse.filename));
+      });
+
       handleSuccess();
+      return fileResponses;
+    } catch (error: unknown) {
+      const errorMessage = (error as { message?: string }).message ?? 'An error occurred while saving data files.';
+      dispatch(setDataFileError(errorMessage));
+      throw error;
     }
-    return responses;
   }
 );
