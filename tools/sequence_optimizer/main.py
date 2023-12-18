@@ -78,7 +78,9 @@ def my_app(cfg: DictConfig) -> None:
         reward = reward_step
         df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
-    print('df', df)
+    # t_rows = df[df['t'] == cfg.params.basic_settings.number_of_evo_cycles]
+    # best_
+    # print('df', df)
     # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
     print("sequence to structure complete...")

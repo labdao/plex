@@ -274,17 +274,20 @@ class Oracle:
         print_rows_with_t(self.t, df)
 
         ### AF2 Runner ### 
-        # # prepare input sequences as fastas and run AF2 K-times
+        # # prepare input sequences as fastas and run AF2
         # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
 
-        # K = self.cfg.params.basic_settings.AF2_repeats_per_seq
-        # for n in range(K):
-        #     print("starting repeat number ", n)
-        #     af2_runner = AF2Runner(seq_input_dir, self.outputs_directory)
-        #     af2_runner.run()
+        if self.t==...:
 
-        # # complete df data frame with info
-        # supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
+            # loop over the sequences which have seed_flag==True at time t, clear the seqs_to_fold directory in the outputs directory, and then write fastas for each most likely sequence, and run the AF2. Then supplement the data frame with metrics and path the pdbs.
+            # write them to a separate csv in which contains only the most likely sequences use is an id to the identify also the AF2 results folder.  
+
+            print("starting repeat number ", n)
+            af2_runner = AF2Runner(seq_input_dir, self.outputs_directory)
+            af2_runner.run()
+
+            # # complete df data frame with info
+            supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
 
         return df
     
