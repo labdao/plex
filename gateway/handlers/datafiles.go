@@ -123,59 +123,6 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		if r.Method != http.MethodGet {
-// 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		query := db.Model(&models.DataFile{})
-
-// 		if cid := r.URL.Query().Get("cid"); cid != "" {
-// 			query = query.Where("cid = ?", cid)
-// 		}
-
-// 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
-// 			query = query.Where("wallet_address = ?", walletAddress)
-// 		}
-
-// 		if filename := r.URL.Query().Get("filename"); filename != "" {
-// 			query = query.Where("filename LIKE ?", "%"+filename+"%")
-// 		}
-
-// 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
-// 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
-// 			if err != nil {
-// 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
-// 				return
-// 			}
-// 			query = query.Where("timestamp <= ?", parsedTime)
-// 		}
-
-// 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
-// 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
-// 			if err != nil {
-// 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
-// 				return
-// 			}
-// 			query = query.Where("timestamp >= ?", parsedTime)
-// 		}
-
-// 		var dataFiles []models.DataFile
-// 		if result := query.Preload("Tags").Find(&dataFiles); result.Error != nil {
-// 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		w.Header().Set("Content-Type", "application/json")
-// 		if err := json.NewEncoder(w).Encode(dataFiles); err != nil {
-// 			http.Error(w, "Error encoding datafiles to JSON", http.StatusInternalServerError)
-// 			return
-// 		}
-// 	}
-// }
-
 func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
