@@ -40,7 +40,7 @@ services:
         condition: service_started
     healthcheck:
       test: curl -f http://requester:1234/readyz
-      interval: 10s
+      interval: 60s
       timeout: 10s
       retries: 10
       start_period: 10s
@@ -75,7 +75,7 @@ services:
         condition: service_started
     healthcheck:
       test: curl -f http://compute:1234/readyz
-      interval: 10s
+      interval: 60s
       timeout: 10s
       retries: 10
       start_period: 10s
@@ -95,7 +95,7 @@ services:
       - 8546:8546
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8545 || exit 1
-      interval: 10s
+      interval: 60s
       timeout: 10s
       retries: 10
       start_period: 10s
@@ -222,10 +222,10 @@ services:
     depends_on:
       geth:
         condition: service_healthy
-      lilypad-solver:
-        condition: service_started
       lilypad-setup:
         condition: service_completed_successfully
+      lilypad-solver:
+        condition: service_started
 
   # resource-provider
   lilypad-resource-provider:
@@ -249,6 +249,10 @@ services:
         condition: service_started
       lilypad-setup:
         condition: service_completed_successfully
+      requester-health:
+        condition: service_healthy
+      compute-health:
+        condition: service_healthy
 
   # jobcreator
   lilypad-jobcreator:
