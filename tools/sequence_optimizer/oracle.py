@@ -8,61 +8,6 @@ import glob
 import sequence_transformer
 import shutil
 
-# def update_summary(t, row, sequence, sequence_pseudoLL, df, directory):
-
-#     summary_file = os.path.join(directory, 'MML_summary.csv')
-
-#     # Check if summary file exists, if not create it
-#     if not os.path.isfile(summary_file):
-#         df.to_csv(summary_file, index=False)
-
-#     # Loop over all JSON files starting with 'sequence_T' and containing 'rank'
-#     for json_file in glob.glob(os.path.join(directory, 'sequence_T*rank*.json')):
-#         with open(json_file, 'r') as file:
-#             data = json.load(file)
-
-#         # Compute average plddt
-#         avg_plddt = sum(data['plddt']) / len(data['plddt'])
-
-#         # Get max_pae value
-#         max_pae = data['max_pae']
-
-#         # Find corresponding PDB file
-#         pdb_file = None
-#         rank_str = json_file.split('rank')[1].split('.')[0]
-#         for pdb in glob.glob(os.path.join(directory, f'*rank{rank_str}.pdb')):
-#             pdb_file = pdb
-#             break
-
-#         # Prepare new row
-#         new_row = {
-#             't': t,
-#             'original_seq': row['original_seq'],
-#             'variant_seq': sequence,
-#             'sequence_pseudo_LL': sequence_pseudoLL,
-#             'mean plddt': avg_plddt,
-#             'max pae': max_pae,
-#             'json': os.path.abspath(json_file),
-#             'pdb': os.path.abspath(pdb_file) if pdb_file else None
-#         }
-
-#         # Concatenate new row to DataFrame
-#         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-
-#     # Save the updated DataFrame to CSV
-#     df.to_csv(summary_file, index=False)
-#     return df
-
-
-# Usage example
-# df = pd.DataFrame(columns=['plddt', 'pae', 'json', 'pdb'])
-# updated_df = update_summary(df, 'path_to_your_directory')
-
-import os
-import json
-import pandas as pd
-import glob
-
 def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern):
     summary_file = os.path.join(directory, 'MML_summary.csv')
 
@@ -70,6 +15,8 @@ def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_patt
     for json_file in glob.glob(os.path.join(directory, json_pattern)):
         with open(json_file, 'r') as file:
             data = json.load(file)
+
+        print('data', data)
 
         # Compute average plddt
         avg_plddt = sum(data['plddt']) / len(data['plddt'])
@@ -99,13 +46,13 @@ def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_patt
         # Concatenate new row to DataFrame
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
-    # Save the updated DataFrame to CSV only if new data was added
     if not df.empty:
-        df.to_csv(summary_file, index=False)
+        if os.path.exists(summary_file):
+            df.to_csv(summary_file, mode='a', header=False, index=False)
+        else:
+            df.to_csv(summary_file, index=False)
 
     return df
-
-
 
 def write_dataframe_to_fastas(t, dataframe, cfg):
     input_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
@@ -376,7 +323,7 @@ class Oracle:
         # # prepare input sequences as fastas and run AF2
         # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
 
-        MLL_df = pd.DataFrame(columns=['t', 'original_seq', 'variant_seq', 'sequence_pseudo_LL',  'mean plddt', 'max pae', 'json', 'pdb'])
+        MML_df = pd.DataFrame(columns=['t', 'original_seq', 'variant_seq', 'sequence_pseudo_LL',  'mean plddt', 'max pae', 'json', 'pdb'])
 
         # if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
         if self.t>=1:
@@ -414,13 +361,10 @@ class Oracle:
                         print("done folding")
 
                         # Inside your loop
-                        json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_*.json"
+                        json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
                         MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern)
 
                         # MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MLL_df, self.outputs_directory)
-
-                        # # complete df data frame with info and append to the MML csv (selected rows of df supplemented by metrics)
-                        # supplemented_dataframe = supplement_dataframe(self.t, self.df, self.outputs_directory)
         
         # if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
 
