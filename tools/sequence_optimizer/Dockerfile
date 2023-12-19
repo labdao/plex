@@ -3,7 +3,7 @@ FROM rapidsai/mambaforge-cuda:cuda11.8.0-base-ubuntu22.04-py3.9
 # FROM docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y wget git nano less zip unzip && rm -rf /var/lib/apt/lists/*
 
 # Set CUDA version and ColabFold version as arguments
 ARG CUDA_VERSION=11.8.0
@@ -40,5 +40,9 @@ RUN python -m colabfold.download
 # Additional installations (if needed)
 RUN pip install hydra-core omegaconf pandas biopython pyyaml
 
+# Install prodigy
+RUN git clone -q https://github.com/haddocking/prodigy && \
+     pip install -q prodigy/
+
 # Label the container
-LABEL container="protbert_colabfold"
+LABEL container="protbert_colabfold_prodigy"

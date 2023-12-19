@@ -353,32 +353,6 @@ def print_rows_with_t(t, df):
     # Print the filtered DataFrame
     print(filtered_df)
 
-def prodigy_run(csv_path, pdb_path):
-    df = pd.read_csv(csv_path)
-    for i, r in df.iterrows():
-        design = r["design"]
-        n = r["n"]
-        file_path = f"{pdb_path}/design{design}_n{n}.pdb"
-        try:
-            subprocess.run(
-                ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
-            )
-            with open("temp.txt", "r") as f:
-                lines = f.readlines()
-                if lines:  # Check if lines is not empty
-                    affinity = float(lines[0].split(" ")[-1].split("/")[0])
-                    df.loc[i, "affinity"] = affinity
-                else:
-                    # print(f"No output from prodigy for {r['path']}")
-                    print(f"No output from prodigy for {file_path}")
-                    # Handle the case where prodigy did not produce output
-        except subprocess.CalledProcessError:
-            # print(f"Prodigy command failed for {r['path']}")
-            print(f"Prodigy command failed for {file_path}")
-
-    # export results
-    df.to_csv(f"{csv_path}", index=None)
-
 def create_complex_df(t, MML_df, outputs_directory, cfg): # create a data frame for the protein complex
     # Filter rows from MML_df where 't' column value is t
     filtered_df = MML_df[MML_df['t'] == t]
@@ -488,6 +462,35 @@ def create_complex_df(t, MML_df, outputs_directory, cfg): # create a data frame 
 
     return complex_df
 
+# def prodigy_run(csv_path, pdb_path):
+def prodigy_run(csv_path):
+    # print('csv path', csv_path)
+    df = pd.read_csv(csv_path)
+    # print('csv file data frame', df)
+    for i, r in df.iterrows():
+
+        file_path = r['pdb']
+        if pd.notna(file_path):
+            print('file path', file_path)
+            try:
+                subprocess.run(
+                    ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+                )
+                with open("temp.txt", "r") as f:
+                    lines = f.readlines()
+                    if lines:  # Check if lines is not empty
+                        affinity = float(lines[0].split(" ")[-1].split("/")[0])
+                        df.loc[i, "affinity"] = affinity
+                    else:
+                        # print(f"No output from prodigy for {r['path']}")
+                        print(f"No output from prodigy for {file_path}")
+                        # Handle the case where prodigy did not produce output
+            except subprocess.CalledProcessError:
+                # print(f"Prodigy command failed for {r['path']}")
+                print(f"Prodigy command failed for {file_path}")
+
+    # export results
+    df.to_csv(f"{csv_path}", index=None)
 
 class Oracle:
     def __init__(self, t, df, df_action, outputs_directory, cfg):
@@ -565,7 +568,8 @@ class Oracle:
             # json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
             # MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern)            
 
-            # print("running Prodigy")
+            print("running Prodigy")
+            prodigy_run(f"{self.outputs_directory}/folding_with_target_summary.csv")
 
             # prodigy_run( # need to work on how the input is read. 
             #     f"{self.outputs_directory}/{path}/mpnn_results.csv",
