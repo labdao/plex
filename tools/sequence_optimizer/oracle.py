@@ -9,7 +9,7 @@ import sequence_transformer
 import shutil
 import subprocess
 
-def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern):
+def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern, index, i):
     summary_file = os.path.join(directory, 'MML_summary.csv')
 
     # Loop over JSON files that match the given pattern for the current iteration
@@ -26,9 +26,10 @@ def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_patt
         max_pae = data['max_pae']
 
         # Find corresponding PDB file
+        json_pattern = f"sequence_Time{t}_TablRow{index}_VariantIdx{i}_unrelaxed"
         pdb_file = None
         rank_str = json_file.split('rank')[1].split('.')[0]
-        for pdb in glob.glob(os.path.join(directory, f'*rank{rank_str}.pdb')): # maybe add json pattern here, like is already done for the protein complex routine
+        for pdb in glob.glob(os.path.join(directory, f'{json_pattern}*rank{rank_str}.pdb')): # maybe add json pattern here, like is already done for the protein complex routine
             pdb_file = pdb
             break
 
@@ -63,8 +64,6 @@ def update_complex_summary(t, row, sequence, sequence_pseudoLL, df, directory, j
         with open(json_file, 'r') as file:
             data = json.load(file)
 
-        print('data', data)
-
         # Compute average plddt
         avg_plddt = sum(data['plddt']) / len(data['plddt'])
 
@@ -74,7 +73,6 @@ def update_complex_summary(t, row, sequence, sequence_pseudoLL, df, directory, j
         # Find corresponding PDB file
         pdb_file = None
         rank_str = json_file.split('rank')[1].split('.')[0]
-        print('json pattern', json_pattern)
         for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
             pdb_file = pdb
             break
@@ -549,7 +547,7 @@ class Oracle:
                         print("done folding")
 
                         json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
-                        MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern)
+                        MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern, index, i)
         
         if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
 
@@ -557,23 +555,8 @@ class Oracle:
             # fold the final evolution step MML and target seqs toegther and save pdb
             complex_df = create_complex_df(self.t, MML_df, self.outputs_directory, self.cfg)
             print(complex_df)
-            # run prodigy
-
-            # af2_runner = AF2Runner(folder, self.outputs_directory)
-            # af2_runner.run()
-
-            # print("done folding")
-
-            # # Inside your loop
-            # json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
-            # MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern)            
 
             print("running Prodigy")
             prodigy_run(f"{self.outputs_directory}/folding_with_target_summary.csv")
-
-            # prodigy_run( # need to work on how the input is read. 
-            #     f"{self.outputs_directory}/{path}/mpnn_results.csv",
-            #     f"{self.outputs_directory}/{path}/all_pdb",
-            # )
             
         return df
