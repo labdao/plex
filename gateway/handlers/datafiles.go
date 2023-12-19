@@ -142,27 +142,17 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		offset := (page - 1) * pageSize
 
-		defaultSort := "timestamp desc"
-
-		sortParam := r.URL.Query().Get("sort")
-		if sortParam != "" {
-			defaultSort = sortParam
-		}
-
-		query := db.Model(&models.DataFile{}).Order(defaultSort)
+		query := db.Model(&models.DataFile{})
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
 		}
-
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
-
 		if filename := r.URL.Query().Get("filename"); filename != "" {
 			query = query.Where("filename LIKE ?", "%"+filename+"%")
 		}
-
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
 			if err != nil {
@@ -171,7 +161,6 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			query = query.Where("timestamp <= ?", parsedTime)
 		}
-
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
 			if err != nil {
@@ -182,9 +171,14 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var totalCount int64
-		db.Model(&models.DataFile{}).Count(&totalCount)
+		query.Count(&totalCount)
 
-		query = query.Offset(offset).Limit(pageSize)
+		defaultSort := "timestamp desc"
+		sortParam := r.URL.Query().Get("sort")
+		if sortParam != "" {
+			defaultSort = sortParam
+		}
+		query = query.Order(defaultSort).Offset(offset).Limit(pageSize)
 
 		var dataFiles []models.DataFile
 		if result := query.Preload("Tags").Find(&dataFiles); result.Error != nil {
