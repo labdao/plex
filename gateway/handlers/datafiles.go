@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -180,6 +181,9 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("timestamp >= ?", parsedTime)
 		}
 
+		var totalCount int64
+		db.Model(&models.DataFile{}).Count(&totalCount)
+
 		query = query.Offset(offset).Limit(pageSize)
 
 		var dataFiles []models.DataFile
@@ -188,9 +192,21 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		totalPages := int(math.Ceil(float64(totalCount) / float64(pageSize)))
+
+		response := map[string]interface{}{
+			"data": dataFiles,
+			"pagination": map[string]int{
+				"currentPage": page,
+				"totalPages":  totalPages,
+				"pageSize":    pageSize,
+				"totalCount":  int(totalCount),
+			},
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dataFiles); err != nil {
-			http.Error(w, "Error encoding datafiles to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
