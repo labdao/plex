@@ -6,7 +6,7 @@ FROM golang:1.20 as build
 ARG BACALHAU_VERSION=v1.1.2
 ARG TAG
 
-RUN apt-get update && apt-get -y --no-install-recoomends install nodejs npm
+RUN apt-get update && apt-get -y --no-install-recommends install nodejs npm
 
 RUN git clone https://github.com/bacalhau-project/bacalhau.git --branch ${BACALHAU_VERSION} --single-branch /work
 
