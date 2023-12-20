@@ -78,8 +78,8 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
-          - 1.1.4
+          - v1.1.2
+          - v1.1.4
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -87,9 +87,9 @@ jobs:
         run: |
           # Download bacalhau plugin
           if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v${{ matrix.bacalhau_version }}/bacalhau_v${{ matrix.bacalhau_version }}_linux_amd64.tar.gz -o bacalhau.tgz
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.bacalhau_version }}/bacalhau_${{ matrix.bacalhau_version }}_linux_amd64.tar.gz -o bacalhau.tgz
           elif [[ "$OSTYPE" == "darwin"* ]]; then
-            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/v${{ matrix.bacalhau_version }}/bacalhau_v${{ matrix.bacalhau_version }}_darwin_arm64.tar.gz -o bacalhau.tgz
+            curl -sSL https://github.com/bacalhau-project/bacalhau/releases/download/${{ matrix.bacalhau_version }}/bacalhau_${{ matrix.bacalhau_version }}_darwin_arm64.tar.gz -o bacalhau.tgz
           fi
           tar -zxvf bacalhau.tgz
 
@@ -110,8 +110,8 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
-          - 1.1.2
-          - 1.1.4
+          - v1.1.2
+          - v1.1.4
         network_mode:
           - public
           - private
