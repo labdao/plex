@@ -15,7 +15,7 @@ services:
   requester:
     image: "ghcr.io/bacalhau-project/bacalhau:v1.0.3"
     hostname: requester
-    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao"
+    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none
     volumes:
       - requestervolume:/home/nonroot/
     environment:
@@ -240,6 +240,7 @@ services:
     command: resource-provider
     volumes:
       - resource-provider:/app/lilypad
+      - /tmp/lilypad:/tmp/lilypad
     depends_on:
       geth:
         condition: service_healthy
