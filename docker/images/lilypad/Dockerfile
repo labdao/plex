@@ -18,7 +18,7 @@ RUN cd lilypad && CGO_ENABLED=0 go build -o /go/bin/lilypad
 
 # Bacalhau
 # For bacalhau cli
-FROM ghcr.io/bacalhau-project/bacalhau:${BACALHAU_VERSION:-v1.1.2} as bacalhau
+FROM ghcr.io/bacalhau-project/bacalhau:${BACALHAU_VERSION:-v1.2.0} as bacalhau
 
 #Final
 FROM public.ecr.aws/docker/library/busybox:1.32.0-glibc
