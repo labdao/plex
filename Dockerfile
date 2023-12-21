@@ -10,6 +10,11 @@ COPY . /app/
 WORKDIR /app/
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
+ARG BACALHAU_VERSION=v1.1.4
+
+# For bacalhau cli
+FROM ghcr.io/bacalhau-project/bacalhau:${BACALHAU_VERSION:-v1.1.4} as bacalhau
+
 FROM busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/plex /plex
@@ -26,6 +31,15 @@ COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
+# COPY bacalhau cli
+COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
+
+# Copy entrypoint
+COPY docker/images/backend/run.sh /run.sh
+
+# This creates config file needed by bacalhau golang client
+RUN chmod +x /usr/local/bin/bacalhau /run.sh
+
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
 ENV POSTGRES_DB=labdao
@@ -35,6 +49,6 @@ ENV BACALHAU_API_HOST=127.0.0.1
 
 EXPOSE 8080
 
-ENTRYPOINT ["/plex"]
+ENTRYPOINT ["/run.sh"]
 
 CMD ["web"]

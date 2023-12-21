@@ -104,8 +104,10 @@ services:
       context: .
       cache_from:
         - quay.io/labdao/backend:latest
-      args:
-        BACALHAU_VERSION: ${BACALHAU_VERSION:-v1.1.4}
+      # Commenting this out since copying binary from another container, if that container doesn't exists the COPY will fail
+      # This is the case when specifying BACALHAU_VERSION to be a branch or a tag that hasn't been released and doesn't have an image
+      # args:
+      #   BACALHAU_VERSION: ${BACALHAU_VERSION:-v1.1.4}
     ports:
       - 8080:8080
     environment:
