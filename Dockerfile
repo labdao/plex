@@ -37,7 +37,7 @@ COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 # Copy entrypoint
 COPY docker/images/backend/run.sh /run.sh
 
-# This creates config file needed by bacalhau golang client
+# Adjusting permissions
 RUN chmod +x /usr/local/bin/bacalhau /run.sh
 
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
