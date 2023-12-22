@@ -16,9 +16,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp
-    depends_on:
-      ipfs:
-        condition: service_healthy
 
   # sidecar container for requester healthcheck
   requester_health:
@@ -237,25 +234,8 @@ services:
       lilypad-setup:
         condition: service_completed_successfully
 
-  ipfs:
-    hostname: ipfs
-    build:
-      context: ./docker/images/ipfs
-      dockerfile: ./Dockerfile
-      cache_from:
-        - quay.io/labdao/ipfs:latest
-    volumes:
-      - ipfs:/data/ipfs
-    environment:
-      IPFS_GATEWAY_PORT: "8888"
-    ports:
-      - 4001:4001
-      - 5001:5001
-      - 8888:8888
-
 volumes:
   dbdata-backend:
-  ipfs:
   lilypad:
   solver:
   mediator:
