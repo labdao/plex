@@ -4,7 +4,7 @@ services:
   requester:
     image: "ghcr.io/bacalhau-project/bacalhau:${BACALHAU_VERSION:-v1.2.0}"
     hostname: requester
-    command: serve --peer none --private-internal-ipfs=false --node-type requester # --private-internal-ipfs=false --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
+    command: serve --peer none --private-internal-ipfs=false --node-type requester --private-internal-ipfs=false # --ipfs-connect '/dns4/ipfs/tcp/5001' --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
       # BACALHAU_ENVIRONMENT: production
       LOG_LEVEL: trace
@@ -34,7 +34,7 @@ services:
   compute:
     image: "ghcr.io/bacalhau-project/bacalhau:${BACALHAU_VERSION:-v1.2.0}"
     hostname: compute
-    command: serve --peer "/dns4/requester/tcp/1234/http" --private-internal-ipfs=false --node-type compute # --private-internal-ipfs=false --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
+    command: serve --peer "/dns4/requester/tcp/1234/http" --node-type compute --private-internal-ipfs=false # '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
       # BACALHAU_ENVIRONMENT: production
       LOG_LEVEL: trace
