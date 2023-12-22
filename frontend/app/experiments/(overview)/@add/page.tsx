@@ -59,7 +59,6 @@ export default function AddGraph() {
   interface ToolJson {
     inputs: Record<string, ToolInput>;
   }
-  
 
   const selectedTool = useSelector(selectFlowAddTool);
   const toolListError = useSelector(selectToolListError);
@@ -69,8 +68,6 @@ export default function AddGraph() {
 
   const [selectedToolIndex, setSelectedToolIndex] = useState("");
   const [inputDataFiles, setInputDataFiles] = useState<Record<string, DataFile[]>>({});
-
-  
 
   useEffect(() => {
     if (cid !== "") {
@@ -84,7 +81,7 @@ export default function AddGraph() {
       return;
     }
     dispatch(toolListThunk());
-    dispatch(dataFileListThunk());
+    dispatch(dataFileListThunk({}));
   }, [cid, dispatch, router]);
 
   const handleToolChange = async (value: string) => {
@@ -98,6 +95,7 @@ export default function AddGraph() {
       const input = (selectedTool.ToolJson.inputs as Record<string, { glob: string[] }>)[inputKey];
       if (typeof input === "object" && input !== null && "glob" in input) {
         const globPatterns = input.glob;
+        // @ts-ignore
         const action = (await dispatch(dataFileListThunk(globPatterns))) as PayloadAction<DataFile[]>;
         newInputDataFiles[inputKey] = action.payload;
       }
@@ -184,7 +182,7 @@ export default function AddGraph() {
                       {key}
                       {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(", ")})`}
                     </Label>
-                    <DataFileSelect onChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
+                    <DataFileSelect onValueChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
                   </div>
                 );
               })}
