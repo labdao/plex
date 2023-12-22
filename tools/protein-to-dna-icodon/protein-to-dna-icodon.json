@@ -36,10 +36,10 @@
             "position": "1",
             "required": true
         },
-        "specie": {
+        "species": {
             "type": "string",
             "array": false,
-            "description": "Specie",
+            "description": "Species",
             "glob": [""],
             "default": "human",
             "min": "",

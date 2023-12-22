@@ -76,13 +76,13 @@ def main():
 
     do_reverse_translate(protein_sequence)
     
-    specie = job_inputs["specie"]
+    species = job_inputs["species"]
     iterations = job_inputs["iterations"]
     make_more_optimal = job_inputs["make_more_optimal"]
 
     r_command = ["/usr/bin/Rscript", 
                  "iCodonScript.R",
-                 specie,
+                 species,
                  str(iterations),
                  str(make_more_optimal)
                 ]
