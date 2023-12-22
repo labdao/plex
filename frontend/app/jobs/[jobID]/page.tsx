@@ -53,14 +53,8 @@ export default function JobDetail() {
           <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
             {row.getValue("Filename")}
           </a>
-          <div style={{ fontSize: 'smaller', marginTop: '4px' }}>
-            <a 
-              target="_blank" 
-              href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}
-              style={{ color: 'gray', textDecoration: 'none' }}
-            >
-              {row.getValue("CID")}
-            </a>
+          <div style={{ fontSize: 'smaller', marginTop: '4px', color: 'gray' }}>
+            {row.getValue("CID")}
           </div>
         </div>
       ),
@@ -85,11 +79,7 @@ export default function JobDetail() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
-          </a>
-        );
+        return shortenAddressOrCid(row.getValue("CID"))
       },
     },
   ];
