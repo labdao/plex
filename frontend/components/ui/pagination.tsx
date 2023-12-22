@@ -10,38 +10,41 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
     const renderPageNumbers = () => {
         const pageNumbers: (number | string)[] = [];
 
+        pageNumbers.push(1);
+
+        let rangeStart: number, rangeEnd: number;
+
         if (totalPages <= 10) {
-            for (let i = 1; i <= totalPages; i++) {
-                pageNumbers.push(i);
-            }
+            rangeStart = 2;
+            rangeEnd = totalPages - 1;
         } else {
-            pageNumbers.push(1);
-
-            let rangeStart = Math.max(2, currentPage - 4);
-            let rangeEnd = Math.min(totalPages - 1, currentPage + 4);
-
             if (currentPage <= 6) {
                 rangeStart = 2;
                 rangeEnd = 10;
-            }
-
-            if (currentPage >= totalPages - 5) {
+            } else if (currentPage >= totalPages - 5) {
                 rangeStart = totalPages - 9;
                 rangeEnd = totalPages - 1;
+            } else {
+                rangeStart = currentPage - 4;
+                rangeEnd = currentPage + 4;
             }
+        }
 
-            if (rangeStart > 2) {
-                pageNumbers.push('...');
-            }
+        if (rangeStart > 2) {
+            pageNumbers.push('...');
+        }
 
-            for (let i = rangeStart; i <= rangeEnd; i++) {
+        for (let i = rangeStart; i <= rangeEnd; i++) {
+            if (i !== 1 && i !== totalPages) {
                 pageNumbers.push(i);
             }
+        }
 
-            if (rangeEnd < totalPages - 1) {
-                pageNumbers.push('...');
-            }
+        if (rangeEnd < totalPages - 1) {
+            pageNumbers.push('...');
+        }
 
+        if (totalPages !== 1) {
             pageNumbers.push(totalPages);
         }
 
@@ -60,7 +63,7 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
             {renderPageNumbers().map((page, index) => (
                 typeof page === 'number' ? (
                     <button 
-                        key={page} 
+                        key={index} 
                         onClick={() => onPageChange(page)} 
                         disabled={currentPage === page}
                         style={{ margin: '0 5px' }}
