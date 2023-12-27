@@ -10,8 +10,11 @@ on:
       preview-enabled:
         description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
         required: false
-        type: bool
         default: true
+        type: choice
+        options:
+          - true
+          - false
       preview-timeout:
         description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
         required: false
@@ -38,37 +41,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  go:
-    strategy:
-      matrix:
-        os:
-          - ubuntu-22.04
-            # - macos-13
-    runs-on: ${{ matrix.os }}
-    environment: ci
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.20.3
-
-      - name: Install dependencies
-        run: go mod download
-
-      - name: Build
-        run: go build
-
-      - name: upload plex binary to be used by other jobs
-        uses: actions/upload-artifact@v3
-        with:
-          name: plex-binary-${{matrix.os}}
-          path: ./plex
-
-      - name: Test
-        run: go test ./... -v
-
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
@@ -80,6 +52,7 @@ jobs:
         bacalhau_version:
           - 1.1.2
           - 1.1.4
+          - 1.2.0
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -112,6 +85,7 @@ jobs:
         bacalhau_version:
           - 1.1.2
           - 1.1.4
+          - 1.2.0
         network_mode:
           - public
           - private

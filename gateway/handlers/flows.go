@@ -21,19 +21,16 @@ import (
 )
 
 func pinIoList(ios []ipwl.IO) (string, error) {
-	// Convert IO slice to JSON
 	data, err := json.Marshal(ios)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal IO slice: %v", err)
 	}
 
-	// Create a temporary file
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
 	if err != nil {
 		return "", fmt.Errorf("cannot create temporary file: %v", err)
 	}
 
-	// Write JSON data to the temporary file
 	if _, err = tmpFile.Write(data); err != nil {
 		return "", fmt.Errorf("failed to write to temporary file: %v", err)
 	}
@@ -43,7 +40,6 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 		return "", fmt.Errorf("failed to pin file: %v", err)
 	}
 
-	// Close the file
 	if err := tmpFile.Close(); err != nil {
 		return "", fmt.Errorf("failed to close the file: %v", err)
 	}
@@ -51,23 +47,18 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	return cid, nil
 }
 
-// extractCidIfPossible checks if the input is a string that contains a '/'
-// and starts with 'Qm'. It returns the CID if these conditions are met.
 func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
-	// Check if input is a string.
 	strInput, ok := input.(string)
 	if !ok {
 		return "", false, errors.New("input is not a string")
 	}
 
-	// Check if the string contains '/' and starts with 'Qm'.
 	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-		split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
-		cid = split[0]                            // The CID is the first part of the split.
+		split := strings.SplitN(strInput, "/", 2)
+		cid = split[0]
 		return cid, true, nil
 	}
 
-	// If the string doesn't meet the conditions, return ok as false.
 	return "", false, nil
 }
 
@@ -131,23 +122,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		/*
-		for key, value := range kwargs {
-			if len(value) == 0 || value[0] == "" {
-				log.Printf("Invalid or missing value for key '%s' in kwargs", key)
-				http.Error(w, fmt.Sprintf("Invalid or missing value for key '%s' in kwargs", key), http.StatusBadRequest)
-				return
-			}
-		}
-		*/
-
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
 		if err != nil {
 			http.Error(w, "Invalid or missing kwargs", http.StatusBadRequest)
 			return
 		}
 
-		// add wallet
 		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
@@ -155,7 +135,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		log.Println("Submitting IO List")
-		submittedIoList := ipwl.SubmitIoList(ioList, "", 60 * 24, []string{})
+		submittedIoList := ipwl.SubmitIoList(ioList, "", 60*72, []string{})
 		log.Println("pinning submitted IO List")
 		submittedIoListCid, err := pinIoList(submittedIoList)
 		if err != nil {
@@ -203,13 +183,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 					if !ok {
 						continue
 					}
-					// Check if the string contains '/' and starts with 'Qm'.
 					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-						split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
-						cid := split[0]                           // The CID is the first part of the split.
+						split := strings.SplitN(strInput, "/", 2)
+						cid := split[0]
 						cidsToAdd = append(cidsToAdd, cid)
 					}
-				case []interface{}: // Changed from []string to []interface{}
+				case []interface{}:
 					fmt.Println("found slice, checking each for 'Qm' prefix")
 					for _, elem := range v {
 						strInput, ok := elem.(string)
@@ -217,8 +196,8 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 							continue
 						}
 						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-							split := strings.SplitN(strInput, "/", 2) // Use SplitN to get the first part before '/'
-							cid := split[0]                           // The CID is the first part of the split.
+							split := strings.SplitN(strInput, "/", 2)
+							cid := split[0]
 							cidsToAdd = append(cidsToAdd, cid)
 						}
 					}
@@ -227,11 +206,9 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				}
 				for _, cid := range cidsToAdd {
 					var dataFile models.DataFile
-					// Lookup DataFile with CID corresponding to input.IPFS
 					result := db.First(&dataFile, "cid = ?", cid)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							// Handle the case where no matching DataFile is found if necessary
 							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
@@ -239,11 +216,9 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 							return
 						}
 					}
-					// Append found DataFile to jobEntry's Inputs
 					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
 				}
 			}
-			// Save jobEntry with related inputs
 			result = db.Save(&jobEntry)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
@@ -261,7 +236,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		cid := params["cid"]
 
@@ -294,7 +268,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Received Patch request at /flows")
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		cid := params["cid"]
 		log.Println("CID: ", cid)
@@ -316,7 +289,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
 			}
-			// Update job state based on the external job state
 			if updatedJob.State.State == model.JobStateCancelled {
 				flow.Jobs[index].State = "failed"
 			} else if updatedJob.State.State == model.JobStateError {
@@ -332,7 +304,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			log.Println("Updated job")
-			// Save the updated job back to the database
 			if err := db.Save(&flow.Jobs[index]).Error; err != nil {
 				http.Error(w, fmt.Sprintf("Error saving job: %v", err), http.StatusInternalServerError)
 				return

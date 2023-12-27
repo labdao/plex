@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { Button } from "../ui/button";
 import Logo from "./Logo";
 import { NavLink } from "./NavLink";
-import { Button } from "../ui/button";
 
 const navItems = [
   {

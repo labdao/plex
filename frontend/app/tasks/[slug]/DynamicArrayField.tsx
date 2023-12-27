@@ -49,7 +49,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                   <>
                     {(input.type === "File" || input.type === "file") && (
                       <DataFileSelect
-                        onChange={field.onChange}
+                        onValueChange={field.onChange}
                         value={field.value}
                         globPatterns={input.glob}
                         label={input.glob && `${input.glob.join(", ")}`}
