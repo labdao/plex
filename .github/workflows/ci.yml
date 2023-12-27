@@ -10,8 +10,11 @@ on:
       preview-enabled:
         description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
         required: false
-        type: bool
         default: true
+        type: choice
+        options:
+          - true
+          - false
       preview-timeout:
         description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
         required: false
