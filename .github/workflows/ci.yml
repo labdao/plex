@@ -80,6 +80,7 @@ jobs:
         bacalhau_version:
           - 1.1.2
           - 1.1.4
+          - 1.2.0
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -112,6 +113,7 @@ jobs:
         bacalhau_version:
           - 1.1.2
           - 1.1.4
+          - 1.2.0
         network_mode:
           - public
           - private
