@@ -40,7 +40,7 @@ on:
         type: string
         default: 'labdao'
       deploy-environment:
-        description: 'environemnt to deploy into'
+        description: 'environment to deploy into'
         required: false
         type: string
 
@@ -103,7 +103,7 @@ jobs:
           context: ${{ inputs.context }}
           # TODO dirty hack to make frontend work
           secrets: |
-            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID || 'clo7adk6w07q7jq0f08yrnkur' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
