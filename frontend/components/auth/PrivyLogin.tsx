@@ -50,9 +50,10 @@ const PrivyLogin: React.FC = () => {
     let counter = 0;
     let wallets = JSON.parse(localStorage.getItem("privy:connections") || "[]");
 
-    while (wallets.length === 0 || (wallets[0].walletClientType !== "privy" && counter < 5)) {
-      // Wait for 1 second before checking again
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    // 30 sec max wait time
+    while (wallets.length === 0 || (wallets[0].walletClientType !== "privy" && counter < 30)) {
+      // Wait for 2 seconds before checking again
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       counter++;
       wallets = JSON.parse(localStorage.getItem("privy:connections") || "[]");
     }

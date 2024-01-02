@@ -36,11 +36,7 @@ export default function ListFlowFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
-          </a>
-        );
+        return shortenAddressOrCid(row.getValue("CID"))
       },
     },
     {
@@ -50,13 +46,6 @@ export default function ListFlowFiles() {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
       }
     },
-    // {
-    //   accessorKey: "Tags",
-    //   header: "Tags",
-    //   cell: ({ row }) => {
-    //     return row.getValue("Tags").join(', ');
-    //   }
-    // },
   ];
 
   const dispatch = useDispatch<AppDispatch>();

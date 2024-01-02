@@ -8,7 +8,7 @@ services:
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
-      # BACALHAU_ENVIRONMENT: production
+      BACALHAU_ENVIRONMENT: local
       LOG_LEVEL: trace
     ports:
       - 1234:1234
@@ -35,8 +35,9 @@ services:
     image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4}"
     hostname: compute
     user: root
-    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --max-job-execution-timeout "24h" --job-selection-accept-networked --job-selection-data-locality anywhere
+    command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --job-selection-accept-networked --job-selection-data-locality anywhere
     environment:
+      BACALHAU_ENVIRONMENT: local
       LOG_LEVEL: trace
       DOCKER_DEFAULT_PLATFORM: linux/amd64
       # Keep containers around - I think
@@ -119,7 +120,7 @@ services:
       cache_from:
         - quay.io/labdao/frontend:latest
       args:
-        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID:-clo7adk6w07q7jq0f08yrnkur}
+        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
     environment:
@@ -173,9 +174,9 @@ services:
     volumes:
       - ipfs:/data/ipfs
     environment:
-      IPFS_LOGGING: "debug"
+      IPFS_LOGGING: "info"
       IPFS_GATEWAY_PORT: "8888"
-      IPFS_DEBUG: "true"
+      IPFS_DEBUG: "false"
     ports:
       - 4001:4001
       - 5001:5001
