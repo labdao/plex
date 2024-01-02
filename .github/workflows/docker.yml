@@ -43,10 +43,6 @@ on:
         description: 'environment to deploy into'
         required: false
         type: string
-      privy-app-id:
-        description: 'Privy App ID'
-        required: true
-        type: string
 
 jobs:
   container-build-and-push:
