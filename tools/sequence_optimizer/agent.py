@@ -203,6 +203,13 @@ class Agent:
                 variant_seq_index = self.df.columns.get_loc('variant_seq')
                 self.df.insert(variant_seq_index + 1, 'seed_flag', [[True]] * len(self.df))
 
+                ## pseudocode to add generalised tree search
+                # add empty column 'seed_as_list'; list with length of original seq
+                # add empty column 'shorted_seq_as_list'; list with length of original seq
+                # add empty column 'variant_seq_as_list'; list with length of original seq
+                # add column 'permisible_action list': list of lists; one list for each seq in variant_seq_as_list; each list has length of original seq and notation: X: mutate/delete, -: empty residue, letter: keep fixed.
+
+
             # perform exhaustive deletion and return a list of shortened_sequences
             df = exhaustive_deletion(self.t, self.df)
 
@@ -219,7 +226,7 @@ class Agent:
         
         elif self.policy_flag == 'random_mutation':
 
-            # select subset of sequences (those of the current step) on which to which to apply the policy
+            # select subset of sequences (those of the current step) on which to apply the policy
             if self.t == 0:
                 df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
             else:
