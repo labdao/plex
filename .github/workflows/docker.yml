@@ -40,8 +40,12 @@ on:
         type: string
         default: 'labdao'
       deploy-environment:
-        description: 'environemnt to deploy into'
+        description: 'environment to deploy into'
         required: false
+        type: string
+      privy-app-id:
+        description: 'Privy App ID'
+        required: true
         type: string
 
 jobs:
@@ -103,7 +107,7 @@ jobs:
           context: ${{ inputs.context }}
           # TODO dirty hack to make frontend work
           secrets: |
-            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+            NEXT_PUBLIC_PRIVY_APP_ID=${{ inputs.privy-app-id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
