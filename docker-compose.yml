@@ -120,7 +120,7 @@ services:
       cache_from:
         - quay.io/labdao/frontend:latest
       args:
-        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID:-clo7adk6w07q7jq0f08yrnkur}
+        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
     environment:
