@@ -25,6 +25,8 @@ def three_to_one(residue):
     return conversion.get(residue, '?')
 
 def main():
+    # pdb_file = "BioCD202b18_aa_7fd4f_unrelaxed_rank_002_alphafold2_multimer_v3_model_3_seed_000.pdb"
+    # pdb_file = "AF-Q3C2E2-F1-model_v4_canine_CD20.pdb"
     pdb_file = "BioCD202b18_aa_7fd4f_unrelaxed_rank_002_alphafold2_multimer_v3_model_3_seed_000.pdb"
     chains = ['A', 'B']  # List of chains to extract
     sequences = {}
@@ -34,7 +36,7 @@ def main():
         sequences[chain_id] = sequence
 
     # Write the sequences to a text file
-    with open("amino_acid_sequences.txt", 'w') as output_file:
+    with open(f"amino_acid_sequences_{pdb_file}.txt", 'w') as output_file:
         for chain_id in chains:
             output_file.write(f"Chain {chain_id}: {sequences[chain_id]}\n")
         

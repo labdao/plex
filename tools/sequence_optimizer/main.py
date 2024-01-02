@@ -90,11 +90,3 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
-
-## goal definition
-# df with sequences to compare within the benchmark
-# for every sequence in the task run folding - k times, default for k = 1 (this will require you to do a bit of fasta glue code)
-# add the paths of the folded proteins to the
-# for every structure path run the minimize protein function
-# add the columns with the new scores to the data frame 
-# the final output of running this script and an input csv is an output csv that holds additional columns which point to structures, minimized structures, af-metrics as well as the minimization metrics
