@@ -30,6 +30,37 @@ def exhaustive_deletion(t, df):
 
     return df
 
+def squeeze_seq(new_sequence):
+    return ''.join(filter(lambda x: x != '-', new_sequence))
+
+def permissible_exhaustive_deletion(t, df):
+    # Iterate over rows where 't' column value is t-1
+    for index, row in df[df['t'] == t-1].iterrows():
+        original_seq = row['original_seq']
+        variant_seqs = row['permissible_variant_seq']
+        seed_flags = row['seed_flag']
+
+        # Check if variant_seqs and seed_flags are lists and have the same length
+        if isinstance(variant_seqs, list) and isinstance(seed_flags, list) and len(variant_seqs) == len(seed_flags):
+            # Iterate over each sequence and its corresponding seed value
+            for variant_seq, seed in zip(variant_seqs, seed_flags):
+                # Process only if seed is True
+                if seed:
+                    variant_seq_list = list(variant_seq)
+
+                    # Iterate over the length of the variant_sequence
+                    for n in range(len(variant_seq_list)):
+                        new_sequence = list(variant_seq)
+                        print('var seq list', variant_seq_list)
+                        if variant_seq_list[n] != '-':
+                            # Create a new sequence replace the character at position n
+                            new_sequence[n] = '-'
+                            # Append a new row to the data frame
+                            new_row = pd.DataFrame({'t': [t], 'seed_seq': variant_seq, 'original_seq': original_seq, 'shortened_seq': [squeeze_seq(new_sequence)], 'permissible_shortened_seq': [new_sequence]})
+                            df = pd.concat([df, new_row], ignore_index=True)
+
+    return df
+
 def mutate_single_residue(t, df):
     # Define the one-letter amino acid alphabet
     alphabet = 'ACDEFGHIKLMNPQRSTVWY'
@@ -204,6 +235,17 @@ class Agent:
                 variant_seq_index = self.df.columns.get_loc('variant_seq')
                 self.df.insert(variant_seq_index + 1, 'seed_flag', [[True]] * len(self.df))
 
+                # Add code to modify the 'variant_seq' strings and create a new column 'permissible_variant_seq'
+                self.df['permissible_variant_seq'] = self.df.apply(
+                    lambda row: [
+                        ''.join(
+                            char if pv_char != '-' else '-' 
+                            for char, pv_char in zip(var_seq, pv)
+                        ) 
+                        for var_seq, pv in zip(row['variant_seq'], row['permissibility_vectors'])
+                    ], axis=1
+)
+
                 ## pseudocode to add generalised tree search
                 # add empty column 'seed_as_list'; list with length of original seq
                 # add empty column 'shorted_seq_as_list'; list with length of original seq
@@ -212,7 +254,8 @@ class Agent:
 
 
             # perform exhaustive deletion and return a list of shortened_sequences
-            df = exhaustive_deletion(self.t, self.df)
+            # df = exhaustive_deletion(self.t, self.df)
+            df = permissible_exhaustive_deletion(self.t, self.df)
 
             # select mutation based on greedy sampling
             df = likelihood_based_mutation(self.t, df)
