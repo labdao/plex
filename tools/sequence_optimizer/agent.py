@@ -170,7 +170,6 @@ def action_constraint(t, df):
 
     return df
 
-
 class Agent:
 
     def __init__(self, t, df, reward, cfg):
@@ -184,7 +183,7 @@ class Agent:
 
         if self.policy_flag == 'delete_and_mutate_ESM':
 
-            # read seq from data frame
+            # read seq from data frame (first step)
             if self.t == 1:  # Adjust formatting of input data frame in the first iteration
 
                 # renaming sequence_number column to original_sequence and write the values
@@ -198,6 +197,8 @@ class Agent:
                 # Renaming the column 'seq' to 'variant_seq' and converting values to lists
                 self.df['seq'] = self.df['seq'].apply(lambda x: [x])
                 self.df.rename(columns={'seq': 'variant_seq'}, inplace=True)
+
+                self.df['permissibility_vectors'] = self.df['permissibility_vectors'].apply(lambda x: [x])
 
                 # Adding a column 'seed_flag' after 'variant_seq' and setting its value to a list containing True
                 variant_seq_index = self.df.columns.get_loc('variant_seq')
@@ -224,81 +225,211 @@ class Agent:
         
             return df, pd.DataFrame.empty
         
-        elif self.policy_flag == 'random_mutation':
+        # elif self.policy_flag == 'random_mutation':
 
-            # select subset of sequences (those of the current step) on which to apply the policy
-            if self.t == 0:
-                df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
-            else:
-                df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()    
+        #     # select subset of sequences (those of the current step) on which to apply the policy
+        #     if self.t == 0:
+        #         df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
+        #     else:
+        #         df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()    
 
-            amino_acids = 'ACDEFGHIKLMNPQRSTVWY'  # List of amino acids in one-letter code   
+        #     amino_acids = 'ACDEFGHIKLMNPQRSTVWY'  # List of amino acids in one-letter code   
 
-            # Update the 't' column in df_action to the current value of self.t
-            df_action['t'] = self.t
+        #     # Update the 't' column in df_action to the current value of self.t
+        #     df_action['t'] = self.t
 
-            for index, row in df_action.iterrows():
-                seq = list(row['seq'])  # Convert string to list for mutation
+        #     for index, row in df_action.iterrows():
+        #         seq = list(row['seq'])  # Convert string to list for mutation
 
-                if len(seq) > 0:
-                    mutation_pos = random.randint(0, len(seq) - 1)  # Select random position
-                    original_residue = seq[mutation_pos]
+        #         if len(seq) > 0:
+        #             mutation_pos = random.randint(0, len(seq) - 1)  # Select random position
+        #             original_residue = seq[mutation_pos]
 
-                    # Select a new amino acid different from the original
-                    new_residue = random.choice([aa for aa in amino_acids if aa != original_residue])
+        #             # Select a new amino acid different from the original
+        #             new_residue = random.choice([aa for aa in amino_acids if aa != original_residue])
 
-                    # Perform the mutation
-                    seq[mutation_pos] = new_residue
+        #             # Perform the mutation
+        #             seq[mutation_pos] = new_residue
 
-                    # Update the sequence in the DataFrame without brackets
-                    df_action.at[index, 'seq'] = ''.join(seq)
+        #             # Update the sequence in the DataFrame without brackets
+        #             df_action.at[index, 'seq'] = ''.join(seq)
 
-                    print('df_action', df_action)
+        #             print('df_action', df_action)
 
-                    # Optional: Print the original and mutated sequences with highlighted mutations
-                    original_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + original_residue + ']' + ''.join(seq[mutation_pos + 1:])
-                    mutated_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + new_residue + ']' + ''.join(seq[mutation_pos + 1:])
-                    print(f"Original: {original_seq_for_printing} -> Mutated: {mutated_seq_for_printing}")
+        #             # Optional: Print the original and mutated sequences with highlighted mutations
+        #             original_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + original_residue + ']' + ''.join(seq[mutation_pos + 1:])
+        #             mutated_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + new_residue + ']' + ''.join(seq[mutation_pos + 1:])
+        #             print(f"Original: {original_seq_for_printing} -> Mutated: {mutated_seq_for_printing}")
 
-            # Concatenate self.df with df_action
-            result_df = pd.concat([self.df, df_action])
+        #     # Concatenate self.df with df_action
+        #     result_df = pd.concat([self.df, df_action])
 
-            return result_df, df_action
+        #     return result_df, df_action
         
-        elif self.policy_flag == 'random_deletion':
+        # elif self.policy_flag == 'random_deletion':
 
-            # select subset of sequences (those of the current step) on which to which to apply the policy
-            if self.t == 0:
-                df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
-            else:
-                df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()   
+        #     # select subset of sequences (those of the current step) on which to which to apply the policy
+        #     if self.t == 0:
+        #         df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
+        #     else:
+        #         df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()   
 
-            for index, row in df_action.iterrows():
-                seq = list(row['seq'])  # Convert string to list for deletion
+        #     for index, row in df_action.iterrows():
+        #         seq = list(row['seq'])  # Convert string to list for deletion
 
-                if len(seq) > 1:  # Ensure there is at least one residue to delete
-                    deletion_pos = random.randint(0, len(seq) - 1)  # Select random position
+        #         if len(seq) > 1:  # Ensure there is at least one residue to delete
+        #             deletion_pos = random.randint(0, len(seq) - 1)  # Select random position
 
-                    original_residue = seq[deletion_pos]
-                    original_seq_for_printing = ''.join(seq[:deletion_pos]) + '[' + original_residue + ']' + ''.join(seq[deletion_pos + 1:])
-                    seq_after_delete_for_printing = ''.join(seq[:deletion_pos]) + ''.join(seq[deletion_pos + 1:])
+        #             original_residue = seq[deletion_pos]
+        #             original_seq_for_printing = ''.join(seq[:deletion_pos]) + '[' + original_residue + ']' + ''.join(seq[deletion_pos + 1:])
+        #             seq_after_delete_for_printing = ''.join(seq[:deletion_pos]) + ''.join(seq[deletion_pos + 1:])
 
-                    # Perform the deletion
-                    del seq[deletion_pos]
+        #             # Perform the deletion
+        #             del seq[deletion_pos]
 
-                    # Update the sequence in the DataFrame after deletion
-                    df_action.at[index, 'seq'] = ''.join(seq)
+        #             # Update the sequence in the DataFrame after deletion
+        #             df_action.at[index, 'seq'] = ''.join(seq)
 
-                    # Optional: Print the sequence before and after deletion
-                    print(f"Sequence before deletion: {original_seq_for_printing} -> Sequence after deletion: {seq_after_delete_for_printing}")
+        #             # Optional: Print the sequence before and after deletion
+        #             print(f"Sequence before deletion: {original_seq_for_printing} -> Sequence after deletion: {seq_after_delete_for_printing}")
 
-            # Update the 't' column in df_action to the current value of self.t
-            df_action['t'] = self.t
+        #     # Update the 't' column in df_action to the current value of self.t
+        #     df_action['t'] = self.t
 
-            # Concatenate self.df with df_action
-            result_df = pd.concat([self.df, df_action])
+        #     # Concatenate self.df with df_action
+        #     result_df = pd.concat([self.df, df_action])
 
             return result_df, df_action
+
+
+# class Agent:
+
+#     def __init__(self, t, df, reward, cfg):
+#         self.t = t
+#         self.df = df
+#         self.reward = reward
+#         self.policy_flag = cfg.params.basic_settings.policy_flag
+#         self.cfg = cfg
+
+#     def apply_policy(self):   
+
+#         if self.policy_flag == 'delete_and_mutate_ESM':
+
+#             # read seq from data frame
+#             if self.t == 1:  # Adjust formatting of input data frame in the first iteration
+
+#                 # renaming sequence_number column to original_sequence and write the values
+#                 self.df.rename(columns={'sequence_number': 'original_seq'}, inplace=True)
+#                 self.df['original_seq'] = self.df['seq']
+
+#                 # Inserting an empty column named 'shortened_seq'
+#                 self.df.insert(2, 'seed_seq', '')
+#                 self.df.insert(3, 'shortened_seq', '')
+
+#                 # Renaming the column 'seq' to 'variant_seq' and converting values to lists
+#                 self.df['seq'] = self.df['seq'].apply(lambda x: [x])
+#                 self.df.rename(columns={'seq': 'variant_seq'}, inplace=True)
+
+#                 # Adding a column 'seed_flag' after 'variant_seq' and setting its value to a list containing True
+#                 variant_seq_index = self.df.columns.get_loc('variant_seq')
+#                 self.df.insert(variant_seq_index + 1, 'seed_flag', [[True]] * len(self.df))
+
+#                 ## pseudocode to add generalised tree search
+#                 # add empty column 'seed_as_list'; list with length of original seq
+#                 # add empty column 'shorted_seq_as_list'; list with length of original seq
+#                 # add empty column 'variant_seq_as_list'; list with length of original seq
+#                 # add column 'permisible_action list': list of lists; one list for each seq in variant_seq_as_list; each list has length of original seq and notation: X: mutate/delete, -: empty residue, letter: keep fixed.
+
+
+#             # perform exhaustive deletion and return a list of shortened_sequences
+#             df = exhaustive_deletion(self.t, self.df)
+
+#             # select mutation based on greedy sampling
+#             df = likelihood_based_mutation(self.t, df)
+
+#             # compute the action constraint (Levenshtein distance)
+#             df = action_constraint(self.t, df)
+
+#             # ## action ranking
+#             # df = action_ranking(self.t, df)
+        
+#             return df, pd.DataFrame.empty
+        
+#         elif self.policy_flag == 'random_mutation':
+
+#             # select subset of sequences (those of the current step) on which to apply the policy
+#             if self.t == 0:
+#                 df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
+#             else:
+#                 df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()    
+
+#             amino_acids = 'ACDEFGHIKLMNPQRSTVWY'  # List of amino acids in one-letter code   
+
+#             # Update the 't' column in df_action to the current value of self.t
+#             df_action['t'] = self.t
+
+#             for index, row in df_action.iterrows():
+#                 seq = list(row['seq'])  # Convert string to list for mutation
+
+#                 if len(seq) > 0:
+#                     mutation_pos = random.randint(0, len(seq) - 1)  # Select random position
+#                     original_residue = seq[mutation_pos]
+
+#                     # Select a new amino acid different from the original
+#                     new_residue = random.choice([aa for aa in amino_acids if aa != original_residue])
+
+#                     # Perform the mutation
+#                     seq[mutation_pos] = new_residue
+
+#                     # Update the sequence in the DataFrame without brackets
+#                     df_action.at[index, 'seq'] = ''.join(seq)
+
+#                     print('df_action', df_action)
+
+#                     # Optional: Print the original and mutated sequences with highlighted mutations
+#                     original_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + original_residue + ']' + ''.join(seq[mutation_pos + 1:])
+#                     mutated_seq_for_printing = ''.join(seq[:mutation_pos]) + '[' + new_residue + ']' + ''.join(seq[mutation_pos + 1:])
+#                     print(f"Original: {original_seq_for_printing} -> Mutated: {mutated_seq_for_printing}")
+
+#             # Concatenate self.df with df_action
+#             result_df = pd.concat([self.df, df_action])
+
+#             return result_df, df_action
+        
+#         elif self.policy_flag == 'random_deletion':
+
+#             # select subset of sequences (those of the current step) on which to which to apply the policy
+#             if self.t == 0:
+#                 df_action = self.df[self.df['t'] == 0][['t', 'sequence_number', 'seq']].copy()
+#             else:
+#                 df_action = self.df[self.df['t'] == self.t - 1][['t', 'sequence_number', 'seq']].copy()   
+
+#             for index, row in df_action.iterrows():
+#                 seq = list(row['seq'])  # Convert string to list for deletion
+
+#                 if len(seq) > 1:  # Ensure there is at least one residue to delete
+#                     deletion_pos = random.randint(0, len(seq) - 1)  # Select random position
+
+#                     original_residue = seq[deletion_pos]
+#                     original_seq_for_printing = ''.join(seq[:deletion_pos]) + '[' + original_residue + ']' + ''.join(seq[deletion_pos + 1:])
+#                     seq_after_delete_for_printing = ''.join(seq[:deletion_pos]) + ''.join(seq[deletion_pos + 1:])
+
+#                     # Perform the deletion
+#                     del seq[deletion_pos]
+
+#                     # Update the sequence in the DataFrame after deletion
+#                     df_action.at[index, 'seq'] = ''.join(seq)
+
+#                     # Optional: Print the sequence before and after deletion
+#                     print(f"Sequence before deletion: {original_seq_for_printing} -> Sequence after deletion: {seq_after_delete_for_printing}")
+
+#             # Update the 't' column in df_action to the current value of self.t
+#             df_action['t'] = self.t
+
+#             # Concatenate self.df with df_action
+#             result_df = pd.concat([self.df, df_action])
+
+#             return result_df, df_action
         
 
 ### some old code snippets ###
