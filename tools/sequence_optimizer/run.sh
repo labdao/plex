@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Absolute path to the fasta file
-fasta_file="/inputs/all_seqs_to_shorten/seqs_to_shorten.fasta"
+fasta_file="/inputs/all_seqs_to_shorten/testseq_to_shorten.fasta"
 
 # Debug: Echo the file path and check if it exists
 echo "File path: $fasta_file"

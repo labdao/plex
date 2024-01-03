@@ -20,18 +20,34 @@ def find_fasta_file(directory_path):
                 return os.path.abspath(os.path.join(root, file))
     return None  # Return None if no .fasta file is found in the directory
 
-def load_fasta_to_dataframe(fasta_file):
+def load_fasta_to_dataframe(fasta_file, cfg):
     sequences = []
     with open(fasta_file, 'r') as file:
         seq_num = 1
         for line in file:
             if line.startswith('>'):
                 # Add an entry for a new sequence, including the 'step' column set to 0
-                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': ''})
+                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': ''}) # TD: consider changing name seq to original_seq here already
                 seq_num += 1
             else:
                 # Add sequence data to the most recently added sequence entry
                 sequences[-1]['seq'] += line.strip()
+
+    return pd.DataFrame(sequences)
+
+def load_initial_data(fasta_file, cfg):
+    sequences = []
+    with open(fasta_file, 'r') as file:
+        seq_num = 1
+        for line in file:
+            if line.startswith('>'):
+                # Add an entry for a new sequence, including the 'step' column set to 0
+                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': '', 'permissibility_vectors': ''}) # TD: consider changing name seq to original_seq here already
+                seq_num += 1
+            else:
+                # Add sequence data to the most recently added sequence entry
+                sequences[-1]['seq'] += line.strip()
+                sequences[-1]['permissibility_vectors'] += cfg.params.basic_settings.init_permissibility_vec
 
     return pd.DataFrame(sequences)
 
@@ -61,7 +77,8 @@ def my_app(cfg: DictConfig) -> None:
     print(f"Output directory : {outputs_directory}")
 
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    df_0 = load_fasta_to_dataframe(fasta_file)
+    # df_0 = load_fasta_to_dataframe(fasta_file, cfg)
+    df_0 = load_initial_data(fasta_file, cfg)
 
     start_time = time.time()
     print("sequence to structure complete...")

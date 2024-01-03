@@ -9,6 +9,242 @@ import sequence_transformer
 import shutil
 import subprocess
 
+def print_rows_with_t(t, df):
+    """
+    This function prints all rows of the DataFrame 'df' 
+    where the 't'-column has the value t.
+    """
+    # Filter the DataFrame based on the condition
+    filtered_df = df[df['t'] == t]
+    
+    # Print the filtered DataFrame
+    print(filtered_df)
+
+def create_complex_df(t, MML_df, outputs_directory, cfg): # create a data frame for the protein complex
+    # Filter rows from MML_df where 't' column value is t
+    filtered_df = MML_df[MML_df['t'] == t]
+
+    # Create a new DataFrame with specified columns
+    complex_df = pd.DataFrame(columns=['t', 'target_seq', 'binder_seq', 'complex', 'sequence_pseudo_LL', 'mean plddt', 'max pae', 'json', 'pdb'])
+
+    # Extract target_seq from cfg
+    target_seq = cfg.params.basic_settings.target_seq
+
+    ### FOR THE ORIGINAL SEQUENCE ###
+    # Assuming binder_seq is the sequence you want from MML_df for t=0
+    binder_seq = filtered_df.iloc[0]['original_seq']  # Change 'variant_seq' to the correct column name if different
+
+    # Create the 'complex' value as concatenation of target_seq and binder_seq
+    complex_value = f"{target_seq}:{binder_seq}"
+
+    # Construct the row with t=0 as a DataFrame
+    row_df = pd.DataFrame([{
+        't': 0,
+        'target_seq': target_seq,
+        'binder_seq': binder_seq,
+        'complex': complex_value,
+        # Leaving other columns blank
+    }])
+
+    # Concatenate new row DataFrame to complex_df
+    complex_df = pd.concat([complex_df, row_df], ignore_index=True)
+
+    # Write complex_df to a CSV file
+    complex_df.to_csv('folding_with_target_summary.csv', index=False)
+
+    # Extract corresponding string sequence
+    sequence = complex_value
+
+    folder = 'sequence_to_fold'
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+    os.makedirs(folder, exist_ok=True)
+
+    # Write into a fasta file in sequence_to_fold directory
+    fasta_file_path = os.path.join(outputs_directory, folder)
+    print('fasta_file_path', fasta_file_path)
+    fasta_filename = os.path.join(folder, f"complex_t0.fasta")
+    with open(fasta_filename, 'w') as fasta_file:
+        fasta_file.write(f">1\n{sequence}\n") 
+
+    print("starting AF2 MML sequence")
+
+    af2_runner = AF2Runner(folder, outputs_directory)
+    af2_runner.run()
+
+    print("done folding")
+
+    json_pattern = f"complex_t0"
+    complex_df = update_complex_summary(0, complex_df, sequence, None, complex_df, outputs_directory, json_pattern)
+
+    ### FOR THE FINAL SHORTENED SEQUENCE ###
+    # Create a new DataFrame with specified columns
+    complex_df = pd.DataFrame(columns=['t', 'target_seq', 'binder_seq', 'complex', 'sequence_pseudo_LL', 'mean plddt', 'max pae', 'json', 'pdb'])
+
+    # Assuming binder_seq is the sequence you want from MML_df for t=0
+    binder_seq = filtered_df.iloc[0]['variant_seq']  # Change 'variant_seq' to the correct column name if different
+
+    # Create the 'complex' value as concatenation of target_seq and binder_seq
+    complex_value = f"{target_seq}:{binder_seq}"
+
+    # Construct the row with t=0 as a DataFrame
+    row_df = pd.DataFrame([{
+        't': cfg.params.basic_settings.number_of_evo_cycles,
+        'target_seq': target_seq,
+        'binder_seq': binder_seq,
+        'complex': complex_value,
+        # Leaving other columns blank
+    }])
+
+    # Concatenate new row DataFrame to complex_df
+    complex_df = pd.concat([complex_df, row_df], ignore_index=True)
+
+    # Write complex_df to a CSV file
+    complex_df.to_csv('folding_with_target_summary.csv', index=False)
+
+    # Extract corresponding string sequence
+    sequence = complex_value
+
+    folder = 'sequence_to_fold'
+    if os.path.exists(folder):
+        shutil.rmtree(folder)
+    os.makedirs(folder, exist_ok=True)
+
+    # Write into a fasta file in sequence_to_fold directory
+    fasta_file_path = os.path.join(outputs_directory, folder)
+    print('fasta_file_path', fasta_file_path)
+    fasta_filename = os.path.join(folder, f"complex_tFINAL.fasta")
+    with open(fasta_filename, 'w') as fasta_file:
+        fasta_file.write(f">1\n{sequence}\n") 
+
+    print("starting AF2 MML sequence")
+
+    af2_runner = AF2Runner(folder, outputs_directory)
+    af2_runner.run()
+
+    print("done folding")
+
+    json_pattern = f"complex_tFINAL"
+    complex_df = update_complex_summary(cfg.params.basic_settings.number_of_evo_cycles, complex_df, sequence, None, complex_df, outputs_directory, json_pattern)
+
+    return complex_df
+
+# def prodigy_run(csv_path, pdb_path):
+def prodigy_run(csv_path):
+    # print('csv path', csv_path)
+    df = pd.read_csv(csv_path)
+    # print('csv file data frame', df)
+    for i, r in df.iterrows():
+
+        file_path = r['pdb']
+        if pd.notna(file_path):
+            print('file path', file_path)
+            try:
+                subprocess.run(
+                    ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+                )
+                with open("temp.txt", "r") as f:
+                    lines = f.readlines()
+                    if lines:  # Check if lines is not empty
+                        affinity = float(lines[0].split(" ")[-1].split("/")[0])
+                        df.loc[i, "affinity"] = affinity
+                    else:
+                        # print(f"No output from prodigy for {r['path']}")
+                        print(f"No output from prodigy for {file_path}")
+                        # Handle the case where prodigy did not produce output
+            except subprocess.CalledProcessError:
+                # print(f"Prodigy command failed for {r['path']}")
+                print(f"Prodigy command failed for {file_path}")
+
+    # export results
+    df.to_csv(f"{csv_path}", index=None)
+
+def modified_sampling_set_pseudoLL(t, df, cfg):
+    N = cfg.params.basic_settings.max_number_of_offspring_kept
+
+    runner = sequence_transformer.ESM2Runner()
+
+    # Check if the 'variant_pseudoLL' column exists in df, if not, create it
+    if 'variant_pseudoLL' not in df.columns:
+        df['variant_pseudoLL'] = None
+
+    # Iterate over rows where 't' column value is t
+    for index, row in df[df['t'] == t].iterrows():
+        action_scores = row['action_score']
+        variant_list = row['variant_seq']
+        seed_flags = row['seed_flag']
+
+        # Determine the list of distinct strings in variant_list
+        distinct_variants = list(set(variant_list))
+
+        # Initialize seed_flags with all False
+        seed_flags = [False] * len(variant_list)
+
+        # Loop over variant_list and set one element in seed_flags to True for each distinct element
+        for i, variant in enumerate(variant_list):
+            if variant in distinct_variants:
+                seed_flags[i] = True
+                distinct_variants.remove(variant)
+
+        # Filter and sort action scores based on seed_flags
+        filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
+        filtered_scores.sort(reverse=True, key=lambda x: x[0])
+
+        # Select top N elements
+        top_indices = {index for _, index in filtered_scores[:N]}
+
+        # Update seed_flags: True if in top N, otherwise False
+        updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
+        df.at[index, 'seed_flag'] = updated_seed_flags
+
+        # Initialize the pseudoLL list with None
+        variant_pseudoLL = [None] * len(variant_list)
+
+        # Compute pseudoLL for elements with True in updated_seed_flags
+        for i, (variant, flag) in enumerate(zip(variant_list, updated_seed_flags)):
+            if flag:
+                pseudoLL = runner.sequence_pseudo_log_likelihoods_scalar(variant)
+                variant_pseudoLL[i] = pseudoLL
+
+        # Update the DataFrame
+        df.at[index, 'variant_pseudoLL'] = variant_pseudoLL
+
+    return df
+
+def modified_sampling_set(t, df, cfg):
+    N = cfg.params.basic_settings.max_number_of_offspring_kept
+
+    # Iterate over rows where 't' column value is t
+    for index, row in df[df['t'] == t].iterrows():
+        action_scores = row['action_score']
+        variant_list = row['variant_seq']
+        seed_flags = row['seed_flag']
+
+        # Determine the list of distinct strings in variant_list
+        distinct_variants = list(set(variant_list))
+
+        # Initialize seed_flags with all False
+        seed_flags = [False] * len(variant_list)
+
+        # Loop over variant_list and set one element in seed_flags to True for each distinct element
+        for i, variant in enumerate(variant_list):
+            if variant in distinct_variants:
+                seed_flags[i] = True
+                distinct_variants.remove(variant)
+
+        # Filter and sort action scores based on seed_flags
+        filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
+        filtered_scores.sort(reverse=True, key=lambda x: x[0])
+
+        # Select top N elements
+        top_indices = {index for _, index in filtered_scores[:N]}
+
+        # Update seed_flags: True if in top N, otherwise False
+        updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
+        df.at[index, 'seed_flag'] = updated_seed_flags
+
+    return df
+
 def update_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern, index, i):
     summary_file = os.path.join(directory, 'MML_summary.csv')
 
@@ -244,251 +480,12 @@ def modified_sampling_set_pseudoLLSelection(t, df, cfg):
 
     return df
 
-
-def modified_sampling_set_pseudoLL(t, df, cfg):
-    N = cfg.params.basic_settings.max_number_of_offspring_kept
-
-    runner = sequence_transformer.ESM2Runner()
-
-    # Check if the 'variant_pseudoLL' column exists in df, if not, create it
-    if 'variant_pseudoLL' not in df.columns:
-        df['variant_pseudoLL'] = None
-
-    # Iterate over rows where 't' column value is t
-    for index, row in df[df['t'] == t].iterrows():
-        action_scores = row['action_score']
-        variant_list = row['variant_seq']
-        seed_flags = row['seed_flag']
-
-        # Determine the list of distinct strings in variant_list
-        distinct_variants = list(set(variant_list))
-
-        # Initialize seed_flags with all False
-        seed_flags = [False] * len(variant_list)
-
-        # Loop over variant_list and set one element in seed_flags to True for each distinct element
-        for i, variant in enumerate(variant_list):
-            if variant in distinct_variants:
-                seed_flags[i] = True
-                distinct_variants.remove(variant)
-
-        # Filter and sort action scores based on seed_flags
-        filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
-        filtered_scores.sort(reverse=True, key=lambda x: x[0])
-
-        # Select top N elements
-        top_indices = {index for _, index in filtered_scores[:N]}
-
-        # Update seed_flags: True if in top N, otherwise False
-        updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
-        df.at[index, 'seed_flag'] = updated_seed_flags
-
-        # Initialize the pseudoLL list with None
-        variant_pseudoLL = [None] * len(variant_list)
-
-        # Compute pseudoLL for elements with True in updated_seed_flags
-        for i, (variant, flag) in enumerate(zip(variant_list, updated_seed_flags)):
-            if flag:
-                pseudoLL = runner.sequence_pseudo_log_likelihoods_scalar(variant)
-                variant_pseudoLL[i] = pseudoLL
-
-        # Update the DataFrame
-        df.at[index, 'variant_pseudoLL'] = variant_pseudoLL
-
-    return df
-
-def modified_sampling_set(t, df, cfg):
-    N = cfg.params.basic_settings.max_number_of_offspring_kept
-
-    # Iterate over rows where 't' column value is t
-    for index, row in df[df['t'] == t].iterrows():
-        action_scores = row['action_score']
-        variant_list = row['variant_seq']
-        seed_flags = row['seed_flag']
-
-        # Determine the list of distinct strings in variant_list
-        distinct_variants = list(set(variant_list))
-
-        # Initialize seed_flags with all False
-        seed_flags = [False] * len(variant_list)
-
-        # Loop over variant_list and set one element in seed_flags to True for each distinct element
-        for i, variant in enumerate(variant_list):
-            if variant in distinct_variants:
-                seed_flags[i] = True
-                distinct_variants.remove(variant)
-
-        # Filter and sort action scores based on seed_flags
-        filtered_scores = [(score, i) for i, (score, flag) in enumerate(zip(action_scores, seed_flags)) if flag]
-        filtered_scores.sort(reverse=True, key=lambda x: x[0])
-
-        # Select top N elements
-        top_indices = {index for _, index in filtered_scores[:N]}
-
-        # Update seed_flags: True if in top N, otherwise False
-        updated_seed_flags = [i in top_indices for i, _ in enumerate(seed_flags)]
-        df.at[index, 'seed_flag'] = updated_seed_flags
-
-    return df
-
 def action_selection(t, df, cfg):
 
     if t>0:
-        # df = modified_sampling_set(t, df, cfg)
-        # df = modified_sampling_set_pseudoLL(t, df, cfg)
         df = modified_sampling_set_pseudoLLSelection(t, df, cfg)
 
     return df
-
-def print_rows_with_t(t, df):
-    """
-    This function prints all rows of the DataFrame 'df' 
-    where the 't'-column has the value t.
-    """
-    # Filter the DataFrame based on the condition
-    filtered_df = df[df['t'] == t]
-    
-    # Print the filtered DataFrame
-    print(filtered_df)
-
-def create_complex_df(t, MML_df, outputs_directory, cfg): # create a data frame for the protein complex
-    # Filter rows from MML_df where 't' column value is t
-    filtered_df = MML_df[MML_df['t'] == t]
-
-    # Create a new DataFrame with specified columns
-    complex_df = pd.DataFrame(columns=['t', 'target_seq', 'binder_seq', 'complex', 'sequence_pseudo_LL', 'mean plddt', 'max pae', 'json', 'pdb'])
-
-    # Extract target_seq from cfg
-    target_seq = cfg.params.basic_settings.target_seq
-
-    ### FOR THE ORIGINAL SEQUENCE ###
-    # Assuming binder_seq is the sequence you want from MML_df for t=0
-    binder_seq = filtered_df.iloc[0]['original_seq']  # Change 'variant_seq' to the correct column name if different
-
-    # Create the 'complex' value as concatenation of target_seq and binder_seq
-    complex_value = f"{target_seq}:{binder_seq}"
-
-    # Construct the row with t=0 as a DataFrame
-    row_df = pd.DataFrame([{
-        't': 0,
-        'target_seq': target_seq,
-        'binder_seq': binder_seq,
-        'complex': complex_value,
-        # Leaving other columns blank
-    }])
-
-    # Concatenate new row DataFrame to complex_df
-    complex_df = pd.concat([complex_df, row_df], ignore_index=True)
-
-    # Write complex_df to a CSV file
-    complex_df.to_csv('folding_with_target_summary.csv', index=False)
-
-    # Extract corresponding string sequence
-    sequence = complex_value
-
-    folder = 'sequence_to_fold'
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
-    os.makedirs(folder, exist_ok=True)
-
-    # Write into a fasta file in sequence_to_fold directory
-    fasta_file_path = os.path.join(outputs_directory, folder)
-    print('fasta_file_path', fasta_file_path)
-    fasta_filename = os.path.join(folder, f"complex_t0.fasta")
-    with open(fasta_filename, 'w') as fasta_file:
-        fasta_file.write(f">1\n{sequence}\n") 
-
-    print("starting AF2 MML sequence")
-
-    af2_runner = AF2Runner(folder, outputs_directory)
-    af2_runner.run()
-
-    print("done folding")
-
-    json_pattern = f"complex_t0"
-    complex_df = update_complex_summary(0, complex_df, sequence, None, complex_df, outputs_directory, json_pattern)
-
-    ### FOR THE FINAL SHORTENED SEQUENCE ###
-    # Create a new DataFrame with specified columns
-    complex_df = pd.DataFrame(columns=['t', 'target_seq', 'binder_seq', 'complex', 'sequence_pseudo_LL', 'mean plddt', 'max pae', 'json', 'pdb'])
-
-    # Assuming binder_seq is the sequence you want from MML_df for t=0
-    binder_seq = filtered_df.iloc[0]['variant_seq']  # Change 'variant_seq' to the correct column name if different
-
-    # Create the 'complex' value as concatenation of target_seq and binder_seq
-    complex_value = f"{target_seq}:{binder_seq}"
-
-    # Construct the row with t=0 as a DataFrame
-    row_df = pd.DataFrame([{
-        't': cfg.params.basic_settings.number_of_evo_cycles,
-        'target_seq': target_seq,
-        'binder_seq': binder_seq,
-        'complex': complex_value,
-        # Leaving other columns blank
-    }])
-
-    # Concatenate new row DataFrame to complex_df
-    complex_df = pd.concat([complex_df, row_df], ignore_index=True)
-
-    # Write complex_df to a CSV file
-    complex_df.to_csv('folding_with_target_summary.csv', index=False)
-
-    # Extract corresponding string sequence
-    sequence = complex_value
-
-    folder = 'sequence_to_fold'
-    if os.path.exists(folder):
-        shutil.rmtree(folder)
-    os.makedirs(folder, exist_ok=True)
-
-    # Write into a fasta file in sequence_to_fold directory
-    fasta_file_path = os.path.join(outputs_directory, folder)
-    print('fasta_file_path', fasta_file_path)
-    fasta_filename = os.path.join(folder, f"complex_tFINAL.fasta")
-    with open(fasta_filename, 'w') as fasta_file:
-        fasta_file.write(f">1\n{sequence}\n") 
-
-    print("starting AF2 MML sequence")
-
-    af2_runner = AF2Runner(folder, outputs_directory)
-    af2_runner.run()
-
-    print("done folding")
-
-    json_pattern = f"complex_tFINAL"
-    complex_df = update_complex_summary(cfg.params.basic_settings.number_of_evo_cycles, complex_df, sequence, None, complex_df, outputs_directory, json_pattern)
-
-    return complex_df
-
-# def prodigy_run(csv_path, pdb_path):
-def prodigy_run(csv_path):
-    # print('csv path', csv_path)
-    df = pd.read_csv(csv_path)
-    # print('csv file data frame', df)
-    for i, r in df.iterrows():
-
-        file_path = r['pdb']
-        if pd.notna(file_path):
-            print('file path', file_path)
-            try:
-                subprocess.run(
-                    ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
-                )
-                with open("temp.txt", "r") as f:
-                    lines = f.readlines()
-                    if lines:  # Check if lines is not empty
-                        affinity = float(lines[0].split(" ")[-1].split("/")[0])
-                        df.loc[i, "affinity"] = affinity
-                    else:
-                        # print(f"No output from prodigy for {r['path']}")
-                        print(f"No output from prodigy for {file_path}")
-                        # Handle the case where prodigy did not produce output
-            except subprocess.CalledProcessError:
-                # print(f"Prodigy command failed for {r['path']}")
-                print(f"Prodigy command failed for {file_path}")
-
-    # export results
-    df.to_csv(f"{csv_path}", index=None)
 
 class Oracle:
     def __init__(self, t, df, df_action, outputs_directory, cfg):
@@ -539,12 +536,12 @@ class Oracle:
                         with open(fasta_filename, 'w') as fasta_file:
                             fasta_file.write(f">1\n{sequence}\n") 
 
-                        print("starting AF2 MML sequence")
+                        # print("starting AF2 MML sequence")
 
-                        af2_runner = AF2Runner(folder, self.outputs_directory)
-                        af2_runner.run()
+                        # af2_runner = AF2Runner(folder, self.outputs_directory)
+                        # af2_runner.run()
 
-                        print("done folding")
+                        # print("done folding")
 
                         json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
                         MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern, index, i)
