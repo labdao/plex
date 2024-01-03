@@ -1,7 +1,7 @@
 import backendUrl from "lib/backendUrl"
 
-export const listFlows = async (): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/flows`, {
+export const listFlows = async (walletAddress: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/flows?walletAddress=${encodeURIComponent(walletAddress)}`, {
     method: 'Get',
     headers: {
       'Content-Type': 'application/json',
