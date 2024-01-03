@@ -601,6 +601,8 @@ class Oracle:
 
         MML_df = pd.DataFrame(columns=['t', 'original_seq', 'variant_seq', 'sequence_pseudo_LL',  'mean plddt', 'max pae', 'json', 'pdb'])
 
+        # print('mml df', MML_df)
+
         # if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
         if self.t>=1:
 
@@ -629,17 +631,19 @@ class Oracle:
                         with open(fasta_filename, 'w') as fasta_file:
                             fasta_file.write(f">1\n{sequence}\n") 
 
-                        # print("starting AF2 MML sequence")
+                        print("starting AF2 MML sequence")
 
-                        # af2_runner = AF2Runner(folder, self.outputs_directory)
-                        # af2_runner.run()
+                        af2_runner = AF2Runner(folder, self.outputs_directory)
+                        af2_runner.run()
 
-                        # print("done folding")
+                        print("done folding")
 
                         json_pattern = f"sequence_Time{self.t}_TablRow{index}_VariantIdx{i}_scores*.json"
                         MML_df = update_summary(self.t, row, sequence, sequence_pseudoLL, MML_df, self.outputs_directory, json_pattern, index, i)
         
         if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
+
+            # print('mml df', MML_df)
 
             # fold original and target seqs together and save pdb
             # fold the final evolution step MML and target seqs toegther and save pdb
