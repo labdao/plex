@@ -40,10 +40,9 @@ def permissible_exhaustive_deletion(t, df):
         variant_seqs = row['permissible_variant_seq']
         seed_flags = row['seed_flag']
         if (t-1)==0:
-            permissibility_vector = row['permissibility_vectors'][0]
+            permissibility_vector = row['permissibility_vectors'][0] # TD: clean this up. should write the input differently already.
         else:
             permissibility_vector = row['permissibility_vectors']
-        print('peeerrrmmm vec', permissibility_vector)
 
         # Check if variant_seqs and seed_flags are lists and have the same length
         if isinstance(variant_seqs, list) and isinstance(seed_flags, list) and len(variant_seqs) == len(seed_flags):
@@ -54,10 +53,11 @@ def permissible_exhaustive_deletion(t, df):
                     variant_seq_list = list(variant_seq)
 
                     # Iterate over the length of the variant_sequence
-                    for n in range(len(variant_seq_list)):
+                    for n in range(len(variant_seq_list)): # TD: clean up to variant_seq?
                         new_sequence = list(variant_seq)
                         new_permissibility_vector = list(permissibility_vector)
-                        if variant_seq_list[n] != '-':
+                        # if variant_seq_list[n] != '-':
+                        if permissibility_vector[n]=='X':
                             # Create a new sequence replace the character at position n
                             new_sequence[n] = '-'
                             new_permissibility_vector[n] = '-'
@@ -197,26 +197,31 @@ def permissible_likelihood_based_mutation(t, df):
     for index, row in df[df['t'] == t].iterrows():
         shortened_seq = row['shortened_seq']
         permissible_shortened_seq = row['permissible_shortened_seq']
+        permissibility_vectors = row['permissibility_vectors']
         mutated_sequences = []
         LL_mutated_sequence = []
         permissible_mutated_sequences = []
 
-        LL_matrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
+        LL_matrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq) # TD: could save some compute time here, by only consider those residues which are permissible to mutation
         # print('check sum', np.sum(np.exp(LL_matrix), axis=0)) # convert to probabilities and compute sum for each column
         greedy_mutations = greedy_choice_residue(runner, LL_matrix)
 
         # Iterate over the length of the shortened_sequence
         for i in range(len(shortened_seq)):
 
-            # Mutate only one residue at a time
-            mutated_seq = list(shortened_seq)
-            mutated_seq[i] = greedy_mutations[i]
-            mutated_sequences.append(''.join(mutated_seq))
+            squeezed_permisibility_list = list(squeeze_seq(permissibility_vectors))
+            if squeezed_permisibility_list[i]=='X':
 
-            permissible_mutated_sequences = infer_permissible_variant(mutated_seq, pattern=permissible_shortened_seq)
+                # Mutate only one residue at a time
+                mutated_seq = list(shortened_seq)
+                mutated_seq[i] = greedy_mutations[i]
+                mutated_sequences.append(''.join(mutated_seq))
 
-            LL_greedy = compute_log_likelihood(runner, mutated_seq, LL_matrix)
-            LL_mutated_sequence.append(LL_greedy)
+                permissible_variant = infer_permissible_variant(mutated_seq, pattern=permissible_shortened_seq)
+                permissible_mutated_sequences.append(permissible_variant) # TD: at the moment we only append if the sequence has been mutated after the deletion. should take care of the shortened sequences which cannot be varied; these would continue as purely deleting along the tree
+
+                LL_greedy = compute_log_likelihood(runner, mutated_seq, LL_matrix)
+                LL_mutated_sequence.append(LL_greedy)
 
         df.at[index, 'variant_seq'] = mutated_sequences
         df.at[index, 'permissible_variant_seq'] = permissible_mutated_sequences
