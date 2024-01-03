@@ -61,8 +61,27 @@ def permissible_exhaustive_deletion(t, df):
                             # Create a new sequence replace the character at position n
                             new_sequence[n] = '-'
                             new_permissibility_vector[n] = '-'
+
+                            # # Before creating the new DataFrame, print out the types to debug
+                            # print(f"Type of 't': {type(t)}")
+                            # print(f"Type of 'variant_seq': {type(variant_seq)}")
+                            # print(f"Type of 'original_seq': {type(original_seq)}")
+                            # print(f"Type of 'new_sequence': {type(new_sequence)}")
+                            # print(f"Type of 'new_permissibility_vector': {type(new_permissibility_vector)}")
+
+                            # If variant_seq is a list, convert it to a string by joining its elements # TD: check why variant_seq sometimes ends up as a list
+                            if isinstance(variant_seq, list):
+                                variant_seq = ''.join(variant_seq)
+
                             # Append a new row to the data frame
-                            new_row = pd.DataFrame({'t': [t], 'seed_seq': variant_seq, 'original_seq': original_seq, 'shortened_seq': [squeeze_seq(new_sequence)], 'permissible_shortened_seq': [new_sequence], 'permissibility_vectors': [new_permissibility_vector]})
+                            new_row = pd.DataFrame({
+                                't': [t],
+                                'seed_seq': [variant_seq],
+                                'original_seq': [original_seq],
+                                'shortened_seq': [squeeze_seq(new_sequence)],
+                                'permissible_shortened_seq': [new_sequence],
+                                'permissibility_vectors': [new_permissibility_vector]
+                            })
                             df = pd.concat([df, new_row], ignore_index=True)
 
     return df
