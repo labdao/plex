@@ -48,6 +48,12 @@ def load_initial_data(fasta_file, cfg):
                 # Add sequence data to the most recently added sequence entry
                 sequences[-1]['seq'] += line.strip()
                 sequences[-1]['permissibility_vectors'] += cfg.params.basic_settings.init_permissibility_vec
+    
+    # After the file reading loop
+    for sequence in sequences:
+        # Convert the string to a list of characters and update the dictionary
+        # sequence['permissibility_vectors'] = [vec for vec in sequence['permissibility_vectors']]
+        sequence['permissibility_vectors'] = list(sequence['permissibility_vectors'])
 
     return pd.DataFrame(sequences)
 

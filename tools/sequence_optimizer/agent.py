@@ -39,6 +39,11 @@ def permissible_exhaustive_deletion(t, df):
         original_seq = row['original_seq']
         variant_seqs = row['permissible_variant_seq']
         seed_flags = row['seed_flag']
+        if (t-1)==0:
+            permissibility_vector = row['permissibility_vectors'][0]
+        else:
+            permissibility_vector = row['permissibility_vectors']
+        print('peeerrrmmm vec', permissibility_vector)
 
         # Check if variant_seqs and seed_flags are lists and have the same length
         if isinstance(variant_seqs, list) and isinstance(seed_flags, list) and len(variant_seqs) == len(seed_flags):
@@ -51,12 +56,13 @@ def permissible_exhaustive_deletion(t, df):
                     # Iterate over the length of the variant_sequence
                     for n in range(len(variant_seq_list)):
                         new_sequence = list(variant_seq)
-                        print('var seq list', variant_seq_list)
+                        new_permissibility_vector = list(permissibility_vector)
                         if variant_seq_list[n] != '-':
                             # Create a new sequence replace the character at position n
                             new_sequence[n] = '-'
+                            new_permissibility_vector[n] = '-'
                             # Append a new row to the data frame
-                            new_row = pd.DataFrame({'t': [t], 'seed_seq': variant_seq, 'original_seq': original_seq, 'shortened_seq': [squeeze_seq(new_sequence)], 'permissible_shortened_seq': [new_sequence]})
+                            new_row = pd.DataFrame({'t': [t], 'seed_seq': variant_seq, 'original_seq': original_seq, 'shortened_seq': [squeeze_seq(new_sequence)], 'permissible_shortened_seq': [new_sequence], 'permissibility_vectors': [new_permissibility_vector]})
                             df = pd.concat([df, new_row], ignore_index=True)
 
     return df
@@ -153,6 +159,67 @@ def likelihood_based_mutation(t, df):
             LL_mutated_sequence.append(LL_greedy)
 
         df.at[index, 'variant_seq'] = mutated_sequences
+        # Ensure the 'action_score' column exists
+        if 'action_score' not in df.columns:
+            df['action_score'] = None
+        df.at[index, 'action_score'] = LL_mutated_sequence
+
+    return df
+
+def infer_permissible_variant(mutated, pattern):
+    # Initialize an index for the mutated string
+    mutated_index = 0
+    # Initialize the result list
+    result = []
+
+    # Loop through the pattern
+    for char in pattern:
+        if char != '-':
+            # If the character in the pattern is different from the one in the mutated string
+            # replace it with the mutated character
+            if char != mutated[mutated_index]:
+                result.append(mutated[mutated_index])
+            else:
+                result.append(char)
+            mutated_index += 1
+        else:
+            # If the character is '-', keep it
+            result.append(char)
+
+    return result
+
+def permissible_likelihood_based_mutation(t, df):
+
+    # Initialize the ESM2Runner with the default model
+    runner = sequence_transformer.ESM2Runner()
+
+    # Iterate over rows where 't' column value is t
+    for index, row in df[df['t'] == t].iterrows():
+        shortened_seq = row['shortened_seq']
+        permissible_shortened_seq = row['permissible_shortened_seq']
+        mutated_sequences = []
+        LL_mutated_sequence = []
+        permissible_mutated_sequences = []
+
+        LL_matrix = runner.token_masked_marginal_log_likelihood_matrix(shortened_seq)
+        # print('check sum', np.sum(np.exp(LL_matrix), axis=0)) # convert to probabilities and compute sum for each column
+        greedy_mutations = greedy_choice_residue(runner, LL_matrix)
+
+        # Iterate over the length of the shortened_sequence
+        for i in range(len(shortened_seq)):
+
+            # Mutate only one residue at a time
+            mutated_seq = list(shortened_seq)
+            mutated_seq[i] = greedy_mutations[i]
+            mutated_sequences.append(''.join(mutated_seq))
+
+            permissible_mutated_sequences = infer_permissible_variant(mutated_seq, pattern=permissible_shortened_seq)
+
+            LL_greedy = compute_log_likelihood(runner, mutated_seq, LL_matrix)
+            LL_mutated_sequence.append(LL_greedy)
+
+        df.at[index, 'variant_seq'] = mutated_sequences
+        df.at[index, 'permissible_variant_seq'] = permissible_mutated_sequences
         # Ensure the 'action_score' column exists
         if 'action_score' not in df.columns:
             df['action_score'] = None
@@ -258,7 +325,8 @@ class Agent:
             df = permissible_exhaustive_deletion(self.t, self.df)
 
             # select mutation based on greedy sampling
-            df = likelihood_based_mutation(self.t, df)
+            # df = likelihood_based_mutation(self.t, df)
+            df = permissible_likelihood_based_mutation(self.t, df)
 
             # compute the action constraint (Levenshtein distance)
             df = action_constraint(self.t, df)
