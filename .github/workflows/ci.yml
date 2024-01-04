@@ -153,6 +153,9 @@ jobs:
           #
           set -x
 
+          # Create empty file to avoid issues
+          touch ./docker/.env.tunnel
+
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
 
