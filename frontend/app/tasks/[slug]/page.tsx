@@ -1,6 +1,8 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,17 +16,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
-import { useRouter } from "next/navigation";
-
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectWalletAddress, toolDetailThunk } from "@/lib/redux";
+import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
-import { ChevronsUpDownIcon } from "lucide-react";
 import { VariantSummary } from "./VariantSummary";
-
-import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
 
@@ -50,7 +48,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       name: "protein design",
       slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
       default_tool: {
-        CID: "QmS4M7MCgSEy44DuiyYhogfF2EyMopbUNUGkkPMqhxhirx",
+        CID: "QmYmKL9fCzxoEQAEvCtLZHXXwjJWdn7bbRE9afTXV5cB3v",
       },
     }),
     []
@@ -63,6 +61,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
+  const walletAddress = useSelector(selectWalletAddress);
 
   // On page load fetch the default tool details
   useEffect(() => {
@@ -143,7 +142,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     console.log("===== Form Submitted =====", values);
 
     console.log('transformed payload')
-    const transformedPayload = transformJson(values, "0xab5801a7d398351b8be11c439e05c5b3259aec9b");
+    const transformedPayload = transformJson(values, walletAddress);
     console.log(transformedPayload);
     console.log('submitting')
 

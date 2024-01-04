@@ -63,6 +63,11 @@
       ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
 
   handlers:
+    - name: Reload systemd
+      become: true
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
     - name: Restart docker
       become: true
       ansible.builtin.service:

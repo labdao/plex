@@ -6,6 +6,7 @@ import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function ListDataFiles() {
   interface Tag {
@@ -47,17 +48,10 @@ export default function ListDataFiles() {
             <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
                 {row.getValue("Filename")}
             </a>
-            <div style={{ fontSize: 'smaller', marginTop: '4px' }}>
-              <a 
-                target="_blank" 
-                href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}
-                style={{ color: 'gray', textDecoration: 'none' }}
-              >
+            <div style={{ fontSize: 'smaller', marginTop: '4px', color: 'gray' }}>
                 {row.getValue("CID")}
-              </a>
             </div>
           </div>
-
         );
       },
     },
@@ -79,11 +73,7 @@ export default function ListDataFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
-          </a>
-        );
+        return shortenAddressOrCid(row.getValue("CID"))
       },
     },
     {
@@ -98,26 +88,32 @@ export default function ListDataFiles() {
 
   ];
 
-  const [datafiles, setDataFiles] = useState<DataFile[]>([]);
+  const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const pageSize = 50;
   const [sorting, setSorting] = useState([{ id: "Timestamp", desc: true }]);
 
   useEffect(() => {
-    fetch(`${backendUrl()}/datafiles`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error ${response.status}`);
-        }
-        return response.json();
+    fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        setDataFiles(responseJson.data);
+        setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
       })
-      .then((data) => {
-        console.log("Fetched datafiles:", data);
-        setDataFiles(data);
-      });
-  }, []);
+      .catch((error) => console.error("Error fetching data files:", error));
+  }, [currentPage]);  
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={datafiles} sorting={sorting} />
+    <div>
+      <div className="border rounded-lg overflow-hidden">
+        <DataTable columns={columns} data={dataFiles} sorting={sorting} />
+      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </div>
-  );
+  );  
 }

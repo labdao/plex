@@ -3,8 +3,8 @@
 # Build the Docker image
 docker build -t colabdesign-noninteractive .
 
-# Create a unique output directory
-OUTPUT_DIR="outputs_$(date +%Y%m%d_%H%M%S)"
+# Create a unique output directory that is gitignored
+OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
