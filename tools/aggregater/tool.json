@@ -1,17 +1,17 @@
 {
     "class": "",
     "name": "aggregate 0.1",
-    "description": "simple hello world that plex stack is working",
+    "description": "Aggregate protein design result CSVs into a single CSV and generate distribution plot",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
+    "dockerPull": "docker.io/openzyme/aggregater@sha256:55ef85cc19382e295cfe367138c1523e64b1b3b4d6d9229ea69377460d431e34",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
         "csv_result_files": {
             "type": "file",
-            "description": "File to have contents added to output result file.",
+            "description": "CSV result files to aggregate together",
             "array": true,
             "glob": ["*.csv"],
             "default": "",
