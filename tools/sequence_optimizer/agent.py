@@ -56,8 +56,7 @@ def permissible_exhaustive_deletion(t, df):
                     for n in range(len(variant_seq_list)): # TD: clean up to variant_seq?
                         new_sequence = list(variant_seq)
                         new_permissibility_vector = list(permissibility_vector)
-                        # if variant_seq_list[n] != '-':
-                        if permissibility_vector[n]=='X':
+                        if permissibility_vector[n]=='+':
                             # Create a new sequence replace the character at position n
                             new_sequence[n] = '-'
                             new_permissibility_vector[n] = '-'
@@ -229,7 +228,7 @@ def permissible_likelihood_based_mutation(t, df):
         for i in range(len(shortened_seq)):
 
             squeezed_permisibility_list = list(squeeze_seq(permissibility_vectors))
-            if squeezed_permisibility_list[i]=='X':
+            if squeezed_permisibility_list[i]=='X' or squeezed_permisibility_list[i]=='+':
 
                 # Mutate only one residue at a time
                 mutated_seq = list(shortened_seq)
