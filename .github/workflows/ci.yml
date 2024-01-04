@@ -148,6 +148,9 @@ jobs:
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
         run: |
+          #
+          set -x
+
           # Add additional info to the env file
           echo "### Preview URLs for Bacalhau Version: ${{ matrix.bacalhau_version }}, OS: ${{ matrix.os }}, Network Mode: ${{ matrix.network_mode }}" >> ./docker/.env.tunnel
 
