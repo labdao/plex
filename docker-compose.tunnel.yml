@@ -2,7 +2,7 @@
 
 services:
   cloudflared-frontend:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:3000 --metrics localhost:40000"
     hostname: cloudflared-frontend
     network_mode: host
@@ -23,7 +23,7 @@ services:
       start_period: 10s
 
   cloudflared-backend:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:8080 --metrics localhost:50000"
     hostname: cloudflared-backend
     network_mode: host
@@ -44,7 +44,7 @@ services:
       start_period: 10s
 
   cloudflared-ipfs:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:8888 --metrics localhost:60000"
     hostname: cloudflared-ipfs
     network_mode: host
