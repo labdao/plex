@@ -153,19 +153,25 @@ jobs:
           #
           set -x
 
-          # Add additional info to the env file
-          echo '### Preview URLs for Bacalhau Version: ${{ matrix.bacalhau_version }}, OS: ${{ matrix.os }}, Network Mode: ${{ matrix.network_mode }}' >> ./docker/.env.tunnel
-
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
 
           # Dump file contents
           cat ./docker/.env.tunnel
 
+          # Comment output
+          source ./docker/.env.tunnel
+          echo "## Preview URLs" >> comment.md
+          echo "| Endpoints | URL |" >> comment.md
+          echo "|---|---|"  >> comment.md
+          echo "| FRONTEND_URL | ${FRONTEND_URL} |" >> comment.md
+          echo "| BACKEND_URL | ${NEXT_PUBLIC_BACKEND_URL} |" >> comment.md
+          echo "| IPFS_GATEWAY_URL | ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT} |" >> comment.md
+
           # Comment on PR with URLs
           PR_NUMBER=$(gh pr view --json number | jq -r '.number')
           if [[ ! -z "${PR_NUMBER}" ]]; then
-            gh pr comment "${PR_NUMBER}" --body-file ./docker/.env.tunnel
+            gh pr comment "${PR_NUMBER}" --body-file comment.md
           fi
 
       - name: Tunnel URLs
