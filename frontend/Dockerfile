@@ -78,4 +78,3 @@ ENV HOSTNAME "0.0.0.0"
 ENV NODE_ENV production
 
 CMD /app/run.sh
-
