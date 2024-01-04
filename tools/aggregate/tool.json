@@ -1,0 +1,36 @@
+{
+    "class": "",
+    "name": "aggregate 0.1",
+    "description": "simple hello world that plex stack is working",
+    "author": "labdao",
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "csv_result_files": {
+            "type": "file",
+            "description": "File to have contents added to output result file.",
+            "array": true,
+            "glob": ["*.csv"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        }
+    },
+    "outputs": {
+        "aggregated_data": {
+            "type": "File",
+            "glob": ["aggregated.csv"]
+        },
+        "distribution_plot": {
+            "type": "File",
+            "glob": ["distribution.png"]
+        }
+    }
+}
