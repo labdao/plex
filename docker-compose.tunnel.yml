@@ -72,7 +72,8 @@ services:
       apk add --no-cache curl jq &&
       echo FRONTEND_URL=https://$(curl -s localhost:40000/quicktunnel | jq -r '.hostname') > /opt/env &&
       echo NEXT_PUBLIC_BACKEND_URL=https://$(curl -s localhost:50000/quicktunnel | jq -r '.hostname') >> /opt/env &&
-      echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env"
+      echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env &&
+      touch /opt/done"
     volumes:
       - ./docker/.env.tunnel:/opt/env
     depends_on:
@@ -82,3 +83,9 @@ services:
         condition: service_healthy
       cloudflared-ipfs-health:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /opt/done"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 3s
