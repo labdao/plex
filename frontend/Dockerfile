@@ -7,10 +7,6 @@ ARG NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT
 
 # Install dependencies only when needed
 FROM base AS deps
-
-# Check if the argument is provided
-RUN if [ -z "$NEXT_PUBLIC_PRIVY_APP_ID" ]; then echo "ERROR: 'NEXT_PUBLIC_PRIVY_APP_ID' is required but not provided." && exit 1; fi
-
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -82,3 +78,4 @@ ENV HOSTNAME "0.0.0.0"
 ENV NODE_ENV production
 
 CMD /app/run.sh
+
