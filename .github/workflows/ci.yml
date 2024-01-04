@@ -147,6 +147,8 @@ jobs:
 
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           #
           set -x
