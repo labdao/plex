@@ -1,6 +1,6 @@
 {
     "class": "",
-    "name": "aggregate 0.1",
+    "name": "aggregater 0.1",
     "description": "Aggregate protein design result CSVs into a single CSV and generate distribution plot",
     "author": "labdao",
     "baseCommand": [],
