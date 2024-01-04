@@ -68,11 +68,12 @@ services:
     image: "alpine"
     network_mode: host
     command: >
-      sh -c "
+      sh -xc "
       apk add --no-cache curl jq &&
       echo FRONTEND_URL=https://$(curl -s localhost:40000/quicktunnel | jq -r '.hostname') > /opt/env &&
       echo NEXT_PUBLIC_BACKEND_URL=https://$(curl -s localhost:50000/quicktunnel | jq -r '.hostname') >> /opt/env &&
       echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env &&
+      echo Tunnel setup done &&
       touch /opt/done"
     volumes:
       - ./docker/.env.tunnel:/opt/env
