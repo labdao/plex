@@ -20,7 +20,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared-backend:
     image: "cloudflare/cloudflared"
@@ -41,7 +41,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared-ipfs:
     image: "cloudflare/cloudflared"
@@ -62,7 +62,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared_post_setup:
     image: "alpine"
@@ -89,4 +89,4 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
