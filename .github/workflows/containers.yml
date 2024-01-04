@@ -127,7 +127,6 @@ jobs:
         filters: |
           frontend:
             - 'frontend/**'
-            - '.github/workflow/docker.yml'
   frontend:
     needs: changes-frontend
     if: ${{ needs.changes-frontend.outputs.changes == 'true' || github.event_name == 'workflow_dispatch' }}
