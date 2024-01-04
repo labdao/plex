@@ -164,8 +164,9 @@ jobs:
 
           # Comment output
           source ./docker/.env.tunnel
-          echo "## Preview URLs" >> comment.md
-          echo "| Endpoints | URL |" >> comment.md
+          echo '## Preview URLs' >> comment.md
+          echo 'Bacalhau Version: ${{ matrix.bacalhau_version }}, OS: ${{ matrix.os }}, Network Mode: ${{ matrix.network_mode }}' >> comment.md
+          echo "| Endpoint | URL |" >> comment.md
           echo "|---|---|"  >> comment.md
           echo "| FRONTEND_URL | ${FRONTEND_URL} |" >> comment.md
           echo "| BACKEND_URL | ${NEXT_PUBLIC_BACKEND_URL} |" >> comment.md
