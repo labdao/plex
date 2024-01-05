@@ -595,16 +595,9 @@ class Oracle:
         df = action_selection(self.t, self.df, self.cfg)
         print_rows_with_t(self.t, df)
 
-        ### run AF2 ### 
-        # # prepare input sequences as fastas and run AF2
-        # seq_input_dir = write_dataframe_to_fastas(self.t, self.df_action, self.cfg)
-
         MML_df = pd.DataFrame(columns=['t', 'original_seq', 'variant_seq', 'sequence_pseudo_LL',  'mean plddt', 'max pae', 'json', 'pdb'])
 
-        # print('mml df', MML_df)
-
-        # if self.t==self.cfg.params.basic_settings.number_of_evo_cycles:
-        if self.t>=1:
+        if self.t>=1: # for some of the sequences and extend the data frame
 
             # Before the loop, clear the sequence_to_fold directory
             folder = 'sequence_to_fold'
