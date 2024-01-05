@@ -147,20 +147,17 @@ jobs:
 
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          #
+          set -x
+
           # Create empty file to avoid issues
           touch ./docker/.env.tunnel
 
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
-
-          # Dump file contents
-          cat ./docker/.env.tunnel
-
-      - name: Tunnel URLs
-        if: inputs.preview-enabled == 'true'
-        run: |
-          cat ./docker/.env.tunnel
 
       - name: docker compose build
         run: |
@@ -200,7 +197,7 @@ jobs:
 
           # Execute permission
           chmod +x ./bacalhau ./plex
-      
+
       - name: Go Test
         run: go test ./... -v
 
@@ -243,7 +240,32 @@ jobs:
         run: |
           cat ./docker/.env.tunnel
 
+      - name: Post tunnel URLs to PR
+        if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #
+          set -x
+
+          # Comment output
+          source ./docker/.env.tunnel
+          echo '## Preview URLs' >> comment.md
+          echo 'Bacalhau Version: ${{ matrix.bacalhau_version }}' >> comment.md
+          echo 'OS: ${{ matrix.os }}' >> comment.md
+          echo 'Network Mode: ${{ matrix.network_mode }}' >> comment.md
+          echo "| Endpoint | URL |" >> comment.md
+          echo "|---|---|"  >> comment.md
+          echo "| FRONTEND_URL | ${FRONTEND_URL} |" >> comment.md
+          echo "| BACKEND_URL | ${NEXT_PUBLIC_BACKEND_URL} |" >> comment.md
+          echo "| IPFS_GATEWAY_URL | ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT} |" >> comment.md
+
+          # Comment on PR with URLs
+          PR_NUMBER=$(gh pr view --json number | jq -r '.number')
+          if [[ ! -z "${PR_NUMBER}" ]]; then
+            gh pr comment "${PR_NUMBER}" --body-file comment.md
+          fi
+
       - name: Sleep for preview-timeout
         if: inputs.preview-enabled == 'true'
         run: sleep ${{ inputs.preview-timeout }}
-
