@@ -163,7 +163,13 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 
-				wrappedCid, err := ipfs.WrapAndPinFile(fileEntry["CID"])
+				tempFilePath, err := ipfs.DownloadFileToTemp(fileEntry["CID"], fileEntry["filename"])
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error downloading file from IPFS: %v", err), http.StatusInternalServerError)
+					return
+				}
+
+				wrappedCid, err := ipfs.WrapAndPinFile(tempFilePath)
 				if err != nil {
 					http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
 					return
