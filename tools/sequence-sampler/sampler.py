@@ -175,8 +175,12 @@ def apply_permissible_action(seed, permissibility_seed, selected_action, selecte
     modified_seq = list(seed)
     modified_permissibility_seq = list(permissibility_seed)
     if selected_action=='mutate':
-        modified_seq[selected_residue] = MLL_mutations[selected_residue]
+        aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
+        aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
+        new_amino_acid = random.choice(aa_options)
+        modified_seq[selected_residue] = new_amino_acid
         modified_permissibility_seq = permissibility_seed
+        # modified_seq[selected_residue] = MLL_mutations[selected_residue]
     elif selected_action=='delete':
         modified_seq[selected_residue] = '-'
         modified_permissibility_seq[selected_residue] = '-' 
@@ -228,8 +232,6 @@ class Sampler:
                 sample_number += 1
         
             return mod_seq
-
-
 
 ### OLD CODE ###
 
