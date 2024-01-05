@@ -100,7 +100,7 @@ def boltzmann(ref_score, mod_score):
 
     return p_mod
 
-def score_seq(seq):
+def score_seq(seq): # TD: normalisation of LL by sequence length!?
 
     # Initialize the ESM2Runner with the default model
     runner = sequence_transformer.ESM2Runner()
@@ -193,7 +193,7 @@ def select_and_apply_random_permissible_action(t, seed, permissibility_seed, act
         print('action-residue pair:', action_residue_tuple)
         modified_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
         
-    return modified_seq, modified_permissibility_seq, action_residue_list
+    return modified_seq, modified_permissibility_seq, action_residue_list, selected_action
 
 class Sampler:
 
@@ -218,9 +218,12 @@ class Sampler:
             sample_number = 1
             while p_mod < p_ref:
                 print('sample number', sample_number)
-                mod_seq = select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg)
+                mod_seq, mod_permissibility_seq, action_residue_list, selected_action = select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg)
                 if mod_seq !=[]:
-                    LL_mod = score_seq(mod_seq) 
+                    if selected_action=='mutate':
+                        LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
+                    else:
+                        LL_mod = score_seq(mod_seq) 
                     p_mod = boltzmann(LL_seed, LL_mod)
                 sample_number += 1
         
