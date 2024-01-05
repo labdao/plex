@@ -16,10 +16,10 @@ on:
           - true
           - false
       preview-timeout:
-        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `360m`'
         required: false
         type: string
-        default: "300m"
+        default: "360m"
   push:
     branches:
       - "main"
@@ -250,6 +250,15 @@ jobs:
 
           # Comment output
           source ./docker/.env.tunnel
+
+          # Adding comment
+          echo '---' >> comment.md
+          echo  >> comment.md
+          echo '**NOTE**' >> comment.md
+          echo  >> comment.md
+          echo 'The URLs will only be available for 6 hours'  >> comment.md
+          echo '---'  >> comment.md
+
           echo '## Preview URLs' >> comment.md
           echo 'Bacalhau Version: ${{ matrix.bacalhau_version }}' >> comment.md
           echo 'OS: ${{ matrix.os }}' >> comment.md
