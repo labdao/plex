@@ -3,14 +3,14 @@ import os
 import time
 import pandas as pd
 
-from AF2_module import AF2Runner
+# from AF2_module import AF2Runner
 import hydra
 from hydra import compose, initialize
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
-from agent import Agent
-from oracle import Oracle
+from sampler import Sampler
+# from oracle import Oracle
 
 
 def find_fasta_file(directory_path):
@@ -94,17 +94,14 @@ def my_app(cfg: DictConfig) -> None:
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
         print("starting iteration number ", t)
 
-        agent = Agent(t+1, df, reward, cfg)
-        df, df_action = agent.apply_policy()
-        df, reward_step = step(t+1, df, df_action, outputs_directory, cfg)
+        sampler = Sampler(t+1, df, reward, cfg)
+        df, df_action = sampler.apply_policy()
 
-        reward = reward_step
         df.to_csv(f"{outputs_directory}/summary.csv", index=False)
+        # df, reward_step = step(t+1, df, df_action, outputs_directory, cfg)
 
-    # t_rows = df[df['t'] == cfg.params.basic_settings.number_of_evo_cycles]
-    # best_
-    # print('df', df)
-    # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
+        # reward = reward_step
+
 
     print("sequence to structure complete...")
     end_time = time.time()

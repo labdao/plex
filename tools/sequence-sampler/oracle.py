@@ -533,6 +533,7 @@ def permissibility_sampling_pseudoLLSelection(t, df, cfg):
 
     # Flatten all pseudoLL values across the relevant rows, ignoring NaNs
     t_rows = df[df['t'] == t]
+    print('df', df)
     all_pseudoLLs = pd.Series([item for sublist in t_rows['variant_pseudoLL'].tolist() for item in sublist])
     all_pseudoLLs = all_pseudoLLs.dropna()
 
