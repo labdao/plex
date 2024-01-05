@@ -1,0 +1,9 @@
+basic_settings:
+  experiment_name: whos-the-weakest-link
+  AF2_repeats_per_seq: 1
+  number_of_evo_cycles: 39
+  policy_flag: delete_and_mutate_ESM
+  max_number_of_offspring_kept: 1
+  target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
+  init_permissibility_vec: '+++++++++++++++++++++++++++++WDKAMGWYRQAPGKEREFVAGIGWGTNTNYXX+++++FTISRDNAKNTVYLQMXXX++++++VYYCAVLDNYLYYYEDSLWYNFIYWGQGT'
+  k: 2
