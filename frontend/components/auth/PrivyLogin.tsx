@@ -1,11 +1,11 @@
-import { useLogin, useWallets } from "@privy-io/react-auth";
+import { getAccessToken, useLogin } from "@privy-io/react-auth";
 import { PrivyAuthContext } from "lib/PrivyContext";
 import { useRouter } from "next/navigation";
 import React, { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
-import { AppDispatch, selectIsLoggedIn, setIsLoggedIn, setWalletAddress } from "@/lib/redux";
+import { AppDispatch, selectIsLoggedIn, setAuthToken, setIsLoggedIn, setWalletAddress } from "@/lib/redux";
 import { saveUserAsync } from "@/lib/redux/slices/userSlice/thunks";
 
 const PrivyLogin: React.FC = () => {
@@ -15,6 +15,10 @@ const PrivyLogin: React.FC = () => {
 
   const { login } = useLogin({
     onComplete: async (user, isNewUser, wasAlreadyAuthenticated) => {
+      const authToken = await getAccessToken();
+      if (authToken) {
+        dispatch(setAuthToken(authToken));
+      }
       const walletAddress = await getWalletAddress();
       if (wasAlreadyAuthenticated) {
         console.log("User was already authenticated");

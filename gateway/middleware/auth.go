@@ -2,9 +2,28 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"
 )
+
+verificationKey := os.Getenv("PRIVY_VERIFICATION_KEY")
+appId := os.Getenv("PRIVY_APP_ID")
+
+type PrivyClaims struct {
+	AppId      string `json:"aud,omitempty"`
+	Expiration uint64 `json:"exp,omitempty"`
+	Issuer     string `json:"iss,omitempty"`
+	UserId     string `json:"sub,omitempty"`
+}
+
+func (c *PrivyClaims) Valid() error {
+	if c.AppId != appId {
+
+	}
+	return nil
+}
 
 func JWTMiddleware(db *gorm.DB, privyPublicKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

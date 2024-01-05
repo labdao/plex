@@ -5,6 +5,7 @@ interface UserState {
   isLoading: boolean;
   error: string | null;
   isLoggedIn: boolean;
+  authToken: string;
 }
 
 const initialState: UserState = {
@@ -12,6 +13,7 @@ const initialState: UserState = {
   isLoading: false,
   error: null,
   isLoggedIn: false,
+  authToken: '',
 };
 
 export const userSlice = createSlice({
@@ -33,6 +35,9 @@ export const userSlice = createSlice({
     setIsLoggedIn: (state, action: PayloadAction<boolean>) => {
       state.isLoggedIn = action.payload;
     },
+    setAuthToken: (state, action: PayloadAction<string>) => {
+      state.authToken = action.payload;
+    },
   },
 });
 
@@ -42,6 +47,7 @@ export const {
   startLoading,
   endLoading,
   setIsLoggedIn,
+  setAuthToken,
 } = userSlice.actions;
 
 export default userSlice.reducer;
