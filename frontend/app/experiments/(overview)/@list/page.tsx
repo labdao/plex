@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { DataTable } from "@/components/ui/data-table";
 import { AppDispatch, flowListThunk, selectFlowList, selectWalletAddress } from "@/lib/redux";
 
@@ -21,7 +22,7 @@ export default function ListFlowFiles() {
     } else {
       return "";
     }
-  }
+  };
 
   const columns: ColumnDef<Flow>[] = [
     {
@@ -36,7 +37,7 @@ export default function ListFlowFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("CID"))
+        return shortenAddressOrCid(row.getValue("CID"));
       },
     },
     {
@@ -44,7 +45,7 @@ export default function ListFlowFiles() {
       header: "User",
       cell: ({ row }) => {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
-      }
+      },
     },
   ];
 
@@ -52,7 +53,7 @@ export default function ListFlowFiles() {
   const flows = useSelector(selectFlowList);
   const walletAddress = useSelector(selectWalletAddress);
 
-  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
+  const [sorting, setSorting] = useState([{ id: "Name", desc: false }]);
 
   useEffect(() => {
     if (walletAddress) {
@@ -61,8 +62,10 @@ export default function ListFlowFiles() {
   }, [dispatch, walletAddress]);
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={flows} sorting={sorting} />
-    </div>
+    <ProtectedComponent method="hide" message="Log in to view your experiments">
+      <div className="overflow-hidden border rounded-lg">
+        <DataTable columns={columns} data={flows} sorting={sorting} />
+      </div>
+    </ProtectedComponent>
   );
 }

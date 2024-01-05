@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
+import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -112,10 +113,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function transformJson(
-    originalJson: any,
-    walletAddress: string
-  ): TransformedJSON {
+  function transformJson(originalJson: any, walletAddress: string): TransformedJSON {
     const { name, tool, ...dynamicKeys } = originalJson;
 
     // Define the transformation for the dynamic keys using a more specific type
@@ -141,22 +139,22 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
 
-    console.log('transformed payload')
+    console.log("transformed payload");
     const transformedPayload = transformJson(values, walletAddress);
     console.log(transformedPayload);
-    console.log('submitting')
+    console.log("submitting");
 
     try {
       const response = await createFlow(transformedPayload);
       if (response && response.cid) {
-        console.log('Flow created', response);
+        console.log("Flow created", response);
         // Redirecting to another page, for example, a success page or dashboard
         router.push(`/experiments/${response.cid}`);
       } else {
-        console.log("something went wrong", response)
+        console.log("something went wrong", response);
       }
     } catch (error) {
-      console.error('Failed to create flow', error);
+      console.error("Failed to create flow", error);
       // Handle error, maybe show message to user
     }
   }
@@ -171,106 +169,106 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           </Alert>
         )}
         <>
-          <TaskPageHeader tool={tool} task={task} />
+          {!toolDetailLoading && <TaskPageHeader tool={tool} task={task} />}
+          <ProtectedComponent method="overlay" message="Log in to run this experiment">
+            <div className="grid grid-cols-3 gap-8">
+              <div className="col-span-2">
+                <Form {...form}>
+                  <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
+                    <Card>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Name <LabelDescription>string</LabelDescription>
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormDescription>Name your experiment</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="tool"
+                          key={tool?.CID}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Model</FormLabel>
+                              <FormControl>
+                                <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
+                              </FormControl>
+                              <FormDescription>
+                                <a
+                                  className="text-accent hover:underline"
+                                  target="_blank"
+                                  href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`}
+                                >
+                                  View Tool Manifest
+                                </a>
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+                    {!toolDetailLoading && (
+                      <>
+                        {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
+                          return (
+                            <Card key={groupKey}>
+                              <CardHeader>
+                                <CardTitle className="uppercase">{groupKey}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
+                                  // @ts-ignore
+                                  const input = groupedInputs?.standard?.[groupKey]?.[key];
+                                  return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                                })}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
 
-          <div className="grid grid-cols-3 gap-8">
-            <div className="col-span-2">
-              <Form {...form}>
-                <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
-                  <Card>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Name <LabelDescription>string</LabelDescription>
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormDescription>Name your experiment</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="tool"
-                        key={tool?.CID}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Model</FormLabel>
-                            <FormControl>
-                              <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
-                            </FormControl>
-                            <FormDescription>
-                              <a
-                                className="text-accent hover:underline"
-                                target="_blank"
-                                href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`}
-                              >
-                                View Tool Manifest
-                              </a>
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                  {!toolDetailLoading && (
-                    <>
-                      {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
-                        return (
-                          <Card key={groupKey}>
-                            <CardHeader>
-                              <CardTitle className="uppercase">{groupKey}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
-                                // @ts-ignore
-                                const input = groupedInputs?.standard?.[groupKey]?.[key];
-                                return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
-                              })}
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-
-                      {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
-                        return (
-                          <Card key={groupKey}>
-                            <Collapsible>
-                              <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase text-bold font-heading">
-                                {groupKey.replace("_", "")}
-                                <ChevronsUpDownIcon />
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <CardContent className="pt-0 space-y-4">
-                                  {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
-                                    // @ts-ignore
-                                    const input = groupedInputs?.collapsible?.[groupKey]?.[key];
-                                    return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
-                                  })}
-                                </CardContent>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          </Card>
-                        );
-                      })}
-                    </>
-                  )}
-                </form>
-              </Form>
+                        {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
+                          return (
+                            <Card key={groupKey}>
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase text-bold font-heading">
+                                  {groupKey.replace("_", "")}
+                                  <ChevronsUpDownIcon />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <CardContent className="pt-0 space-y-4">
+                                    {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
+                                      // @ts-ignore
+                                      const input = groupedInputs?.collapsible?.[groupKey]?.[key];
+                                      return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                                    })}
+                                  </CardContent>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            </Card>
+                          );
+                        })}
+                      </>
+                    )}
+                  </form>
+                </Form>
+              </div>
+              <div>
+                <VariantSummary sortedInputs={sortedInputs} form={form} />
+              </div>
             </div>
-            <div>
-              <VariantSummary sortedInputs={sortedInputs} form={form} />
-            </div>
-          </div>
+          </ProtectedComponent>
         </>
-        {toolDetailLoading && <PageLoader />}
       </div>
     </>
   );
