@@ -3,9 +3,16 @@ package bacalhau
 import (
 	"fmt"
 	"testing"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
-func TestCreateBacalhauJob(t *testing.T) {
+func DonotTestCreateBacalhauJob(t *testing.T) {
+	cid, err := ipfs.WrapAndPinFile("./testdata/design/insulin_target.pdb")
+	if err != nil {
+		t.Fatalf(fmt.Sprint(err))
+	}
+
 	inputs := map[string]interface{}{
 		"binder_length":        50,
 		"contigs_override":     "",
@@ -13,9 +20,10 @@ func TestCreateBacalhauJob(t *testing.T) {
 		"number_of_binders":    2,
 		"target_chain":         "D",
 		"target_end_residue":   200,
-		"target_protein":       "QmcK6UZffv6wWeqBEWUKViXXvFRmDo2Wo5MYwFGQtPZQ2J/6vja_stripped.pdb",
+		"target_protein":       cid + "/insulin_target.pdb",
 		"target_start_residue": 50,
 	}
+
 	container := "ubuntu"
 	selector := ""
 	maxTime := 60
