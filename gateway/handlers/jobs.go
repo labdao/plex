@@ -163,6 +163,12 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 
+				wrappedCid, err := ipfs.WrapAndPinFile(fileEntry["CID"])
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
+					return
+				}
+
 				log.Println("Attempting to find DataFile in DB with CID: ", fileEntry["CID"])
 
 				var dataFile models.DataFile
@@ -221,7 +227,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 						dataFile = models.DataFile{
-							CID:       fileEntry["CID"],
+							CID:       wrappedCid,
 							Filename:  fileName,
 							Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
 							Timestamp: time.Now(),
@@ -239,13 +245,11 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					}
 				}
 
-				// Then add the DataFile to the Job.Outputs
 				log.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
 				job.Outputs = append(job.Outputs, dataFile)
 				log.Println("Updated Job.Outputs:", job.Outputs)
 			}
 
-			// Update job in the database with new Outputs (this may need adjustment depending on your ORM)
 			if err := db.Save(&job).Error; err != nil {
 				http.Error(w, fmt.Sprintf("Error updating job: %v", err), http.StatusInternalServerError)
 				return
@@ -265,8 +269,6 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
-			// Check the origin of the request and return true if it's allowed
-			// Here's a simple example that allows any origin:
 			return true
 		},
 	}
