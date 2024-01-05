@@ -1,0 +1,8 @@
+typer
+transformers
+pandas
+numpy
+biopython
+torch
+torchvision
+torchaudio
