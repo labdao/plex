@@ -12,28 +12,12 @@ from omegaconf import DictConfig, OmegaConf
 from sampler import Sampler
 # from oracle import Oracle
 
-
 def find_fasta_file(directory_path):
     for root, dirs, files in os.walk(directory_path):
         for file in files:
             if file.endswith(".fasta"):
                 return os.path.abspath(os.path.join(root, file))
     return None  # Return None if no .fasta file is found in the directory
-
-def load_fasta_to_dataframe(fasta_file, cfg):
-    sequences = []
-    with open(fasta_file, 'r') as file:
-        seq_num = 1
-        for line in file:
-            if line.startswith('>'):
-                # Add an entry for a new sequence, including the 'step' column set to 0
-                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': ''}) # TD: consider changing name seq to original_seq here already
-                seq_num += 1
-            else:
-                # Add sequence data to the most recently added sequence entry
-                sequences[-1]['seq'] += line.strip()
-
-    return pd.DataFrame(sequences)
 
 def load_initial_data(fasta_file, cfg):
     sequences = []
@@ -42,31 +26,23 @@ def load_initial_data(fasta_file, cfg):
         for line in file:
             if line.startswith('>'):
                 # Add an entry for a new sequence, including the 'step' column set to 0
-                sequences.append({'t': 0, 'sequence_number': seq_num, 'seq': '', 'permissibility_vectors': ''}) # TD: consider changing name seq to original_seq here already
+                sequences.append({'t': 0, 'seed_number': seq_num, 'seed': '', 'modified_seq': '', 'permissibility_seed': '', 'permissibility_modified_seq': ''})
                 seq_num += 1
             else:
                 # Add sequence data to the most recently added sequence entry
-                sequences[-1]['seq'] += line.strip()
-                sequences[-1]['permissibility_vectors'] += cfg.params.basic_settings.init_permissibility_vec
+                sequences[-1]['seed'] += line.strip()
+                sequences[-1]['modified_seq'] += sequences[-1]['seed']
+                sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
+                sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
     
     # After the file reading loop
     for sequence in sequences:
         # Convert the string to a list of characters and update the dictionary
         # sequence['permissibility_vectors'] = [vec for vec in sequence['permissibility_vectors']]
-        sequence['permissibility_vectors'] = list(sequence['permissibility_vectors'])
+        sequence['permissibility_seed'] = list(sequence['permissibility_seed'])
+        sequence['permissibility_modified_seq'] = list(sequence['permissibility_modified_seq'])
 
     return pd.DataFrame(sequences)
-
-def step(t, df, df_action, outputs_directory, cfg):
-
-    # # run oracle
-    oracle_runner = Oracle(t, df, df_action, outputs_directory, cfg)
-    df = oracle_runner.run()
-
-    # # run reward
-    reward = 0
-    
-    return df, reward
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -83,24 +59,27 @@ def my_app(cfg: DictConfig) -> None:
     print(f"Output directory : {outputs_directory}")
 
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    # df_0 = load_fasta_to_dataframe(fasta_file, cfg)
     df_0 = load_initial_data(fasta_file, cfg)
+    seed = df_0[-1]['seed']
+    permissibility_seed = df_0[-1]['permissibility_seed']
+    print('df0', df_0)
 
     start_time = time.time()
     print("sequence to structure complete...")
 
-    reward = 0
-    df, reward_step = step(0, df_0, df_0, outputs_directory, cfg)
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
-        print("starting iteration number ", t)
+        print("starting evolution step", t)
 
-        sampler = Sampler(t+1, df, reward, cfg)
-        df, df_action = sampler.apply_policy()
+        print('seed', seed)
 
-        df.to_csv(f"{outputs_directory}/summary.csv", index=False)
-        # df, reward_step = step(t+1, df, df_action, outputs_directory, cfg)
+        sampler = Sampler(t+1, seed, cfg)
+        mod_seq, modified_permissibility_seq = sampler.apply_policy()
 
-        # reward = reward_step
+        seed = mod_seq
+        print('mod seq', mod_seq)
+        print('modified_permissibility_seq', modified_permissibility_seq)
+
+        # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
 
     print("sequence to structure complete...")
@@ -110,3 +89,19 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
+
+
+### OLD CODE ###
+    # reward = 0
+    # df, reward_step = step(0, df_0, df_0, outputs_directory, cfg)
+
+# def step(t, df, df_action, outputs_directory, cfg):
+
+#     # # run oracle
+#     oracle_runner = Oracle(t, df, df_action, outputs_directory, cfg)
+#     df = oracle_runner.run()
+
+#     # # run reward
+#     reward = 0
+    
+#     return df, reward
