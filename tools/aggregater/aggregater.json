@@ -1,11 +1,11 @@
 {
     "class": "",
-    "name": "aggregater 0.1",
+    "name": "aggregater 0.3",
     "description": "Aggregate protein design result CSVs into a single CSV and generate distribution plot",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/openzyme/aggregater@sha256:55ef85cc19382e295cfe367138c1523e64b1b3b4d6d9229ea69377460d431e34",
+    "dockerPull": "docker.io/openzyme/aggregater@sha256:1a9d4b9a763af1f0a3bb3f307a70bed0ad2c88d8f185c7c1a369b1f0b54000c3",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {

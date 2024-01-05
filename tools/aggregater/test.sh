@@ -9,7 +9,7 @@ mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
 docker run \
--e PLEX_JOB_INPUTS='{"csv_result_files": ["/inputs/csv_result_files/0/default_scores.csv", "/inputs/csv_result_files/1/default_scores.csv", "/inputs/csv_result_files/2/default_scores.csv"]}' \
+-e PLEX_JOB_INPUTS='{"csv_result_files": ["/inputs/csv_result_files/0/example_default_scores.csv", "/inputs/csv_result_files/1/example_default_scores.csv", "/inputs/csv_result_files/2/example_default_scores.csv"]}' \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs aggregater
 

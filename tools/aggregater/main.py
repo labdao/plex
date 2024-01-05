@@ -62,7 +62,7 @@ def main():
     all_data = []
 
     for i, file_path in enumerate(job_inputs["csv_result_files"]):
-        print(f'Readinf file: {file_path}, {i + 1} out of {len(job_inputs["csv_result_files"])}')
+        print(f'Reading file: {file_path}, {i + 1} out of {len(job_inputs["csv_result_files"])}')
         df = pd.read_csv(file_path)
         all_data.append(df)
 
