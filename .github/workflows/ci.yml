@@ -254,7 +254,7 @@ jobs:
           # Adding comment
           echo '---' >> comment.md
           echo  >> comment.md
-          echo '**NOTE**' >> comment.md
+          echo ':information_source: NOTE' >> comment.md
           echo  >> comment.md
           echo 'The URLs will only be available for 6 hours'  >> comment.md
           echo '---'  >> comment.md
