@@ -69,7 +69,7 @@ def step(t, df, df_action, outputs_directory, cfg):
     return df, reward
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config_sequence-optimizer")
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
 
     print(OmegaConf.to_yaml(cfg))
