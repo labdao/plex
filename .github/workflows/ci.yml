@@ -159,29 +159,23 @@ jobs:
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
 
+          # copy tunnel info to .env
+          cat docker/.env.tunnel >> .env
+
       - name: docker compose build
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Build compose
           docker compose build --parallel
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml up -d --wait
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
