@@ -1,5 +1,5 @@
 {
-    "name": "AF2 v0.96",
+    "name": "AF2 v0.98",
     "description": "Create structure from sequence with AF2.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -9,7 +9,7 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/af2@sha256:bfb503fd37a27f8d60c653276ff6ec402a3c5404c641689d057da01584b71c8d",
+    "dockerPull": "quay.io/labdao/af2@sha256:acbed7ec10e993d5969ac0abd175252ebcf3f35c0c4919a24456521e32d47720",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
