@@ -69,18 +69,16 @@ def my_app(cfg: DictConfig) -> None:
 
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
         print("starting evolution step", t)
-
         print('seed', seed)
 
-        sampler = Sampler(t+1, seed, cfg)
+        sampler = Sampler(t+1, seed, permissibility_seed, cfg)
         mod_seq, modified_permissibility_seq = sampler.apply_policy()
-
         seed = mod_seq
+
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
 
         # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
-
 
     print("sequence to structure complete...")
     end_time = time.time()
@@ -92,16 +90,4 @@ if __name__ == "__main__":
 
 
 ### OLD CODE ###
-    # reward = 0
-    # df, reward_step = step(0, df_0, df_0, outputs_directory, cfg)
-
-# def step(t, df, df_action, outputs_directory, cfg):
-
-#     # # run oracle
-#     oracle_runner = Oracle(t, df, df_action, outputs_directory, cfg)
-#     df = oracle_runner.run()
-
-#     # # run reward
-#     reward = 0
-    
-#     return df, reward
+# ...

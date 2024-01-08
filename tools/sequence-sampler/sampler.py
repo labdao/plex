@@ -189,14 +189,15 @@ def apply_permissible_action(seed, permissibility_seed, selected_action, selecte
 
 def select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg):
 
-    selected_action = select_random_permissible_action(permissible_actions, action_probabilities=None)
+    selected_action = select_random_permissible_action(permissible_seed, action_probabilities=None)
     selected_residue = select_random_permissible_residue(permissibility_seed, selected_action)
+    action_residue_pair = (selected_action, selected_residue)
+    print('action-residue pair:', action_residue_tuple)
 
-    if action_residue_tuple not in action_residue_list: # append and modify, if not done before
+    if action_residue_tuple not in action_residue_list: # append and modify, if action-residue pair has not been sampled previously
         action_residue_list.append(action_residue_tuple)
-        print('action-residue pair:', action_residue_tuple)
         modified_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
-        
+
     return modified_seq, modified_permissibility_seq, action_residue_list, selected_action
 
 class Sampler:
@@ -220,11 +221,11 @@ class Sampler:
             action_residue_list = []
             MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
             sample_number = 1
-            while p_mod < p_ref:
+            while p_mod < p_ref: # should probably sample based on probability
                 print('sample number', sample_number)
                 mod_seq, mod_permissibility_seq, action_residue_list, selected_action = select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg)
                 if mod_seq !=[]:
-                    if selected_action=='mutate':
+                    if selected_action=='mutate': # for mutations we can use the LL computed based on reference sequence
                         LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
                     else:
                         LL_mod = score_seq(mod_seq) 
@@ -232,6 +233,7 @@ class Sampler:
                 sample_number += 1
         
             return mod_seq
+
 
 ### OLD CODE ###
 
