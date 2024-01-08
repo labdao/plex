@@ -16,10 +16,10 @@ on:
           - true
           - false
       preview-timeout:
-        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `360m`'
         required: false
         type: string
-        default: "300m"
+        default: "360m"
   push:
     branches:
       - "main"
@@ -147,44 +147,35 @@ jobs:
 
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          #
+          set -x
+
           # Create empty file to avoid issues
           touch ./docker/.env.tunnel
 
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
 
-          # Dump file contents
-          cat ./docker/.env.tunnel
-
-      - name: Tunnel URLs
-        if: inputs.preview-enabled == 'true'
-        run: |
-          cat ./docker/.env.tunnel
+          # copy tunnel info to .env
+          cat docker/.env.tunnel >> .env
 
       - name: docker compose build
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Build compose
           docker compose build --parallel
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml up -d --wait
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
@@ -200,7 +191,7 @@ jobs:
 
           # Execute permission
           chmod +x ./bacalhau ./plex
-      
+
       - name: Go Test
         run: go test ./... -v
 
@@ -243,7 +234,41 @@ jobs:
         run: |
           cat ./docker/.env.tunnel
 
+      - name: Post tunnel URLs to PR
+        if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #
+          set -x
+
+          # Comment output
+          source ./docker/.env.tunnel
+
+          # Adding comment
+          echo '---' >> comment.md
+          echo  >> comment.md
+          echo ':information_source: NOTE' >> comment.md
+          echo  >> comment.md
+          echo 'The URLs will only be available for 6 hours'  >> comment.md
+          echo '---'  >> comment.md
+
+          echo '## Preview URLs' >> comment.md
+          echo 'Bacalhau Version: ${{ matrix.bacalhau_version }}' >> comment.md
+          echo 'OS: ${{ matrix.os }}' >> comment.md
+          echo 'Network Mode: ${{ matrix.network_mode }}' >> comment.md
+          echo "| Endpoint | URL |" >> comment.md
+          echo "|---|---|"  >> comment.md
+          echo "| FRONTEND_URL | ${FRONTEND_URL} |" >> comment.md
+          echo "| BACKEND_URL | ${NEXT_PUBLIC_BACKEND_URL} |" >> comment.md
+          echo "| IPFS_GATEWAY_URL | ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT} |" >> comment.md
+
+          # Comment on PR with URLs
+          PR_NUMBER=$(gh pr view --json number | jq -r '.number')
+          if [[ ! -z "${PR_NUMBER}" ]]; then
+            gh pr comment "${PR_NUMBER}" --body-file comment.md
+          fi
+
       - name: Sleep for preview-timeout
         if: inputs.preview-enabled == 'true'
         run: sleep ${{ inputs.preview-timeout }}
-

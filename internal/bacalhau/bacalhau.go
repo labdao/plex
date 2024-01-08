@@ -13,6 +13,7 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/config"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
+	"github.com/labdao/plex/internal/ipfs"
 )
 
 func GetBacalhauApiHost() string {
@@ -82,11 +83,22 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 				cid, filename := parts[0], parts[1]
 				localDir := "/inputs/" + key
 				localPath := localDir + "/" + filename
+
+				var bacalhauPath string
+				cidIsDir, err := ipfs.IsDirectory(cid)
+				if err != nil {
+					return nil, err
+				}
+				if cidIsDir {
+					bacalhauPath = localDir
+				} else {
+					bacalhauPath = localPath
+				}
 				job.Spec.Inputs = append(job.Spec.Inputs,
 					model.StorageSpec{
 						StorageSource: model.StorageSourceIPFS,
 						CID:           cid,
-						Path:          localDir,
+						Path:          bacalhauPath,
 					})
 				localJobInputs[key] = localPath
 			} else {
@@ -118,12 +130,21 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 					// Construct the path with the key and index 'i'
 					indexedDir := fmt.Sprintf("/inputs/%s/%d", key, i)
 					indexedPath := indexedDir + "/" + filename
-
+					cidIsDir, err := ipfs.IsDirectory(cid)
+					var bacalhauPath string
+					if err != nil {
+						return nil, err
+					}
+					if cidIsDir {
+						bacalhauPath = indexedDir
+					} else {
+						bacalhauPath = indexedPath
+					}
 					job.Spec.Inputs = append(job.Spec.Inputs,
 						model.StorageSpec{
 							StorageSource: model.StorageSourceIPFS,
 							CID:           cid,
-							Path:          indexedDir,
+							Path:          bacalhauPath,
 						})
 					localFilePaths = append(localFilePaths, indexedPath)
 				}

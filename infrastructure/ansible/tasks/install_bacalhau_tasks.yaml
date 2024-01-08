@@ -79,6 +79,7 @@
     dest: /etc/systemd/system
     mode: "0644"
   notify:
+    - Reload systemd
     - Restart Bacalhau
 
 - name: Ensure Bacalhau is running
