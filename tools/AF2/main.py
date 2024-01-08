@@ -10,6 +10,92 @@ from hydra import compose, initialize
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
+def prodigy_run(csv_path):
+    # print('csv path', csv_path)
+    df = pd.read_csv(csv_path)
+    # print('csv file data frame', df)
+    for i, r in df.iterrows():
+
+        file_path = r['pdb']
+        if pd.notna(file_path):
+            print('file path', file_path)
+            try:
+                subprocess.run(
+                    ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+                )
+                with open("temp.txt", "r") as f:
+                    lines = f.readlines()
+                    if lines:  # Check if lines is not empty
+                        affinity = float(lines[0].split(" ")[-1].split("/")[0])
+                        df.loc[i, "affinity"] = affinity
+                    else:
+                        # print(f"No output from prodigy for {r['path']}")
+                        print(f"No output from prodigy for {file_path}")
+                        # Handle the case where prodigy did not produce output
+            except subprocess.CalledProcessError:
+                # print(f"Prodigy command failed for {r['path']}")
+                print(f"Prodigy command failed for {file_path}")
+
+    # export results
+    df.to_csv(f"{csv_path}", index=None)
+
+# Please note the following:
+# - You need to replace 'path_to_your_pdb_file.pdb' and 'path_to_your_pae_matrix.npy' with the actual paths to your PDB file and PAE matrix file.
+# - The selection strings for the receptor and ligand (receptor_selection and ligand_selection) need to be adjusted according to your specific system. The example uses chain IDs, but you might need to use different selection criteria.
+# - The scheme='closest-heavy' argument in md.compute_contacts specifies that only heavy atoms (non-hydrogen) are considered for contact calculations. Adjust this if necessary.
+# - The PAE matrix is assumed to be indexed in a way that corresponds to the residue indices in the PDB file. If there's an offset or different indexing, you'll need to adjust the indexing in the line that computes interface_pae_values.
+# 
+# Before running the code, ensure that you have mdtraj and numpy installed in your Python environment. You can install them using pip if necessary:
+# pip install mdtraj numpy
+def compute_ipae(pdb_file):
+
+    import mdtraj as md
+    import numpy as np
+
+    # Load the PDB file using mdtraj
+    # pdb_file = 'path_to_your_pdb_file.pdb'  # Replace with your PDB file path
+    traj = md.load(pdb_file)
+
+    # Define the selection strings for the receptor and ligand
+    receptor_selection = 'A'  # Example selection string for the receptor
+    ligand_selection = 'B'  # Example selection string for the ligand
+
+    # Select the receptor and ligand atoms
+    receptor_atoms = traj.topology.select(receptor_selection)
+    ligand_atoms = traj.topology.select(ligand_selection)
+
+    # Compute contacts between receptor and ligand
+    # The distance_cutoff is in nanometers; adjust as needed
+    distance_cutoff = 0.35
+    contacts = md.compute_contacts(traj, contacts=(receptor_atoms, ligand_atoms), scheme='closest-heavy', cutoff=distance_cutoff)
+
+    # Get the contact pairs and distances
+    contact_pairs = contacts[0]
+    contact_distances = contacts[1].reshape(-1)  # Flatten the distances array
+
+    # Filter contact pairs based on the distance cutoff
+    contact_indices = contact_pairs[contact_distances < distance_cutoff]
+
+    # Assuming you have the PAE matrix loaded as a NumPy array
+    pae_matrix = np.load('path_to_your_pae_matrix.npy')  # Replace with your PAE matrix file path
+
+    # Compute the PAE at the interface
+    # Map the contact indices to the PAE matrix
+    # Note: You may need to adjust the indices based on how your PAE matrix is indexed
+    interface_pae_values = pae_matrix[contact_indices[:, 0], contact_indices[:, 1]]
+
+    # Output the results
+    print("Contact residues (receptor, ligand):", contact_indices)
+    print("PAE values at the interface:", interface_pae_values)
+
+    # Compute the median PAE for the interface contacts
+    median_pae_interface = np.median(interface_pae_values)
+
+    return median_pae_interface
+
+# Output the median PAE value
+print("Median PAE at the interface:", median_pae_interface)
+
 def parse_log_and_fasta_to_csv(fasta_path, log_path):
     # Read and store sequences from the FASTA file
     sequences = {}
@@ -57,6 +143,11 @@ def parse_log_and_fasta_to_csv(fasta_path, log_path):
                             row_data[key] = value
 
                 csv_writer.writerow(row_data)
+    
+    # print("running Prodigy")
+    # prodigy_run(f"{self.outputs_directory}/folding_with_target_summary.csv")
+
+    # need to write the prodigy scores to the csv; for this initialize the columns above
 
     print(f"CSV file written to {csv_path}")
 
