@@ -113,28 +113,25 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function transformJson(
-    originalJson: any,
-    walletAddress: string
-  ): TransformedJSON {
+  function transformJson(originalJson: any, walletAddress: string): TransformedJSON {
     const { name, tool: toolCid, ...dynamicKeys } = originalJson;
 
     const toolJsonInputs = tool.ToolJson.inputs;
 
     const kwargs = Object.fromEntries(
-        Object.entries(dynamicKeys).map(([key, valueArray]) => {
-            // Check if the 'array' property for this key is true
-            // @ts-ignore
-            if (toolJsonInputs[key] && toolJsonInputs[key]["array"]) {
-                // Group the entire array as a single element in another array
-                // @ts-ignore
-                return [key, [valueArray.map(valueObject => valueObject.value)]];
-            } else {
-                // Process normally
-                // @ts-ignore
-                return [key, valueArray.map(valueObject => valueObject.value)];
-            }
-        })
+      Object.entries(dynamicKeys).map(([key, valueArray]) => {
+        // Check if the 'array' property for this key is true
+        // @ts-ignore
+        if (toolJsonInputs[key] && toolJsonInputs[key]["array"]) {
+          // Group the entire array as a single element in another array
+          // @ts-ignore
+          return [key, [valueArray.map((valueObject) => valueObject.value)]];
+        } else {
+          // Process normally
+          // @ts-ignore
+          return [key, valueArray.map((valueObject) => valueObject.value)];
+        }
+      })
     );
 
     // Return the transformed JSON
@@ -182,11 +179,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
         <>
           {!toolDetailLoading && <TaskPageHeader tool={tool} task={task} />}
           <ProtectedComponent method="overlay" message="Log in to run this experiment">
-<<<<<<< HEAD
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-=======
-            <div className="grid grid-cols-3 gap-8">
->>>>>>> b7d270d (Slightly rework auth, only require login for specific components)
               <div className="col-span-2">
                 <Form {...form}>
                   <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
