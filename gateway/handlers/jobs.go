@@ -233,10 +233,11 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 						dataFile = models.DataFile{
-							CID:       wrappedCid,
-							Filename:  fileName,
-							Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
-							Timestamp: time.Now(),
+							CID:           wrappedCid,
+							WalletAddress: job.WalletAddress,
+							Filename:      fileName,
+							Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
+							Timestamp:     time.Now(),
 						}
 
 						if err := db.Create(&dataFile).Error; err != nil {
