@@ -6,9 +6,9 @@ import { setFlowList,setFlowListError, setFlowListSuccess } from './slice'
 
 export const flowListThunk = createAppAsyncThunk(
   'flow/flowList',
-  async (_, { dispatch }) => {
+  async (walletAddress: string, { dispatch }) => {
     try {
-      const response = await listFlows()
+      const response = await listFlows(walletAddress)
       if (response) {
         dispatch(setFlowListSuccess(true))
         dispatch(setFlowList(response))

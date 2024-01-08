@@ -44,7 +44,7 @@ export default function AddTool() {
       return;
     }
     dispatch(toolListThunk());
-    dispatch(dataFileListThunk());
+    dispatch(dataFileListThunk({}));
   }, [toolSuccess, dispatch]);
 
   const handleToolJsonChange = (toolJsonInput: string) => {
