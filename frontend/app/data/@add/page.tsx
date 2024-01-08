@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  endLoading,
+  endFileUploadDataSlice,
   saveDataFileAsync,
-  selectCID,
   selectDataFileError,
   selectDataFileIsLoading,
   setError,
-  startLoading,
+  startFileUploadDataSlice,
   useDispatch,
   useSelector,
 } from "@/lib/redux";
@@ -51,16 +50,16 @@ export default function DataFileForm() {
       return;
     }
 
-    dispatch(startLoading());
+    dispatch(startFileUploadDataSlice());
     dispatch(setError(null));
     const metadata = { walletAddress };
 
     try {
       await dispatch(saveDataFileAsync({ file, metadata, handleSuccess }));
-      dispatch(endLoading());
+      dispatch(endFileUploadDataSlice());
     } catch (error) {
       dispatch(setError("Error uploading file"));
-      dispatch(endLoading());
+      dispatch(endFileUploadDataSlice());
     }
   };
 
