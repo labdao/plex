@@ -29,4 +29,4 @@ RUN cd OmegaFold && python setup.py install
 RUN pip install git+https://github.com/HeliXonProtein/OmegaFold.git
 
 # downloading weights
-RUN wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt 
+RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt 
