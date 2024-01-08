@@ -21,3 +21,12 @@ RUN python -m colabfold.download
 RUN mamba install -y openmm pdbfixer && \
     mamba clean -afy
 RUN pip install hydra-core omegaconf pandas biopython pyyaml
+
+# omegafold
+RUN apt-get update && apt-get install -y git nano
+RUN git clone https://github.com/HeliXonProtein/OmegaFold
+RUN cd OmegaFold && python setup.py install
+RUN pip install git+https://github.com/HeliXonProtein/OmegaFold.git
+
+# downloading weights
+RUN wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt 
