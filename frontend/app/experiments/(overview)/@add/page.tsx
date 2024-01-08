@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -26,7 +27,6 @@ import {
   selectFlowAddTool,
   selectToolList,
   selectToolListError,
-  selectWalletAddress,
   setFlowAddCid,
   setFlowAddError,
   setFlowAddKwargs,
@@ -41,8 +41,9 @@ import { DataFile } from "@/lib/redux/slices/dataFileListSlice/slice";
 export default function AddGraph() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const { user } = usePrivy();
 
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
   const name = useSelector(selectFlowAddName);
   const loading = useSelector(selectFlowAddLoading);
   const error = useSelector(selectFlowAddError);
@@ -73,7 +74,14 @@ export default function AddGraph() {
     if (cid !== "") {
       dispatch(setFlowAddSuccess(false));
       dispatch(setFlowAddKwargs({}));
-      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}));
+      dispatch(
+        setFlowAddTool({
+          CID: "",
+          WalletAddress: "",
+          Name: "",
+          ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" },
+        })
+      );
       dispatch(setFlowAddError(null));
       dispatch(setFlowAddName(""));
       dispatch(setFlowAddCid(""));
@@ -174,18 +182,18 @@ export default function AddGraph() {
                   return positionA - positionB;
                 })
                 .map((key) => {
-                // @ts-ignore
-                const inputDetail = selectedTool.ToolJson.inputs[key];
-                return (
-                  <div key={key}>
-                    <Label>
-                      {key}
-                      {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(", ")})`}
-                    </Label>
-                    <DataFileSelect onValueChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
-                  </div>
-                );
-              })}
+                  // @ts-ignore
+                  const inputDetail = selectedTool.ToolJson.inputs[key];
+                  return (
+                    <div key={key}>
+                      <Label>
+                        {key}
+                        {inputDetail.glob && ` (Glob: ${inputDetail.glob.join(", ")})`}
+                      </Label>
+                      <DataFileSelect onValueChange={(value) => handleKwargsChange(value, key)} value={kwargs[key]?.[0]} label={key} />
+                    </div>
+                  );
+                })}
               <Button type="submit" disabled={loading || !isValidForm()}>
                 {loading ? "Submitting..." : "Submit"}
               </Button>

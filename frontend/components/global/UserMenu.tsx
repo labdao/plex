@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { selectWalletAddress, setIsLoggedIn, setWalletAddress, useDispatch, useSelector } from "lib/redux";
+import { useDispatch } from "lib/redux";
 import { DownloadIcon, Loader2Icon, User } from "lucide-react";
 import React from "react";
 
@@ -18,9 +18,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import PrivyLoginButton from "../auth/PrivyLoginButton";
 
 export default function UserMenu() {
-  const dispatch = useDispatch();
   const { ready, authenticated, user, exportWallet, logout } = usePrivy();
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   const hasEmbeddedWallet =
     ready && authenticated && !!user?.linkedAccounts.find((account: any) => account.type === "wallet" && account.walletClient === "privy");
@@ -33,9 +32,6 @@ export default function UserMenu() {
 
   const handleLogout = async () => {
     await logout();
-    localStorage.removeItem("walletAddress");
-    dispatch(setWalletAddress(""));
-    dispatch(setIsLoggedIn(false));
   };
 
   if (!ready) return <Loader2Icon className="opacity-50 animate-spin" />;

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -7,9 +8,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { DataTable } from "@/components/ui/data-table";
-import { AppDispatch, flowListThunk, selectFlowList, selectWalletAddress } from "@/lib/redux";
+import { AppDispatch, flowListThunk, selectFlowList } from "@/lib/redux";
 
 export default function ListFlowFiles() {
+  const { user } = usePrivy();
+
   interface Flow {
     CID: string;
     Name: string;
@@ -51,7 +54,7 @@ export default function ListFlowFiles() {
 
   const dispatch = useDispatch<AppDispatch>();
   const flows = useSelector(selectFlowList);
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   const [sorting, setSorting] = useState([{ id: "Name", desc: false }]);
 

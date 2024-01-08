@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -13,7 +14,6 @@ import {
   selectCID,
   selectDataFileError,
   selectDataFileIsLoading,
-  selectWalletAddress,
   setError,
   startLoading,
   useDispatch,
@@ -22,13 +22,13 @@ import {
 
 export default function DataFileForm() {
   const [open, setOpen] = React.useState(false);
-
+  const { user } = usePrivy();
   const dispatch = useDispatch();
 
   const router = useRouter();
   const errorMessage = useSelector(selectDataFileError);
   const isLoading = useSelector(selectDataFileIsLoading);
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   const [file, setFile] = useState<File | null>(null);
 

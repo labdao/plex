@@ -1,5 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectWalletAddress, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -42,6 +43,7 @@ type TransformedJSON = {
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const { user } = usePrivy();
 
   // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
   const task = useMemo(
@@ -62,7 +64,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   // On page load fetch the default tool details
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { JsonInput } from "@mantine/core";
 import { MantineProvider } from "@mantine/core";
+import { usePrivy } from "@privy-io/react-auth";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -16,7 +17,6 @@ import {
   selectAddToolJson,
   selectAddToolLoading,
   selectAddToolSuccess,
-  selectWalletAddress,
   setAddToolError,
   setAddToolJson,
   setAddToolLoading,
@@ -26,10 +26,10 @@ import {
 
 export default function AddTool() {
   const [open, setOpen] = React.useState(false);
-
+  const { user } = usePrivy();
   const dispatch = useDispatch<AppDispatch>();
 
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
   const loading = useSelector(selectAddToolLoading);
   const error = useSelector(selectAddToolError);
   const toolJson = useSelector(selectAddToolJson);

@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 
 import { ButtonProps } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
-import { AppDispatch, setIsLoggedIn, setWalletAddress } from "@/lib/redux";
+import { AppDispatch } from "@/lib/redux";
 import { saveUserAsync } from "@/lib/redux/slices/userSlice/thunks";
 
 const PrivyLoginButton = (props: ButtonProps) => {
@@ -20,18 +20,14 @@ const PrivyLoginButton = (props: ButtonProps) => {
         console.log("No wallet address found");
         return;
       }
-      dispatch(setWalletAddress(walletAddress));
 
       if (wasAlreadyAuthenticated) {
         console.log("User was already authenticated");
-        dispatch(setIsLoggedIn(true));
       } else if (isNewUser) {
         console.log("New user");
         dispatch(saveUserAsync({ walletAddress }));
-        dispatch(setIsLoggedIn(true));
       } else if (user) {
         console.log("User authenticated");
-        dispatch(setIsLoggedIn(true));
       }
     },
     onError: (error) => {
