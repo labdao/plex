@@ -178,7 +178,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
         )}
         <>
           {!toolDetailLoading && <TaskPageHeader tool={tool} task={task} />}
-          <ProtectedComponent method="overlay" message="Log in to run this experiment">
+          <ProtectedComponent method="overlay" message="Log in to run an experiment">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="col-span-2">
                 <Form {...form}>
