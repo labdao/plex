@@ -1,6 +1,7 @@
 "use client";
 
 import { SiDiscord, SiGithub, SiTwitter } from "@icons-pack/react-simple-icons";
+import dayjs from "dayjs";
 import Link from "next/link";
 
 import { Button } from "../ui/button";
@@ -97,7 +98,7 @@ export default function Footer() {
               <SiDiscord size={32} />
             </Link>
           </div>
-          <div className="opacity-25 text-muted-foreground">&copy; 2023 Openlab&nbsp;Association</div>
+          <div className="opacity-25 text-muted-foreground">&copy; {dayjs().format("YYYY")} Openlab&nbsp;Association</div>
         </div>
         <div className="flex flex-wrap w-full mb-8 lg:w-3/4">
           {footerSections.map((section) => (
