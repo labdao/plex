@@ -2,6 +2,8 @@
 import os
 import time
 import pandas as pd
+import mdtraj as md
+import numpy as np
 from AF2_module import AF2Runner
 import csv
 
@@ -41,107 +43,34 @@ def prodigy_run(csv_path):
     # export results
     df.to_csv(f"{csv_path}", index=None)
 
-# Please note the following:
-# - You need to replace 'path_to_your_pdb_file.pdb' and 'path_to_your_pae_matrix.npy' with the actual paths to your PDB file and PAE matrix file.
-# - The selection strings for the receptor and ligand (receptor_selection and ligand_selection) need to be adjusted according to your specific system. The example uses chain IDs, but you might need to use different selection criteria.
-# - The scheme='closest-heavy' argument in md.compute_contacts specifies that only heavy atoms (non-hydrogen) are considered for contact calculations. Adjust this if necessary.
-# - The PAE matrix is assumed to be indexed in a way that corresponds to the residue indices in the PDB file. If there's an offset or different indexing, you'll need to adjust the indexing in the line that computes interface_pae_values.
-# 
-# Before running the code, ensure that you have mdtraj and numpy installed in your Python environment. You can install them using pip if necessary:
-# pip install mdtraj numpy
-def compute_ipae(pdb_file):
+def compute_ipae(pdb_file, pae_matrix):
 
-    import mdtraj as md
-    import numpy as np
-
-    # Load the PDB file using mdtraj
-    # pdb_file = 'path_to_your_pdb_file.pdb'  # Replace with your PDB file path
     traj = md.load(pdb_file)
 
-    # Define the selection strings for the receptor and ligand
-    receptor_selection = 'A'  # Example selection string for the receptor
-    ligand_selection = 'B'  # Example selection string for the ligand
-
-    # Select the receptor and ligand atoms
-    receptor_atoms = traj.topology.select(receptor_selection)
-    ligand_atoms = traj.topology.select(ligand_selection)
-
-    # Compute contacts between receptor and ligand
-    # The distance_cutoff is in nanometers; adjust as needed
     distance_cutoff = 0.35
-    contacts = md.compute_contacts(traj, contacts=(receptor_atoms, ligand_atoms), scheme='closest-heavy', cutoff=distance_cutoff)
+    contacts = md.compute_contacts(traj, contacts='all', scheme='closest-heavy')
 
     # Get the contact pairs and distances
-    contact_pairs = contacts[0]
-    contact_distances = contacts[1].reshape(-1)  # Flatten the distances array
+    contact_distances = contacts[0].reshape(-1)  # flatten the distances array
+    contact_pairs = contacts[1]
 
     # Filter contact pairs based on the distance cutoff
     contact_indices = contact_pairs[contact_distances < distance_cutoff]
 
-    # Assuming you have the PAE matrix loaded as a NumPy array
-    pae_matrix = np.load('path_to_your_pae_matrix.npy')  # Replace with your PAE matrix file path
-
-    # Compute the PAE at the interface
-    # Map the contact indices to the PAE matrix
-    # Note: You may need to adjust the indices based on how your PAE matrix is indexed
+    # extract interface values
     interface_pae_values = pae_matrix[contact_indices[:, 0], contact_indices[:, 1]]
 
-    # Output the results
-    print("Contact residues (receptor, ligand):", contact_indices)
-    print("PAE values at the interface:", interface_pae_values)
+    # # Output the results
+    # print("Contact residues (receptor, ligand):", contact_indices)
+    # print("PAE values at the interface:", interface_pae_values)
 
     # Compute the median PAE for the interface contacts
     median_pae_interface = np.median(interface_pae_values)
 
     # Output the median PAE value
-    print("Median PAE at the interface:", median_pae_interface)
+    print("median PAE at the interface:", median_pae_interface)
 
     return median_pae_interface
-
-# def update_complex_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern):
-#     summary_file = os.path.join(directory, 'folding_with_target_summary.csv')
-
-#     # loop over JSON files that match the given pattern for the current iteration
-#     for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores*.json")):
-#         with open(json_file, 'r') as file:
-#             data = json.load(file)
-
-#         # Compute average plddt
-#         avg_plddt = sum(data['plddt']) / len(data['plddt'])
-
-#         # Get max_pae value
-#         max_pae = data['max_pae']
-
-#         # Find corresponding PDB file
-#         pdb_file = None
-#         rank_str = json_file.split('rank')[1].split('.')[0]
-#         for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
-#             pdb_file = pdb
-#             break
-
-#         # Prepare new row
-#         new_row = {
-#             't': t, # delete
-#             'target_seq': row['target_seq'].iloc[0],
-#             'binder_seq': row['binder_seq'].iloc[0],
-#             'complex': sequence,
-#             'sequence_pseudo_LL': sequence_pseudoLL, # delete
-#             'mean plddt': avg_plddt,
-#             'max pae': max_pae, # add i_pae # add rmsd
-#             'json': os.path.abspath(json_file),
-#             'pdb': os.path.abspath(pdb_file) if pdb_file else None
-#         }
-
-#         # Concatenate new row to DataFrame
-#         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-
-#     if not df.empty:
-#         if os.path.exists(summary_file):
-#             df.to_csv(summary_file, mode='a', header=False, index=False)
-#         else:
-#             df.to_csv(summary_file, index=False)
-
-#     return df
 
 def create_summary(directory, json_pattern):
     summary_file = os.path.join(directory, 'updated_summary.csv')
@@ -166,19 +95,19 @@ def create_summary(directory, json_pattern):
             pdb_file = pdb
             break
 
+        pae_matrix = np.array(data['pae'])
+        i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
+
         # Prepare new row
         new_row = {
             # 'sequence': 'extract from pdb',
             'mean plddt': avg_plddt,
             'max pae': max_pae,
-            # 'i_pae': ,
+            'i_pae': i_pae,
             # 'rmsd': ,
             'absolute json path': os.path.abspath(json_file),
             'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
         }
-
-        # use absolute pdb path here and compute i_pae
-        # compute_ipae(pdb_file)
 
         # Concatenate new row to DataFrame
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
@@ -327,3 +256,50 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
+
+
+
+# def update_complex_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern):
+#     summary_file = os.path.join(directory, 'folding_with_target_summary.csv')
+
+#     # loop over JSON files that match the given pattern for the current iteration
+#     for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores*.json")):
+#         with open(json_file, 'r') as file:
+#             data = json.load(file)
+
+#         # Compute average plddt
+#         avg_plddt = sum(data['plddt']) / len(data['plddt'])
+
+#         # Get max_pae value
+#         max_pae = data['max_pae']
+
+#         # Find corresponding PDB file
+#         pdb_file = None
+#         rank_str = json_file.split('rank')[1].split('.')[0]
+#         for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
+#             pdb_file = pdb
+#             break
+
+#         # Prepare new row
+#         new_row = {
+#             't': t, # delete
+#             'target_seq': row['target_seq'].iloc[0],
+#             'binder_seq': row['binder_seq'].iloc[0],
+#             'complex': sequence,
+#             'sequence_pseudo_LL': sequence_pseudoLL, # delete
+#             'mean plddt': avg_plddt,
+#             'max pae': max_pae, # add i_pae # add rmsd
+#             'json': os.path.abspath(json_file),
+#             'pdb': os.path.abspath(pdb_file) if pdb_file else None
+#         }
+
+#         # Concatenate new row to DataFrame
+#         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+#     if not df.empty:
+#         if os.path.exists(summary_file):
+#             df.to_csv(summary_file, mode='a', header=False, index=False)
+#         else:
+#             df.to_csv(summary_file, index=False)
+
+#     return df
