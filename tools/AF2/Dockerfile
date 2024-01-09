@@ -33,4 +33,7 @@ RUN git clone -q https://github.com/haddocking/prodigy && \
      pip install -q prodigy/
 
 # downloading weights
-RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt 
+RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt
+
+# entrypoint
+ENTRYPOINT ["python", "-u", "main.py"]
