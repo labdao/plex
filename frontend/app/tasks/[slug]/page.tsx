@@ -150,6 +150,10 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     console.log("===== Form Submitted =====", values);
 
     console.log("transformed payload");
+    if (!walletAddress) {
+      console.error("Wallet address missing");
+      return;
+    }
     const transformedPayload = transformJson(values, walletAddress);
     console.log(transformedPayload);
     console.log("submitting");

@@ -58,6 +58,10 @@ export default function AddTool() {
     dispatch(setAddToolError(""));
     try {
       const toolJsonParsed = JSON.parse(toolJson);
+      if (!walletAddress) {
+        dispatch(setAddToolError("Wallet address missing"));
+        return;
+      }
       await dispatch(createToolThunk({ walletAddress, toolJson: toolJsonParsed }));
     } catch (error) {
       console.error("Error creating tool", error);

@@ -130,6 +130,11 @@ export default function AddGraph() {
     console.log("Submitting flow");
     dispatch(setFlowAddLoading(true));
     dispatch(setFlowAddError(null));
+    if (!walletAddress) {
+      dispatch(setFlowAddError("Wallet address missing"));
+      return;
+    }
+
     await dispatch(
       addFlowThunk({
         name,
