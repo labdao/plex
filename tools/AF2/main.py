@@ -15,35 +15,62 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 import glob
 import json
+import subprocess
 
-def prodigy_run(csv_path):
-    # print('csv path', csv_path)
-    df = pd.read_csv(csv_path)
-    # print('csv file data frame', df)
-    for i, r in df.iterrows():
+# def prodigy_run(csv_path):
+#     # print('csv path', csv_path)
+#     df = pd.read_csv(csv_path)
+#     # print('csv file data frame', df)
+#     for i, r in df.iterrows():
 
-        file_path = r['pdb']
-        if pd.notna(file_path):
-            print('file path', file_path)
-            try:
-                subprocess.run(
-                    ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
-                )
-                with open("temp.txt", "r") as f:
-                    lines = f.readlines()
-                    if lines:  # Check if lines is not empty
-                        affinity = float(lines[0].split(" ")[-1].split("/")[0])
-                        df.loc[i, "affinity"] = affinity
-                    else:
-                        # print(f"No output from prodigy for {r['path']}")
-                        print(f"No output from prodigy for {file_path}")
-                        # Handle the case where prodigy did not produce output
-            except subprocess.CalledProcessError:
-                # print(f"Prodigy command failed for {r['path']}")
-                print(f"Prodigy command failed for {file_path}")
+#         file_path = r['pdb']
+#         if pd.notna(file_path):
+#             print('file path', file_path)
+#             try:
+#                 subprocess.run(
+#                     ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+#                 )
+#                 with open("temp.txt", "r") as f:
+#                     lines = f.readlines()
+#                     if lines:  # Check if lines is not empty
+#                         affinity = float(lines[0].split(" ")[-1].split("/")[0])
+#                         df.loc[i, "affinity"] = affinity
+#                     else:
+#                         # print(f"No output from prodigy for {r['path']}")
+#                         print(f"No output from prodigy for {file_path}")
+#                         # Handle the case where prodigy did not produce output
+#             except subprocess.CalledProcessError:
+#                 # print(f"Prodigy command failed for {r['path']}")
+#                 print(f"Prodigy command failed for {file_path}")
 
-    # export results
-    df.to_csv(f"{csv_path}", index=None)
+#     # export results
+#     df.to_csv(f"{csv_path}", index=None)
+
+import subprocess
+
+def compute_affinity(file_path):
+    if pd.notna(file_path):
+        try:
+            # Run Prodigy and capture the output in temp.txt
+            subprocess.run(
+                ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+            )
+            # Read the output from temp.txt
+            with open("temp.txt", "r") as f:
+                lines = f.readlines()
+                if lines:  # Check if lines is not empty
+                    # Extract the affinity value from the output
+                    affinity = float(lines[0].split(" ")[-1].split("/")[0])
+                    return affinity
+                else:
+                    print(f"No output from prodigy for {file_path}")
+                    return None  # No output from Prodigy
+        except subprocess.CalledProcessError:
+            print(f"Prodigy command failed for {file_path}")
+            return None  # Prodigy command failed
+    else:
+        print("Invalid file path")
+        return None  # Invalid file path provided
 
 def extract_sequence_from_pdb(pdb_file):
     parser = PDBParser()
@@ -117,13 +144,19 @@ def create_summary(directory, json_pattern):
 
         sequence = extract_sequence_from_pdb(os.path.abspath(pdb_file))
 
+        # Usage example
+        pdb_file_path = os.path.abspath(pdb_file)
+        affinity = compute_affinity(pdb_file_path)
+        if affinity is not None:
+            print(f"The affinity for the file {pdb_file_path} is {affinity}")
+
         # Prepare new row
         new_row = {
             'sequence': sequence,
             'mean plddt': avg_plddt,
             'max pae': max_pae,
             'i_pae': i_pae,
-            # 'rmsd': ,
+            'affinity': affinity,
             'absolute json path': os.path.abspath(json_file),
             'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
         }
