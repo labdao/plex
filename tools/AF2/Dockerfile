@@ -2,6 +2,8 @@ ARG CUDA_VERSION=11.8.0
 ARG COLABFOLD_VERSION=1.5.3
 FROM rapidsai/mambaforge-cuda:cuda${CUDA_VERSION}-base-ubuntu22.04-py3.9
 
+WORKDIR /app
+
 # colabfold
 RUN apt-get update && apt-get install -y wget cuda-nvcc-$(echo $CUDA_VERSION | cut -d'.' -f1,2 | tr '.' '-') --no-install-recommends --no-install-suggests && rm -rf /var/lib/apt/lists/* && \
     mamba config --set auto_update_conda false && \
@@ -34,6 +36,12 @@ RUN git clone -q https://github.com/haddocking/prodigy && \
 
 # downloading weights
 RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt
+
+# Copy in Files
+COPY . /app
+
+ENV PYTHONUNBUFFERED=1
+ENV HYDRA_FULL_ERROR=1
 
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
