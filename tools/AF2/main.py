@@ -6,6 +6,8 @@ import mdtraj as md
 import numpy as np
 from AF2_module import AF2Runner
 import csv
+from Bio.PDB import PDBParser
+from Bio.SeqUtils import seq1
 
 import hydra
 from hydra import compose, initialize
@@ -42,6 +44,21 @@ def prodigy_run(csv_path):
 
     # export results
     df.to_csv(f"{csv_path}", index=None)
+
+def extract_sequence_from_pdb(pdb_file):
+    parser = PDBParser()
+    structure = parser.get_structure('structure', pdb_file)
+    sequences = []
+
+    for model in structure:
+        for chain in model:
+            seq = []
+            for residue in chain:
+                if residue.id[0] == ' ':  # This checks for hetero/water residues
+                    seq.append(seq1(residue.resname.strip()))
+            sequences.append(''.join(seq))
+
+    return ':'.join(sequences)
 
 def compute_ipae(pdb_file, pae_matrix):
 
@@ -98,9 +115,11 @@ def create_summary(directory, json_pattern):
         pae_matrix = np.array(data['pae'])
         i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
 
+        sequence = extract_sequence_from_pdb(os.path.abspath(pdb_file))
+
         # Prepare new row
         new_row = {
-            # 'sequence': 'extract from pdb',
+            'sequence': sequence,
             'mean plddt': avg_plddt,
             'max pae': max_pae,
             'i_pae': i_pae,
