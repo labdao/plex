@@ -1,3 +1,3 @@
 defaults:
   - inputs: container
-  - outputs: container
+  - outputs: local

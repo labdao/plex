@@ -9,6 +9,8 @@ import hydra
 from hydra import compose, initialize
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
+import glob
+import json
 
 def prodigy_run(csv_path):
     # print('csv path', csv_path)
@@ -91,12 +93,105 @@ def compute_ipae(pdb_file):
     # Compute the median PAE for the interface contacts
     median_pae_interface = np.median(interface_pae_values)
 
+    # Output the median PAE value
+    print("Median PAE at the interface:", median_pae_interface)
+
     return median_pae_interface
 
-# Output the median PAE value
-print("Median PAE at the interface:", median_pae_interface)
+# def update_complex_summary(t, row, sequence, sequence_pseudoLL, df, directory, json_pattern):
+#     summary_file = os.path.join(directory, 'folding_with_target_summary.csv')
 
-def parse_log_and_fasta_to_csv(fasta_path, log_path):
+#     # loop over JSON files that match the given pattern for the current iteration
+#     for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores*.json")):
+#         with open(json_file, 'r') as file:
+#             data = json.load(file)
+
+#         # Compute average plddt
+#         avg_plddt = sum(data['plddt']) / len(data['plddt'])
+
+#         # Get max_pae value
+#         max_pae = data['max_pae']
+
+#         # Find corresponding PDB file
+#         pdb_file = None
+#         rank_str = json_file.split('rank')[1].split('.')[0]
+#         for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
+#             pdb_file = pdb
+#             break
+
+#         # Prepare new row
+#         new_row = {
+#             't': t, # delete
+#             'target_seq': row['target_seq'].iloc[0],
+#             'binder_seq': row['binder_seq'].iloc[0],
+#             'complex': sequence,
+#             'sequence_pseudo_LL': sequence_pseudoLL, # delete
+#             'mean plddt': avg_plddt,
+#             'max pae': max_pae, # add i_pae # add rmsd
+#             'json': os.path.abspath(json_file),
+#             'pdb': os.path.abspath(pdb_file) if pdb_file else None
+#         }
+
+#         # Concatenate new row to DataFrame
+#         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+#     if not df.empty:
+#         if os.path.exists(summary_file):
+#             df.to_csv(summary_file, mode='a', header=False, index=False)
+#         else:
+#             df.to_csv(summary_file, index=False)
+
+#     return df
+
+def create_summary(directory, json_pattern):
+    summary_file = os.path.join(directory, 'updated_summary.csv')
+
+    # Initialize an empty DataFrame
+    df = pd.DataFrame()
+
+    # loop over JSON files that match the given pattern for the current iteration
+    for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores*.json")):
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+
+        # Compute average plddt
+        avg_plddt = sum(data['plddt']) / len(data['plddt'])
+        # Get max_pae value
+        max_pae = data['max_pae']
+
+        # Find corresponding PDB file
+        pdb_file = None
+        rank_str = json_file.split('rank')[1].split('.')[0]
+        for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
+            pdb_file = pdb
+            break
+
+        # Prepare new row
+        new_row = {
+            # 'sequence': 'extract from pdb',
+            'mean plddt': avg_plddt,
+            'max pae': max_pae,
+            # 'i_pae': ,
+            # 'rmsd': ,
+            'absolute json path': os.path.abspath(json_file),
+            'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
+        }
+
+        # use absolute pdb path here and compute i_pae
+        # compute_ipae(pdb_file)
+
+        # Concatenate new row to DataFrame
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+    if not df.empty:
+        if os.path.exists(summary_file):
+            df.to_csv(summary_file, mode='a', header=False, index=False)
+        else:
+            df.to_csv(summary_file, index=False)
+
+    return df
+
+def parse_log_and_fasta_to_csv(fasta_path, log_path): # remove this
     # Read and store sequences from the FASTA file
     sequences = {}
     with open(fasta_path, 'r') as fasta_file:
@@ -143,6 +238,8 @@ def parse_log_and_fasta_to_csv(fasta_path, log_path):
                             row_data[key] = value
 
                 csv_writer.writerow(row_data)
+
+
     
     # print("running Prodigy")
     # prodigy_run(f"{self.outputs_directory}/folding_with_target_summary.csv")
@@ -220,7 +317,8 @@ def my_app(cfg: DictConfig) -> None:
     seq2struc(df, outputs_directory, cfg)
 
     # create and write a csv file with sequence and metric information for each output structure
-    parse_log_and_fasta_to_csv(os.path.abspath(fasta_file), os.path.join(outputs_directory, 'log.txt'))
+    # parse_log_and_fasta_to_csv(os.path.abspath(fasta_file), os.path.join(outputs_directory, 'log.txt'))
+    create_summary(outputs_directory, json_pattern='seq_1')
 
     print("Sequence to structure complete...")
     end_time = time.time()
