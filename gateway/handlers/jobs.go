@@ -135,7 +135,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 		if job.State == "completed" {
 			// we always only do one execution at the moment
-			fmt.Println("Job completed, getting output directory CID")
+			fmt.Println("Job completed, getting output directory CID...")
 			outputDirCID := updatedJob.State.Executions[0].PublishedResult.CID
 			outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
 			if err != nil {

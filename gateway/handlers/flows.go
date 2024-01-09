@@ -166,6 +166,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				BacalhauJobID: job.BacalhauJobId,
 				State:         job.State,
 				Error:         job.ErrMsg,
+				WalletAddress: walletAddress,
 				ToolID:        job.Tool.IPFS,
 				FlowID:        flowEntry.CID,
 			}
