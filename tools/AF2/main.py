@@ -16,6 +16,32 @@ import glob
 import json
 import subprocess
 
+# from Bio.PDB import PDBParser, Superimposer
+
+# def calculate_rmsd(pdb1, pdb2, chain_id_1='B', chain_id_2='A'): ## rmsd computation for the future
+#     # Initialize the PDB parser
+#     parser = PDBParser()
+
+#     # Parse the structures
+#     structure_1 = parser.get_structure('PDB1', pdb1)
+#     structure_2 = parser.get_structure('PDB2', pdb2)
+
+#     # Extract the chains
+#     chain_1 = next(structure_1[0][chain_id_1].get_atoms())
+#     chain_2 = next(structure_2[0][chain_id_2].get_atoms())
+
+#     # Check if the chains have the same length
+#     if len(list(chain_1)) != len(list(chain_2)):
+#         raise ValueError("Chains have different lengths and RMSD cannot be computed.")
+
+#     # Align the structures
+#     sup = Superimposer()
+#     sup.set_atoms(list(chain_1), list(chain_2))
+#     sup.apply(structure_2.get_atoms())
+
+#     # Return the RMSD
+#     return sup.rms
+
 def compute_affinity(file_path):
     if pd.notna(file_path):
         try:
@@ -114,6 +140,8 @@ def create_summary(directory, json_pattern):
         if affinity is not None:
             print(f"The affinity for the file {pdb_file_path} is {affinity}")
 
+        # rmsd = calculate_rmsd(os.path.abspath(pdb_file), '/outputs/omegafold_binder.pdb')
+
         # Prepare new row
         new_row = {
             'sequence': sequence,
@@ -121,6 +149,7 @@ def create_summary(directory, json_pattern):
             'max pae': max_pae,
             'i_pae': i_pae,
             'affinity': affinity,
+            # 'rmsd': rmsd,
             'absolute json path': os.path.abspath(json_file),
             'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
         }
