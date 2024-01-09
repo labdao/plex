@@ -23,12 +23,7 @@ const ProtectedComponent = ({ children, method = "overlay", message }: Protected
     router.push("/login");
   }
 
-  if (!ready)
-    return (
-      <div className="flex justify-center w-full p-16 text-primary animate-pulse">
-        <Logo className="w-auto h-16 animate-spin" />
-      </div>
-    );
+  if (!ready) return <PageLoader variant="logo" />;
 
   if (authenticated) return children;
 

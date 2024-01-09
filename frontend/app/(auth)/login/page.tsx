@@ -24,6 +24,6 @@ export default function LoginPage() {
       </div>
     </div>
   ) : (
-    <PageLoader />
+    <PageLoader variant="logo" />
   );
 }
