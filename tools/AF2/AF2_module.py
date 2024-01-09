@@ -1,5 +1,6 @@
 import subprocess
 import os
+from Omegafold_module import Omegafold
 
 class AF2Runner:
     def __init__(self, fasta_file, output_dir):
@@ -57,12 +58,43 @@ class AF2Runner:
         work_dir = os.path.dirname(self.input_file)
         if not work_dir:
             work_dir = os.getcwd()  # Default to current directory if no directory is part of the input file path
-        
-        colabfold_batch_command = "colabfold_batch", f"{self.input_file}", f"{self.output_dir}"
-        # colabfold_batch_command = "colabfold_batch" input.fasta output && omegafold input.fasta output
 
-        subprocess.run(colabfold_batch_command, check=True)
+        # colabfold_batch_command = f"colabfold_batch {self.input_file} {self.output_dir}"
+        # subprocess.run(colabfold_batch_command, shell=True, check=True)
+
+        # Check if input_file is a directory
+        if os.path.isdir(self.input_file):
+            # Iterate over each file in the directory
+            for filename in os.listdir(self.input_file):
+                file_path = os.path.join(self.input_file, filename)
+                print('file_path', file_path)
+                # Check if the file is a FASTA file (assuming .fasta extension)
+                if os.path.isfile(file_path) and filename.endswith('.fasta'):
+
+                    # Assuming process_fasta.py is in the same directory as your main script
+                    process_fasta_script = "./process_fasta.py"
+
+                    # Update the command to include the Python script execution
+                    colabfold_batch_command = (
+                        f"colabfold_batch {file_path} {self.output_dir} && "
+                        f"python {process_fasta_script} {file_path} && "
+                        f"omegafold {file_path} {self.output_dir}"
+                    )
+                    # colabfold_batch_command = f"colabfold_batch {file_path} {self.output_dir} && omegafold {file_path} {self.output_dir}"
+                    subprocess.run(colabfold_batch_command, shell=True, check=True)
+
+        else:
+            # If input_file is not a directory, run the commands directly
+            colabfold_batch_command = f"colabfold_batch {self.input_file} {self.output_dir} && omegafold {self.input_file} {self.output_dir}"
+            subprocess.run(colabfold_batch_command, shell=True, check=True)        
+
         print(f"Prediction job complete. Results are in {self.output_dir}")
 
     def run(self):
         self.run_prediction()
+
+
+        # colabfold_batch_command = "colabfold_batch", f"{self.input_file}", f"{self.output_dir}"
+        # # colabfold_batch_command = "colabfold_batch", f"{self.input_file}", f"{self.output_dir}" && omegafold, f"{self.input_file}", f"{self.output_dir}"
+
+        # subprocess.run(colabfold_batch_command, check=True)

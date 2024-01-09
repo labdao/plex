@@ -35,6 +35,30 @@ class Omegafold:
     def run_prediction(self):
         
         print("Running prediction job...")
+
+        # with open(self.input_file, 'r') as file:
+        #     lines = file.readlines()
+
+        # # # Remove the first line if it contains '>1' and replace ':' with '/'
+        # lines_to_write = [line.replace(':', '/') for line in (lines[1:] if lines[0].strip() == '>1' else lines)]
+
+        # with open(self.input_file, 'w') as file:
+        #     file.writelines(lines_to_write)
+
+        with open(self.input_file, 'r') as file:
+            lines = file.readlines()
+
+        # Replace '>1' with '>' in the first line and ':' with '/' in all lines
+        lines[0] = lines[0].replace('>1', '>')
+        lines_to_write = [line.replace(':', '/') for line in lines]
+
+        print('lines', lines_to_write)
+
+        with open(self.input_file, 'w') as file:
+            file.writelines(lines_to_write)
+
+        print('input file', self.input_file)
+
         work_dir = os.path.dirname(self.input_file)
         if not work_dir:
             work_dir = os.getcwd()  # Default to current directory if no directory is part of the input file path
