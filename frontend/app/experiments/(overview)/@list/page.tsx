@@ -1,14 +1,18 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { DataTable } from "@/components/ui/data-table";
 import { AppDispatch, flowListThunk, selectFlowList } from "@/lib/redux";
 
 export default function ListFlowFiles() {
+  const { user } = usePrivy();
+
   interface Flow {
     CID: string;
     Name: string;
@@ -21,7 +25,7 @@ export default function ListFlowFiles() {
     } else {
       return "";
     }
-  }
+  };
 
   const columns: ColumnDef<Flow>[] = [
     {
@@ -36,11 +40,7 @@ export default function ListFlowFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
-          </a>
-        );
+        return shortenAddressOrCid(row.getValue("CID"));
       },
     },
     {
@@ -48,30 +48,27 @@ export default function ListFlowFiles() {
       header: "User",
       cell: ({ row }) => {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
-      }
+      },
     },
-    // {
-    //   accessorKey: "Tags",
-    //   header: "Tags",
-    //   cell: ({ row }) => {
-    //     return row.getValue("Tags").join(', ');
-    //   }
-    // },
   ];
 
   const dispatch = useDispatch<AppDispatch>();
-
   const flows = useSelector(selectFlowList);
+  const walletAddress = user?.wallet?.address;
 
-  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
+  const [sorting, setSorting] = useState([{ id: "Name", desc: false }]);
 
   useEffect(() => {
-    dispatch(flowListThunk());
-  }, [dispatch]);
+    if (walletAddress) {
+      dispatch(flowListThunk(walletAddress));
+    }
+  }, [dispatch, walletAddress]);
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={flows} sorting={sorting} />
-    </div>
+    <ProtectedComponent method="hide" message="Log in to view your experiments">
+      <div className="overflow-hidden border rounded-lg">
+        <DataTable columns={columns} data={flows} sorting={sorting} />
+      </div>
+    </ProtectedComponent>
   );
 }

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,7 +30,7 @@ export function VariantSummary({ sortedInputs, form }: VariantSummaryProps) {
         name: key.replaceAll("_", " "),
         variantCount: count,
       });
-      variantSummaryInfo.total *= count;
+      if (!input?.array) variantSummaryInfo.total *= count;
     }
   }
 
