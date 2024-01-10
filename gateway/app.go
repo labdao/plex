@@ -16,6 +16,7 @@ import (
 
 	"github.com/rs/cors"
 
+	"github.com/labdao/plex/gateway/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -77,6 +78,9 @@ func ServeWebApp() {
 	})
 
 	mux := server.NewServer(db)
+
+	// start queue watcher
+	utils.StartJobQueues()
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
