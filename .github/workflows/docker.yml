@@ -62,12 +62,6 @@ jobs:
           echo "| registry | ${{ inputs.registry }} |" >> $GITHUB_STEP_SUMMARY
           echo "| registry-org-name | ${{ inputs.registry-org-name }} |" >> $GITHUB_STEP_SUMMARY
 
-      - name: Set some env
-        id: docker-build-and-push-env
-        run: |
-          export INPUT_NAME_LOWERCASE=$(echo ${{ inputs.name }} | tr "[[:upper:]]" "[[:lower:]]")
-          echo "DOCKER_IMAGE=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${INPUT_NAME_LOWERCASE}" >> $GITHUB_ENV
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -85,7 +79,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: ${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{inputs.name}}
           tags: |
             type=ref,suffix=${{ inputs.tag-suffix }},event=branch
             type=ref,suffix=${{ inputs.tag-suffix }},event=pr
@@ -117,12 +111,12 @@ jobs:
         id: docker-build-and-push-outputs
         env:
           DOCKER_IMAGE_NAME: "${{ inputs.name }}"
-          DOCKER_IMAGE_WITH_DIGEST: "${{ env.DOCKER_IMAGE }}@${{ steps.build-and-push.outputs.digest }}"
+          DOCKER_IMAGE: "${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }}@${{ steps.build-and-push.outputs.digest }}"
         run: |
           echo "## OUTPUTS" >> $GITHUB_STEP_SUMMARY
-          echo '**${{ inputs.name }}** image available at:' >>  $GITHUB_STEP_SUMMARY
-          echo '`${{ env.DOCKER_IMAGE_WITH_DIGEST }}`' >>  $GITHUB_STEP_SUMMARY
-          echo 'IMAGE=${{ env.DOCKER_IMAGE_WITH_DIGEST }}' >> $GITHUB_OUTPUT
+          echo '**${{ env.DOCKER_IMAGE_NAME }}** image available at:' >>  $GITHUB_STEP_SUMMARY
+          echo '`${{ env.DOCKER_IMAGE }}`' >>  $GITHUB_STEP_SUMMARY
+          echo 'IMAGE=${{ env.DOCKER_IMAGE }}' >> $GITHUB_OUTPUT
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
