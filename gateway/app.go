@@ -79,8 +79,14 @@ func ServeWebApp() {
 
 	mux := server.NewServer(db)
 
-	// start queue watcher
-	utils.StartJobQueues()
+	// Start queue watcher in a separate goroutine
+	// The whole app will crash if the job queue runs into an error
+	// In the the future this could instead send an on call alert
+	go func() {
+		if err := utils.StartJobQueues(); err != nil {
+			panic(fmt.Sprintf("unexpected error processing job queues: %v", err))
+		}
+	}()
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
