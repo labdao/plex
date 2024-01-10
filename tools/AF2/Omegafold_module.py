@@ -36,15 +36,6 @@ class Omegafold:
         
         print("Running prediction job...")
 
-        # with open(self.input_file, 'r') as file:
-        #     lines = file.readlines()
-
-        # # # Remove the first line if it contains '>1' and replace ':' with '/'
-        # lines_to_write = [line.replace(':', '/') for line in (lines[1:] if lines[0].strip() == '>1' else lines)]
-
-        # with open(self.input_file, 'w') as file:
-        #     file.writelines(lines_to_write)
-
         with open(self.input_file, 'r') as file:
             lines = file.readlines()
 
