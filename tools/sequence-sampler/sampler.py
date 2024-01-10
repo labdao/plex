@@ -81,7 +81,8 @@ def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
     total_log_likelihood = 0
 
     # Compute the total log likelihood of the mutated sequence
-    for i, aa in enumerate(mutated_sequence):
+    squeezed_mutated_sequence = squeeze_seq(mutated_sequence)
+    for i, aa in enumerate(squeezed_mutated_sequence):
         # Find the row index for this amino acid
         row_index = amino_acid_code.index(aa)
         
@@ -93,12 +94,19 @@ def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 def squeeze_seq(new_sequence):
     return ''.join(filter(lambda x: x != '-', new_sequence))
 
-def boltzmann(ref_score, mod_score):
+def acceptance_probability(ref_score, mod_score, T):
 
-    # p_mod = exp(...)
-    p_mod = mod_score
+    k = 1.
+    p_mod = np.exp((ref_score - mod_score)/(k*T)) # TD: think carefully about the sign in the exponent
+    print('acceptance probability', np.minimum(1.,p_mod))
 
-    return p_mod
+    return np.minimum(1.,p_mod)
+
+def modification_bouncer(ref_score, mod_score, T):
+
+    p_mod = acceptance_probability(ref_score, mod_score, T)
+
+    return random.random() < p_mod
 
 def score_seq(seq): # TD: normalisation of LL by sequence length!?
 
@@ -128,6 +136,22 @@ def select_random_permissible_residue(permissibility_seed, selected_action):
     
     return random.choice(permissible_elements)
 
+def MLL_mutation(runner, LLmatrix):
+    # Define the one-letter amino acid code
+    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+
+    # Check if the LLmatrix has 20 rows corresponding to the amino acids
+    if LLmatrix.shape[0] != len(amino_acid_code):
+        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
+
+    # Find the index of the maximum value in each column
+    max_indices = np.argmax(LLmatrix, axis=0)
+
+    # Map these indices to their corresponding amino acids
+    MLL_mutations = [amino_acid_code[index] for index in max_indices]
+
+    return MLL_mutations
+
 # Randomly select one action from the list of permissible actions
 def select_random_permissible_action(permissibility_seed, action_probabilities=None):
     
@@ -154,22 +178,6 @@ def select_random_permissible_action(permissibility_seed, action_probabilities=N
     
     return random.choices(permissible_actions, weights=action_probabilities, k=1)[0]
 
-def MLL_mutation(runner, LLmatrix):
-    # Define the one-letter amino acid code
-    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
-
-    # Check if the LLmatrix has 20 rows corresponding to the amino acids
-    if LLmatrix.shape[0] != len(amino_acid_code):
-        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
-
-    # Find the index of the maximum value in each column
-    max_indices = np.argmax(LLmatrix, axis=0)
-
-    # Map these indices to their corresponding amino acids
-    MLL_mutations = [amino_acid_code[index] for index in max_indices]
-
-    return MLL_mutations
-
 def apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg):
 
     modified_seq = list(seed)
@@ -189,24 +197,27 @@ def apply_permissible_action(seed, permissibility_seed, selected_action, selecte
 
 def select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg):
 
-    selected_action = select_random_permissible_action(permissible_seed, action_probabilities=None)
+    selected_action = select_random_permissible_action(permissibility_seed, action_probabilities=None)
     selected_residue = select_random_permissible_residue(permissibility_seed, selected_action)
+
     action_residue_pair = (selected_action, selected_residue)
-    print('action-residue pair:', action_residue_tuple)
+    print('action-residue pair:', action_residue_pair)
 
-    if action_residue_tuple not in action_residue_list: # append and modify, if action-residue pair has not been sampled previously
-        action_residue_list.append(action_residue_tuple)
-        modified_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
+    if action_residue_pair not in action_residue_list: # append and modify, if action-residue pair has not been sampled previously
+        action_residue_list.append(action_residue_pair)
+        mod_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
 
-    return modified_seq, modified_permissibility_seq, action_residue_list, selected_action
+    return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
 
 class Sampler:
 
-    def __init__(self, t, seed, cfg):
+    def __init__(self, t, seed, permissibility_seed, cfg):
         self.t = t
         self.seed = seed
+        self.permissibility_seed = permissibility_seed
         self.cfg = cfg
         self.policy_flag = cfg.params.basic_settings.policy_flag
+        self.T = cfg.params.basic_settings.T
 
     def apply_policy(self):
 
@@ -221,21 +232,25 @@ class Sampler:
             action_residue_list = []
             MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
             sample_number = 1
-            while p_mod < p_ref: # should probably sample based on probability
+            accept_flag = False
+            while accept_flag is False: # should probably sample based on probability
                 print('sample number', sample_number)
-                mod_seq, mod_permissibility_seq, action_residue_list, selected_action = select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg)
+                mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
                 if mod_seq !=[]:
                     if selected_action=='mutate': # for mutations we can use the LL computed based on reference sequence
                         LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
-                    else:
-                        LL_mod = score_seq(mod_seq) 
-                    p_mod = boltzmann(LL_seed, LL_mod)
+                    elif selected_action=='delete':
+                        LL_mod = score_seq(mod_seq) # first computes the LL matrix for the shortened sequence and then computes log-likelihood
+
+                    accept_flag = modification_bouncer(LL_seed, LL_mod, self.T)
+                    print('modification accepted', accept_flag)
+
                 sample_number += 1
         
-            return mod_seq
+            return mod_seq, mod_permissibility_seq, action_residue_pair
 
 
-### OLD CODE ###
+###### OLD CODE ######
 
 # seed = mod_seq
 # # add all info to data frame

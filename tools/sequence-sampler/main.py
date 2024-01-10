@@ -3,14 +3,12 @@ import os
 import time
 import pandas as pd
 
-# from AF2_module import AF2Runner
 import hydra
 from hydra import compose, initialize
 from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
 from sampler import Sampler
-# from oracle import Oracle
 
 # def get_plex_job_inputs():
 #     # Retrieve the environment variable
@@ -28,6 +26,10 @@ from sampler import Sampler
 #         # Handle the case where the string is not valid JSON
 #         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
 
+
+def squeeze_seq(new_sequence):
+    return ''.join(filter(lambda x: x != '-', new_sequence))
+
 def find_fasta_file(directory_path):
     for root, dirs, files in os.walk(directory_path):
         for file in files:
@@ -42,7 +44,7 @@ def load_initial_data(fasta_file, cfg):
         for line in file:
             if line.startswith('>'):
                 # Add an entry for a new sequence, including the 'step' column set to 0
-                sequences.append({'t': 0, 'seed_number': seq_num, 'seed': '', 'modified_seq': '', 'permissibility_seed': '', 'permissibility_modified_seq': ''})
+                sequences.append({'t': 0, 'seed': '', 'applied action': 'none', 'modified_seq': '', 'permissibility_seed': '', 'permissibility_modified_seq': ''})
                 seq_num += 1
             else:
                 # Add sequence data to the most recently added sequence entry
@@ -77,10 +79,10 @@ def my_app(cfg: DictConfig) -> None:
     print(f"Output directory : {outputs_directory}")
 
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    df_0 = load_initial_data(fasta_file, cfg)
-    seed = df_0[-1]['seed']
-    permissibility_seed = df_0[-1]['permissibility_seed']
-    print('df0', df_0)
+    df = load_initial_data(fasta_file, cfg)
+    print('df', df)
+    seed = df.iloc[-1]['seed']
+    permissibility_seed = df.iloc[-1]['permissibility_seed']
 
     start_time = time.time()
     print("sequence to structure complete...")
@@ -90,13 +92,25 @@ def my_app(cfg: DictConfig) -> None:
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg)
-        mod_seq, modified_permissibility_seq = sampler.apply_policy()
-        seed = mod_seq
+        mod_seq, modified_permissibility_seq, action_residue_pair = sampler.apply_policy()
 
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
 
-        # df.to_csv(f"{outputs_directory}/summary.csv", index=False)
+        new_row = {
+            't': t+1,
+            'seed': squeeze_seq(seed),
+            'applied action': action_residue_pair,
+            'modified_seq': squeeze_seq(mod_seq),
+            'permissibility_seed': permissibility_seed,
+            'permissibility_modified_seq': modified_permissibility_seq
+        }
+
+        # Append the new row to the DataFrame
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        df.to_csv(f"{outputs_directory}/summary.csv", index=False)
+
+        seed = mod_seq
 
     print("sequence to structure complete...")
     end_time = time.time()
