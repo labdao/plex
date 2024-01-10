@@ -44,7 +44,15 @@ def load_initial_data(fasta_file, cfg):
         for line in file:
             if line.startswith('>'):
                 # Add an entry for a new sequence, including the 'step' column set to 0
-                sequences.append({'t': 0, 'seed': '', 'applied action': 'none', 'modified_seq': '', 'permissibility_seed': '', 'permissibility_modified_seq': ''})
+                sequences.append({
+                    't': 0,
+                    'seed': '',
+                    'permissibility_seed': '',
+                    'levenshtein_step_size': 0,
+                    'applied_action_(type, mask)': 'none',
+                    'modified_seq': '',
+                    'permissibility_modified_seq': ''}
+                )
                 seq_num += 1
             else:
                 # Add sequence data to the most recently added sequence entry
@@ -92,7 +100,7 @@ def my_app(cfg: DictConfig) -> None:
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg)
-        mod_seq, modified_permissibility_seq, action_residue_pair = sampler.apply_policy()
+        mod_seq, modified_permissibility_seq, action_residue_pair, levenshtein_step_size = sampler.apply_policy()
 
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
@@ -100,10 +108,11 @@ def my_app(cfg: DictConfig) -> None:
         new_row = {
             't': t+1,
             'seed': squeeze_seq(seed),
-            'applied action': action_residue_pair,
+            'permissibility_seed': ''.join(permissibility_seed),
+            'levenshtein_step_size': levenshtein_step_size,
+            'applied_action_(type, mask)': action_residue_pair,
             'modified_seq': squeeze_seq(mod_seq),
-            'permissibility_seed': permissibility_seed,
-            'permissibility_modified_seq': modified_permissibility_seq
+            'permissibility_modified_seq': ''.join(modified_permissibility_seq)
         }
 
         # Append the new row to the DataFrame
@@ -111,6 +120,7 @@ def my_app(cfg: DictConfig) -> None:
         df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
         seed = mod_seq
+        permissibility_seed = modified_permissibility_seq
 
     print("sequence to structure complete...")
     end_time = time.time()

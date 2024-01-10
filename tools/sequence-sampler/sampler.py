@@ -68,6 +68,22 @@ def action_constraint(t, df):
 
     return df
 
+def MLL_mutation(runner, LLmatrix):
+    # Define the one-letter amino acid code
+    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+
+    # Check if the LLmatrix has 20 rows corresponding to the amino acids
+    if LLmatrix.shape[0] != len(amino_acid_code):
+        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
+
+    # Find the index of the maximum value in each column
+    max_indices = np.argmax(LLmatrix, axis=0)
+
+    # Map these indices to their corresponding amino acids
+    MLL_mutations = [amino_acid_code[index] for index in max_indices]
+
+    return MLL_mutations
+
 def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 
     # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
@@ -135,22 +151,6 @@ def select_random_permissible_residue(permissibility_seed, selected_action):
         return None
     
     return random.choice(permissible_elements)
-
-def MLL_mutation(runner, LLmatrix):
-    # Define the one-letter amino acid code
-    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
-
-    # Check if the LLmatrix has 20 rows corresponding to the amino acids
-    if LLmatrix.shape[0] != len(amino_acid_code):
-        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
-
-    # Find the index of the maximum value in each column
-    max_indices = np.argmax(LLmatrix, axis=0)
-
-    # Map these indices to their corresponding amino acids
-    MLL_mutations = [amino_acid_code[index] for index in max_indices]
-
-    return MLL_mutations
 
 # Randomly select one action from the list of permissible actions
 def select_random_permissible_action(permissibility_seed, action_probabilities=None):
@@ -223,11 +223,13 @@ class Sampler:
 
         if self.policy_flag == 'policy_sampling':
 
+            levenshtein_step_size = 1
+
             # Initialize the ESM2Runner with the default model
             runner = sequence_transformer.ESM2Runner()
             LLmatrix_seed = runner.token_masked_marginal_log_likelihood_matrix(self.seed)
             LL_seed = score_seq(self.seed)
-            p_ref = LL_seed # need to replace this later with proper implementation of boltzmann
+            # p_ref = LL_seed # need to replace this later with proper implementation of boltzmann
 
             action_residue_list = []
             MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
@@ -247,64 +249,7 @@ class Sampler:
 
                 sample_number += 1
         
-            return mod_seq, mod_permissibility_seq, action_residue_pair
+            return mod_seq, mod_permissibility_seq, action_residue_pair, levenshtein_step_size
 
 
 ###### OLD CODE ######
-
-# seed = mod_seq
-# # add all info to data frame
-
-# compute the action constraint (Levenshtein distance)
-# df = action_constraint(self.t, df)
-
-# if self.t == 1: # read seq from data in first step
-                # # TD: no need for the shorted_seq anymore 
-
-                # # renaming sequence_number column to original_sequence and write the values
-                # self.df.rename(columns={'sequence_number': 'original_seq'}, inplace=True)
-                # self.df['original_seq'] = self.df['seq']
-
-                # # Inserting an empty column named 'shortened_seq'
-                # self.df.insert(2, 'seed_seq', '')
-                # self.df.insert(3, 'shortened_seq', '')
-
-                # # Renaming the column 'seq' to 'variant_seq' and converting values to lists
-                # self.df['seq'] = self.df['seq'].apply(lambda x: [x])
-                # self.df.rename(columns={'seq': 'variant_seq'}, inplace=True)
-
-                # self.df['permissibility_vectors'] = self.df['permissibility_vectors'].apply(lambda x: [x])
-
-                # # Adding a column 'seed_flag' after 'variant_seq' and setting its value to a list containing True
-                # variant_seq_index = self.df.columns.get_loc('variant_seq')
-                # self.df.insert(variant_seq_index + 1, 'seed_flag', [[True]] * len(self.df))
-
-                # # Add code to modify the 'variant_seq' strings and create a new column 'permissible_variant_seq'
-                # self.df['permissible_variant_seq'] = self.df.apply(
-                #     lambda row: [
-                #         ''.join(
-                #             char if pv_char != '-' else '-' 
-                #             for char, pv_char in zip(var_seq, pv)
-                #         ) 
-                #         for var_seq, pv in zip(row['variant_seq'], row['permissibility_vectors'])
-                #     ], axis=1
-                # )
-
-    # squeezed_permisibility_list = list(squeeze_seq(permissibility_vectors))
-    # if squeezed_permisibility_list[i]=='X' or squeezed_permisibility_list[i]=='+':
-    # # if squeezed_permisibility_list[i]=='X':
-
-    #     # Mutate only one residue at a time
-    #             mutated_seq = list(shortened_seq)
-    #             mutated_seq[i] = greedy_mutations[i]
-    #             mutated_sequences.append(''.join(mutated_seq))
-
-    #             permissible_variant = infer_permissible_variant(mutated_seq, pattern=permissible_shortened_seq)
-    #             permissible_mutated_sequences.append(permissible_variant) # TD: at the moment we only append if the sequence has been mutated after the deletion. should take care of the shortened sequences which cannot be varied; these would continue as purely deleting along the tree
-
-        # df.at[index, 'variant_seq'] = mutated_sequences
-        # df.at[index, 'permissible_variant_seq'] = permissible_mutated_sequences
-        # # Ensure the 'action_score' column exists
-        # if 'action_score' not in df.columns:
-        #     df['action_score'] = None
-        # df.at[index, 'action_score'] = LL_mutated_sequence
