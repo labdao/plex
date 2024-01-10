@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -147,6 +148,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			CID:           submittedIoListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
+			StartTime:     time.Now(),
 		}
 
 		log.Println("Creating Flow entry")

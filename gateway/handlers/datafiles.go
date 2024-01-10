@@ -94,7 +94,6 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// Get a single datafile by CID
 func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
