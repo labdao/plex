@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 
-import UserLoader from "@/components/auth/UserLoader";
 import Footer from "@/components/global/Footer";
 import Header from "@/components/global/Header";
 import { Providers } from "@/lib/providers";
@@ -95,9 +94,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
         <Providers>
           <div className="flex flex-col w-full min-h-screen bg-gray-100">
             <Header />
-            <div className="grow">
-              <UserLoader>{props.children}</UserLoader>
-            </div>
+            <div className="grow">{props.children}</div>
             <Footer />
           </div>
         </Providers>
