@@ -211,7 +211,7 @@ def select_and_apply_random_permissible_action(t, seed, permissibility_seed, act
 def action_mask_generator(seed, permissibility_seed, levenshtein_step_size, n_masks, alphabet):
     action_masks = []
     # Identify the indices where permissibility_seed has 'X' or '+'
-    permissible_indices = [i for i, char in enumerate(permissibility_seed) if char in ['X', '+']]
+    permissible_indices = [i for i, char in enumerate(squeeze_seq(permissibility_seed)) if char in ['X', '+']]
     
     for _ in range(n_masks):
         # Randomly select indices based on the levenshtein_step_size
@@ -261,9 +261,7 @@ def apply_action_vectors(seed, permissibility_seed, action_vector, cfg):
     modified_seq = list(seed)
     print('action vector', action_vector)
     for i, action in enumerate(action_vector[0]):
-        print('action', action)
         if action != 'none':
-            # Assuming apply_permissible_action is defined elsewhere and accessible
             modified_seq, modified_permissibility_seq = apply_action(seed, permissibility_seed, action, i, cfg)
     print('modimodimodi', seed, modified_seq)
     return modified_seq, modified_permissibility_seq
@@ -279,7 +277,7 @@ def propose_state(t, seed, permissibility_seed, action_residue_list, cfg): #
 
     modified_seq, modified_permissibility_seq = apply_action_vectors(seed, permissibility_seed, action_vectors, cfg)
 
-    return modified_seq, modified_permissibility_seq
+    return squeeze_seq(modified_seq), modified_permissibility_seq, action_masks[0]
 
 
 class Sampler:
@@ -310,7 +308,7 @@ class Sampler:
             while accept_flag is False:
                 print('sample number', sample_number)
                 # mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
-                mod_seq, mod_permissibility_seq = propose_state(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg)
+                mod_seq, mod_permissibility_seq, action_mask = propose_state(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg)
                 if mod_seq !=[]:
                     if len(mod_seq)==len(self.seed): # for mutations we can use the LL computed based on reference sequence
                         LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
@@ -325,7 +323,7 @@ class Sampler:
 
                 action_residue_pair = []
         
-            return mod_seq, mod_permissibility_seq, action_residue_pair, levenshtein_step_size
+            return mod_seq, mod_permissibility_seq, action_residue_pair, levenshtein_step_size, action_mask
 
 
 ###### OLD CODE ######

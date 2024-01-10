@@ -61,12 +61,10 @@ def load_initial_data(fasta_file, cfg):
                 sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
                 sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
     
-    # After the file reading loop
-    for sequence in sequences:
-        # Convert the string to a list of characters and update the dictionary
-        # sequence['permissibility_vectors'] = [vec for vec in sequence['permissibility_vectors']]
-        sequence['permissibility_seed'] = list(sequence['permissibility_seed'])
-        sequence['permissibility_modified_seq'] = list(sequence['permissibility_modified_seq'])
+    # # After the file reading loop
+    # for sequence in sequences:
+    #     sequence['permissibility_seed'] = list(sequence['permissibility_seed'])
+    #     sequence['permissibility_modified_seq'] = list(sequence['permissibility_modified_seq'])
 
     return pd.DataFrame(sequences)
 
@@ -100,7 +98,7 @@ def my_app(cfg: DictConfig) -> None:
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg)
-        mod_seq, modified_permissibility_seq, action_residue_pair, levenshtein_step_size = sampler.apply_policy()
+        mod_seq, modified_permissibility_seq, action_residue_pair, levenshtein_step_size, action_mask = sampler.apply_policy()
 
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
@@ -110,8 +108,8 @@ def my_app(cfg: DictConfig) -> None:
             'seed': squeeze_seq(seed),
             'permissibility_seed': ''.join(permissibility_seed),
             'levenshtein_step_size': levenshtein_step_size,
-            'applied_action_(mask, type)': action_residue_pair,
-            'modified_seq': squeeze_seq(mod_seq),
+            'applied_action_(mask, type)': action_mask,
+            'modified_seq': mod_seq,
             'permissibility_modified_seq': ''.join(modified_permissibility_seq)
         }
 
