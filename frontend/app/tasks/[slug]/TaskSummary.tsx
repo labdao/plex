@@ -53,7 +53,7 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
     outputSummaryInfo.items.push({
       name: key.replaceAll("_", " "),
       fileExtensions: outputs?.[key]?.glob?.map((glob: string) => glob.split(".").pop())?.join(", "),
-      fileNames: outputs?.[key]?.glob?.map((glob: string) => glob.replaceAll("*_", ""))?.join(", "),
+      fileNames: outputs?.[key]?.glob?.join(", "),
       multiple: outputs?.[key]?.type === "Array",
     });
   }
