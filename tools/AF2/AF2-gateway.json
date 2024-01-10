@@ -4,7 +4,7 @@
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
     "paper": "https://www.nature.com/articles/s41592-022-01488-1",
-    "task": "protein design",
+    "task": "protein folding",
     "baseCommand": [
     ],
     "arguments": [
