@@ -178,13 +178,6 @@ def select_random_permissible_action(permissibility_seed, action_probabilities=N
     
     return random.choices(permissible_actions, weights=action_probabilities, k=1)[0]
 
-# def propose_state(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg): # 
-
-#     # create mask
-
-
-#     return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
-
 def apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg):
 
     modified_seq = list(seed)
@@ -195,7 +188,6 @@ def apply_permissible_action(seed, permissibility_seed, selected_action, selecte
         new_amino_acid = random.choice(aa_options)
         modified_seq[selected_residue] = new_amino_acid
         modified_permissibility_seq = permissibility_seed
-        # modified_seq[selected_residue] = MLL_mutations[selected_residue]
     elif selected_action=='delete':
         modified_seq[selected_residue] = '-'
         modified_permissibility_seq[selected_residue] = '-' 
@@ -215,6 +207,80 @@ def select_and_apply_random_permissible_action(t, seed, permissibility_seed, act
         mod_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
 
     return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
+
+def action_mask_generator(seed, permissibility_seed, levenshtein_step_size, n_masks, alphabet):
+    action_masks = []
+    # Identify the indices where permissibility_seed has 'X' or '+'
+    permissible_indices = [i for i, char in enumerate(permissibility_seed) if char in ['X', '+']]
+    
+    for _ in range(n_masks):
+        # Randomly select indices based on the levenshtein_step_size
+        selected_indices = random.sample(permissible_indices, min(levenshtein_step_size, len(permissible_indices)))
+        
+        # Create a new mask based on the selected indices
+        action_mask = list(seed)
+        for index in selected_indices:
+            action_mask[index] = permissibility_seed[index]
+        
+        action_masks.append(''.join(action_mask))
+    
+    return action_masks
+
+def select_actions_for_masks(action_masks, alphabet):
+    action_vectors = []
+    for action_mask in action_masks:
+        action_vector = []
+        for char in action_mask:
+            if char in alphabet:
+                action_vector.append('none')
+            elif char == 'X':
+                action_vector.append('mutate')
+            elif char == '+':
+                action_vector.append(random.choice(['mutate', 'delete']))
+        action_vectors.append(action_vector)
+    return action_vectors
+
+def apply_action(seed, permissibility_seed, selected_action, selected_residue, cfg):
+
+    modified_seq = list(seed)
+    modified_permissibility_seq = list(permissibility_seed)
+    if selected_action=='mutate':
+        print('applying mutation')
+        aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
+        aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
+        new_amino_acid = random.choice(aa_options)
+        modified_seq[selected_residue] = new_amino_acid
+        modified_permissibility_seq = permissibility_seed
+    elif selected_action=='delete':
+        modified_seq[selected_residue] = '-'
+        modified_permissibility_seq[selected_residue] = '-' 
+
+    return modified_seq, modified_permissibility_seq
+
+def apply_action_vectors(seed, permissibility_seed, action_vector, cfg):
+    modified_seq = list(seed)
+    print('action vector', action_vector)
+    for i, action in enumerate(action_vector[0]):
+        print('action', action)
+        if action != 'none':
+            # Assuming apply_permissible_action is defined elsewhere and accessible
+            modified_seq, modified_permissibility_seq = apply_action(seed, permissibility_seed, action, i, cfg)
+    print('modimodimodi', seed, modified_seq)
+    return modified_seq, modified_permissibility_seq
+
+def propose_state(t, seed, permissibility_seed, action_residue_list, cfg): # 
+
+    levenshtein_step_size = 1
+    n_masks = 1
+    alphabet = 'LAGVSERTIDPKQNFYMHWC'
+
+    action_masks = action_mask_generator(seed, permissibility_seed, levenshtein_step_size, n_masks, alphabet)
+    action_vectors = select_actions_for_masks(action_masks, alphabet)
+
+    modified_seq, modified_permissibility_seq = apply_action_vectors(seed, permissibility_seed, action_vectors, cfg)
+
+    return modified_seq, modified_permissibility_seq
+
 
 class Sampler:
 
@@ -241,10 +307,10 @@ class Sampler:
             MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
             sample_number = 1
             accept_flag = False
-            while accept_flag is False: # should probably sample based on probability
+            while accept_flag is False:
                 print('sample number', sample_number)
-                mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
-                
+                # mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
+                mod_seq, mod_permissibility_seq = propose_state(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg)
                 if mod_seq !=[]:
                     if len(mod_seq)==len(self.seed): # for mutations we can use the LL computed based on reference sequence
                         LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
@@ -256,6 +322,8 @@ class Sampler:
                 print('action accepted', accept_flag)
 
                 sample_number += 1
+
+                action_residue_pair = []
         
             return mod_seq, mod_permissibility_seq, action_residue_pair, levenshtein_step_size
 
