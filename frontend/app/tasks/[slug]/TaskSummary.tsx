@@ -7,9 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface VariantSummaryProps {
+interface TaskSummaryProps {
   form: UseFormReturn<any>;
   sortedInputs: any;
+  outputs: {
+    [key: string]: {
+      glob: string[];
+      item: string;
+      type: string;
+    };
+  } | null;
 }
 
 type VariantSummaryItem = {
@@ -17,10 +24,17 @@ type VariantSummaryItem = {
   variantCount: number;
 };
 
-export function VariantSummary({ sortedInputs, form }: VariantSummaryProps) {
-  const watchAllFields = form.watch();
-  const variantSummaryInfo = { items: [] as VariantSummaryItem[], total: 1 };
+type OutputSummaryItem = {
+  name: string;
+  fileExtensions: string;
+  fileNames: string;
+  multiple: boolean;
+};
 
+export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
+  const watchAllFields = form.watch();
+
+  let variantSummaryInfo = { items: [] as VariantSummaryItem[], total: 1 };
   for (const [key, input] of sortedInputs) {
     //If the field is required or has a value, we show it in the summary
     //We don't show optional fields with no value
@@ -34,9 +48,19 @@ export function VariantSummary({ sortedInputs, form }: VariantSummaryProps) {
     }
   }
 
+  let outputSummaryInfo = { items: [] as OutputSummaryItem[] };
+  for (const key in outputs) {
+    outputSummaryInfo.items.push({
+      name: key.replaceAll("_", " "),
+      fileExtensions: outputs?.[key]?.glob?.map((glob: string) => glob.split(".").pop())?.join(", "),
+      fileNames: outputs?.[key]?.glob?.map((glob: string) => glob.replaceAll("*_", ""))?.join(", "),
+      multiple: outputs?.[key]?.type === "Array",
+    });
+  }
+
   return (
-    <>
-      <Card className="sticky top-4">
+    <div className="sticky max-h-screen overflow-y-auto top-4">
+      <Card>
         <CardContent>
           <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
           <div className="mb-4 space-y-2 lowercase">
@@ -60,6 +84,21 @@ export function VariantSummary({ sortedInputs, form }: VariantSummaryProps) {
           </Button>
         </CardContent>
       </Card>
-    </>
+      {outputs && (
+        <Card className="mt-8 mb-4">
+          <CardContent>
+            <div className="mb-4 font-mono text-sm font-bold uppercase">Expected Output</div>
+            <div className="space-y-2 lowercase">
+              {(outputSummaryInfo?.items || []).map((item, index) => (
+                <div key={index}>
+                  {item.multiple ? <div>{item.fileExtensions} files</div> : <div>{item.fileNames} file</div>}
+                  <div className="mr-3 text-xs text-muted-foreground">{item.name}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
