@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	bacalhauModels "github.com/bacalhau-project/bacalhau/pkg/models"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
-	"github.com/labdao/plex/models"
 	"gorm.io/gorm"
 )
 
@@ -72,15 +72,15 @@ func processJob(job *models.Job) error {
 			return err
 		}
 
-		if bacalhauJob.State == "failed" {
+		if bacalhauJob.State.State == bacalhauModels.JobStateTypeFailed {
 			if time.Since(job.CreatedAt) > maxQueueTime {
-				return setJobStatus(job, "failed", "timed out in queue")
+				return setJobStatus(job, models.JobStateFailed, "timed out in queue")
 			}
 			time.Sleep(1 * time.Second)
 			if err := submitBacalhauJob(job); err != nil {
 				return err
 			}
-		} else if bacalhauJob.State == "running" {
+		} else if bacalhauJob.State == bacalhauModels.JobStateTypeFailed {
 			return setJobStatus(job, "running", "")
 		}
 

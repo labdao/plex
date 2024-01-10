@@ -216,3 +216,7 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 	updatedJob, _, err := client.Get(context.Background(), jobId)
 	return updatedJob, err
 }
+
+func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
+	if job.State.State == model.JobStateError
+}
