@@ -118,7 +118,7 @@ def acceptance_probability(ref_score, mod_score, T):
 
     return np.minimum(1.,p_mod)
 
-def modification_bouncer(ref_score, mod_score, T):
+def action_bouncer(ref_score, mod_score, T):
 
     p_mod = acceptance_probability(ref_score, mod_score, T)
 
@@ -178,6 +178,13 @@ def select_random_permissible_action(permissibility_seed, action_probabilities=N
     
     return random.choices(permissible_actions, weights=action_probabilities, k=1)[0]
 
+# def propose_state(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg): # 
+
+#     # create mask
+
+
+#     return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
+
 def apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg):
 
     modified_seq = list(seed)
@@ -200,7 +207,7 @@ def select_and_apply_random_permissible_action(t, seed, permissibility_seed, act
     selected_action = select_random_permissible_action(permissibility_seed, action_probabilities=None)
     selected_residue = select_random_permissible_residue(permissibility_seed, selected_action)
 
-    action_residue_pair = (selected_action, selected_residue)
+    action_residue_pair = (selected_residue, selected_action)
     print('action-residue pair:', action_residue_pair)
 
     if action_residue_pair not in action_residue_list: # append and modify, if action-residue pair has not been sampled previously
@@ -228,8 +235,7 @@ class Sampler:
             # Initialize the ESM2Runner with the default model
             runner = sequence_transformer.ESM2Runner()
             LLmatrix_seed = runner.token_masked_marginal_log_likelihood_matrix(self.seed)
-            LL_seed = score_seq(self.seed)
-            # p_ref = LL_seed # need to replace this later with proper implementation of boltzmann
+            LL_seed = compute_log_likelihood(runner, self.seed, LLmatrix_seed)
 
             action_residue_list = []
             MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
@@ -238,14 +244,16 @@ class Sampler:
             while accept_flag is False: # should probably sample based on probability
                 print('sample number', sample_number)
                 mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
+                
                 if mod_seq !=[]:
-                    if selected_action=='mutate': # for mutations we can use the LL computed based on reference sequence
+                    if len(mod_seq)==len(self.seed): # for mutations we can use the LL computed based on reference sequence
                         LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
-                    elif selected_action=='delete':
-                        LL_mod = score_seq(mod_seq) # first computes the LL matrix for the shortened sequence and then computes log-likelihood
+                    elif len(mod_seq)<len(self.seed):
+                        LLmatrix_mod = runner.token_masked_marginal_log_likelihood_matrix(mod_seq)
+                        LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_mod)
 
-                    accept_flag = modification_bouncer(LL_seed, LL_mod, self.T)
-                    print('modification accepted', accept_flag)
+                accept_flag = action_bouncer(LL_seed, LL_mod, self.T)
+                print('action accepted', accept_flag)
 
                 sample_number += 1
         

@@ -49,7 +49,7 @@ def load_initial_data(fasta_file, cfg):
                     'seed': '',
                     'permissibility_seed': '',
                     'levenshtein_step_size': 0,
-                    'applied_action_(type, mask)': 'none',
+                    'applied_action_(mask, type)': 'none',
                     'modified_seq': '',
                     'permissibility_modified_seq': ''}
                 )
@@ -110,7 +110,7 @@ def my_app(cfg: DictConfig) -> None:
             'seed': squeeze_seq(seed),
             'permissibility_seed': ''.join(permissibility_seed),
             'levenshtein_step_size': levenshtein_step_size,
-            'applied_action_(type, mask)': action_residue_pair,
+            'applied_action_(mask, type)': action_residue_pair,
             'modified_seq': squeeze_seq(mod_seq),
             'permissibility_modified_seq': ''.join(modified_permissibility_seq)
         }
