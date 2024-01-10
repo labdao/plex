@@ -27,7 +27,7 @@ export default function Header() {
   return (
     <nav className="flex items-center justify-between p-4 border-b bg-background">
       <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase font-heading">
-        <Logo className="w-auto h-8" /> Lab Exchange
+        <Logo className="w-auto h-8 text-primary" /> Lab Exchange
       </Link>
       <>
         <div className="flex gap-8 ml-16 mr-auto">
