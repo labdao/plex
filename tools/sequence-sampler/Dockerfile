@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y wget git nano less zip unzip && rm -rf 
 ARG CUDA_VERSION=11.8.0
 ARG COLABFOLD_VERSION=1.5.3
 
+# WORKDIR /app
+
 # Install CUDA nvcc
 RUN apt-get update && apt-get install -y cuda-nvcc-$(echo $CUDA_VERSION | cut -d'.' -f1,2 | tr '.' '-') --no-install-recommends --no-install-suggests && rm -rf /var/lib/apt/lists/*
 
@@ -43,6 +45,16 @@ RUN pip install hydra-core omegaconf pandas biopython pyyaml
 # Install prodigy
 RUN git clone -q https://github.com/haddocking/prodigy && \
      pip install -q prodigy/
+
+# # Copy in Files
+# COPY . /app
+
+# ENV PYTHONUNBUFFERED=1
+# ENV HYDRA_FULL_ERROR=1
+
+
+# # entrypoint
+# ENTRYPOINT ["python", "-u", "main.py"]
 
 # Label the container
 LABEL container="protbert_colabfold_prodigy"

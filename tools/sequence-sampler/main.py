@@ -12,6 +12,22 @@ from omegaconf import DictConfig, OmegaConf
 from sampler import Sampler
 # from oracle import Oracle
 
+# def get_plex_job_inputs():
+#     # Retrieve the environment variable
+#     json_str = os.getenv("PLEX_JOB_INPUTS")
+
+#     # Check if the environment variable is set
+#     if json_str is None:
+#         raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
+
+#     # Convert the JSON string to a Python dictionary
+#     try:
+#         data = json.loads(json_str)
+#         return data
+#     except json.JSONDecodeError:
+#         # Handle the case where the string is not valid JSON
+#         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
+
 def find_fasta_file(directory_path):
     for root, dirs, files in os.walk(directory_path):
         for file in files:
@@ -47,6 +63,8 @@ def load_initial_data(fasta_file, cfg):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
+    # user_inputs = get_plex_job_inputs()
+    # print(f"user inputs from plex: {user_inputs}")
 
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
