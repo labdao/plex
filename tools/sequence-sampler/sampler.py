@@ -68,22 +68,6 @@ def action_constraint(t, df):
 
     return df
 
-def MLL_mutation(runner, LLmatrix):
-    # Define the one-letter amino acid code
-    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
-
-    # Check if the LLmatrix has 20 rows corresponding to the amino acids
-    if LLmatrix.shape[0] != len(amino_acid_code):
-        raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
-
-    # Find the index of the maximum value in each column
-    max_indices = np.argmax(LLmatrix, axis=0)
-
-    # Map these indices to their corresponding amino acids
-    MLL_mutations = [amino_acid_code[index] for index in max_indices]
-
-    return MLL_mutations
-
 def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 
     # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
@@ -148,14 +132,15 @@ def sample_permissible_vector(seed, permissibility_seed, levenshtein_step_size, 
         
     action_mask = ''.join(action_mask)
     
-    return action_mask
+    return action_mask #, permissibility_seed
 
-def select_actions_for_mask_and_vector(permissible_vector, alphabet):
+def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
     print()
-    print('permissible_vector', permissible_vector)
+    print('permissible_mask', permissible_mask)
     action_vector = []
     action_mask = []
-    for char in permissible_vector:
+    permissibility_vector = list(permissibility_vector)
+    for i, char in enumerate(permissible_mask):
         if char in alphabet:
             action_vector.append('none')
             action_mask.append(char)
@@ -167,53 +152,66 @@ def select_actions_for_mask_and_vector(permissible_vector, alphabet):
             action_vector.append(random_action)
             if random_action == 'mutate':
                 action_mask.append('X')
+            elif random_action == 'delete':
+                action_mask.append('-')
+                permissibility_vector[i] = '-' # important line
     
-    action_mask = ''.join(action_mask) # convert to string
+    action_mask = ''.join(action_mask)
+    permissibility_vector = ''.join(permissibility_vector) # convert to string
 
-    return action_vector, action_mask
+    return permissibility_vector, action_mask
 
-def apply_action(seed, permissibility_seed, selected_action, selected_residue, cfg):
+def apply_action(seed, selected_residue, selected_action, cfg):
+
+    alphabet = 'LAGVSERTIDPKQNFYMHWC'
 
     modified_seq = list(seed)
-    modified_permissibility_seq = list(permissibility_seed)
-    if selected_action=='mutate':
+    # modified_permissibility_seq = list(permissibility_seed)
+    if selected_action=='X':
         print('applying mutation')
-        aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
-        aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
-        new_amino_acid = random.choice(aa_options)
-        modified_seq[selected_residue] = new_amino_acid
-        modified_permissibility_seq = permissibility_seed
-    elif selected_action=='delete':
+        letter_options = [letter for letter in alphabet if letter != modified_seq[selected_residue]]
+        new_letter = random.choice(letter_options)
+        modified_seq[selected_residue] = new_letter
+        # modified_permissibility_seq = permissibility_seed
+    elif selected_action=='-':
+        print('applying deletion')
+        letter_options = [letter for letter in alphabet if letter != modified_seq[selected_residue]]
+        new_letter = random.choice(letter_options)
         modified_seq[selected_residue] = '-'
-        modified_permissibility_seq[selected_residue] = '-' 
+        # modified_permissibility_seq = permissibility_seed
 
-    return modified_seq, modified_permissibility_seq
+    return modified_seq #, modified_permissibility_seq
 
-def apply_action_vector(seed, permissibility_seed, action_vector, cfg):
+def apply_action_vector(seed, action_mask, cfg):
+
+    alphabet = 'LAGVSERTIDPKQNFYMHWC'
+    
     modified_seq = list(seed)
+    for i, char in enumerate(action_mask):
+        if char not in alphabet:
+            action = char
+            modified_seq = apply_action(seed, i, action, cfg)
 
-    for i, action in enumerate(action_vector):
-        if action != 'none':
-            modified_seq, modified_permissibility_seq = apply_action(seed, permissibility_seed, action, i, cfg)
+    return modified_seq
 
-    return modified_seq, modified_permissibility_seq # need to treat the case where all actions are none / how can this happen in the first place?
+def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, max_levenshtein_step_size): # 
 
-def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg): # 
+    max_levenshtein_step_size = 1
 
-    levenshtein_step_size = 1
     n_masks = 1
     alphabet = 'LAGVSERTIDPKQNFYMHWC'
 
-    permissible_vector = sample_permissible_vector(seed, permissibility_seed, levenshtein_step_size, n_masks, alphabet)
-    action_vector, action_mask = select_actions_for_mask_and_vector(permissible_vector, alphabet)
+    permissible_mask = sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet)
+    permissibility_vector, action_mask = sample_actions_for_mask(permissible_mask, permissibility_seed, alphabet) # TD: check whether this line is correct!
+    print('permissible_vector after', permissibility_vector)
 
-    return action_vector, action_mask
+    return permissibility_vector, action_mask
 
-def propose_state(t, seed, permissibility_seed, action_vector, cfg): #         
+def propose_state(t, seed, action_mask, cfg):
 
-    modified_seq, modified_permissibility_seq = apply_action_vector(seed, permissibility_seed, action_vector, cfg)
+    modified_seq = apply_action_vector(seed, action_mask, cfg)
 
-    return squeeze_seq(modified_seq), modified_permissibility_seq
+    return squeeze_seq(modified_seq)
 
 def score_sequence(seed, mod_seq, LLmatrix_seed, runner): # TD: generalise to allow for plug-in of other scoring functions
     if mod_seq !=[]:
@@ -235,12 +233,13 @@ class Sampler:
         self.cfg = cfg
         self.policy_flag = cfg.params.basic_settings.policy_flag
         self.temperature = cfg.params.basic_settings.temperature
+        self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
 
     def apply_policy(self):
 
         if self.policy_flag == 'policy_sampling':
 
-            levenshtein_step_size = 1
+            levenshtein_step_size = 2
 
             # Initialize the ESM2Runner with the default model
             runner = sequence_transformer.ESM2Runner()
@@ -254,10 +253,10 @@ class Sampler:
             while accept_flag is False:
                 print('sample number', sample_number)
 
-                action_vector, action_mask = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg)
-                print('vector, mask', action_vector, action_mask)
+                permissibility_vector, action_mask = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
+                print('permissible vector, mask', permissibility_vector, action_mask)
 
-                mod_seq, mod_permissibility_seq = propose_state(self.t, self.seed, self.permissibility_seed, action_vector, self.cfg)
+                mod_seq = propose_state(self.t, self.seed, action_mask, self.cfg)
 
                 LL_mod = score_sequence(self.seed, mod_seq, LLmatrix_seed, runner)
 
@@ -266,7 +265,7 @@ class Sampler:
 
                 sample_number += 1
         
-            return mod_seq, mod_permissibility_seq, (levenshtein_step_size, action_mask), levenshtein_step_size, action_mask
+            return mod_seq, permissibility_vector, (levenshtein_step_size, squeeze_seq(action_mask)), levenshtein_step_size, action_mask
 
 
 ###### OLD CODE ######
@@ -346,3 +345,45 @@ class Sampler:
 #         mod_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
 
 #     return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
+
+# def MLL_mutation(runner, LLmatrix):
+#     # Define the one-letter amino acid code
+#     amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+
+#     # Check if the LLmatrix has 20 rows corresponding to the amino acids
+#     if LLmatrix.shape[0] != len(amino_acid_code):
+#         raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
+
+#     # Find the index of the maximum value in each column
+#     max_indices = np.argmax(LLmatrix, axis=0)
+
+#     # Map these indices to their corresponding amino acids
+#     MLL_mutations = [amino_acid_code[index] for index in max_indices]
+
+#     return MLL_mutations
+
+# def apply_action(seed, permissibility_seed, selected_action, selected_residue, cfg):
+
+#     modified_seq = list(seed)
+#     modified_permissibility_seq = list(permissibility_seed)
+#     if selected_action=='mutate':
+#         print('applying mutation')
+#         aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
+#         aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
+#         new_amino_acid = random.choice(aa_options)
+#         modified_seq[selected_residue] = new_amino_acid
+#         modified_permissibility_seq = permissibility_seed
+#     elif selected_action=='delete':
+#         modified_seq[selected_residue] = '-'
+#         modified_permissibility_seq[selected_residue] = '-' 
+
+#     return modified_seq, modified_permissibility_seq
+
+# def apply_action_vector(seed, permissibility_seed, action_vector, cfg):
+#     modified_seq = list(seed)
+
+#     for i, action in enumerate(action_vector):
+#         if action != 'none':
+#             modified_seq, modified_permissibility_seq = apply_action(seed, permissibility_seed, action, i, cfg)
+
+#     return modified_seq, modified_permissibility_seq # need to treat the case where all actions are none / how can this happen in the first place?
