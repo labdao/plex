@@ -221,3 +221,15 @@ func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 	capacityErrorMsg := "not enough capacity available"
 	return job.State.State == model.JobStateError && strings.HasPrefix(job.State.Executions[0].Status, capacityErrorMsg)
 }
+
+func JobIsRunning(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateInProgress
+}
+
+func JobCompleted(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateCompleted
+}
+
+func JobFailed(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateError
+}

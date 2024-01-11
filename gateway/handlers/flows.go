@@ -164,10 +164,10 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			log.Println("Creating job entry")
 			jobEntry := models.Job{
 				BacalhauJobID: job.BacalhauJobId,
-				State:         job.State,
-				Error:         job.ErrMsg,
-				ToolID:        job.Tool.IPFS,
-				FlowID:        flowEntry.CID,
+				// State:         job.State,
+				Error:  job.ErrMsg,
+				ToolID: job.Tool.IPFS,
+				FlowID: flowEntry.CID,
 			}
 			result := db.Create(&jobEntry)
 			if result.Error != nil {
@@ -216,7 +216,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 							return
 						}
 					}
-					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+					// jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
 				}
 			}
 			result = db.Save(&jobEntry)

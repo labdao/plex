@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	bacalhauModels "github.com/bacalhau-project/bacalhau/pkg/models"
+	"encoding/json"
+
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
 	"gorm.io/gorm"
@@ -33,7 +34,7 @@ func StartJobQueues() error {
 func ProcessJobQueue(queueType models.QueueType, errChan chan<- error) {
 	for {
 		var jobs []models.Job
-		if err := fetchJobs(&jobs, queueType); err != nil {
+		if err := fetchJobsWithToolData(&jobs, queueType); err != nil {
 			errChan <- err
 			return
 		}
@@ -48,13 +49,13 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error) {
 			}
 		}
 
-		fmt.Printf("Finished processing queue, rehydrating %s queue with jobs\n", jobType)
+		fmt.Printf("Finished processing queue, rehydrating %s queue with jobs\n", queueType)
 		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
 }
 
-func fetchJobs(jobs *[]models.Job, queueType models.QueueType) error {
-	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Find(jobs).Error
+func fetchJobsWithToolData(jobs *[]models.Job, queueType models.QueueType) error {
+	return db.Preload("Tool").Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Find(jobs).Error
 }
 
 func processJob(job *models.Job) error {
@@ -78,15 +79,15 @@ func processJob(job *models.Job) error {
 
 		// keep retrying job if there is a capacity error until job times out
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
-			time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Second) // Wait for a short period before checking the status again
 			continue
-		} else if bacalhauJob.State == bacalhauModels.JobStateRunning {
+		} else if bacalhau.JobIsRunning(bacalhauJob) {
 			return setJobStatus(job, models.JobStateRunning, "")
-		} else {
-			continue
+		} else if bacalhau.JobFailed(bacalhauJob) {
+			return setJobStatus(job, models.JobStateFailed, "")
+		} else if bacalhau.JobCompleted(bacalhauJob) {
+			return setJobStatus(job, models.JobStateCompleted, "")
 		}
-
-		time.Sleep(1 * time.Second) // Wait for a short period before checking the status again
 	}
 }
 
@@ -97,14 +98,25 @@ func setJobStatus(job *models.Job, state models.JobState, errorMessage string) e
 }
 
 func submitBacalhauJob(job *models.Job) error {
-	// Define inputs and other parameters required for CreateBacalhauJob
-	// This is a placeholder and needs actual implementation based on job details and requirements
+	var inputs map[string]interface{}
+	if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
+		return err
+	}
+	annotations := []string{}
+	container := job.Tool.Container
+	memory := job.Tool.Memory
+	cpu := job.Tool.Cpu
+	gpu := job.Tool.Gpu == 1
+	network := job.Tool.Network
 
-	createdJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations)
+	selector := ""
+	maxTime := 60 * 72
+
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations)
 	if err != nil {
 		return err
 	}
 
-	job.BacalhauJobID = createdJob.ID
+	job.BacalhauJobID = bacalhauJob.ID()
 	return db.Save(job).Error
 }

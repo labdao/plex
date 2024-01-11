@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 type JobState string
@@ -21,16 +23,18 @@ const (
 )
 
 type Job struct {
-	BacalhauJobID string     `gorm:"primaryKey;type:varchar(255);not null"`
-	State         JobState   `gorm:"type:varchar(255);default:'queued'"`
-	Error         string     `gorm:"type:text;default:''"`
-	WalletAddress string     `gorm:"type:varchar(255)"`
-	ToolID        string     `gorm:"type:varchar(255);not null;index"`
-	Tool          Tool       `gorm:"foreignKey:ToolID"`
-	FlowID        string     `gorm:"type:varchar(255);not null;index"`
-	Flow          Flow       `gorm:"foreignKey:FlowID"`
-	Inputs        []DataFile `gorm:"many2many:job_inputs;foreignKey:BacalhauJobID;references:CID"`
-	Outputs       []DataFile `gorm:"many2many:job_outputs;foreignKey:BacalhauJobID;references:CID"`
-	Queue         QueueType  `gorm:"type:varchar(255);not null"`
-	CreatedAt     time.Time  `gorm:"type:timestamp"`
+	ID            uint           `gorm:"primaryKey;autoIncrement"`
+	BacalhauJobID string         `gorm:"type:varchar(255);index;not null"`
+	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
+	Error         string         `gorm:"type:text;default:''"`
+	WalletAddress string         `gorm:"type:varchar(255)"`
+	ToolID        string         `gorm:"type:varchar(255);not null;index"`
+	Tool          Tool           `gorm:"foreignKey:ToolID"`
+	FlowID        string         `gorm:"type:varchar(255);not null;index"`
+	Flow          Flow           `gorm:"foreignKey:FlowID"`
+	Inputs        datatypes.JSON `gorm:"type:json"`
+	Outputs       []DataFile     `gorm:"many2many:job_outputs;foreignKey:BacalhauJobID;references:CID"`
+	Queue         QueueType      `gorm:"type:varchar(255);not null"`
+	CreatedAt     time.Time      `gorm:"type:timestamp"`
+	Annotations   string         `gorm:"type:varchar(255)"`
 }
