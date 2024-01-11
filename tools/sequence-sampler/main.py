@@ -48,8 +48,7 @@ def load_initial_data(fasta_file, cfg):
                     't': 0,
                     'seed': '',
                     'permissibility_seed': '',
-                    'levenshtein_step_size': 0,
-                    'applied_action_(mask, type)': 'none',
+                    '(levenshtein-distance, mask)': 'none',
                     'modified_seq': '',
                     'permissibility_modified_seq': ''}
                 )
@@ -60,11 +59,6 @@ def load_initial_data(fasta_file, cfg):
                 sequences[-1]['modified_seq'] += sequences[-1]['seed']
                 sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
                 sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
-    
-    # # After the file reading loop
-    # for sequence in sequences:
-    #     sequence['permissibility_seed'] = list(sequence['permissibility_seed'])
-    #     sequence['permissibility_modified_seq'] = list(sequence['permissibility_modified_seq'])
 
     return pd.DataFrame(sequences)
 
@@ -98,7 +92,7 @@ def my_app(cfg: DictConfig) -> None:
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg)
-        mod_seq, modified_permissibility_seq, action_residue_pair, levenshtein_step_size, action_mask = sampler.apply_policy()
+        mod_seq, modified_permissibility_seq, action, levenshtein_step_size, action_mask = sampler.apply_policy()
 
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
@@ -107,8 +101,7 @@ def my_app(cfg: DictConfig) -> None:
             't': t+1,
             'seed': squeeze_seq(seed),
             'permissibility_seed': ''.join(permissibility_seed),
-            'levenshtein_step_size': levenshtein_step_size,
-            'applied_action_(mask, type)': action_mask,
+            '(levenshtein-distance, mask)': action,
             'modified_seq': mod_seq,
             'permissibility_modified_seq': ''.join(modified_permissibility_seq)
         }

@@ -7,7 +7,7 @@ basic_settings:
   target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
   init_permissibility_vec: 'TLGXVQ++++LFHIAL'
   k: 1
-  T: 100.
+  temperature: 100.
   max_levenshtein_step_size: 10
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
   # consider adding the dictionary which relates actions and code
