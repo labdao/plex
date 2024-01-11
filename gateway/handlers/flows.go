@@ -17,6 +17,7 @@ import (
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -64,6 +65,7 @@ func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO McMenemy, update so that jobs are just created to DB and not Bacalhau
 		log.Println("Received Post request at /flows")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -91,6 +93,17 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		err = json.Unmarshal(requestData["toolCid"], &toolCid)
 		if err != nil || toolCid == "" {
 			http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
+			return
+		}
+
+		var tool models.Tool
+		result := db.Where("cid = ?", toolCid).First(&tool)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				http.Error(w, "Tool not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -130,52 +143,58 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
+			return
 		}
 		log.Println("Initialized IO List")
 
-		log.Println("Submitting IO List")
-		submittedIoList := ipwl.SubmitIoList(ioList, "", 60*72, []string{})
-		log.Println("pinning submitted IO List")
-		submittedIoListCid, err := pinIoList(submittedIoList)
+		// save ioList to IPFS
+		ioListCid, err := pinIoList(ioList)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error pinning IO: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		flowEntry := models.Flow{
-			CID:           submittedIoListCid,
+			CID:           ioListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
 		}
 
 		log.Println("Creating Flow entry")
-		result := db.Create(&flowEntry)
+		result = db.Create(&flowEntry)
 		if result.Error != nil {
-			if utils.IsDuplicateKeyError(result.Error) {
-				http.Error(w, "A Flow with the same CID already exists", http.StatusConflict)
-			} else {
-				http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
-			}
+			http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		for _, job := range submittedIoList {
+		for _, ioItem := range ioList {
 			log.Println("Creating job entry")
-			jobEntry := models.Job{
-				BacalhauJobID: job.BacalhauJobId,
-				// State:         job.State,
-				Error:  job.ErrMsg,
-				ToolID: job.Tool.IPFS,
-				FlowID: flowEntry.CID,
+			inputsJSON, err := json.Marshal(ioItem.Inputs)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
+				return
 			}
-			result := db.Create(&jobEntry)
+			var queue models.QueueType
+			if tool.Gpu == 0 {
+				queue = models.QueueTypeCPU
+			} else {
+				queue = models.QueueTypeGPU
+			}
+			job := models.Job{
+				ToolID:        ioItem.Tool.IPFS,
+				FlowID:        flowEntry.CID,
+				WalletAddress: walletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				Queue:         queue,
+			}
+			result := db.Create(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
-			for _, input := range job.Inputs {
+			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
 				switch v := input.(type) {
 				case string:
@@ -216,16 +235,16 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 							return
 						}
 					}
-					// jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+					job.InputFiles = append(job.InputFiles, dataFile)
 				}
 			}
-			result = db.Save(&jobEntry)
+			result = db.Save(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
-		utils.SendJSONResponseWithCID(w, submittedIoListCid)
+		utils.SendJSONResponseWithCID(w, ioListCid)
 	}
 }
 

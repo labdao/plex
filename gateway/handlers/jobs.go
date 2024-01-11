@@ -145,7 +145,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 			// Create a map of existing output CIDs for quick lookup
 			existingOutputs := make(map[string]struct{})
-			for _, output := range job.Outputs {
+			for _, output := range job.OutputFiles {
 				existingOutputs[output.CID] = struct{}{}
 			}
 
@@ -241,8 +241,8 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 				// Then add the DataFile to the Job.Outputs
 				log.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
-				job.Outputs = append(job.Outputs, dataFile)
-				log.Println("Updated Job.Outputs:", job.Outputs)
+				job.OutputFiles = append(job.OutputFiles, dataFile)
+				log.Println("Updated Job.Outputs:", job.OutputFiles)
 			}
 
 			// Update job in the database with new Outputs (this may need adjustment depending on your ORM)

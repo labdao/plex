@@ -33,7 +33,8 @@ type Job struct {
 	FlowID        string         `gorm:"type:varchar(255);not null;index"`
 	Flow          Flow           `gorm:"foreignKey:FlowID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
-	Outputs       []DataFile     `gorm:"many2many:job_outputs;foreignKey:BacalhauJobID;references:CID"`
+	InputFiles    []DataFile     `gorm:"many2many:job_inputs;foreignKey:BacalhauJobID;references:CID"`
+	OutputFiles   []DataFile     `gorm:"many2many:job_outputs;foreignKey:BacalhauJobID;references:CID"`
 	Queue         QueueType      `gorm:"type:varchar(255);not null"`
 	CreatedAt     time.Time      `gorm:"type:timestamp"`
 	Annotations   string         `gorm:"type:varchar(255)"`
