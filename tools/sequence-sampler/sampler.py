@@ -5,6 +5,7 @@ import sys
 import os
 import sequence_transformer
 from state_generator import StateGenerator
+# from state_scorer import StateScorer
 
 def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 

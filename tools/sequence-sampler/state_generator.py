@@ -27,5 +27,12 @@ class StateGenerator:
 
             return ''.join(modified_seq)
 
+        elif self.generator_type=='diffusion_generator':
+
+            # run alpha fold
+            # run RFdiffusion
+
+            return ''.join(modified_seq)
+
     def run(self):
         return self.generate_state()
