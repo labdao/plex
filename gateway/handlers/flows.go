@@ -48,21 +48,6 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	return cid, nil
 }
 
-func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
-	strInput, ok := input.(string)
-	if !ok {
-		return "", false, errors.New("input is not a string")
-	}
-
-	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-		split := strings.SplitN(strInput, "/", 2)
-		cid = split[0]
-		return cid, true, nil
-	}
-
-	return "", false, nil
-}
-
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO McMenemy, update so that jobs are just created to DB and not Bacalhau
