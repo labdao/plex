@@ -22,7 +22,7 @@ export default function TaskList() {
               </CarouselItem>
             ))}
             <CarouselItem className="pr-4 sm:basis-[40%] md:basis-[30%] lg:basis-[22%]">
-              <Link href="mailto:info@convexity.bio?subject=Task Suggestion">
+              <Link href="https://forms.gle/A5NYYveDiq7gjrMe9" target="_blank" rel="noopener">
                 <Card className="flex items-center justify-center h-full bg-gray-200 hover:border-ring hover:text-accent">
                   <CardContent className="flex flex-col items-center text-sm">
                     <PlusIcon size={48} />
