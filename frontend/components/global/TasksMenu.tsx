@@ -13,9 +13,9 @@ export default function TasksMenu() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className="mr-2">
+        <DropdownMenuTrigger className="mx-2">
           <Button>
-            Run Experiment <ChevronDownIcon size={18} className="ml-1" />
+            Run <span className="hidden md:inline">&nbsp;Experiment</span> <ChevronDownIcon size={18} className="ml-1" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" collisionPadding={10}>
