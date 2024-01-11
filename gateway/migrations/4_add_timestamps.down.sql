@@ -10,3 +10,9 @@ DROP COLUMN IF EXISTS timestamp;
 -- Remove CreatedAt column from users table
 ALTER TABLE users
 DROP COLUMN IF EXISTS created_at;
+
+-- Remove CreatedAt, StartedAt, CompletedAt columns from jobs table
+ALTER TABLE jobs
+DROP COLUMN IF EXISTS created_at,
+DROP COLUMN IF EXISTS started_at,
+DROP COLUMN IF EXISTS completed_at;
