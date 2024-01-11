@@ -218,5 +218,6 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 }
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
-	if job.State.State == model.JobStateError
+	capacityErrorMsg := "not enough capacity available"
+	return job.State.State == model.JobStateError && strings.HasPrefix(job.State.Executions[0].Status, capacityErrorMsg)
 }

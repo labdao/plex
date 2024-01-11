@@ -62,26 +62,28 @@ func processJob(job *models.Job) error {
 		return setJobStatus(job, models.JobStateFailed, "timed out in queue")
 	}
 
+	// handle case already submitted
 	if err := submitBacalhauJob(job); err != nil {
 		return err
 	}
 
 	for {
+		if time.Since(job.CreatedAt) > maxQueueTime {
+			return setJobStatus(job, models.JobStateFailed, "timed out in queue")
+		}
 		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
 		if err != nil {
 			return err
 		}
 
-		if bacalhauJob.State.State == bacalhauModels.JobStateTypeFailed {
-			if time.Since(job.CreatedAt) > maxQueueTime {
-				return setJobStatus(job, models.JobStateFailed, "timed out in queue")
-			}
+		// keep retrying job if there is a capacity error until job times out
+		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
 			time.Sleep(1 * time.Second)
-			if err := submitBacalhauJob(job); err != nil {
-				return err
-			}
-		} else if bacalhauJob.State == bacalhauModels.JobStateTypeFailed {
-			return setJobStatus(job, "running", "")
+			continue
+		} else if bacalhauJob.State == bacalhauModels.JobStateRunning {
+			return setJobStatus(job, models.JobStateRunning, "")
+		} else {
+			continue
 		}
 
 		time.Sleep(1 * time.Second) // Wait for a short period before checking the status again
