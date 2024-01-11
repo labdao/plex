@@ -8,7 +8,7 @@ basic_settings:
   init_permissibility_vec: 'TLGXVQ++++LFHIAL'
   k: 1
   temperature: 100.
-  max_levenshtein_step_size: 2
+  max_levenshtein_step_size: 3
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
   # consider adding the dictionary which relates actions and code
   # consider adding the set of non-tirival actions

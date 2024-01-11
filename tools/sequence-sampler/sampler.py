@@ -5,69 +5,6 @@ import sys
 import os
 import sequence_transformer
 
-def infer_permissible_variant(mutated, pattern):
-    # Initialize an index for the mutated string
-    mutated_index = 0
-    # Initialize the result list
-    result = []
-
-    # Loop through the pattern
-    for char in pattern:
-        if char != '-':
-            # If the character in the pattern is different from the one in the mutated string
-            # replace it with the mutated character
-            if char != mutated[mutated_index]:
-                result.append(mutated[mutated_index])
-            else:
-                result.append(char)
-            mutated_index += 1
-        else:
-            # If the character is '-', keep it
-            result.append(char)
-
-    return result
-
-def levenshtein_distance(s1, s2):
-    if len(s1) < len(s2):
-        return levenshtein_distance(s2, s1)
-
-    # len(s1) >= len(s2)
-    if len(s2) == 0:
-        return len(s1)
-
-    previous_row = range(len(s2) + 1)
-    for i, c1 in enumerate(s1):
-        current_row = [i + 1]
-        for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1
-            deletions = current_row[j] + 1
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(min(insertions, deletions, substitutions))
-        previous_row = current_row
-
-    return previous_row[-1]
-
-def action_constraint(t, df):
-    # Ensure the 'action constraint' column exists
-    if 'action_constraint' not in df.columns:
-        df['action_constraint'] = None
-
-    # Iterate over rows where 't' column value is t
-    for index, row in df[(df['t'] == t)].iterrows():
-        shortened_seq = row['shortened_seq']
-        variant_seqs = row['variant_seq']
-        levenshtein_distances = []
-
-        # Compute Levenshtein distance for each sequence in the variant_seq list
-        for variant_seq in variant_seqs:
-            distance = levenshtein_distance(shortened_seq, variant_seq)
-            levenshtein_distances.append(distance)
-
-        # Update the 'action_constraint' column with the list of distances
-        df.at[index, 'action_constraint'] = levenshtein_distances
-
-    return df
-
 def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 
     # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
@@ -118,12 +55,15 @@ def score_seq(seq): # TD: normalisation of LL by sequence length!?
 
     return LL
 
-def sample_permissible_vector(seed, permissibility_seed, levenshtein_step_size, n_masks, alphabet):
+def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet):
     # Identify the indices where permissibility_seed has 'X' or '+'
     permissible_indices = [i for i, char in enumerate(permissibility_seed) if char in ['X', '+']]
 
+    # Randomly select a sample size between 1 and the minimum of levenshtein_step_size and the length of permissible_indices
+    levenshtein_step_size = random.randint(1, min(max_levenshtein_step_size, len(permissible_indices)))
+
     # Randomly select indices based on the levenshtein_step_size
-    selected_indices = random.sample(permissible_indices, min(levenshtein_step_size, len(permissible_indices)))
+    selected_indices = random.sample(permissible_indices, levenshtein_step_size)
         
     # Create a new mask based on the selected indices
     action_mask = list(seed)
@@ -132,11 +72,9 @@ def sample_permissible_vector(seed, permissibility_seed, levenshtein_step_size, 
         
     action_mask = ''.join(action_mask)
     
-    return action_mask #, permissibility_seed
+    return action_mask, levenshtein_step_size
 
 def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
-    print()
-    print('permissible_mask', permissible_mask)
     action_vector = []
     action_mask = []
     permissibility_vector = list(permissibility_vector)
@@ -152,72 +90,54 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
             action_vector.append(random_action)
             if random_action == 'mutate':
                 action_mask.append('X')
-            elif random_action == 'delete':
-                action_mask.append('-')
-                permissibility_vector[i] = '-' # important line
+            elif random_action == 'delete': # important case
+                action_mask.append('-')        
+                permissibility_vector[i] = '-'
     
     action_mask = ''.join(action_mask)
-    permissibility_vector = ''.join(permissibility_vector) # convert to string
+    permissibility_vector = ''.join(permissibility_vector)
 
     return permissibility_vector, action_mask
 
-def apply_action(seed, selected_residue, selected_action, cfg):
-
-    alphabet = 'LAGVSERTIDPKQNFYMHWC'
-
-    modified_seq = list(seed)
-    # modified_permissibility_seq = list(permissibility_seed)
-    if selected_action=='X':
-        print('applying mutation')
-        letter_options = [letter for letter in alphabet if letter != modified_seq[selected_residue]]
-        new_letter = random.choice(letter_options)
-        modified_seq[selected_residue] = new_letter
-        # modified_permissibility_seq = permissibility_seed
-    elif selected_action=='-':
-        print('applying deletion')
-        letter_options = [letter for letter in alphabet if letter != modified_seq[selected_residue]]
-        new_letter = random.choice(letter_options)
-        modified_seq[selected_residue] = '-'
-        # modified_permissibility_seq = permissibility_seed
-
-    return modified_seq #, modified_permissibility_seq
-
-def apply_action_vector(seed, action_mask, cfg):
+def simpleGenerator(seed, action_mask, cfg):
 
     alphabet = 'LAGVSERTIDPKQNFYMHWC'
     
     modified_seq = list(seed)
     for i, char in enumerate(action_mask):
         if char not in alphabet:
-            action = char
-            modified_seq = apply_action(seed, i, action, cfg)
+            if char=='X':
+                print('applying mutation')
+                letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
+                new_letter = random.choice(letter_options)
+                modified_seq[i] = new_letter
+            elif char=='-':
+                print('applying deletion')
+                modified_seq[i] = '-'
 
     return modified_seq
 
-def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, max_levenshtein_step_size): # 
+def generate_proposed_state(seed, action_mask, cfg):
 
-    max_levenshtein_step_size = 1
+    modified_seq = simpleGenerator(seed, action_mask, cfg)
+
+    return modified_seq
+
+def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, max_levenshtein_step_size):
 
     n_masks = 1
     alphabet = 'LAGVSERTIDPKQNFYMHWC'
 
-    permissible_mask = sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet)
-    permissibility_vector, action_mask = sample_actions_for_mask(permissible_mask, permissibility_seed, alphabet) # TD: check whether this line is correct!
-    print('permissible_vector after', permissibility_vector)
+    permissible_mask, levenshtein_step_size = sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet)
+    permissibility_vector, action_mask = sample_actions_for_mask(permissible_mask, permissibility_seed, alphabet)
 
-    return permissibility_vector, action_mask
+    return permissibility_vector, action_mask, levenshtein_step_size
 
-def propose_state(t, seed, action_mask, cfg):
-
-    modified_seq = apply_action_vector(seed, action_mask, cfg)
-
-    return squeeze_seq(modified_seq)
-
-def score_sequence(seed, mod_seq, LLmatrix_seed, runner): # TD: generalise to allow for plug-in of other scoring functions
+def score_sequence(seed, mod_seq, levenshtein_distance, LLmatrix_seed, runner): # TD: generalise to allow for plug-in of other scoring functions
     if mod_seq !=[]:
-        if len(mod_seq)==len(seed): # TD: change to, if levenshtein distance == 0
+        if levenshtein_distance==0:
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
-        elif len(mod_seq)<len(seed): # TD: change to, if levenshtein distance > 0
+        elif levenshtein_distance>0:
             LLmatrix_mod = runner.token_masked_marginal_log_likelihood_matrix(mod_seq)
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_mod)
 
@@ -247,28 +167,91 @@ class Sampler:
             LL_seed = compute_log_likelihood(runner, self.seed, LLmatrix_seed)
 
             action_residue_list = []
-            # MLL_mutations = MLL_mutation(runner, LLmatrix_seed)
             sample_number = 1
             accept_flag = False
             while accept_flag is False:
                 print('sample number', sample_number)
 
-                permissibility_vector, action_mask = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
-                print('permissible vector, mask', permissibility_vector, action_mask)
+                permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
+                print('permissible vector, mask:', permissibility_vector, action_mask)
 
-                mod_seq = propose_state(self.t, self.seed, action_mask, self.cfg)
+                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
 
-                LL_mod = score_sequence(self.seed, mod_seq, LLmatrix_seed, runner)
+                LL_mod = score_sequence(self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, runner)
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature)
+                print('levenshtein distance', levenshtein_distance)
                 print('action accepted', accept_flag)
 
                 sample_number += 1
         
-            return mod_seq, permissibility_vector, (levenshtein_step_size, squeeze_seq(action_mask)), levenshtein_step_size, action_mask
+            return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask
 
 
 ###### OLD CODE ######
+# def infer_permissible_variant(mutated, pattern):
+#     # Initialize an index for the mutated string
+#     mutated_index = 0
+#     # Initialize the result list
+#     result = []
+
+#     # Loop through the pattern
+#     for char in pattern:
+#         if char != '-':
+#             # If the character in the pattern is different from the one in the mutated string
+#             # replace it with the mutated character
+#             if char != mutated[mutated_index]:
+#                 result.append(mutated[mutated_index])
+#             else:
+#                 result.append(char)
+#             mutated_index += 1
+#         else:
+#             # If the character is '-', keep it
+#             result.append(char)
+
+#     return result
+
+# def levenshtein_distance(s1, s2):
+#     if len(s1) < len(s2):
+#         return levenshtein_distance(s2, s1)
+
+#     # len(s1) >= len(s2)
+#     if len(s2) == 0:
+#         return len(s1)
+
+#     previous_row = range(len(s2) + 1)
+#     for i, c1 in enumerate(s1):
+#         current_row = [i + 1]
+#         for j, c2 in enumerate(s2):
+#             insertions = previous_row[j + 1] + 1
+#             deletions = current_row[j] + 1
+#             substitutions = previous_row[j] + (c1 != c2)
+#             current_row.append(min(insertions, deletions, substitutions))
+#         previous_row = current_row
+
+#     return previous_row[-1]
+
+# def action_constraint(t, df):
+#     # Ensure the 'action constraint' column exists
+#     if 'action_constraint' not in df.columns:
+#         df['action_constraint'] = None
+
+#     # Iterate over rows where 't' column value is t
+#     for index, row in df[(df['t'] == t)].iterrows():
+#         shortened_seq = row['shortened_seq']
+#         variant_seqs = row['variant_seq']
+#         levenshtein_distances = []
+
+#         # Compute Levenshtein distance for each sequence in the variant_seq list
+#         for variant_seq in variant_seqs:
+#             distance = levenshtein_distance(shortened_seq, variant_seq)
+#             levenshtein_distances.append(distance)
+
+#         # Update the 'action_constraint' column with the list of distances
+#         df.at[index, 'action_constraint'] = levenshtein_distances
+
+#     return df
+
 # mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
 
 

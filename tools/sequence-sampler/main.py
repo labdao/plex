@@ -26,7 +26,6 @@ from sampler import Sampler
 #         # Handle the case where the string is not valid JSON
 #         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
 
-
 def squeeze_seq(new_sequence):
     return ''.join(filter(lambda x: x != '-', new_sequence))
 
@@ -113,6 +112,8 @@ def my_app(cfg: DictConfig) -> None:
         seed = mod_seq
         permissibility_seed = modified_permissibility_seq
 
+        print('')
+
     print("sequence to structure complete...")
     end_time = time.time()
     duration = end_time - start_time
@@ -120,7 +121,3 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
-
-
-### OLD CODE ###
-# ...
