@@ -20,7 +20,7 @@ export default function TaskPageHeader({ tool, task }: TaskPageHeaderProps) {
     <>
       <h1 className="mb-4 text-3xl font-heading">
         <span className="text-muted-foreground">
-          {task.name}/{author || "unknown"}/
+          <span className="lowercase">{task.name}</span>/{author || "unknown"}/
         </span>
         {name}
       </h1>

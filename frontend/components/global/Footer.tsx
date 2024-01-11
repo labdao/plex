@@ -4,7 +4,7 @@ import { SiDiscord, SiGithub, SiTwitter } from "@icons-pack/react-simple-icons";
 import dayjs from "dayjs";
 import Link from "next/link";
 
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 
 export default function Footer() {

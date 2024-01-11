@@ -3,9 +3,11 @@
 import Link from "next/link";
 import React from "react";
 
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+
 import Logo from "./Logo";
 import { NavLink } from "./NavLink";
+import TasksMenu from "./TasksMenu";
 import UserMenu from "./UserMenu";
 
 const navItems = [
@@ -37,9 +39,7 @@ export default function Header() {
             </NavLink>
           ))}
         </div>
-        <Button asChild className="mr-4">
-          <Link href="/tasks/protein-design">Run Experiment</Link>
-        </Button>
+        <TasksMenu />
         <UserMenu />
       </>
     </nav>

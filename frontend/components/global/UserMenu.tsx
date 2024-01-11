@@ -1,10 +1,10 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useDispatch } from "lib/redux";
 import { DownloadIcon, Loader2Icon, User } from "lucide-react";
 import React from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,9 +42,11 @@ export default function UserMenu() {
       {authenticated && (
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <User />
+            <Button size="icon" variant="ghost">
+              <User />
+            </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent collisionPadding={10} className="font-mono tracking-wider uppercase">
+          <DropdownMenuContent collisionPadding={10}>
             {user?.email?.address && (
               <>
                 <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
@@ -54,13 +56,13 @@ export default function UserMenu() {
 
             {walletAddress && (
               <>
-                <DropdownMenuLabel className="font-normal truncate w-72">
-                  Wallet: <em>{walletAddress}</em>
+                <DropdownMenuLabel className="truncate w-72">
+                  Wallet: <em className="font-mono font-normal">{walletAddress}</em>
                 </DropdownMenuLabel>
 
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger className="w-full">
                       <DropdownMenuItem disabled={!hasEmbeddedWallet} onClick={handleExportWallet}>
                         <DownloadIcon size={20} className="mr-1" />
                         Export Wallet
