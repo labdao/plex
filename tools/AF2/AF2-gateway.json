@@ -1,0 +1,50 @@
+{
+    "name": "af2 v1.4",
+    "description": "Create structure from sequence with AF2.",
+    "author": "sokrypton",
+    "github": "https://github.com/sokrypton/ColabFold",
+    "paper": "https://www.nature.com/articles/s41592-022-01488-1",
+    "task": "protein folding",
+    "baseCommand": [
+    ],
+    "arguments": [
+    ],
+    "dockerPull": "quay.io/labdao/af2@sha256:c97bb3e95fef6141bac208bab18066cd49026ef24583054c102268f30581bc90",
+    "gpuBool": true,
+    "memoryGB": 12,
+    "cpu": 3,
+    "networkBool": true,
+    "inputs": {
+      "sequences": {
+        "type": "file",
+        "description": "fasta file with sequences to fold.",
+        "array": false,
+        "glob": [
+          "*.fasta"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "input_sequence.fasta",
+        "grouping": "input sequences",
+        "position": "101",
+        "required": true
+      }
+    },
+    "pdb_structures": {
+      "all_outputs": {
+        "type": "Array",
+        "item": "File",
+        "glob": [
+          "*.pdb"
+        ]
+      },
+      "json_structures": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "*.json"
+        ]
+      }
+    }
+  }
