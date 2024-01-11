@@ -4,6 +4,7 @@ import random
 import sys
 import os
 import sequence_transformer
+from state_generator import StateGenerator
 
 def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
 
@@ -93,33 +94,18 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
             elif random_action == 'delete': # important case
                 action_mask.append('-')        
                 permissibility_vector[i] = '-'
+        elif char == '-':
+            action_mask.append('-')  
     
     action_mask = ''.join(action_mask)
     permissibility_vector = ''.join(permissibility_vector)
 
     return permissibility_vector, action_mask
 
-def simpleGenerator(seed, action_mask, cfg):
-
-    alphabet = 'LAGVSERTIDPKQNFYMHWC'
-    
-    modified_seq = list(seed)
-    for i, char in enumerate(action_mask):
-        if char not in alphabet:
-            if char=='X':
-                print('applying mutation')
-                letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
-                new_letter = random.choice(letter_options)
-                modified_seq[i] = new_letter
-            elif char=='-':
-                print('applying deletion')
-                modified_seq[i] = '-'
-
-    return modified_seq
-
 def generate_proposed_state(seed, action_mask, cfg):
 
-    modified_seq = simpleGenerator(seed, action_mask, cfg)
+    generator = StateGenerator('simple_generator', seed, action_mask, cfg)
+    modified_seq = generator.run()
 
     return modified_seq
 
@@ -173,200 +159,15 @@ class Sampler:
                 print('sample number', sample_number)
 
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
-                print('permissible vector, mask:', permissibility_vector, action_mask)
+                print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector, action_mask)
 
                 mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
 
                 LL_mod = score_sequence(self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, runner)
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature)
-                print('levenshtein distance', levenshtein_distance)
                 print('action accepted', accept_flag)
 
                 sample_number += 1
         
             return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask
-
-
-###### OLD CODE ######
-# def infer_permissible_variant(mutated, pattern):
-#     # Initialize an index for the mutated string
-#     mutated_index = 0
-#     # Initialize the result list
-#     result = []
-
-#     # Loop through the pattern
-#     for char in pattern:
-#         if char != '-':
-#             # If the character in the pattern is different from the one in the mutated string
-#             # replace it with the mutated character
-#             if char != mutated[mutated_index]:
-#                 result.append(mutated[mutated_index])
-#             else:
-#                 result.append(char)
-#             mutated_index += 1
-#         else:
-#             # If the character is '-', keep it
-#             result.append(char)
-
-#     return result
-
-# def levenshtein_distance(s1, s2):
-#     if len(s1) < len(s2):
-#         return levenshtein_distance(s2, s1)
-
-#     # len(s1) >= len(s2)
-#     if len(s2) == 0:
-#         return len(s1)
-
-#     previous_row = range(len(s2) + 1)
-#     for i, c1 in enumerate(s1):
-#         current_row = [i + 1]
-#         for j, c2 in enumerate(s2):
-#             insertions = previous_row[j + 1] + 1
-#             deletions = current_row[j] + 1
-#             substitutions = previous_row[j] + (c1 != c2)
-#             current_row.append(min(insertions, deletions, substitutions))
-#         previous_row = current_row
-
-#     return previous_row[-1]
-
-# def action_constraint(t, df):
-#     # Ensure the 'action constraint' column exists
-#     if 'action_constraint' not in df.columns:
-#         df['action_constraint'] = None
-
-#     # Iterate over rows where 't' column value is t
-#     for index, row in df[(df['t'] == t)].iterrows():
-#         shortened_seq = row['shortened_seq']
-#         variant_seqs = row['variant_seq']
-#         levenshtein_distances = []
-
-#         # Compute Levenshtein distance for each sequence in the variant_seq list
-#         for variant_seq in variant_seqs:
-#             distance = levenshtein_distance(shortened_seq, variant_seq)
-#             levenshtein_distances.append(distance)
-
-#         # Update the 'action_constraint' column with the list of distances
-#         df.at[index, 'action_constraint'] = levenshtein_distances
-
-#     return df
-
-# mod_seq, mod_permissibility_seq, action_residue_list, selected_action, action_residue_pair = select_and_apply_random_permissible_action(self.t, self.seed, self.permissibility_seed, action_residue_list, MLL_mutations, self.cfg)
-
-
-# # Randomly select an element from permissibility_seed where the selected action can be applied
-# def select_random_permissible_residue(permissibility_seed, selected_action):
-#     # Define the criteria for selecting an element based on the action
-#     action_criteria = {
-#         'mutate': lambda x: x == '+' or x == 'X',
-#         'delete': lambda x: x == '+'
-#     }
-    
-#     # Filter the permissibility_seed for elements where the action can be applied
-#     permissible_elements = [i for i, x in enumerate(permissibility_seed) if action_criteria[selected_action](x)]
-    
-#     # Randomly choose from the permissible elements with equal probabilities
-#     if not permissible_elements:
-#         print("Warning: No permissible elements found for the selected action.")
-#         return None
-    
-#     return random.choice(permissible_elements)
-
-# # Randomly select one action from the list of permissible actions
-# def select_random_permissible_action(permissibility_seed, action_probabilities=None):
-    
-#     # Define what makes each action permissible
-#     permissibility_criteria = {
-#         'mutate': lambda permissibility_seed: '+' in permissibility_seed or 'X' in permissibility_seed,
-#         'delete': lambda permissibility_seed: '+' in permissibility_seed
-#     }
-
-#     permissible_actions = []
-#     for action, is_permissible in permissibility_criteria.items():
-#         if is_permissible(permissibility_seed):
-#             permissible_actions.append(action)
-
-#     # warning if no permissible actions are found
-#     if not permissible_actions:
-#         print("Warning: No permissible actions found.")
-#     if not permissible_actions:
-#         return None  # No action to select if the list is empty
-    
-#     if action_probabilities is None:
-#         # If no probabilities are provided, select with uniform probability
-#         action_probabilities = [1. / len(permissible_actions)] * len(permissible_actions)
-    
-#     return random.choices(permissible_actions, weights=action_probabilities, k=1)[0]
-
-# def apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg):
-
-#     modified_seq = list(seed)
-#     modified_permissibility_seq = list(permissibility_seed)
-#     if selected_action=='mutate':
-#         aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
-#         aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
-#         new_amino_acid = random.choice(aa_options)
-#         modified_seq[selected_residue] = new_amino_acid
-#         modified_permissibility_seq = permissibility_seed
-#     elif selected_action=='delete':
-#         modified_seq[selected_residue] = '-'
-#         modified_permissibility_seq[selected_residue] = '-' 
-
-#     return modified_seq, modified_permissibility_seq
-
-# def select_and_apply_random_permissible_action(t, seed, permissibility_seed, action_residue_list, MLL_mutations, cfg):
-
-#     selected_action = select_random_permissible_action(permissibility_seed, action_probabilities=None)
-#     selected_residue = select_random_permissible_residue(permissibility_seed, selected_action)
-
-#     action_residue_pair = (selected_residue, selected_action)
-#     print('action-residue pair:', action_residue_pair)
-
-#     if action_residue_pair not in action_residue_list: # append and modify, if action-residue pair has not been sampled previously
-#         action_residue_list.append(action_residue_pair)
-#         mod_seq, modified_permissibility_seq = apply_permissible_action(seed, permissibility_seed, selected_action, selected_residue, MLL_mutations, cfg)
-
-#     return mod_seq, modified_permissibility_seq, action_residue_list, selected_action, action_residue_pair
-
-# def MLL_mutation(runner, LLmatrix):
-#     # Define the one-letter amino acid code
-#     amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
-
-#     # Check if the LLmatrix has 20 rows corresponding to the amino acids
-#     if LLmatrix.shape[0] != len(amino_acid_code):
-#         raise ValueError("The LLmatrix should have 20 rows, one for each amino acid.")
-
-#     # Find the index of the maximum value in each column
-#     max_indices = np.argmax(LLmatrix, axis=0)
-
-#     # Map these indices to their corresponding amino acids
-#     MLL_mutations = [amino_acid_code[index] for index in max_indices]
-
-#     return MLL_mutations
-
-# def apply_action(seed, permissibility_seed, selected_action, selected_residue, cfg):
-
-#     modified_seq = list(seed)
-#     modified_permissibility_seq = list(permissibility_seed)
-#     if selected_action=='mutate':
-#         print('applying mutation')
-#         aa_alphabet = 'LAGVSERTIDPKQNFYMHWC'
-#         aa_options = [aa for aa in aa_alphabet if aa != modified_seq[selected_residue]]
-#         new_amino_acid = random.choice(aa_options)
-#         modified_seq[selected_residue] = new_amino_acid
-#         modified_permissibility_seq = permissibility_seed
-#     elif selected_action=='delete':
-#         modified_seq[selected_residue] = '-'
-#         modified_permissibility_seq[selected_residue] = '-' 
-
-#     return modified_seq, modified_permissibility_seq
-
-# def apply_action_vector(seed, permissibility_seed, action_vector, cfg):
-#     modified_seq = list(seed)
-
-#     for i, action in enumerate(action_vector):
-#         if action != 'none':
-#             modified_seq, modified_permissibility_seq = apply_action(seed, permissibility_seed, action, i, cfg)
-
-#     return modified_seq, modified_permissibility_seq # need to treat the case where all actions are none / how can this happen in the first place?
