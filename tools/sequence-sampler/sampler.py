@@ -166,7 +166,7 @@ class Sampler:
 
                 LL_mod = score_sequence(self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, runner)
 
-                accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature)
+                accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)
 
                 sample_number += 1
