@@ -24,7 +24,7 @@ const (
 
 type Job struct {
 	ID            uint           `gorm:"primaryKey;autoIncrement"`
-	BacalhauJobID string         `gorm:"type:varchar(255);index;unique;not null"`
+	BacalhauJobID string         `gorm:"type:varchar(255)"`
 	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
 	Error         string         `gorm:"type:text;default:''"`
 	WalletAddress string         `gorm:"type:varchar(255)"`
@@ -33,9 +33,9 @@ type Job struct {
 	FlowID        uint           `gorm:"type:int;not null;index"`
 	Flow          Flow           `gorm:"foreignKey:FlowID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
-	InputFiles    []DataFile     `gorm:"many2many:job_inputs;foreignKey:BacalhauJobID;references:CID"`
-	OutputFiles   []DataFile     `gorm:"many2many:job_outputs;foreignKey:BacalhauJobID;references:CID"`
-	Queue         QueueType      `gorm:"type:varchar(255);not null"`
+	InputFiles    []DataFile     `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
+	OutputFiles   []DataFile     `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
+	Queue         QueueType      `gorm:"type:varchar(255)"`
 	CreatedAt     time.Time      `gorm:"type:timestamp"`
 	Annotations   string         `gorm:"type:varchar(255)"`
 }

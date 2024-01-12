@@ -3,34 +3,46 @@ BEGIN;
 -- Add the new ID column to the jobs table
 ALTER TABLE jobs ADD COLUMN id SERIAL UNIQUE;
 
--- Update join tables to include the new job_id column
-ALTER TABLE job_inputs ADD COLUMN job_id INT;
-ALTER TABLE job_outputs ADD COLUMN job_id INT;
+-- Create new many-to-many relation tables
+CREATE TABLE job_input_files (
+    job_id INT NOT NULL,
+    data_file_c_id VARCHAR(255) NOT NULL,
+    PRIMARY KEY (job_id, data_file_c_id),
+    FOREIGN KEY (job_id) REFERENCES jobs(id),
+    FOREIGN KEY (data_file_c_id) REFERENCES data_files(cid)
+);
 
--- Populate the new job_id columns in join tables
-UPDATE job_inputs SET job_id = j.id FROM jobs j WHERE job_inputs.job_bacalhau_job_id = j.bacalhau_job_id;
-UPDATE job_outputs SET job_id = j.id FROM jobs j WHERE job_outputs.job_bacalhau_job_id = j.bacalhau_job_id;
+CREATE TABLE job_output_files (
+    job_id INT NOT NULL,
+    data_file_c_id VARCHAR(255) NOT NULL,
+    PRIMARY KEY (job_id, data_file_c_id),
+    FOREIGN KEY (job_id) REFERENCES jobs(id),
+    FOREIGN KEY (data_file_c_id) REFERENCES data_files(cid)
+);
 
--- Remove old foreign key constraints
-ALTER TABLE job_inputs DROP CONSTRAINT job_inputs_job_bacalhau_job_id_fkey;
-ALTER TABLE job_outputs DROP CONSTRAINT job_outputs_job_bacalhau_job_id_fkey;
+-- Move over data from previous join tables
+INSERT INTO job_input_files (job_id, data_file_c_id)
+SELECT j.id, ji.data_file_c_id
+FROM job_inputs ji
+JOIN jobs j ON ji.job_bacalhau_job_id = j.bacalhau_job_id;
 
--- Make 'id' the primary key
+INSERT INTO job_output_files (job_id, data_file_c_id)
+SELECT j.id, jo.data_file_c_id
+FROM job_outputs jo
+JOIN jobs j ON jo.job_bacalhau_job_id = j.bacalhau_job_id;
+
+-- Remove old join tables
+DROP TABLE job_inputs;
+DROP TABLE job_outputs;
+
+-- Make 'id' instead of 'bacalhau_job-id' the primary key for jobs
 ALTER TABLE jobs DROP CONSTRAINT jobs_pkey;
 ALTER TABLE jobs ADD PRIMARY KEY (id);
 
--- Add the new foreign key constraints referencing the new job_id
-ALTER TABLE job_inputs ADD CONSTRAINT job_inputs_jobid_fkey FOREIGN KEY (job_id) REFERENCES jobs(id);
-ALTER TABLE job_outputs ADD CONSTRAINT job_outputs_jobid_fkey FOREIGN KEY (job_id) REFERENCES jobs(id);
-
--- Renaming join tables
-ALTER TABLE job_inputs RENAME TO job_input_files;
-ALTER TABLE job_outputs RENAME TO job_output_files;
-
 -- Other jobs table modifications
-ALTER TABLE jobs ALTER COLUMN state TYPE VARCHAR(255);
+ALTER TABLE jobs ALTER COLUMN state SET DEFAULT 'queued';
 ALTER TABLE jobs ADD COLUMN inputs JSON;
-ALTER TABLE jobs ADD COLUMN queue VARCHAR(255) NOT NULL;
+ALTER TABLE jobs ADD COLUMN queue VARCHAR(255);
 ALTER TABLE jobs ADD COLUMN created_at TIMESTAMP;
 ALTER TABLE jobs ADD COLUMN annotations VARCHAR(255);
 
@@ -42,7 +54,7 @@ ALTER TABLE tools ADD COLUMN gpu INT;
 ALTER TABLE tools ADD COLUMN network BOOLEAN;
 
 -- Update tools based on ToolJson data
-UPDATE tools SET 
+UPDATE tools SET
     container = COALESCE(NULLIF((tool_json ->> 'dockerPull')::TEXT, ''), 'unknown'), 
     memory = (tool_json ->> 'memoryGB')::INT,
     cpu = (tool_json ->> 'cpu')::FLOAT,
