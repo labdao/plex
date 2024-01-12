@@ -1,7 +1,7 @@
 basic_settings:
   experiment_name: whos-the-weakest-link
   AF2_repeats_per_seq: 1
-  number_of_evo_cycles: 6
+  number_of_evo_cycles: 2
   policy_flag: policy_sampling
   max_number_of_offspring_kept: 1
   target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF

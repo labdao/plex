@@ -16,6 +16,14 @@ class AF2Runner:
         print(f"Cache directory is {self.cache_dir}")
         print(f"Output directory is {self.output_dir}")
 
+        # Clear the cache directory except for colabfold/params ## need to test whether this works!
+        for item in os.listdir(self.cache_dir):
+            item_path = os.path.join(self.cache_dir, item)
+            if item != 'colabfold' and os.path.isfile(item_path):
+                os.remove(item_path)
+            elif item != 'colabfold' and os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+
     def check_whether_weights_are_present(self):
         # Path to the directory where weights should be
         weights_dir = '/cache/colabfold/params'
@@ -35,7 +43,6 @@ class AF2Runner:
             return all(file in files_in_dir for file in expected_files)
 
         return False
-
 
     def download_af2_weights(self):
         # downloads weights

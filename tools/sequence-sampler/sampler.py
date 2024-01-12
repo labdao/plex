@@ -6,12 +6,15 @@ import os
 import sequence_transformer
 from generator_module import StateGenerator
 from scorer_module import StateScorer
+from utils import squeeze_seq
 
-def compute_log_likelihood(mutated_sequence, LLmatrix):
+def compute_log_likelihood(sequence, LLmatrix):
+
+    sequence = squeeze_seq(sequence)
 
     # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
-    if len(mutated_sequence) != LLmatrix.shape[1]:
-        raise ValueError("Length of mutated_sequence must match the number of columns in LLmatrix.")
+    if len(sequence) != LLmatrix.shape[1]:
+        raise ValueError("Length of sequence must match the number of columns in LLmatrix.")
     
     # Define the one-letter amino acid code
     # amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
@@ -20,9 +23,8 @@ def compute_log_likelihood(mutated_sequence, LLmatrix):
     # Initialize total log likelihood
     total_log_likelihood = 0
 
-    # Compute the total log likelihood of the mutated sequence
-    squeezed_mutated_sequence = squeeze_seq(mutated_sequence)
-    for i, aa in enumerate(squeezed_mutated_sequence):
+    # Compute the total log likelihood of sequence
+    for i, aa in enumerate(sequence):
         # Find the row index for this amino acid
         row_index = amino_acid_code.index(aa)
         
@@ -30,9 +32,6 @@ def compute_log_likelihood(mutated_sequence, LLmatrix):
         total_log_likelihood += LLmatrix[row_index, i]
 
     return total_log_likelihood
-
-def squeeze_seq(new_sequence):
-    return ''.join(filter(lambda x: x != '-', new_sequence))
 
 def acceptance_probability(ref_score, mod_score, T):
 
@@ -47,16 +46,6 @@ def action_bouncer(ref_score, mod_score, T):
     p_mod = acceptance_probability(ref_score, mod_score, T)
 
     return random.random() < p_mod
-
-def score_seq(seq): # TD: normalisation of LL by sequence length!?
-
-    # Initialize the ESM2Runner with the default model
-    runner = sequence_transformer.ESM2Runner()
-    LLmatrix = runner.token_masked_marginal_log_likelihood_matrix(seq)
-
-    LL = compute_log_likelihood(runner, seq, LLmatrix)
-
-    return LL
 
 def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet):
     # Identify the indices where permissibility_seed has 'X' or '+'
@@ -122,7 +111,7 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
     return permissibility_vector, action_mask, levenshtein_step_size
 
 def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, outputs_directory): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
-    if mod_seq !=[]:
+    if squeeze_seq(mod_seq) !=[]:
         if levenshtein_distance==0:
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
         elif levenshtein_distance>0:
@@ -130,7 +119,7 @@ def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, o
             scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory)
             df = scorer.run()
             LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
-            LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod)
+            LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod) # TD: normalization by sequence length?
 
     return LL_mod
 
@@ -167,7 +156,7 @@ class Sampler:
 
                 mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
 
-                LL_mod = score_sequence(self.t, self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
+                LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)
@@ -177,3 +166,17 @@ class Sampler:
                 sample_number += 1
         
             return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask
+
+### OLD CODE ###
+# def squeeze_seq(new_sequence):
+#     return ''.join(filter(lambda x: x != '-', new_sequence))
+
+# def score_seq(seq): # TD: normalisation of LL by sequence length!?
+
+#     # Initialize the ESM2Runner with the default model
+#     runner = sequence_transformer.ESM2Runner()
+#     LLmatrix = runner.token_masked_marginal_log_likelihood_matrix(seq)
+
+#     LL = compute_log_likelihood(runner, seq, LLmatrix)
+
+#     return LL
