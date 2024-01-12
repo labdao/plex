@@ -27,6 +27,30 @@ class StateGenerator:
 
             if generator=='RFdiffusion+ProteinMPNN':
                 print(f"Running {generator}")
+
+                # important comment: Make sure to replace /path/to/outputs/motifscaffolding, /path/to/models, and /path/to/inputs/5TPN.pdb with the actual paths you want to use. Also, the --contigmap_contigs argument format should match the expected format in run_inference.py. The capture_output=True argument is used to capture the output for logging purposes, and text=True ensures that the output is returned as a string. Adjust the arguments as necessary for your specific use case.
+
+                # Define the command and arguments as a list
+                command = [
+                    'python3.9', 'scripts/run_inference.py',
+                    '--output_prefix', '/path/to/outputs/motifscaffolding',
+                    '--model_directory_path', '/path/to/models',
+                    '--input_pdb', '/path/to/inputs/5TPN.pdb',
+                    '--num_designs', '3',
+                    '--contigmap_contigs', '10-40/A163-181/10-40'
+                ]
+
+                # Run the command
+                result = subprocess.run(command, capture_output=True, text=True)
+
+                # Check if the command was successful
+                if result.returncode == 0:
+                    print("Inference script ran successfully")
+                    print(result.stdout)
+                else:
+                    print("Error running inference script")
+                    print(result.stderr)
+
                 # docker run -it --rm --gpus all \
                 #   -v $HOME/models:$HOME/models \
                 #   -v $HOME/inputs:$HOME/inputs \
@@ -37,6 +61,19 @@ class StateGenerator:
                 #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
                 #   inference.num_designs=3 \
                 #   'contigmap.contigs=[10-40/A163-181/10-40]'
+
+                # # last lines of some docker file
+                # WORKDIR /app/RFdiffusion
+
+                # ENV DGLBACKEND="pytorch"
+
+                # ENTRYPOINT ["python3.9", "scripts/run_inference.py"]
+
+                # inference.output_prefix=$HOME/outputs/motifscaffolding \
+                # inference.model_directory_path=$HOME/models \
+                # inference.input_pdb=$HOME/inputs/5TPN.pdb \
+                # inference.num_designs=3 \
+                # 'contigmap.contigs=[10-40/A163-181/10-40]'
 
             elif generator=='delete+substitute':
                 print(f"Running {generator}")
