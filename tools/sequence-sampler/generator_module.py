@@ -1,42 +1,68 @@
-import random
+import subprocess
+import os
+import pandas as pd
+from utils import squeeze_seq
 
 class StateGenerator:
-    def __init__(self, generator_type, seed, action_mask, cfg):
-        self.generator_type = generator_type
-        self.seed = seed
-        self.action_mask = action_mask
+    def __init__(self, evo_cycle, generator_list, sequence, cfg, outputs_directory):
+        self.evo_cycle = evo_cycle
+        self.generator_list = generator_list
+        self.sequence = squeeze_seq(sequence)
+        self.outputs_directory = outputs_directory
         self.cfg = cfg
+        # take data frame as input and retrieve the pdb as absolute path
 
-    def generate_state(self):
+    def run_generation(self):
 
-        if self.generator_type=='simple_generator':
+        print('\n')
+        print("Running generating job...")
+        df_generate = pd.DataFrame() # initialize data frame
+        for generator in self.generator_list:
 
-            alphabet = 'LAGVSERTIDPKQNFYMHWC'
-    
-            modified_seq = list(self.seed)
-            for i, char in enumerate(self.action_mask):
-                if char not in alphabet:
-                    if char=='X':
-                        print('applying mutation')
-                        letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
-                        new_letter = random.choice(letter_options)
-                        modified_seq[i] = new_letter
-                    elif char=='-': # could be picky here only perform the deletion if it has not been applied to that position before
-                        if modified_seq[i]!='-':
-                            print('applying deletion')
-                            modified_seq[i] = '-'
+            generator_directory = os.path.join(self.outputs_directory, generator)
+            if not os.path.exists(generator_directory):
+                os.makedirs(generator_directory, exist_ok=True)
 
-            return ''.join(modified_seq)
+            if generator=='RFdiffusion+ProteinMPNN':
+                print(f"Running {generator}")
+                runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
+                LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(self.sequence)
+                # LL_sequence = compute_log_likelihood(runner, self.sequence, LLmatrix_sequence)
 
-        elif self.generator_type=='diffusion_generator':
+                scores_to_add = {
+                    'LLmatrix_sequence': LLmatrix_sequence #,
+                    # 'LL_sequence': LL_sequence
+                }
+                for column_name, column_data in scores_to_add.items():
+                    df_score[column_name] = pd.Series([column_data])
 
-            # run alpha fold
-            # run RFdiffusion
+            
+            elif scorer=='delete+substitute':
+                print(f"Running {generator}")
 
-            return ''.join(modified_seq)
+                alphabet = 'LAGVSERTIDPKQNFYMHWC'
+        
+                modified_seq = list(self.seed)
+                for i, char in enumerate(self.action_mask):
+                    if char not in alphabet:
+                        if char=='X':
+                            print('applying mutation')
+                            letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
+                            new_letter = random.choice(letter_options)
+                            modified_seq[i] = new_letter
+                        elif char=='-':
+                            if modified_seq[i]!='-':
+                                print('applying deletion')
+                                modified_seq[i] = '-'
+
+                return ''.join(modified_seq)
+        
+        print(f"Generating job complete. Results are in {self.outputs_directory}")
+
+        return df_score
 
     def run(self):
-        return self.generate_state()
+        return self.run_generation()
 
 # docker run command for rfdiffusion:
 
