@@ -36,3 +36,18 @@ class StateGenerator:
 
     def run(self):
         return self.generate_state()
+
+# docker run command for rfdiffusion:
+
+# docker run -it --rm --gpus all \
+#   -v $HOME/models:$HOME/models \
+#   -v $HOME/inputs:$HOME/inputs \
+#   -v $HOME/outputs:$HOME/outputs \
+#   rfdiffusion \
+#   inference.output_prefix=$HOME/outputs/motifscaffolding \
+#   inference.model_directory_path=$HOME/models \
+#   inference.input_pdb=$HOME/inputs/5TPN.pdb \
+#   inference.num_designs=3 \
+#   'contigmap.contigs=[10-40/A163-181/10-40]'
+
+TD: from action mask, generate contig.
