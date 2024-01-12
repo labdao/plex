@@ -170,6 +170,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Error:         job.ErrMsg,
 				ToolID:        job.Tool.IPFS,
 				FlowID:        flowEntry.CID,
+				CreatedAt:     time.Now(),
 			}
 			result := db.Create(&jobEntry)
 			if result.Error != nil {

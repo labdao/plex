@@ -111,6 +111,26 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
 		}
 
+		log.Println("Getting job history...")
+		events, err := bacalhau.GetBacalhauJobEvents(job.BacalhauJobID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error getting job history: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		for _, event := range events {
+			if event.ExecutionState != nil {
+				switch event.ExecutionState.New {
+				case model.ExecutionStateBidAccepted:
+					log.Printf("Bid Accepted Time: %s", event.Time)
+					job.StartedAt = event.Time
+				case model.ExecutionStateCompleted:
+					log.Printf("Job Completed Time: %s", event.Time)
+					job.CompletedAt = event.Time
+				}
+			}
+		}
+
 		if updatedJob.State.State == model.JobStateCancelled {
 			job.State = "failed"
 		} else if updatedJob.State.State == model.JobStateError {
@@ -244,6 +264,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("Error updating job: %v", err), http.StatusInternalServerError)
 				return
 			}
+
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {
