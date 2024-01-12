@@ -24,20 +24,20 @@ class StateGenerator:
                 os.makedirs(generator_directory, exist_ok=True)
 
             if generator=='RFdiffusion+ProteinMPNN':
-                print(f"Running {generator}")
-                runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
-                LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(self.sequence)
-                # LL_sequence = compute_log_likelihood(runner, self.sequence, LLmatrix_sequence)
-
-                scores_to_add = {
-                    'LLmatrix_sequence': LLmatrix_sequence #,
-                    # 'LL_sequence': LL_sequence
-                }
-                for column_name, column_data in scores_to_add.items():
-                    df_score[column_name] = pd.Series([column_data])
+            #     print(f"Running {generator}")
+                # docker run -it --rm --gpus all \
+                #   -v $HOME/models:$HOME/models \
+                #   -v $HOME/inputs:$HOME/inputs \
+                #   -v $HOME/outputs:$HOME/outputs \
+                #   rfdiffusion \
+                #   inference.output_prefix=$HOME/outputs/motifscaffolding \
+                #   inference.model_directory_path=$HOME/models \
+                #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
+                #   inference.num_designs=3 \
+                #   'contigmap.contigs=[10-40/A163-181/10-40]'
 
             
-            elif scorer=='delete+substitute':
+            elif generator=='delete+substitute':
                 print(f"Running {generator}")
 
                 alphabet = 'LAGVSERTIDPKQNFYMHWC'
@@ -59,8 +59,6 @@ class StateGenerator:
         
         print(f"Generating job complete. Results are in {self.outputs_directory}")
 
-        return df_score
-
     def run(self):
         return self.run_generation()
 
@@ -76,5 +74,3 @@ class StateGenerator:
 #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
 #   inference.num_designs=3 \
 #   'contigmap.contigs=[10-40/A163-181/10-40]'
-
-# TD: from action mask, generate contig
