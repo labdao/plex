@@ -152,7 +152,8 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		if job.State == "completed" {
-			fmt.Println("Job completed, getting output directory CID")
+			// we always only do one execution at the moment
+			fmt.Println("Job completed, getting output directory CID...")
 			outputDirCID := updatedJob.State.Executions[0].PublishedResult.CID
 			outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
 			if err != nil {
@@ -177,6 +178,18 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 				if _, exists := existingOutputs[fileEntry["CID"]]; exists {
 					continue
+				}
+
+				tempFilePath, err := ipfs.DownloadFileToTemp(fileEntry["CID"], fileEntry["filename"])
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error downloading file from IPFS: %v", err), http.StatusInternalServerError)
+					return
+				}
+
+				wrappedCid, err := ipfs.WrapAndPinFile(tempFilePath)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
+					return
 				}
 
 				log.Println("Attempting to find DataFile in DB with CID: ", fileEntry["CID"])
@@ -237,10 +250,11 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 						dataFile = models.DataFile{
-							CID:       fileEntry["CID"],
-							Filename:  fileName,
-							Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
-							Timestamp: time.Now(),
+							CID:           wrappedCid,
+							WalletAddress: job.WalletAddress,
+							Filename:      fileName,
+							Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
+							Timestamp:     time.Now(),
 						}
 
 						if err := db.Create(&dataFile).Error; err != nil {
