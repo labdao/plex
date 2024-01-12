@@ -4,17 +4,18 @@ import random
 import sys
 import os
 import sequence_transformer
-from state_generator import StateGenerator
-# from state_scorer import StateScorer
+from generator_module import StateGenerator
+from scorer_module import StateScorer
 
-def compute_log_likelihood(runner, mutated_sequence, LLmatrix):
+def compute_log_likelihood(mutated_sequence, LLmatrix):
 
     # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
     if len(mutated_sequence) != LLmatrix.shape[1]:
         raise ValueError("Length of mutated_sequence must match the number of columns in LLmatrix.")
     
     # Define the one-letter amino acid code
-    amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+    # amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
+    amino_acid_code = ''.join('LAGVSERTIDPKQNFYMHWC')
 
     # Initialize total log likelihood
     total_log_likelihood = 0
@@ -120,13 +121,16 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
 
     return permissibility_vector, action_mask, levenshtein_step_size
 
-def score_sequence(seed, mod_seq, levenshtein_distance, LLmatrix_seed, runner): # TD: generalise to allow for plug-in of other scoring functions
+def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
     if mod_seq !=[]:
         if levenshtein_distance==0:
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
         elif levenshtein_distance>0:
-            LLmatrix_mod = runner.token_masked_marginal_log_likelihood_matrix(mod_seq)
-            LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_mod)
+
+            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, output_dir='')
+            df = scorer.run()
+            LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
+            LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod)
 
     return LL_mod
 
@@ -146,12 +150,10 @@ class Sampler:
 
         if self.policy_flag == 'policy_sampling':
 
-            levenshtein_step_size = 2
-
-            # Initialize the ESM2Runner with the default model
-            runner = sequence_transformer.ESM2Runner()
-            LLmatrix_seed = runner.token_masked_marginal_log_likelihood_matrix(self.seed)
-            LL_seed = compute_log_likelihood(runner, self.seed, LLmatrix_seed)
+            scorer = StateScorer(self.t, ['ESM2'], self.seed, self.cfg, output_dir='')
+            df = scorer.run()
+            LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
+            LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
 
             action_residue_list = []
             sample_number = 1
@@ -164,10 +166,12 @@ class Sampler:
 
                 mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
 
-                LL_mod = score_sequence(self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, runner)
+                LL_mod = score_sequence(self.t, self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, self.cfg) # TD: pass df to function
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)
+
+                # supplement data frame with sample_number and accept_flag, and return df
 
                 sample_number += 1
         
