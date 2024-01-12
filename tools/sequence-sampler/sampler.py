@@ -93,9 +93,10 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
 
     return permissibility_vector, action_mask
 
-def generate_proposed_state(seed, action_mask, cfg):
+def generate_proposed_state(seed, action_mask, cfg, outputs_directory):
 
-    generator = StateGenerator('simple_generator', seed, action_mask, cfg)
+    # generator = StateGenerator('simple_generator', seed, action_mask, cfg)
+    generator = StateGenerator('xxx', ['delete+substitute'], seed, action_mask, cfg, outputs_directory)
     modified_seq = generator.run()
 
     return modified_seq
@@ -154,7 +155,7 @@ class Sampler:
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
                 print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector, action_mask)
 
-                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
+                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg, self.outputs_directory)
 
                 LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
 
