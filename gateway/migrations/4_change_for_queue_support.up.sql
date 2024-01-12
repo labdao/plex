@@ -55,4 +55,25 @@ ALTER TABLE flows DROP CONSTRAINT flows_pkey;
 ALTER TABLE flows ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE flows ALTER COLUMN cid SET NOT NULL;
 
+-- Add a temporary column to jobs for the new foreign key
+ALTER TABLE jobs ADD COLUMN temp_flow_id INT;
+
+-- Update the temp_flow_id with the corresponding flow's new id
+UPDATE jobs
+SET temp_flow_id = f.id
+FROM flows f
+WHERE jobs.flow_id = f.cid;
+
+-- Drop the old FlowID column and rename the temp column
+ALTER TABLE jobs DROP COLUMN flow_id;
+ALTER TABLE jobs RENAME COLUMN temp_flow_id TO flow_id;
+
+-- Add foreign key constraint
+ALTER TABLE jobs ADD CONSTRAINT fk_jobs_flows FOREIGN KEY (flow_id) REFERENCES flows(id);
+
+-- Drop the old cid index if it exists
+DROP INDEX IF EXISTS idx_jobs_flow_id;
+
+CREATE INDEX IF NOT EXISTS idx_jobs_flow_id ON jobs (flow_id);
+
 COMMIT;

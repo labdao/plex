@@ -13,6 +13,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
+	"github.com/labdao/plex/gateway/utils"
 
 	"github.com/rs/cors"
 
@@ -79,12 +80,12 @@ func ServeWebApp() {
 	mux := server.NewServer(db)
 
 	// Start queue watcher in a separate goroutine
-	// go func() {
-	// 	if err := utils.StartJobQueues(); err != nil {
-	// 		// There should definitely be log alerts set up around this message
-	// 		fmt.Printf("unexpected error processing job queues: %v", err)
-	// 	}
-	// }()
+	go func() {
+		if err := utils.StartJobQueues(db); err != nil {
+			// There should definitely be log alerts set up around this message
+			fmt.Printf("unexpected error processing job queues: %v", err)
+		}
+	}()
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")

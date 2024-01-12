@@ -13,13 +13,11 @@ import (
 
 const maxQueueTime = 2 * time.Hour // Example maximum queue time
 
-var db *gorm.DB // Assume db is initialized and available
-
-func StartJobQueues() error {
+func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 2) // Buffer for two types of jobs
 
-	go ProcessJobQueue(models.QueueTypeCPU, errChan)
-	go ProcessJobQueue(models.QueueTypeGPU, errChan)
+	go ProcessJobQueue(models.QueueTypeCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeGPU, errChan, db)
 
 	// Wait for error from any queue
 	for i := 0; i < 2; i++ {
@@ -31,10 +29,10 @@ func StartJobQueues() error {
 	return nil
 }
 
-func ProcessJobQueue(queueType models.QueueType, errChan chan<- error) {
+func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.DB) {
 	for {
 		var jobs []models.Job
-		if err := fetchJobsWithToolData(&jobs, queueType); err != nil {
+		if err := fetchJobsWithToolData(&jobs, queueType, db); err != nil {
 			errChan <- err
 			return
 		}
@@ -43,7 +41,7 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error) {
 
 		for _, job := range jobs {
 			// there should not be any errors from processJob
-			if err := processJob(&job); err != nil {
+			if err := processJob(&job, db); err != nil {
 				errChan <- err
 				return
 			}
@@ -54,23 +52,23 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error) {
 	}
 }
 
-func fetchJobsWithToolData(jobs *[]models.Job, queueType models.QueueType) error {
+func fetchJobsWithToolData(jobs *[]models.Job, queueType models.QueueType, db *gorm.DB) error {
 	return db.Preload("Tool").Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Find(jobs).Error
 }
 
-func processJob(job *models.Job) error {
+func processJob(job *models.Job, db *gorm.DB) error {
 	if time.Since(job.CreatedAt) > maxQueueTime {
-		return setJobStatus(job, models.JobStateFailed, "timed out in queue")
+		return setJobStatus(job, models.JobStateFailed, "timed out in queue", db)
 	}
 
 	// handle case already submitted
-	if err := submitBacalhauJob(job); err != nil {
+	if err := submitBacalhauJob(job, db); err != nil {
 		return err
 	}
 
 	for {
 		if time.Since(job.CreatedAt) > maxQueueTime {
-			return setJobStatus(job, models.JobStateFailed, "timed out in queue")
+			return setJobStatus(job, models.JobStateFailed, "timed out in queue", db)
 		}
 		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
 		if err != nil {
@@ -82,22 +80,22 @@ func processJob(job *models.Job) error {
 			time.Sleep(1 * time.Second) // Wait for a short period before checking the status again
 			continue
 		} else if bacalhau.JobIsRunning(bacalhauJob) {
-			return setJobStatus(job, models.JobStateRunning, "")
+			return setJobStatus(job, models.JobStateRunning, "", db)
 		} else if bacalhau.JobFailed(bacalhauJob) {
-			return setJobStatus(job, models.JobStateFailed, "")
+			return setJobStatus(job, models.JobStateFailed, "", db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
-			return setJobStatus(job, models.JobStateCompleted, "")
+			return setJobStatus(job, models.JobStateCompleted, "", db)
 		}
 	}
 }
 
-func setJobStatus(job *models.Job, state models.JobState, errorMessage string) error {
+func setJobStatus(job *models.Job, state models.JobState, errorMessage string, db *gorm.DB) error {
 	job.State = state
 	job.Error = errorMessage
 	return db.Save(job).Error
 }
 
-func submitBacalhauJob(job *models.Job) error {
+func submitBacalhauJob(job *models.Job, db *gorm.DB) error {
 	var inputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
 		return err

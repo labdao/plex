@@ -140,14 +140,14 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		flowEntry := models.Flow{
+		flow := models.Flow{
 			CID:           ioListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
 		}
 
 		log.Println("Creating Flow entry")
-		result = db.Create(&flowEntry)
+		result = db.Create(&flow)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -168,7 +168,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			job := models.Job{
 				ToolID:        ioItem.Tool.IPFS,
-				FlowID:        flowEntry.CID,
+				FlowID:        flow.ID,
 				WalletAddress: walletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,

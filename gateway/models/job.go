@@ -30,7 +30,7 @@ type Job struct {
 	WalletAddress string         `gorm:"type:varchar(255)"`
 	ToolID        string         `gorm:"type:varchar(255);not null;index"`
 	Tool          Tool           `gorm:"foreignKey:ToolID"`
-	FlowID        string         `gorm:"type:varchar(255);not null;index"`
+	FlowID        uint           `gorm:"type:int;not null;index"`
 	Flow          Flow           `gorm:"foreignKey:FlowID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
 	InputFiles    []DataFile     `gorm:"many2many:job_inputs;foreignKey:BacalhauJobID;references:CID"`
