@@ -102,3 +102,22 @@
     mode: "0644"
   notify:
     - Restart Bacalhau
+
+# Setup instance-terminator script
+- name: Run block when its a compute node
+  when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+  block:
+    - name: Deploy instance-terminator script
+      become: true
+      ansible.builtin.template:
+        src: "files/instance-terminator.j2"
+        dest: /usr/local/bin/instance-terminator
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Ensure the cron job is present
+      ansible.builtin.cron:
+        name: "Run instance-terminator script every 5 minutes"
+        minute: "*/5"
+        job: "/usr/local/bin/instance-terminator"

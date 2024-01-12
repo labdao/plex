@@ -1,0 +1,65 @@
+#!/bin/bash
+set -eoux pipefail
+
+terminate() {
+  echo "Terminating instance"
+  aws autoscaling terminate-instance-in-auto-scaling-group \
+    --region "{{ ansible_ec2_placement_region }}" \
+    --instance-id "{{ ansible_ec2_instance_id }}" \
+    --should-decrement-desired-capacity
+}
+
+mark_as_unhealthy() {
+  echo "Mark instance as unhealthy"
+  aws autoscaling set-instance-health \
+    --region "{{ ansible_ec2_placement_region }}" \
+    --instance-id "{{ ansible_ec2_instance_id }}" \
+    --health-status Unhealthy
+}
+
+query_bacalhau_node_info() {
+  curl --fail --silent "http://127.0.0.1:1234/api/v1/node_info" | jq -r ".ComputeNodeInfo.$1"
+}
+
+aws_autoscaling_describe() {
+  aws autoscaling describe-auto-scaling-groups \
+  --auto-scaling-group-names "{{ ansible_ec2_tags_instance_aws_autoscaling_groupName }}" \
+  --region "{{ ansible_ec2_placement_region }}" | jq -r ".AutoScalingGroups[].$1"
+}
+
+# Seconds
+COOLOFF_PERIOD="120"
+
+RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
+ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
+
+
+if [ "${RUNNING_EXECUTIONS}" -eq 0 ] && [ "${ENQUEUED_EXECUTIONS}" -eq 0 ]; then
+
+  echo "Sleeping for ${COOLOFF_PERIOD} seconds"
+  sleep ${COOLOFF_PERIOD}
+  echo "Cool off finished"
+
+
+  AFTER_COOLOFF_RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
+  AFTER_COOLOFF_ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
+
+  ASG_MIN_SIZE=$(aws_autoscaling_describe "MinSize")
+  ASG_RUNNING_INSTANCES=$(aws_autoscaling_describe "Instances | length")
+
+  # If nothing is running
+  # and nothing is enqueued
+  # and number of running instances is larger than min size
+  if [ "${AFTER_COOLOFF_RUNNING_EXECUTIONS}" -eq 0 ] && [ "${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}" -eq 0 ] && [ "${ASG_RUNNING_INSTANCES}" -gt "${ASG_MIN_SIZE}" ]; then
+    # Dump vars
+    echo "AFTER_COOLOFF_RUNNING_EXECUTIONS=${AFTER_COOLOFF_RUNNING_EXECUTIONS}"
+    echo "AFTER_COOLOFF_ENQUEUED_EXECUTIONS=${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}"
+    echo "ASG_MIN_SIZE=${ASG_MIN_SIZE}"
+    echo "ASG_RUNNING_INSTANCES=${ASG_RUNNING_INSTANCES}"
+
+    echo "Nothing running, turning off instance"
+
+    systemctl kill -s SIGKILL compute.service
+    terminate || mark_as_unhealthy
+  fi
+fi
