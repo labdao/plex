@@ -24,7 +24,7 @@ const (
 
 type Job struct {
 	ID            uint           `gorm:"primaryKey;autoIncrement"`
-	BacalhauJobID string         `gorm:"type:varchar(255);index;not null"`
+	BacalhauJobID string         `gorm:"type:varchar(255);index;unique;not null"`
 	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
 	Error         string         `gorm:"type:text;default:''"`
 	WalletAddress string         `gorm:"type:varchar(255)"`

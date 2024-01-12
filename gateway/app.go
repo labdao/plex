@@ -16,7 +16,6 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/labdao/plex/gateway/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -80,13 +79,12 @@ func ServeWebApp() {
 	mux := server.NewServer(db)
 
 	// Start queue watcher in a separate goroutine
-	// The whole app will crash if the job queue runs into an error
-	// In the the future this could instead send an on call alert
-	go func() {
-		if err := utils.StartJobQueues(); err != nil {
-			panic(fmt.Sprintf("unexpected error processing job queues: %v", err))
-		}
-	}()
+	// go func() {
+	// 	if err := utils.StartJobQueues(); err != nil {
+	// 		// There should definitely be log alerts set up around this message
+	// 		fmt.Printf("unexpected error processing job queues: %v", err)
+	// 	}
+	// }()
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
