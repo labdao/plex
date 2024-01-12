@@ -90,7 +90,7 @@ def my_app(cfg: DictConfig) -> None:
         print("starting evolution step", t)
         print('seed', seed)
 
-        sampler = Sampler(t+1, seed, permissibility_seed, cfg)
+        sampler = Sampler(t+1, seed, permissibility_seed, cfg, outputs_directory)
         mod_seq, modified_permissibility_seq, action, levenshtein_step_size, action_mask = sampler.apply_policy()
 
         print('mod seq', mod_seq)

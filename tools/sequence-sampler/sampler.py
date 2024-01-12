@@ -121,13 +121,13 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
 
     return permissibility_vector, action_mask, levenshtein_step_size
 
-def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
+def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, outputs_directory): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
     if mod_seq !=[]:
         if levenshtein_distance==0:
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
         elif levenshtein_distance>0:
 
-            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, output_dir='')
+            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory)
             df = scorer.run()
             LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
             LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod)
@@ -137,7 +137,7 @@ def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg): 
 
 class Sampler:
 
-    def __init__(self, t, seed, permissibility_seed, cfg):
+    def __init__(self, t, seed, permissibility_seed, cfg, outputs_directory):
         self.t = t
         self.seed = seed
         self.permissibility_seed = permissibility_seed
@@ -145,12 +145,13 @@ class Sampler:
         self.policy_flag = cfg.params.basic_settings.policy_flag
         self.temperature = cfg.params.basic_settings.temperature
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
+        self.outputs_directory = outputs_directory
 
     def apply_policy(self):
 
         if self.policy_flag == 'policy_sampling':
 
-            scorer = StateScorer(self.t, ['ESM2'], self.seed, self.cfg, output_dir='')
+            scorer = StateScorer(self.t, ['ESM2', 'AF2'], self.seed, self.cfg, self.outputs_directory)
             df = scorer.run()
             LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
             LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
@@ -166,7 +167,7 @@ class Sampler:
 
                 mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg)
 
-                LL_mod = score_sequence(self.t, self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, self.cfg) # TD: pass df to function
+                LL_mod = score_sequence(self.t, self.seed, squeeze_seq(mod_seq), levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)
