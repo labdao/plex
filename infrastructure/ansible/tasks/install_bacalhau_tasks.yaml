@@ -33,91 +33,94 @@
       delay: 3
       until: bacalhau_unarchive is succeeded
 
-- name: Fetch AWS EC2 Metadata facts
-  amazon.aws.ec2_metadata_facts:
-
-- name: Print environment info
-  ansible.builtin.debug:
-    msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
-  when: ansible_ec2_tags_instance_Env is defined
-
-- name: Set fact
-  ansible.builtin.set_fact:
-    requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-    ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-    receptor_hostname: "receptor.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-  when: ansible_ec2_tags_instance_Env is defined
-
-- name: Set requester_peer url
-  ansible.builtin.set_fact:
-    requester_peer: "/dns4/{{ requester_hostname }}/tcp/1234/http"
-  when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
-
-- name: Set ipfs connect url
-  ansible.builtin.set_fact:
-    ipfs_connect: "/dns4/{{ ipfs_hostname }}/tcp/5001"
-  when: ipfs_hostname is defined
-
-- name: Set receptor url
-  ansible.builtin.set_fact:
-    receptor_url: "http://{{ receptor_hostname }}:8080/judge"
-  when: receptor_hostname is defined
-
-- name: Ensure path to bacalhau dir exists
-  become: true
-  ansible.builtin.file:
-    path: /home/ubuntu/.bacalhau/
-    state: directory
-    mode: "0755"
-    owner: ubuntu
-    group: ubuntu
-
-- name: Install the Bacalhau systemd unit
-  become: true
-  ansible.builtin.template:
-    src: "files/{{ bacalhau_node_type }}.service"
-    dest: /etc/systemd/system
-    mode: "0644"
-  notify:
-    - Reload systemd
-    - Restart Bacalhau
-
-- name: Ensure Bacalhau is running
-  become: true
-  ansible.builtin.service:
-    name: "{{ bacalhau_node_type }}"
-    state: started
-    enabled: true
-
-- name: Flush handler to ensure Bacalhau is running
-  ansible.builtin.meta: flush_handlers
-
-- name: Deploy config file
-  become: true
-  ansible.builtin.template:
-    src: "files/{{ bacalhau_node_type }}.yaml"
-    dest: /home/ubuntu/.bacalhau/config.yaml
-    owner: ubuntu
-    group: ubuntu
-    mode: "0644"
-  notify:
-    - Restart Bacalhau
-
-# Setup instance-terminator script
-- name: Run block when its a compute node
-  when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+- name: Block for nopacker
+  tags: nopacker
   block:
-    - name: Deploy instance-terminator script
+    - name: Fetch AWS EC2 Metadata facts
+      amazon.aws.ec2_metadata_facts:
+
+    - name: Print environment info
+      ansible.builtin.debug:
+        msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
+      when: ansible_ec2_tags_instance_Env is defined
+
+    - name: Set fact
+      ansible.builtin.set_fact:
+        requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+        ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+        receptor_hostname: "receptor.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
+      when: ansible_ec2_tags_instance_Env is defined
+
+    - name: Set requester_peer url
+      ansible.builtin.set_fact:
+        requester_peer: "/dns4/{{ requester_hostname }}/tcp/1234/http"
+      when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+
+    - name: Set ipfs connect url
+      ansible.builtin.set_fact:
+        ipfs_connect: "/dns4/{{ ipfs_hostname }}/tcp/5001"
+      when: ipfs_hostname is defined
+
+    - name: Set receptor url
+      ansible.builtin.set_fact:
+        receptor_url: "http://{{ receptor_hostname }}:8080/judge"
+      when: receptor_hostname is defined
+
+    - name: Ensure path to bacalhau dir exists
+      become: true
+      ansible.builtin.file:
+        path: /home/ubuntu/.bacalhau/
+        state: directory
+        mode: "0755"
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Install the Bacalhau systemd unit
       become: true
       ansible.builtin.template:
-        src: "files/instance-terminator.j2"
-        dest: /usr/local/bin/instance-terminator
-        owner: root
-        group: root
-        mode: "0755"
+        src: "files/{{ bacalhau_node_type }}.service"
+        dest: /etc/systemd/system
+        mode: "0644"
+      notify:
+        - Reload systemd
+        - Restart Bacalhau
 
-    - name: Ensure the cron job is present
-      ansible.builtin.cron:
-        name: "Run instance-terminator script every 5 minutes"
-        minute: "*/5"
-        job: "/usr/local/bin/instance-terminator"
+    - name: Ensure Bacalhau is running
+      become: true
+      ansible.builtin.service:
+        name: "{{ bacalhau_node_type }}"
+        state: started
+        enabled: true
+
+    - name: Flush handler to ensure Bacalhau is running
+      ansible.builtin.meta: flush_handlers
+
+    - name: Deploy config file
+      become: true
+      ansible.builtin.template:
+        src: "files/{{ bacalhau_node_type }}.yaml"
+        dest: /home/ubuntu/.bacalhau/config.yaml
+        owner: ubuntu
+        group: ubuntu
+        mode: "0644"
+      notify:
+        - Restart Bacalhau
+
+    # Setup instance-terminator script
+    - name: Run block when its a compute node
+      when: ansible_ec2_tags_instance_Type is defined and ansible_ec2_tags_instance_Type is match("compute.*")
+      block:
+        - name: Deploy instance-terminator script
+          become: true
+          ansible.builtin.template:
+            src: "files/instance-terminator.j2"
+            dest: /usr/local/bin/instance-terminator
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Ensure the cron job is present
+          ansible.builtin.cron:
+            name: "Run instance-terminator script every 5 minutes"
+            minute: "*/5"
+            job: "/usr/local/bin/instance-terminator"
