@@ -28,7 +28,7 @@ const initialState: ToolDetailSliceState = {
       paper: "",
     },
   },
-  loading: false,
+  loading: true,
   error: null,
   success: false,
 };
