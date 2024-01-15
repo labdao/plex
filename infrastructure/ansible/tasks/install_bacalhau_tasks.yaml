@@ -119,8 +119,8 @@
             group: root
             mode: "0755"
 
-        - name: Ensure the cron job is present
+        - name: Setup instance-terminator cronjob
           ansible.builtin.cron:
-            name: "Run instance-terminator script every 5 minutes"
-            minute: "*/5"
+            name: "Run instance-terminator script every 15 minutes"
+            minute: "*/15"
             job: "/usr/local/bin/instance-terminator"
