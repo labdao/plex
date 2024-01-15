@@ -42,7 +42,6 @@
       max-concurrent-downloads: 20
       max-download-attempts: 5
       storage-driver: overlay2
-      userns-remap: ubuntu
   become: true
   ansible.builtin.copy:
     content: "{{ docker_config | to_json(indent=2, sort_keys=True) }}"
