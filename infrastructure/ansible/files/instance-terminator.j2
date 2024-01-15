@@ -2,19 +2,19 @@
 set -eoux pipefail
 
 terminate() {
-  echo "Terminating instance" | tee /var/log/instance-terminator.log
+  echo "Terminating instance" | tee -a /var/log/instance-terminator.log
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "{{ ansible_ec2_placement_region }}" \
     --instance-id "{{ ansible_ec2_instance_id }}" \
-    --should-decrement-desired-capacity | tee /var/log/instance-terminator.log
+    --should-decrement-desired-capacity | tee -a /var/log/instance-terminator.log
 }
 
 mark_as_unhealthy() {
-  echo "Mark instance as unhealthy" | tee /var/log/instance-terminator.log
+  echo "Mark instance as unhealthy" | tee -a /var/log/instance-terminator.log
   aws autoscaling set-instance-health \
     --region "{{ ansible_ec2_placement_region }}" \
     --instance-id "{{ ansible_ec2_instance_id }}" \
-    --health-status Unhealthy | tee /var/log/instance-terminator.log
+    --health-status Unhealthy | tee -a /var/log/instance-terminator.log
 }
 
 query_bacalhau_node_info() {
@@ -30,36 +30,42 @@ aws_autoscaling_describe() {
 # Seconds
 COOLOFF_PERIOD="120"
 
-RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
-ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
+echo "Running script - $(date)" | tee -a /var/log/instance-terminator.log
 
+ASG_MIN_SIZE=$(aws_autoscaling_describe "MinSize")
+ASG_RUNNING_INSTANCES=$(aws_autoscaling_describe "Instances | length")
 
-if [ "${RUNNING_EXECUTIONS}" -eq 0 ] && [ "${ENQUEUED_EXECUTIONS}" -eq 0 ]; then
+# if number of running instances is larger than min size
+if [ "${ASG_RUNNING_INSTANCES}" -gt "${ASG_MIN_SIZE}" ]; then
+  echo "ASG_MIN_SIZE=${ASG_MIN_SIZE}"  | tee -a /var/log/instance-terminator.log
+  echo "ASG_RUNNING_INSTANCES=${ASG_RUNNING_INSTANCES}"  | tee -a /var/log/instance-terminator.log
 
-  echo "Sleeping for ${COOLOFF_PERIOD} seconds" | tee /var/log/instance-terminator.log
-  sleep ${COOLOFF_PERIOD}
-  echo "Cool off finished"  | tee /var/log/instance-terminator.log
-
-  AFTER_COOLOFF_RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
-  AFTER_COOLOFF_ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
-
-  ASG_MIN_SIZE=$(aws_autoscaling_describe "MinSize")
-  ASG_RUNNING_INSTANCES=$(aws_autoscaling_describe "Instances | length")
+  RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
+  ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
 
   # If nothing is running
   # and nothing is enqueued
-  # and number of running instances is larger than min size
-  if [ "${AFTER_COOLOFF_RUNNING_EXECUTIONS}" -eq 0 ] && [ "${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}" -eq 0 ] && [ "${ASG_RUNNING_INSTANCES}" -gt "${ASG_MIN_SIZE}" ]; then
-    # Dump vars
-    echo "AFTER_COOLOFF_RUNNING_EXECUTIONS=${AFTER_COOLOFF_RUNNING_EXECUTIONS}"  | tee /var/log/instance-terminator.log
-    echo "AFTER_COOLOFF_ENQUEUED_EXECUTIONS=${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}"  | tee /var/log/instance-terminator.log
-    echo "ASG_MIN_SIZE=${ASG_MIN_SIZE}"  | tee /var/log/instance-terminator.log
-    echo "ASG_RUNNING_INSTANCES=${ASG_RUNNING_INSTANCES}"  | tee /var/log/instance-terminator.log
+  if [ "${RUNNING_EXECUTIONS}" -eq 0 ] && [ "${ENQUEUED_EXECUTIONS}" -eq 0 ]; then
 
-    echo "Nothing running, turning off instance"  | tee /var/log/instance-terminator.log
+    echo "Sleeping for ${COOLOFF_PERIOD} seconds" | tee -a /var/log/instance-terminator.log
+    sleep ${COOLOFF_PERIOD}
+    echo "Cool off finished"  | tee -a /var/log/instance-terminator.log
+
+    AFTER_COOLOFF_RUNNING_EXECUTIONS=$(query_bacalhau_node_info "RunningExecutions")
+    AFTER_COOLOFF_ENQUEUED_EXECUTIONS=$(query_bacalhau_node_info "EnqueuedExecutions")
+
+    # If nothing is running
+    # and nothing is enqueued
+    # After cooloff period
+    if [ "${AFTER_COOLOFF_RUNNING_EXECUTIONS}" -eq 0 ] && [ "${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}" -eq 0 ]; then
+      # Dump vars
+      echo "AFTER_COOLOFF_RUNNING_EXECUTIONS=${AFTER_COOLOFF_RUNNING_EXECUTIONS}"  | tee -a /var/log/instance-terminator.log
+      echo "AFTER_COOLOFF_ENQUEUED_EXECUTIONS=${AFTER_COOLOFF_ENQUEUED_EXECUTIONS}"  | tee -a /var/log/instance-terminator.log
+
+      echo "Nothing running, turning off instance"  | tee -a /var/log/instance-terminator.log
 
 
-    systemctl kill -s SIGKILL compute.service | tee /var/log/instance-terminator.log
-    terminate || mark_as_unhealthy
-  fi
+      systemctl kill -s SIGKILL compute.service | tee -a /var/log/instance-terminator.log
+      terminate || mark_as_unhealthy
+    fi
 fi
