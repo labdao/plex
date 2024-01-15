@@ -7,6 +7,7 @@ import sequence_transformer
 from generator_module import StateGenerator
 from scorer_module import StateScorer
 from utils import squeeze_seq
+from utils import write_af2_update
 
 def compute_log_likelihood(sequence, LLmatrix):
 
@@ -93,10 +94,10 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
 
     return permissibility_vector, action_mask
 
-def generate_proposed_state(seed, action_mask, cfg, outputs_directory):
+def generate_proposed_state(seed, action_mask, cfg, outputs_directory, df):
 
     # generator = StateGenerator('simple_generator', seed, action_mask, cfg)
-    generator = StateGenerator('xxx', ['RFdiffusion+ProteinMPNN'], seed, action_mask, cfg, outputs_directory)
+    generator = StateGenerator('xxx', ['RFdiffusion+ProteinMPNN'], seed, action_mask, cfg, outputs_directory, df)
     modified_seq = generator.run()
 
     return modified_seq
@@ -127,7 +128,7 @@ def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, o
 
 class Sampler:
 
-    def __init__(self, t, seed, permissibility_seed, cfg, outputs_directory):
+    def __init__(self, t, seed, permissibility_seed, cfg, outputs_directory, df):
         self.t = t
         self.seed = seed
         self.permissibility_seed = permissibility_seed
@@ -155,7 +156,7 @@ class Sampler:
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
                 print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector, action_mask)
 
-                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg, self.outputs_directory)
+                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg, self.outputs_directory, df)
 
                 LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
 

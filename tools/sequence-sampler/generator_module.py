@@ -3,15 +3,19 @@ import os
 import pandas as pd
 import random
 from utils import squeeze_seq
+from utils import generate_contig
+from utils import read_last_line_of_fasta
 
 class StateGenerator:
-    def __init__(self, evo_cycle, generator_list, sequence, action_mask, cfg, outputs_directory):
+    def __init__(self, evo_cycle, generator_list, sequence, action_mask, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle
         self.generator_list = generator_list
         self.sequence = sequence # to squeeze or not to squeeze?
         self.action_mask = action_mask
         self.cfg = cfg
+        self.target = cfg.params.basic_settings.target_seq
         self.outputs_directory = outputs_directory
+        self.df = df
         # take data frame as input and retrieve the pdb as absolute path
 
     def run_generation(self):
@@ -28,19 +32,20 @@ class StateGenerator:
             if generator=='RFdiffusion+ProteinMPNN':
                 print(f"Running {generator}")
 
-                # important comment: Make sure to replace /path/to/outputs/motifscaffolding, /path/to/models, and /path/to/inputs/5TPN.pdb with the actual paths you want to use. Also, the --contigmap_contigs argument format should match the expected format in run_inference.py. The capture_output=True argument is used to capture the output for logging purposes, and text=True ensures that the output is returned as a string. Adjust the arguments as necessary for your specific use case.
+                print(os.getcwd())
 
-                # Define the command and arguments as a list
+                contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
+                print('contig for diffusion', contig)
+                # define arguments and run RFDiffusion
                 command = [
-                    'python3.9', 'scripts/run_inference.py',
-                    '--output_prefix', '/path/to/outputs/motifscaffolding',
-                    '--model_directory_path', '/path/to/models',
-                    '--input_pdb', '/path/to/inputs/5TPN.pdb',
-                    '--num_designs', '3',
-                    '--contigmap_contigs', '10-40/A163-181/10-40'
+                    'python', 'RFdiffusion/scripts/run_inference.py',
+                    '--output_prefix', os.path.join(generator_directory, '/motifscaffolding'),
+                    '--model_directory_path', '/inputs/models',
+                    '--input_pdb', self.df['absolute pdb path'],
+                    '--num_designs', '1',
+                    '--contigmap_contigs', contig
                 ]
 
-                # Run the command
                 result = subprocess.run(command, capture_output=True, text=True)
 
                 # Check if the command was successful
@@ -50,30 +55,40 @@ class StateGenerator:
                 else:
                     print("Error running inference script")
                     print(result.stderr)
+                
+                print('Running MPNN')
+                # Activate the conda environment 'mlfold'
+                subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
 
-                # docker run -it --rm --gpus all \
-                #   -v $HOME/models:$HOME/models \
-                #   -v $HOME/inputs:$HOME/inputs \
-                #   -v $HOME/outputs:$HOME/outputs \
-                #   rfdiffusion \
-                #   inference.output_prefix=$HOME/outputs/motifscaffolding \
-                #   inference.model_directory_path=$HOME/models \
-                #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
-                #   inference.num_designs=3 \
-                #   'contigmap.contigs=[10-40/A163-181/10-40]'
+                # Define the paths and parameters
+                path_to_PDB = os.path.join(generator_directory, '/motifscaffolding_1.pdb') # '/inputs/diffusion_test.pdb'
+                output_dir = generator_directory
+                chains_to_design = 'B'
 
-                # # last lines of some docker file
-                # WORKDIR /app/RFdiffusion
+                # Create the output directory if it doesn't exist
+                os.makedirs(output_dir, exist_ok=True)
 
-                # ENV DGLBACKEND="pytorch"
+                # Define the command and arguments
+                command = [
+                    'python', 'ProteinMPNN/protein_mpnn_run.py',
+                    '--pdb_path', path_to_PDB,
+                    '--pdb_path_chains', chains_to_design,
+                    '--out_folder', output_dir,
+                    '--num_seq_per_target', '1',
+                    '--sampling_temp', '0.1',
+                    '--seed', '37',
+                    '--batch_size', '1'
+                ]
 
-                # ENTRYPOINT ["python3.9", "scripts/run_inference.py"]
+                # Run the command
+                subprocess.run(command, capture_output=True, text=True)
 
-                # inference.output_prefix=$HOME/outputs/motifscaffolding \
-                # inference.model_directory_path=$HOME/models \
-                # inference.input_pdb=$HOME/inputs/5TPN.pdb \
-                # inference.num_designs=3 \
-                # 'contigmap.contigs=[10-40/A163-181/10-40]'
+                # Usage
+                fasta_file_path = os.path.join(generator_directory, '/motifscaffolding_1.fasta')
+                modified_seq = read_last_line_of_fasta(fasta_file_path)
+                print('modified sequence after ProteinMPNN', last_line)
+
+                return ''.join(modified_seq) # TD: extract the sequence properly here from the seqs output directory!
 
             elif generator=='delete+substitute':
                 print(f"Running {generator}")
@@ -112,3 +127,27 @@ class StateGenerator:
 #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
 #   inference.num_designs=3 \
 #   'contigmap.contigs=[10-40/A163-181/10-40]'
+
+                # docker run -it --rm --gpus all \
+                #   -v $HOME/models:$HOME/models \
+                #   -v $HOME/inputs:$HOME/inputs \
+                #   -v $HOME/outputs:$HOME/outputs \
+                #   rfdiffusion \
+                #   inference.output_prefix=$HOME/outputs/motifscaffolding \
+                #   inference.model_directory_path=$HOME/models \
+                #   inference.input_pdb=$HOME/inputs/5TPN.pdb \
+                #   inference.num_designs=3 \
+                #   'contigmap.contigs=[10-40/A163-181/10-40]'
+
+                # # last lines of some docker file
+                # WORKDIR /app/RFdiffusion
+
+                # ENV DGLBACKEND="pytorch"
+
+                # ENTRYPOINT ["python3.9", "scripts/run_inference.py"]
+
+                # inference.output_prefix=$HOME/outputs/motifscaffolding \
+                # inference.model_directory_path=$HOME/models \
+                # inference.input_pdb=$HOME/inputs/5TPN.pdb \
+                # inference.num_designs=3 \
+                # 'contigmap.contigs=[10-40/A163-181/10-40]'

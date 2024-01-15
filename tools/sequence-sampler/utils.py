@@ -25,11 +25,11 @@ def generate_contig(action_mask, target, starting_target_residue=None, end_targe
             if current_group == '' or current_group[-1] == 'X':
                 current_group += char  # Continue the current X group
             elif current_group[-1] in alphabet:
-                action_mask_contig += f'A{position-len(current_group)+1}-{position}/'
+                action_mask_contig += f'B{position-len(current_group)+1}-{position}/'
                 current_group = char
         elif char=='-':
             if current_group!='' and current_group[-1] in alphabet:
-                action_mask_contig += f'A{position-len(current_group)+1}-{position}/'
+                action_mask_contig += f'B{position-len(current_group)+1}-{position}/'
                 current_group = ''
             elif current_group!='' and current_group[-1]=='X':
                 action_mask_contig += f'{len(current_group)}/'
@@ -52,3 +52,72 @@ def generate_contig(action_mask, target, starting_target_residue=None, end_targe
     contig = f'A{starting_target_residue}-{end_target_residue}/0 {action_mask_contig}'
     
     return contig
+
+import pandas as pd
+import os
+import glob
+import json
+import numpy as np
+
+def write_af2_update(df, directory, json_pattern):
+    # Loop over JSON files that match the given pattern for the current iteration
+    for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores_rank_001*.json")):
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+
+        # Compute average plddt
+        avg_plddt = sum(data['plddt']) / len(data['plddt'])
+        # Get max_pae value
+        max_pae = data['max_pae']
+
+        # Find corresponding PDB file
+        pdb_file = None
+        rank_str = json_file.split('rank')[1].split('.')[0]
+        for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
+            pdb_file = pdb
+            break
+
+        if pdb_file:
+            pae_matrix = np.array(data['pae'])
+            i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
+
+            sequence = extract_sequence_from_pdb(os.path.abspath(pdb_file))
+
+            pdb_file_path = os.path.abspath(pdb_file)
+            affinity = compute_affinity(pdb_file_path)
+
+            # Add new columns to the DataFrame if they don't exist
+            if 'sequence' not in df:
+                df['sequence'] = None
+            if 'mean plddt' not in df:
+                df['mean plddt'] = None
+            if 'max pae' not in df:
+                df['max pae'] = None
+            # if 'i_pae' not in df:
+            #     df['i_pae'] = None
+            # if 'affinity' not in df:
+            #     df['affinity'] = None
+            if 'absolute json path' not in df:
+                df['absolute json path'] = None
+            if 'absolute pdb path' not in df:
+                df['absolute pdb path'] = None
+
+            # Update the DataFrame with new values
+            df.at[0, 'sequence'] = sequence
+            df.at[0, 'mean plddt'] = avg_plddt
+            df.at[0, 'max pae'] = max_pae
+            # df.at[0, 'i_pae'] = i_pae
+            # df.at[0, 'affinity'] = affinity
+            df.at[0, 'absolute json path'] = os.path.abspath(json_file)
+            df.at[0, 'absolute pdb path'] = pdb_file_path
+
+    return df
+
+def read_last_line_of_fasta(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        # Skip to the last non-empty line that starts with '>'
+        for last_line in reversed(lines):
+            if last_line.strip() and not last_line.startswith('>'):
+                return last_line.strip()
+    return None

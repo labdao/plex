@@ -4,6 +4,7 @@ import pandas as pd
 import sequence_transformer
 from AF2_module import AF2Runner
 from utils import squeeze_seq
+from utils import write_af2_update
 
 class StateScorer:
     def __init__(self, evo_cycle, scorer_list, sequence, cfg, outputs_directory):
@@ -28,7 +29,6 @@ class StateScorer:
                 print(f"Running {scorer}")
                 runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
                 LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(self.sequence)
-                # LL_sequence = compute_log_likelihood(runner, self.sequence, LLmatrix_sequence)
 
                 scores_to_add = {
                     'LLmatrix_sequence': LLmatrix_sequence #,
@@ -36,7 +36,6 @@ class StateScorer:
                 }
                 for column_name, column_data in scores_to_add.items():
                     df_score[column_name] = pd.Series([column_data])
-
             
             elif scorer=='AF2':
                 print(f"Running {scorer}")
@@ -55,14 +54,16 @@ class StateScorer:
 
                 file_path = os.path.join(input_dir, f"evo_cycle_{self.evo_cycle}.fasta")
                 with open(file_path, 'w') as file:
-                    file.write(f">evo_cycle_{self.evo_cycle}\n{self.sequence}\n")
+                    file.write(f">evo_cycle_{self.evo_cycle}\n{target_binder_sequence}\n")
 
                 seq_input_dir = os.path.abspath(input_dir)
 
                 af2_runner = AF2Runner(seq_input_dir, scorer_directory)
                 af2_runner.run()
 
-            #     # append output as new columns of data frame
+                # append output as new columns of data frame
+                df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{self.evo_cycle}\n{target_binder_sequence}\n")
+                df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
             
             # elif scorer=='Prodigy': # not implemented yet
 

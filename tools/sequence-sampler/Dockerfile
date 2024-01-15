@@ -11,6 +11,9 @@ ARG COLABFOLD_VERSION=1.5.3
 
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1
+ENV HYDRA_FULL_ERROR=1
+
 # Install CUDA nvcc
 RUN apt-get update && apt-get install -y cuda-nvcc-$(echo $CUDA_VERSION | cut -d'.' -f1,2 | tr '.' '-') --no-install-recommends --no-install-suggests && rm -rf /var/lib/apt/lists/*
 
@@ -23,11 +26,8 @@ RUN mamba config --set auto_update_conda false && \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-# Copy the rest of your application
-COPY . .
-
-# # Run test script
-# RUN chmod +x test.sh && ./test.sh
+# Additional installations
+RUN pip install hydra-core omegaconf pandas biopython pyyaml
 
 # Set environment variables
 ENV PATH /usr/local/envs/colabfold/bin:$PATH
@@ -35,18 +35,18 @@ ENV MPLBACKEND Agg
 VOLUME cache
 ENV MPLCONFIGDIR /cache
 ENV XDG_CACHE_HOME /cache
+ENV DGLBACKEND="pytorch"
 
-# Download weights for colabfold
+# download weights for colabfold
 RUN python -m colabfold.download
 
-# Additional installations (if needed)
-RUN pip install hydra-core omegaconf pandas biopython pyyaml
-
-# Install prodigy
+# Prodigy
 RUN git clone -q https://github.com/haddocking/prodigy && \
      pip install -q prodigy/
 
-# Install additional Python packages
+# RFdiffusion
+RUN mkdir /app/RFdiffusion && git clone https://github.com/RosettaCommons/RFdiffusion.git /app/RFdiffusion
+
 RUN pip install -q --no-cache-dir \
   dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html \
   torch==1.12.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116 \
@@ -57,42 +57,61 @@ RUN pip install -q --no-cache-dir \
   decorator==5.1.0 \
   hydra-core==1.3.2 \
   pyrsistent==0.19.3 \
-  hydra-core omegaconf pandas biopython pyyaml
+  /app/RFdiffusion/env/SE3Transformer \
+  && pip install --no-cache-dir /app/RFdiffusion --no-deps
 
-# Copy the rest of your application
-RUN git clone https://github.com/RosettaCommons/RFdiffusion.git
-COPY . /app/RFdiffusion
+RUN pip install /app/RFdiffusion/env/SE3Transformer --no-deps && pip install --no-cache-dir /app/RFdiffusion --no-deps
 
-# Set environment variables
-ENV PATH /usr/local/envs/colabfold/bin:$PATH
-ENV MPLBACKEND Agg
-VOLUME cache
-ENV MPLCONFIGDIR /cache
-ENV XDG_CACHE_HOME /cache
-ENV DGLBACKEND="pytorch"
+# download weights
+RUN mkdir -p /app/models 
+RUN chmod +x /app/RFdiffusion/scripts/download_models.sh
+RUN bash -x /app/RFdiffusion/scripts/download_models.sh /app/models
 
-RUN git clone -q https://github.com/dauparas/ProteinMPNN
-COPY . /app/MPNN
-
-# Install SE3Transformer
-RUN pip install --no-cache-dir /app/RFdiffusion/env/SE3Transformer --no-deps
-
-# Install the RFdiffusion package without dependencies (as they are already installed)
-RUN pip install --no-cache-dir /app/RFdiffusion --no-deps
-
-# WORKDIR /app/RFdiffusion
-
-# # entrypoint
-# ENTRYPOINT ["python3.9", "scripts/run_inference.py"]
+## ProteinMPNN
+RUN mkdir /app/ProteinMPNN && git clone https://github.com/dauparas/ProteinMPNN /app/ProteinMPNN
 
 # Copy in Files
 COPY . /app
 
-ENV PYTHONUNBUFFERED=1
-ENV HYDRA_FULL_ERROR=1
+# Label the container
+LABEL container="seqoptim:rfdiff-mpnn"
 
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
 
-# Label the container
-LABEL container="sequence_sampler:rediff_mpnn_added"
+
+
+# RUN apt-get -q update \ 
+#   && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+#   # git \
+#   # python3.9 \
+#   # python3-pip \
+#   && python -m pip install -q -U --no-cache-dir pip \
+#   && rm -rf /var/lib/apt/lists/* \
+#   && apt-get autoremove -y \
+#   && apt-get clean \
+#   && pip install -q --no-cache-dir \
+#   dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html \
+#   torch==1.12.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116 \
+#   e3nn==0.3.3 \
+#   wandb==0.12.0 \
+#   pynvml==11.0.0 \
+#   git+https://github.com/NVIDIA/dllogger#egg=dllogger \
+#   decorator==5.1.0 \
+#   hydra-core==1.3.2 \
+#   pyrsistent==0.19.3 \
+#   /app/RFdiffusion/env/SE3Transformer \
+#   && pip install --no-cache-dir /app/RFdiffusion --no-deps
+
+# # Install additional Python packages
+# RUN pip install -q \
+#   dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html \
+#   torch==1.12.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116 \
+#   e3nn==0.3.3 \
+#   wandb==0.12.0 \
+#   pynvml==11.0.0 \
+#   git+https://github.com/NVIDIA/dllogger#egg=dllogger \
+#   decorator==5.1.0 \
+#   hydra-core==1.3.2 \
+#   pyrsistent==0.19.3 \
+#   hydra-core omegaconf pandas biopython pyyaml

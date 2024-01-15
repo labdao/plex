@@ -10,5 +10,7 @@ basic_settings:
   temperature: 100.
   max_levenshtein_step_size: 3
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
+  # number of AF2 repeats
   # consider adding the dictionary which relates actions and code
   # consider adding the set of non-tirival actions
+  # add start and end resiude
