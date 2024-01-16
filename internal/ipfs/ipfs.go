@@ -11,15 +11,26 @@ import (
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
-	"github.com/labdao/plex/internal/bacalhau"
 )
+
+func GetBacalhauApiHost() string {
+	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
+	plexEnv, _ := os.LookupEnv("PLEX_ENV")
+	if exists {
+		return bacalApiHost
+	} else if plexEnv == "stage" {
+		return "bacalhau.staging.labdao.xyz"
+	} else {
+		return "bacalhau.labdao.xyz"
+	}
+}
 
 func DeriveIpfsNodeUrl() string {
 	ipfsApiHost, exists := os.LookupEnv("IPFS_API_HOST")
 
 	// If IPFS_API_HOST is not set, use BACALHAU_API_HOST
 	if !exists {
-		ipfsApiHost = bacalhau.GetBacalhauApiHost()
+		ipfsApiHost = GetBacalhauApiHost()
 	}
 
 	// If ipfsApiHost already starts with http:// or https://, don't prepend it.
@@ -265,19 +276,30 @@ func IsValidCID(cidStr string) bool {
 }
 
 func IsDirectory(cidStr string) (bool, error) {
-	filePath, err := DownloadToTempDir(cidStr)
+	ipfsNodeUrl := DeriveIpfsNodeUrl()
+	sh := shell.NewShell(ipfsNodeUrl)
+
+	// Use the FilesList function to get information about the CID
+	entries, err := sh.List(cidStr)
+
+	// If an error is returned, it might be a file or an invalid CID
 	if err != nil {
-		return false, err
+		// You can further check the error message if needed to differentiate between a file and an invalid CID
+		return false, fmt.Errorf("error getting CID info from IPFS: %v", err)
 	}
-	fileInfo, err := os.Stat(filePath)
-	if err != nil {
-		return false, err
-	}
-	if fileInfo.IsDir() {
+
+	// If there are multiple entries, it's definitely a directory
+	if len(entries) >= 1 {
 		return true, nil
-	} else {
-		return false, nil
 	}
+
+	// If there is one entry and it's a different CID then it is a direcotry with a single file
+	if len(entries) == 1 && entries[0].Hash != cidStr {
+		return true, nil
+	}
+
+	// Otherwise it is a file
+	return false, nil
 }
 
 func IsImage(filepath string) bool {

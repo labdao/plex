@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -8,27 +9,25 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  endLoading,
+  endFileUploadDataSlice,
   saveDataFileAsync,
-  selectCID,
   selectDataFileError,
   selectDataFileIsLoading,
-  selectWalletAddress,
   setError,
-  startLoading,
+  startFileUploadDataSlice,
   useDispatch,
   useSelector,
 } from "@/lib/redux";
 
 export default function DataFileForm() {
   const [open, setOpen] = React.useState(false);
-
+  const { user } = usePrivy();
   const dispatch = useDispatch();
 
   const router = useRouter();
   const errorMessage = useSelector(selectDataFileError);
   const isLoading = useSelector(selectDataFileIsLoading);
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   const [file, setFile] = useState<File | null>(null);
 
@@ -51,16 +50,16 @@ export default function DataFileForm() {
       return;
     }
 
-    dispatch(startLoading());
+    dispatch(startFileUploadDataSlice());
     dispatch(setError(null));
     const metadata = { walletAddress };
 
     try {
       await dispatch(saveDataFileAsync({ file, metadata, handleSuccess }));
-      dispatch(endLoading());
+      dispatch(endFileUploadDataSlice());
     } catch (error) {
       dispatch(setError("Error uploading file"));
-      dispatch(endLoading());
+      dispatch(endFileUploadDataSlice());
     }
   };
 
