@@ -180,18 +180,6 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 
-				tempFilePath, err := ipfs.DownloadFileToTemp(fileEntry["CID"], fileEntry["filename"])
-				if err != nil {
-					http.Error(w, fmt.Sprintf("Error downloading file from IPFS: %v", err), http.StatusInternalServerError)
-					return
-				}
-
-				wrappedCid, err := ipfs.WrapAndPinFile(tempFilePath)
-				if err != nil {
-					http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
-					return
-				}
-
 				log.Println("Attempting to find DataFile in DB with CID: ", fileEntry["CID"])
 
 				var dataFile models.DataFile
@@ -250,7 +238,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 						dataFile = models.DataFile{
-							CID:           wrappedCid,
+							CID:           fileEntry["CID"],
 							WalletAddress: job.WalletAddress,
 							Filename:      fileName,
 							Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
