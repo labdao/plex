@@ -28,7 +28,6 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		bacalhauJobID := params["bacalhauJobID"]
 
@@ -82,7 +81,6 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		bacalhauJobID := params["bacalhauJobID"]
 
@@ -113,6 +111,26 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
 		}
 
+		log.Println("Getting job history...")
+		events, err := bacalhau.GetBacalhauJobEvents(job.BacalhauJobID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error getting job history: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		for _, event := range events {
+			if event.ExecutionState != nil {
+				switch event.ExecutionState.New {
+				case model.ExecutionStateBidAccepted:
+					log.Printf("Bid Accepted Time: %s", event.Time)
+					job.StartedAt = event.Time
+				case model.ExecutionStateCompleted:
+					log.Printf("Job Completed Time: %s", event.Time)
+					job.CompletedAt = event.Time
+				}
+			}
+		}
+
 		if updatedJob.State.State == model.JobStateCancelled {
 			job.State = "failed"
 		} else if updatedJob.State.State == model.JobStateError {
@@ -135,7 +153,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 		if job.State == "completed" {
 			// we always only do one execution at the moment
-			fmt.Println("Job completed, getting output directory CID")
+			fmt.Println("Job completed, getting output directory CID...")
 			outputDirCID := updatedJob.State.Executions[0].PublishedResult.CID
 			outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
 			if err != nil {
@@ -143,7 +161,6 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			// Create a map of existing output CIDs for quick lookup
 			existingOutputs := make(map[string]struct{})
 			for _, output := range job.Outputs {
 				existingOutputs[output.CID] = struct{}{}
@@ -221,10 +238,11 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 						dataFile = models.DataFile{
-							CID:       fileEntry["CID"],
-							Filename:  fileName,
-							Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
-							Timestamp: time.Now(),
+							CID:           fileEntry["CID"],
+							WalletAddress: job.WalletAddress,
+							Filename:      fileName,
+							Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
+							Timestamp:     time.Now(),
 						}
 
 						if err := db.Create(&dataFile).Error; err != nil {
@@ -239,17 +257,16 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 					}
 				}
 
-				// Then add the DataFile to the Job.Outputs
 				log.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
 				job.Outputs = append(job.Outputs, dataFile)
 				log.Println("Updated Job.Outputs:", job.Outputs)
 			}
 
-			// Update job in the database with new Outputs (this may need adjustment depending on your ORM)
 			if err := db.Save(&job).Error; err != nil {
 				http.Error(w, fmt.Sprintf("Error updating job: %v", err), http.StatusInternalServerError)
 				return
 			}
+
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {
@@ -265,8 +282,6 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
-			// Check the origin of the request and return true if it's allowed
-			// Here's a simple example that allows any origin:
 			return true
 		},
 	}
@@ -300,10 +315,8 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Channel to gather output
 	outputChan := make(chan string)
 
-	// Read from stdout
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
@@ -311,7 +324,6 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// Read from stderr
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
@@ -319,16 +331,13 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// Write to WebSocket
 	go func() {
 		for {
 			select {
 			case outputLine, ok := <-outputChan:
 				if !ok {
-					// Handle closed channel, if necessary
 					return
 				}
-				// Send to WebSocket
 				if err := conn.WriteMessage(websocket.TextMessage, []byte(outputLine)); err != nil {
 					log.Println("Error sending message through WebSocket:", err)
 					return
@@ -337,6 +346,5 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// If you need to wait for cmd to finish
 	cmd.Wait()
 }

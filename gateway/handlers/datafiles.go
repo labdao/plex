@@ -94,7 +94,6 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// Get a single datafile by CID
 func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -216,20 +215,22 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var dataFile models.DataFile
-		if err := db.Where("cid = ?", cid).First(&dataFile).Error; err != nil {
+		if err := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile).Error; err != nil {
 			utils.SendJSONError(w, "Data file not found", http.StatusNotFound)
 			return
 		}
 
-		ipfsPath := cid
-		if dataFile.WalletAddress != "" {
-			ipfsPath = cid + "/" + dataFile.Filename
-		}
-
+		// First attempt with the initial ipfsPath
+		ipfsPath := determineIPFSPath(cid, dataFile)
 		tempFilePath, err := ipfs.DownloadFileToTemp(ipfsPath, dataFile.Filename)
 		if err != nil {
-			utils.SendJSONError(w, "Error downloading file from IPFS", http.StatusInternalServerError)
-			return
+			// If the first attempt fails, try with an alternative ipfsPath
+			altIPFSPath := determineAltIPFSPath(cid, dataFile)
+			tempFilePath, err = ipfs.DownloadFileToTemp(altIPFSPath, dataFile.Filename)
+			if err != nil {
+				utils.SendJSONError(w, "Error downloading file from IPFS", http.StatusInternalServerError)
+				return
+			}
 		}
 		defer os.Remove(tempFilePath)
 
@@ -248,6 +249,31 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func determineIPFSPath(cid string, dataFile models.DataFile) string {
+	isGenerated := checkIfGenerated(dataFile)
+	if dataFile.WalletAddress != "" || isGenerated {
+		return cid + "/" + dataFile.Filename
+	}
+	return cid
+}
+
+func determineAltIPFSPath(cid string, dataFile models.DataFile) string {
+	isGenerated := checkIfGenerated(dataFile)
+	if dataFile.WalletAddress == "" && !isGenerated {
+		return cid + "/" + dataFile.Filename
+	}
+	return cid
+}
+
+func checkIfGenerated(dataFile models.DataFile) bool {
+	for _, tag := range dataFile.Tags {
+		if tag.Name == "generated" {
+			return true
+		}
+	}
+	return false
 }
 
 func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
