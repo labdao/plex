@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
-import { PageLoader } from "@/components/shared/PageLoader";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +23,7 @@ import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
-import { VariantSummary } from "./VariantSummary";
+import { TaskSummary } from "./TaskSummary";
 
 type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
 
@@ -172,7 +171,6 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       // Handle error, maybe show message to user
     }
   }
-
   return (
     <>
       <div className="container mt-8">
@@ -183,9 +181,9 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           </Alert>
         )}
         <>
-          {!toolDetailLoading && <TaskPageHeader tool={tool} task={task} />}
+          <TaskPageHeader tool={tool} task={task} loading={toolDetailLoading} />
           <ProtectedComponent method="overlay" message="Log in to run an experiment">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="grid min-h-screen grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="col-span-2">
                 <Form {...form}>
                   <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
@@ -278,7 +276,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                 </Form>
               </div>
               <div>
-                <VariantSummary sortedInputs={sortedInputs} form={form} />
+                <TaskSummary sortedInputs={sortedInputs} form={form} outputs={tool?.ToolJson?.outputs} />
               </div>
             </div>
           </ProtectedComponent>
