@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
@@ -42,9 +43,9 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		var existingUser models.User
 		if err := db.Where("wallet_address = ?", requestData.WalletAddress).First(&existingUser).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
-				// User does not exist, create new user
 				newUser := models.User{
 					WalletAddress: requestData.WalletAddress,
+					CreatedAt:     time.Now(),
 				}
 				if result := db.Create(&newUser); result.Error != nil {
 					utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
@@ -56,7 +57,6 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 				w.WriteHeader(http.StatusCreated)
 				json.NewEncoder(w).Encode(newUser)
 			} else {
-				// Some other error occurred during the query
 				utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
 				fmt.Println("Database error:", err)
 			}
