@@ -66,6 +66,6 @@ COPY . /app
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
 
-
+USER 1000
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
