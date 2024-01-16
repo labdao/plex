@@ -50,13 +50,22 @@ class StateGenerator:
                 env = os.environ.copy()
                 env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
 
-                command = [ # TD: add the inputs from the block above
+                # command = [ # TD: add the inputs from the block above
+                #     'python', 'RFdiffusion/scripts/run_inference.py',
+                #     'inference.output_prefix=/outputs/motifscaffolding',
+                #     'inference.model_directory_path=RFdiffusion/models',
+                #     'inference.input_pdb=/inputs/5TPN.pdb',
+                #     'inference.num_designs=1',
+                #     "contigmap.contigs=[10-40/A163-181/10-40]"
+                # ]
+
+                command = [
                     'python', 'RFdiffusion/scripts/run_inference.py',
-                    'inference.output_prefix=/outputs/motifscaffolding',
+                    f'inference.output_prefix={os.path.join(generator_directory, "motifscaffolding")}',
                     'inference.model_directory_path=RFdiffusion/models',
-                    'inference.input_pdb=/inputs/5TPN.pdb',
+                    f'inference.input_pdb={self.df["absolute pdb path"].iloc[0]}',
                     'inference.num_designs=1',
-                    "contigmap.contigs=[10-40/A163-181/10-40]"
+                    f'contigmap.contigs={[contig]}'
                 ]
 
                 result = subprocess.run(command, capture_output=True, text=True, env=env)
