@@ -1,2 +1,0 @@
-# ODDT Scoring Functions
-This repository contains a set of scoring functions that can be used with the Open Drug Discovery Toolkit (ODDT). ODDT is a toolkit for computer-aided drug discovery that includes a wide range of tools and functions for molecular modeling, including scoring functions.

@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -20,19 +21,16 @@ import (
 )
 
 func pinIoList(ios []ipwl.IO) (string, error) {
-	// Convert IO slice to JSON
 	data, err := json.Marshal(ios)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal IO slice: %v", err)
 	}
 
-	// Create a temporary file
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
 	if err != nil {
 		return "", fmt.Errorf("cannot create temporary file: %v", err)
 	}
 
-	// Write JSON data to the temporary file
 	if _, err = tmpFile.Write(data); err != nil {
 		return "", fmt.Errorf("failed to write to temporary file: %v", err)
 	}
@@ -42,12 +40,26 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 		return "", fmt.Errorf("failed to pin file: %v", err)
 	}
 
-	// Close the file
 	if err := tmpFile.Close(); err != nil {
 		return "", fmt.Errorf("failed to close the file: %v", err)
 	}
 
 	return cid, nil
+}
+
+func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
+	strInput, ok := input.(string)
+	if !ok {
+		return "", false, errors.New("input is not a string")
+	}
+
+	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+		split := strings.SplitN(strInput, "/", 2)
+		cid = split[0]
+		return cid, true, nil
+	}
+
+	return "", false, nil
 }
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
@@ -96,27 +108,18 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var kwargs map[string][]string
-
 		kwargsRaw, ok := requestData["kwargs"]
 		if !ok {
 			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
 			return
 		}
 
+		var kwargs map[string][]interface{}
 		err = json.Unmarshal(kwargsRaw, &kwargs)
 		if err != nil {
 			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
 			http.Error(w, "Invalid structure for kwargs", http.StatusBadRequest)
 			return
-		}
-
-		for key, value := range kwargs {
-			if len(value) == 0 || value[0] == "" {
-				log.Printf("Invalid or missing value for key '%s' in kwargs", key)
-				http.Error(w, fmt.Sprintf("Invalid or missing value for key '%s' in kwargs", key), http.StatusBadRequest)
-				return
-			}
 		}
 
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
@@ -125,7 +128,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// add wallet
 		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
 		if err != nil {
 			log.Fatal(err)
@@ -133,7 +135,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		log.Println("Submitting IO List")
-		submittedIoList := ipwl.SubmitIoList(ioList, "", 60, []string{})
+		submittedIoList := ipwl.SubmitIoList(ioList, "", 60*72, []string{})
 		log.Println("pinning submitted IO List")
 		submittedIoListCid, err := pinIoList(submittedIoList)
 		if err != nil {
@@ -174,32 +176,55 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			for _, input := range job.Inputs {
-				var dataFile models.DataFile
-				// Lookup DataFile with CID corresponding to input.IPFS
-				result := db.First(&dataFile, "cid = ?", input.IPFS)
-				if result.Error != nil {
-					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						// Handle the case where no matching DataFile is found if necessary
-						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", input.IPFS), http.StatusInternalServerError)
-						return
-					} else {
-						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
-						return
+				var cidsToAdd []string
+				switch v := input.(type) {
+				case string:
+					strInput, ok := input.(string)
+					if !ok {
+						continue
 					}
+					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+						split := strings.SplitN(strInput, "/", 2)
+						cid := split[0]
+						cidsToAdd = append(cidsToAdd, cid)
+					}
+				case []interface{}:
+					fmt.Println("found slice, checking each for 'Qm' prefix")
+					for _, elem := range v {
+						strInput, ok := elem.(string)
+						if !ok {
+							continue
+						}
+						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+							split := strings.SplitN(strInput, "/", 2)
+							cid := split[0]
+							cidsToAdd = append(cidsToAdd, cid)
+						}
+					}
+				default:
+					continue
 				}
-
-				// Append found DataFile to jobEntry's Inputs
-				jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+				for _, cid := range cidsToAdd {
+					var dataFile models.DataFile
+					result := db.First(&dataFile, "cid = ?", cid)
+					if result.Error != nil {
+						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							return
+						} else {
+							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							return
+						}
+					}
+					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+				}
 			}
-
-			// Save jobEntry with related inputs
 			result = db.Save(&jobEntry)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
-
 		utils.SendJSONResponseWithCID(w, submittedIoListCid)
 	}
 }
@@ -211,7 +236,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		cid := params["cid"]
 
@@ -244,7 +268,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Received Patch request at /flows")
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		cid := params["cid"]
 		log.Println("CID: ", cid)
@@ -266,7 +289,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
 			}
-			// Update job state based on the external job state
 			if updatedJob.State.State == model.JobStateCancelled {
 				flow.Jobs[index].State = "failed"
 			} else if updatedJob.State.State == model.JobStateError {
@@ -282,7 +304,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			log.Println("Updated job")
-			// Save the updated job back to the database
 			if err := db.Save(&flow.Jobs[index]).Error; err != nil {
 				http.Error(w, fmt.Sprintf("Error saving job: %v", err), http.StatusInternalServerError)
 				return

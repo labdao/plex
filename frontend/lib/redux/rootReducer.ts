@@ -7,10 +7,10 @@ import {
   flowListSlice,
   jobDetailSlice,
   toolAddSlice,
+  toolDetailSlice,
   toolListSlice,
   userSlice,
-} from './slices'
-
+} from "./slices";
 
 export const reducer = {
   user: userSlice.reducer,
@@ -18,8 +18,9 @@ export const reducer = {
   dataFileList: dataFileListSlice.reducer,
   toolAdd: toolAddSlice.reducer,
   toolList: toolListSlice.reducer,
+  toolDetail: toolDetailSlice.reducer,
   flowAdd: flowAddSlice.reducer,
   flowList: flowListSlice.reducer,
   flowDetail: flowDetailSlice.reducer,
   jobDetail: jobDetailSlice.reducer,
-}
+};

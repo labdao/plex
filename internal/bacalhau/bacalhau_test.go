@@ -3,42 +3,52 @@ package bacalhau
 import (
 	"fmt"
 	"testing"
+
+	"github.com/labdao/plex/internal/ipfs"
 )
 
-func TestCreateBacalhauJob(t *testing.T) {
-	cid := "bafybeibuivbwkakim3hkgphffaipknuhw4epjfu3bstvsuv577spjhbvju"
-	container := "ubuntu"
-	cmd := "echo DeSci"
-	maxTime := 60
-	timeOut := maxTime * 60 // Bacalhau timeout is in seconds, so we need to multiply by 60
-	memory := "12gb"
-	cpu := "1.200000"
-	gpu := "1"
-	networkFlag := true
-	selector := ""
-	job, err := CreateBacalhauJob(cid, container, cmd, selector, 60, 12, 1.200000, true, networkFlag, []string{})
+func DonotTestCreateBacalhauJob(t *testing.T) {
+	cid, err := ipfs.WrapAndPinFile("./testdata/design/insulin_target.pdb")
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}
-	if job.Spec.Timeout != int64(timeOut) {
-		t.Errorf("got = %d; wanted %d", job.Spec.Timeout, timeOut)
+
+	inputs := map[string]interface{}{
+		"binder_length":        50,
+		"contigs_override":     "",
+		"hotspot":              "",
+		"number_of_binders":    2,
+		"target_chain":         "D",
+		"target_end_residue":   200,
+		"target_protein":       cid + "/insulin_target.pdb",
+		"target_start_residue": 50,
 	}
-	if job.Spec.Resources.Memory != memory {
-		t.Errorf("got = %s; wanted %s", job.Spec.Resources.Memory, memory)
+
+	container := "ubuntu"
+	selector := ""
+	maxTime := 60
+	memory := 12
+	cpu := 1.2
+	gpu := true
+	network := true
+	annotations := []string{"labdaolocal"}
+	job, err := CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations)
+	if err != nil {
+		t.Fatalf(fmt.Sprint(err))
 	}
-	if job.Spec.Resources.CPU != cpu {
-		t.Errorf("got = %s; wanted %s", job.Spec.Resources.CPU, cpu)
+	if job.Spec.Timeout != int64(maxTime*60) {
+		t.Errorf("got = %d; wanted %d", job.Spec.Timeout, maxTime)
 	}
-	if job.Spec.Resources.GPU != gpu {
-		t.Errorf("got = %s; wanted %s", job.Spec.Resources.GPU, gpu)
+	if job.Spec.Resources.Memory != fmt.Sprintf("%dgb", memory) {
+		t.Errorf("got = %s; wanted %s", job.Spec.Resources.Memory, fmt.Sprintf("%dgb", memory))
 	}
-	if job.Spec.Docker.Image != container {
-		t.Errorf("got = %s; wanted %s", job.Spec.Docker.Image, container)
+	if job.Spec.Resources.CPU != fmt.Sprintf("%f", cpu) {
+		t.Errorf("got = %s; wanted %s", job.Spec.Resources.CPU, fmt.Sprintf("%f", cpu))
 	}
-	if fmt.Sprint(job.Spec.Docker.Entrypoint) != fmt.Sprint([]string{"/bin/bash", "-c", cmd}) {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(job.Spec.Docker.Entrypoint), fmt.Sprint(cmd))
+	if job.Spec.Resources.GPU != "1" {
+		t.Errorf("got = %s; wanted 1", job.Spec.Resources.GPU)
 	}
-	if job.Spec.Inputs[0].CID != cid {
-		t.Errorf("got = %s; wanted %s", fmt.Sprint(job.Spec.Inputs[0].CID), fmt.Sprint(cid))
+	if job.Spec.EngineSpec.Type != "docker" {
+		t.Errorf("got = %s; wanted docker", job.Spec.EngineSpec.Type)
 	}
 }

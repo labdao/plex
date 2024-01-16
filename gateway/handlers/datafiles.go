@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -20,7 +22,7 @@ import (
 
 func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received request at /create-datafile")
+		log.Println("Received request to add datafile")
 
 		if err := utils.CheckRequestMethod(r, http.MethodPost); err != nil {
 			utils.SendJSONError(w, err.Error(), http.StatusBadRequest)
@@ -77,6 +79,17 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		var uploadedTag models.Tag
+		if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
+			utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
+			return
+		}
+
+		if err := db.Model(&dataFile).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error adding tag to datafile: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		utils.SendJSONResponseWithCID(w, dataFile.CID)
 	}
 }
@@ -97,7 +110,7 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var dataFile models.DataFile
-		result := db.Where("cid = ?", cid).First(&dataFile)
+		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -111,7 +124,6 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// List datafiles based on multiple parameters
 func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -119,20 +131,28 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		var page, pageSize int = 1, 50
+
+		if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
+			page = p
+		}
+		if ps, err := strconv.Atoi(r.URL.Query().Get("pageSize")); err == nil && ps > 0 {
+			pageSize = ps
+		}
+
+		offset := (page - 1) * pageSize
+
 		query := db.Model(&models.DataFile{})
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
 		}
-
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
-
 		if filename := r.URL.Query().Get("filename"); filename != "" {
 			query = query.Where("filename LIKE ?", "%"+filename+"%")
 		}
-
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
 			if err != nil {
@@ -141,7 +161,6 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			query = query.Where("timestamp <= ?", parsedTime)
 		}
-
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
 			if err != nil {
@@ -151,15 +170,37 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("timestamp >= ?", parsedTime)
 		}
 
+		var totalCount int64
+		query.Count(&totalCount)
+
+		defaultSort := "timestamp desc"
+		sortParam := r.URL.Query().Get("sort")
+		if sortParam != "" {
+			defaultSort = sortParam
+		}
+		query = query.Order(defaultSort).Offset(offset).Limit(pageSize)
+
 		var dataFiles []models.DataFile
-		if result := query.Find(&dataFiles); result.Error != nil {
+		if result := query.Preload("Tags").Find(&dataFiles); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafiles: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
+		totalPages := int(math.Ceil(float64(totalCount) / float64(pageSize)))
+
+		response := map[string]interface{}{
+			"data": dataFiles,
+			"pagination": map[string]int{
+				"currentPage": page,
+				"totalPages":  totalPages,
+				"pageSize":    pageSize,
+				"totalCount":  int(totalCount),
+			},
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(dataFiles); err != nil {
-			http.Error(w, "Error encoding datafiles to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, "Error encoding response to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
@@ -207,4 +248,41 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
+	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
+
+	var dataFile models.DataFile
+	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
+		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
+		return fmt.Errorf("Data file not found: %v", err)
+	}
+
+	var tags []models.Tag
+	if err := db.Where("name IN ?", tagNames).Find(&tags).Error; err != nil {
+		log.Printf("Error finding tags: %v\n", err)
+		return fmt.Errorf("Error finding tags: %v", err)
+	}
+
+	existingTagMap := make(map[string]bool)
+	for _, tag := range dataFile.Tags {
+		existingTagMap[tag.Name] = true
+	}
+
+	log.Println("Adding tags:", tagNames)
+	for _, tag := range tags {
+		if !existingTagMap[tag.Name] {
+			dataFile.Tags = append(dataFile.Tags, tag)
+		}
+	}
+
+	log.Println("Saving DataFile with new tags to DB")
+	if err := db.Save(&dataFile).Error; err != nil {
+		log.Printf("Error saving DataFile with CID %s: %v\n", dataFileCID, err)
+		return fmt.Errorf("Error saving datafile: %v", err)
+	}
+
+	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
+	return nil
 }

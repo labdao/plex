@@ -40,7 +40,7 @@ on:
         type: string
         default: 'labdao'
       deploy-environment:
-        description: 'environemnt to deploy into'
+        description: 'environment to deploy into'
         required: false
         type: string
 

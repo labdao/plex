@@ -2,7 +2,7 @@
 
 services:
   cloudflared-frontend:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:3000 --metrics localhost:40000"
     hostname: cloudflared-frontend
     network_mode: host
@@ -20,10 +20,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared-backend:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:8080 --metrics localhost:50000"
     hostname: cloudflared-backend
     network_mode: host
@@ -41,10 +41,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared-ipfs:
-    image: "cloudflare/cloudflared"
+    image: "cloudflare/cloudflared:2023.8.2"
     command: "tunnel --url http://localhost:8888 --metrics localhost:60000"
     hostname: cloudflared-ipfs
     network_mode: host
@@ -62,17 +62,20 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 3s
+      start_period: 10s
 
   cloudflared_post_setup:
     image: "alpine"
     network_mode: host
     command: >
-      sh -c "
+      sh -exc "
       apk add --no-cache curl jq &&
       echo FRONTEND_URL=https://$(curl -s localhost:40000/quicktunnel | jq -r '.hostname') > /opt/env &&
       echo NEXT_PUBLIC_BACKEND_URL=https://$(curl -s localhost:50000/quicktunnel | jq -r '.hostname') >> /opt/env &&
-      echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env"
+      echo NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=https://$(curl -s localhost:60000/quicktunnel | jq -r '.hostname')/ipfs/ >> /opt/env &&
+      echo Tunnel setup done &&
+      touch /opt/done &&
+      sleep infinity"
     volumes:
       - ./docker/.env.tunnel:/opt/env
     depends_on:
@@ -82,3 +85,9 @@ services:
         condition: service_healthy
       cloudflared-ipfs-health:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /opt/done"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s

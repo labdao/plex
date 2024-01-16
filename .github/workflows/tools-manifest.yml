@@ -49,9 +49,24 @@ jobs:
         ###############################################################
         ################## Add new tools here #########################
         ###############################################################
+        # Following syntax of topleveldir_configfilename_withoutjson
         filters: |
-          colabdesign:
+          # Toplevel dir after tools_filename_without_json_extension
+          # this is a workaround to allow multiple config files under same directory
+          # Example if you have a config file under tools/mytool/mytool_config_file.json
+          # you would add,
+          # mytool_mytool_config_file:
+          #   - 'tools/mytool/mytool_config_file.json'
+          colabdesign_colabdesign:
             - 'tools/colabdesign/colabdesign.json'
+          colabdesign_colabdesign-gateway:
+            - 'tools/colabdesign/colabdesign-gateway.json'
+          colabdesign-autoprompt_colabdesign-gateway:
+            - 'tools/colabdesign-autoprompt/colabdesign-gateway.json'
+          AF2_AF2-gateway:
+            - 'tools/AF2/AF2-gateway.json'
+          aggregater:
+            - 'tools/aggregater/aggregater.json'
 
   tools:
     needs: changes-tools
@@ -63,14 +78,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Version tool name
+
+      - name: Setting tool related envs
         run: |
-          echo "TOOL_NAME=$(cat tools/${{ matrix.tools }}/${{ matrix.tools }}.json | jq -r '.name')" >> $GITHUB_ENV
+          echo "TOOL_DIR=$(echo ${{ matrix.tools }} | cut -d '_' -f1)" >> $GITHUB_ENV
+          echo "TOOL_FILE=$(echo ${{ matrix.tools }} | cut -d '_' -f2-)" >> $GITHUB_ENV
+
+      - name: Setting tool file path
+        run: |
+          echo "TOOL_FILE_PATH=tools/${{ env.TOOL_DIR }}/${{ env.TOOL_FILE }}.json" >> $GITHUB_ENV
+
+      - name: Setting some more tool related envs
+        run: |
+          # Extract name from json
+          echo "TOOL_NAME=$(cat ${{ env.TOOL_FILE_PATH }} | jq -r '.name')" >> $GITHUB_ENV
+
           echo "NORMALIZED_GIT_REF=$(echo $GITHUB_REF | sed 's/refs\///g' | sed 's/heads\///g' | sed 's/\/merge//g' | sed 's/\//-/g')" >> $GITHUB_ENV
           echo "GIT_SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - name: debug
-        run: |
-          echo "::debug::Set the Octocat variable"
 
       - name: Versionined tool name
         env:
@@ -83,6 +107,9 @@ jobs:
           echo "## Params" >> $GITHUB_STEP_SUMMARY
           echo "| Parameter Name NAME | Parameter VALUE |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|"  >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_DIR | ${{ env.TOOL_DIR }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_FILE | ${{ env.TOOL_FILE }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TOOL_FILE_PATH | ${{ env.TOOL_FILE_PATH }} |" >> $GITHUB_STEP_SUMMARY
           echo "| TOOL_NAME | ${{ env.TOOL_NAME }} |" >> $GITHUB_STEP_SUMMARY
           echo "| GITHUB_REF | $GITHUB_REF |" >> $GITHUB_STEP_SUMMARY
           echo "| NORMALIZED_GIT_REF | ${{ env.NORMALIZED_GIT_REF }} |" >> $GITHUB_STEP_SUMMARY
@@ -91,7 +118,7 @@ jobs:
 
       - name: Dump updated manifest file to be POSTed
         run: |
-          jq --arg toolname "${{ env.TOOL_NAME_VERSIONED }}" '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"} | .toolJson.name |= $toolname'  tools/colabdesign/colabdesign.json > /tmp/manifest.json
+          jq --arg toolname "${{ env.TOOL_NAME_VERSIONED }}" '{"toolJson": ., "walletAddress": "${{ env.TOOLS_WALLET_ADDRESS }}"} | .toolJson.name |= $toolname'  ${{ env.TOOL_FILE_PATH }} > /tmp/manifest.json
 
       - name: Dump Manifest json
         run: |

@@ -32,26 +32,21 @@ export default function FlowDetail() {
   const columns: ColumnDef<Job>[] = [
     {
       accessorKey: "BacalhauJobID",
-      header: "Bacalhau ID",
+      header: "Job ID",
       cell: ({ row }) => {
         return <Link href={`/jobs/${row.getValue("BacalhauJobID")}/`}>{row.getValue("BacalhauJobID")}</Link>;
       },
     },
     {
-      accessorKey: "Tool.Name",
-      header: "Tool Name",
-    },
-    {
-      accessorKey: "Tool.CID",
-      accessorFn: (row) => row.Tool.CID,
-      header: "Tool CID",
-      cell: ({ cell }) => {
-        return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}/${cell.getValue()}`}>
-            {cell.getValue() as string}
-          </a>
-        );
-      },
+      id: 'tool',
+      header: 'Model',
+      cell: ({ row }) => {
+        const toolName = row.original.Tool.Name;
+        const toolCID = row.original.Tool.CID;
+        const toolCIDUrl = `${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}/${toolCID}`;
+
+        return <a href={toolCIDUrl} target="_blank">{toolName}</a>; 
+      }
     },
     {
       accessorKey: "State",
@@ -69,8 +64,8 @@ export default function FlowDetail() {
   return (
     <div className="container mt-8">
       <Card className="pt-4">
-        <CardTitle className="px-4 flex justify-between items-center border-b pb-4 mb-4">
-          {flow.Name}{" "}
+        <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
+          <span className="font-bold font-heading">{flow.Name}</span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => dispatch(flowPatchDetailThunk(flow.CID))} disabled={loading}>
               <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
@@ -94,7 +89,7 @@ export default function FlowDetail() {
         </CardContent>
       </Card>
       <Card className="mt-4">
-        <div className="p-4 font-medium uppercase">Jobs</div>
+        <div className="p-4 font-bold font-heading">Jobs</div>
         <div className="bg-gray-50">
           <DataTable columns={columns} data={flow.Jobs} />
         </div>
