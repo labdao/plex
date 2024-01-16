@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "docker.io/supraja968/colabdesign-autoprompt@sha256:8b244eeb828dd2ea269c64267b46cf96a5b816f4b56c05b3c1babf052ca03791",
+  "dockerPull": "quay.io/labdao/colabdesign-autoprompt@sha256:2f268c7a187bd9365e6de15e65acf478b7c70903b1555fe2a995631b253c5f1a",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
