@@ -41,7 +41,7 @@ class StateGenerator:
                     'python', 'RFdiffusion/scripts/run_inference.py',
                     '--output_prefix', os.path.join(generator_directory, '/motifscaffolding'),
                     '--model_directory_path', '/inputs/models',
-                    '--input_pdb', self.df['absolute pdb path'],
+                    '--input_pdb', self.df['absolute pdb path'].iloc[0],
                     '--num_designs', '1',
                     '--contigmap_contigs', contig
                 ]

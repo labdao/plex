@@ -62,7 +62,7 @@ class StateScorer:
                 af2_runner.run()
 
                 # append output as new columns of data frame
-                df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{self.evo_cycle}\n{target_binder_sequence}\n")
+                df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{self.evo_cycle}")
                 df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
             
             # elif scorer=='Prodigy': # not implemented yet

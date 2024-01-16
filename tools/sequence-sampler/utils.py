@@ -1,3 +1,11 @@
+import pandas as pd
+import os
+import glob
+import json
+import numpy as np
+from Bio.PDB import PDBParser
+from Bio.SeqUtils import seq1
+
 def squeeze_seq(new_sequence):
     return ''.join(filter(lambda x: x != '-', new_sequence))
 
@@ -53,11 +61,20 @@ def generate_contig(action_mask, target, starting_target_residue=None, end_targe
     
     return contig
 
-import pandas as pd
-import os
-import glob
-import json
-import numpy as np
+def extract_sequence_from_pdb(pdb_file):
+    parser = PDBParser()
+    structure = parser.get_structure('structure', pdb_file)
+    sequences = []
+
+    for model in structure:
+        for chain in model:
+            seq = []
+            for residue in chain:
+                if residue.id[0] == ' ':  # This checks for hetero/water residues
+                    seq.append(seq1(residue.resname.strip()))
+            sequences.append(''.join(seq))
+
+    return ':'.join(sequences)
 
 def write_af2_update(df, directory, json_pattern):
     # Loop over JSON files that match the given pattern for the current iteration
@@ -65,26 +82,27 @@ def write_af2_update(df, directory, json_pattern):
         with open(json_file, 'r') as file:
             data = json.load(file)
 
-        # Compute average plddt
+        # compute metric values
         avg_plddt = sum(data['plddt']) / len(data['plddt'])
-        # Get max_pae value
         max_pae = data['max_pae']
 
         # Find corresponding PDB file
         pdb_file = None
         rank_str = json_file.split('rank')[1].split('.')[0]
-        for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank{rank_str}*.pdb")):
+        for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank_001*.pdb")):
             pdb_file = pdb
             break
+        print('pdb file', pdb_file)
+        print('rank str', rank_str)
 
         if pdb_file:
             pae_matrix = np.array(data['pae'])
-            i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
+            # i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
 
             sequence = extract_sequence_from_pdb(os.path.abspath(pdb_file))
 
             pdb_file_path = os.path.abspath(pdb_file)
-            affinity = compute_affinity(pdb_file_path)
+            # affinity = compute_affinity(pdb_file_path)
 
             # Add new columns to the DataFrame if they don't exist
             if 'sequence' not in df:
