@@ -31,10 +31,10 @@ export default function FlowDetail() {
 
   const columns: ColumnDef<Job>[] = [
     {
-      accessorKey: "BacalhauJobID",
+      accessorKey: "ID",
       header: "Job ID",
       cell: ({ row }) => {
-        return <Link href={`/jobs/${row.getValue("BacalhauJobID")}/`}>{row.getValue("BacalhauJobID")}</Link>;
+        return <Link href={`/jobs/${row.getValue("ID")}/`}>{row.getValue("ID")}</Link>;
       },
     },
     {
