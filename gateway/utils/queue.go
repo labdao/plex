@@ -115,6 +115,13 @@ func submitBacalhauJob(job *models.Job, db *gorm.DB) error {
 		return err
 	}
 
-	job.BacalhauJobID = bacalhauJob.ID()
+	submittedBacalhauJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
+	if err != nil {
+		return err
+	}
+
+	job.BacalhauJobID = submittedBacalhauJob.Metadata.ID
+	fmt.Printf("Job had id %v\n", job.ID)
+	fmt.Printf("Creating Job with bac id %v\n", submittedBacalhauJob.Metadata.ID)
 	return db.Save(job).Error
 }
