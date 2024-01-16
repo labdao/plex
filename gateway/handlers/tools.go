@@ -88,7 +88,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			ToolJson:      toolJSON,
 			Container:     tool.DockerPull,
 			Memory:        *tool.MemoryGB,
-			Cpu:           tool.Cpu,
+			Cpu:           *tool.Cpu,
 			Gpu:           toolGpu,
 			Network:       tool.NetworkBool,
 		}
