@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
@@ -147,6 +148,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			CID:           submittedIoListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
+			StartTime:     time.Now(),
 		}
 
 		log.Println("Creating Flow entry")
@@ -166,8 +168,10 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				BacalhauJobID: job.BacalhauJobId,
 				State:         job.State,
 				Error:         job.ErrMsg,
+				WalletAddress: walletAddress,
 				ToolID:        job.Tool.IPFS,
 				FlowID:        flowEntry.CID,
+				CreatedAt:     time.Now(),
 			}
 			result := db.Create(&jobEntry)
 			if result.Error != nil {
@@ -283,11 +287,14 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		log.Println("Fetched flow from DB")
+
+		var latestCompletionTime *time.Time
 		for index, job := range flow.Jobs {
 			log.Println("Updating job: ", index)
 			updatedJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
+				return
 			}
 			if updatedJob.State.State == model.JobStateCancelled {
 				flow.Jobs[index].State = "failed"
@@ -299,6 +306,9 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 				flow.Jobs[index].State = "processing"
 			} else if updatedJob.State.State == model.JobStateCompleted {
 				flow.Jobs[index].State = "completed"
+				if latestCompletionTime == nil || flow.Jobs[index].CompletedAt.After(*latestCompletionTime) {
+					latestCompletionTime = &flow.Jobs[index].CompletedAt
+				}
 			} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
 				flow.Jobs[index].State = "failed"
 			}
@@ -306,6 +316,14 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			log.Println("Updated job")
 			if err := db.Save(&flow.Jobs[index]).Error; err != nil {
 				http.Error(w, fmt.Sprintf("Error saving job: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		if latestCompletionTime != nil {
+			flow.EndTime = *latestCompletionTime
+			if err := db.Save(&flow).Error; err != nil {
+				http.Error(w, fmt.Sprintf("Error saving Flow with updated EndTime: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}
