@@ -118,7 +118,7 @@ def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, o
             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
         elif levenshtein_distance>0:
 
-            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory)
+            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
             df = scorer.run()
             LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
             LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod) # TD: normalization by sequence length?

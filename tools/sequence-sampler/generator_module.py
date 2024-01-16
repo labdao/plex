@@ -37,16 +37,29 @@ class StateGenerator:
                 contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
                 print('contig for diffusion', contig)
                 # define arguments and run RFDiffusion
-                command = [
+                # command = [
+                #     'python', 'RFdiffusion/scripts/run_inference.py',
+                #     '--output_prefix', os.path.join(generator_directory, '/motifscaffolding'),
+                #     '--model_directory_path', '/inputs/models',
+                #     '--input_pdb', self.df['absolute pdb path'].iloc[0],
+                #     '--num_designs', '1',
+                #     '--contigmap_contigs', contig
+                # ]
+
+                # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
+                env = os.environ.copy()
+                env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
+
+                command = [ # TD: add the inputs from the block above
                     'python', 'RFdiffusion/scripts/run_inference.py',
-                    '--output_prefix', os.path.join(generator_directory, '/motifscaffolding'),
-                    '--model_directory_path', '/inputs/models',
-                    '--input_pdb', self.df['absolute pdb path'].iloc[0],
-                    '--num_designs', '1',
-                    '--contigmap_contigs', contig
+                    'inference.output_prefix=/outputs/motifscaffolding',
+                    'inference.model_directory_path=RFdiffusion/models',
+                    'inference.input_pdb=/inputs/5TPN.pdb',
+                    'inference.num_designs=1',
+                    "contigmap.contigs=[10-40/A163-181/10-40]"
                 ]
 
-                result = subprocess.run(command, capture_output=True, text=True)
+                result = subprocess.run(command, capture_output=True, text=True, env=env)
 
                 # Check if the command was successful
                 if result.returncode == 0:
@@ -61,7 +74,7 @@ class StateGenerator:
                 subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
 
                 # Define the paths and parameters
-                path_to_PDB = os.path.join(generator_directory, '/motifscaffolding_1.pdb') # '/inputs/diffusion_test.pdb'
+                path_to_PDB = os.path.join(generator_directory, '/motifscaffolding_1.pdb') # fetch one of the RFDiffusion designs; test with: '/inputs/diffusion_test.pdb'
                 output_dir = generator_directory
                 chains_to_design = 'B'
 
@@ -69,16 +82,16 @@ class StateGenerator:
                 os.makedirs(output_dir, exist_ok=True)
 
                 # Define the command and arguments
-                command = [
-                    'python', 'ProteinMPNN/protein_mpnn_run.py',
-                    '--pdb_path', path_to_PDB,
-                    '--pdb_path_chains', chains_to_design,
-                    '--out_folder', output_dir,
-                    '--num_seq_per_target', '1',
-                    '--sampling_temp', '0.1',
-                    '--seed', '37',
-                    '--batch_size', '1'
-                ]
+                # command = [
+                #     'python', 'ProteinMPNN/protein_mpnn_run.py',
+                #     '--pdb_path', path_to_PDB,
+                #     '--pdb_path_chains', chains_to_design,
+                #     '--out_folder', output_dir,
+                #     '--num_seq_per_target', '1',
+                #     '--sampling_temp', '0.1',
+                #     '--seed', '37',
+                #     '--batch_size', '1'
+                # ]
 
                 # Run the command
                 subprocess.run(command, capture_output=True, text=True)

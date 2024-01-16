@@ -1,7 +1,7 @@
 {
-    "name": "seq2struc v0.1",
-    "description": "Create structure from sequence and possibly use the agent to mutate sequences, and run recursively.",
-    "author": "sokrypton",
+    "name": "sequence-sampler v0.1 (beta)",
+    "description": "Evolutionary sampling of sequences.",
+    "author": "Convexity Labs",
     "github": "https://github.com/sokrypton/ColabDesign",
     "paper": "https://www.nature.com/articles/s41586-023-06415-8",
     "task": "sequence design",
@@ -9,7 +9,7 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/colabdesign-autoprompt@sha256:057ea360fdd26cdb098ed451dd03fd58a1de35c1e4508701f37f69587f501291",
+    "dockerPull": "quay.io/labdao/...",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
@@ -219,3 +219,33 @@
       }
     }
   }
+
+  // Relevant inputs:
+
+  // basic_settings:
+      // experiment_name: whos-the-weakest-link
+      // AF2_repeats_per_seq: 1
+      // number_of_evo_cycles: 2
+      // policy_flag: policy_sampling
+      // max_number_of_offspring_kept: 1
+      // target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
+      // init_permissibility_vec: 'TLGXVQ++++LFHIAL'
+      // k: 1
+      // temperature: 100.
+      // max_levenshtein_step_size: 3
+      // alphabet: 'LAGVSERTIDPKQNFYMHWC'
+      // # number of AF2 repeats
+      // # consider adding the dictionary which relates actions and code
+      // # consider adding the set of non-tirival actions
+      // # add start and end residue
+
+  // command = [
+  //   'python', 'ProteinMPNN/protein_mpnn_run.py',
+  //   '--pdb_path', path_to_PDB,
+  //   '--pdb_path_chains', chains_to_design,
+  //   '--out_folder', output_dir,
+  //   '--num_seq_per_target', '1',
+  //   '--sampling_temp', '0.1',
+  //   '--seed', '37',
+  //   '--batch_size', '1'
+]
