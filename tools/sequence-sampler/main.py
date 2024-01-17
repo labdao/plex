@@ -45,11 +45,13 @@ def load_initial_data(fasta_file, cfg):
                 # Add an entry for a new sequence, including the 'step' column set to 0
                 sequences.append({
                     't': 0,
+                    'sample_number': 0,
                     'seed': '',
                     'permissibility_seed': '',
                     '(levenshtein-distance, mask)': 'none',
                     'modified_seq': '',
-                    'permissibility_modified_seq': ''}
+                    'permissibility_modified_seq': '',
+                    'acceptance_flag': True}
                 )
                 seq_num += 1
             else:
@@ -58,6 +60,9 @@ def load_initial_data(fasta_file, cfg):
                 sequences[-1]['modified_seq'] += sequences[-1]['seed']
                 sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
                 sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
+    
+    # sequences['t'] = sequences['t'].astype(int) # TD: make this work
+    # sequences['sample_number'] =sequences['sample_number'].astype(int)
 
     return pd.DataFrame(sequences)
 
@@ -93,24 +98,14 @@ def my_app(cfg: DictConfig) -> None:
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg, outputs_directory, df)
-        mod_seq, modified_permissibility_seq, action, levenshtein_step_size, action_mask = sampler.apply_policy()
+        mod_seq, modified_permissibility_seq, action, levenshtein_step_size, action_mask, df = sampler.apply_policy()
 
         print('mod seq', mod_seq)
         print('modified_permissibility_seq', modified_permissibility_seq)
 
-        new_row = {
-            't': t+1,
-            'seed': squeeze_seq(seed),
-            'permissibility_seed': ''.join(permissibility_seed),
-            '(levenshtein-distance, mask)': action,
-            'modified_seq': mod_seq,
-            'permissibility_modified_seq': ''.join(modified_permissibility_seq)
-        }
-
-        # Append the new row to the DataFrame
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
+        # update seed and permissibility seed
         seed = mod_seq
         permissibility_seed = modified_permissibility_seq
 

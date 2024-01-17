@@ -131,6 +131,37 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
+# # New function to append `df` to `XXX` using concatenation
+# def concatenate_to_df(df, df_main):
+#     # # Load df_main DataFrame
+#     # df_main = pd.read_csv(df_main_path)
+
+#     # Ensure all columns in df are in df_main, if not, add them
+#     for col in df.columns:
+#         if col not in df_main.columns:
+#             df_main[col] = None
+
+#     # Concatenate the last row of df to df_main
+#     df_main = pd.concat([df_main, df[-1:].reset_index(drop=True)], ignore_index=True)
+
+#     # # Save the updated df_main DataFrame
+#     # df_main.to_csv(df_main_path, index=False)
+
+#     return df_main
+
+def concatenate_to_df(df, df_main):
+    # Ensure all columns in df are in df_main, if not, add them
+    for col in df.columns:
+        if col not in df_main.columns:
+            df_main[col] = pd.NA  # Use pd.NA for missing entries
+
+    # Assign the values from the single row of df to the last row of df_main
+    last_index = df_main.index[-1]
+    for col in df.columns:
+        df_main.at[last_index, col] = df.at[df.index[0], col]
+
+    return df_main
+
 def read_second_line_of_fasta(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()

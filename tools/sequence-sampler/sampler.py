@@ -8,6 +8,7 @@ from generator_module import StateGenerator
 from scorer_module import StateScorer
 from utils import squeeze_seq
 from utils import write_af2_update
+from utils import concatenate_to_df
 
 def compute_log_likelihood(sequence, LLmatrix):
 
@@ -118,8 +119,8 @@ def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, o
         elif levenshtein_distance>0:
 
             scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
-            df = scorer.run()
-            LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
+            df, LLmatrix_mod = scorer.run()
+            # LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
             LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod) # TD: normalization by sequence length?
 
     return LL_mod
@@ -136,15 +137,19 @@ class Sampler:
         self.temperature = cfg.params.basic_settings.temperature
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
         self.outputs_directory = outputs_directory
+        self.df = df
 
     def apply_policy(self):
 
         if self.policy_flag == 'policy_sampling':
 
             scorer = StateScorer(self.t, ['ESM2', 'AF2'], self.seed, self.cfg, self.outputs_directory)
-            df = scorer.run()
-            LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
+            df, LLmatrix_seed = scorer.run()
+            # LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
             LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
+
+            # supplement data frame by scores
+            self.df = concatenate_to_df(df, self.df)
 
             action_residue_list = []
             sample_number = 1
@@ -162,8 +167,23 @@ class Sampler:
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)
 
+                squeezed_action_mask = squeeze_seq(action_mask)
+                new_row = {
+                    't': int(self.t),
+                    'sample_number': int(sample_number),
+                    'seed': squeeze_seq(self.seed),
+                    'permissibility_seed': ''.join(self.permissibility_seed),
+                    '(levenshtein-distance, mask)': (levenshtein_distance, squeezed_action_mask.replace('X', 'x')),
+                    'modified_seq': mod_seq,
+                    'permissibility_modified_seq': ''.join(permissibility_vector),
+                    'acceptance_flag': accept_flag 
+                }
+
+                # Append the new row to the DataFrame
+                df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
+
                 # supplement data frame with sample_number and accept_flag, and return df
 
                 sample_number += 1
         
-            return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask
+            return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask, df
