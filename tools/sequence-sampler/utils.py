@@ -131,11 +131,18 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
-def read_last_line_of_fasta(file_path):
+def read_second_line_of_fasta(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
-        # Skip to the last non-empty line that starts with '>'
-        for last_line in reversed(lines):
-            if last_line.strip() and not last_line.startswith('>'):
-                return last_line.strip()
+        if len(lines) >= 2:
+            return lines[1].strip()
     return None
+
+# def read_last_line_of_fasta(file_path):
+#     with open(file_path, 'r') as file:
+#         lines = file.readlines()
+#         # Skip to the last non-empty line that starts with '>'
+#         for last_line in reversed(lines):
+#             if last_line.strip() and not last_line.startswith('>'):
+#                 return last_line.strip()
+#     return None

@@ -94,10 +94,9 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
 
     return permissibility_vector, action_mask
 
-def generate_proposed_state(seed, action_mask, cfg, outputs_directory, df):
+def generate_proposed_state(t, seed, action_mask, cfg, outputs_directory, df):
 
-    # generator = StateGenerator('simple_generator', seed, action_mask, cfg)
-    generator = StateGenerator('xxx', ['RFdiffusion+ProteinMPNN'], seed, action_mask, cfg, outputs_directory, df)
+    generator = StateGenerator(t, ['RFdiffusion+ProteinMPNN'], seed, action_mask, cfg, outputs_directory, df) # TD:
     modified_seq = generator.run()
 
     return modified_seq
@@ -144,7 +143,6 @@ class Sampler:
 
             scorer = StateScorer(self.t, ['ESM2', 'AF2'], self.seed, self.cfg, self.outputs_directory)
             df = scorer.run()
-            print('df fraaaammmmee after scorer.run', df.columns)
             LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
             LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
 
@@ -157,8 +155,7 @@ class Sampler:
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
                 print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector, action_mask)
 
-                print('df fraaaammmmee', df.columns)
-                mod_seq = generate_proposed_state(self.seed, action_mask, self.cfg, self.outputs_directory, df)
+                mod_seq = generate_proposed_state(self.t, self.seed, action_mask, self.cfg, self.outputs_directory, df)
 
                 LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
 
@@ -170,17 +167,3 @@ class Sampler:
                 sample_number += 1
         
             return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask
-
-### OLD CODE ###
-# def squeeze_seq(new_sequence):
-#     return ''.join(filter(lambda x: x != '-', new_sequence))
-
-# def score_seq(seq): # TD: normalisation of LL by sequence length!?
-
-#     # Initialize the ESM2Runner with the default model
-#     runner = sequence_transformer.ESM2Runner()
-#     LLmatrix = runner.token_masked_marginal_log_likelihood_matrix(seq)
-
-#     LL = compute_log_likelihood(runner, seq, LLmatrix)
-
-#     return LL
