@@ -9,7 +9,11 @@ import { ToolDetail } from "@/lib/redux";
 interface TaskPageHeaderProps {
   tool: ToolDetail;
   //@TODO will have a proper type once tasks are set up
-  task: { name: string; slug: string; default_tool: { CID: string } };
+  task: { 
+    name: string; 
+    slug: string; 
+    default_tool?: { CID: string } 
+  };
   loading: boolean;
 }
 
