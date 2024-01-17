@@ -85,9 +85,10 @@ export default function JobDetail() {
   ];
 
   useEffect(() => {
-    const jobBacalhauID = window.location.href.split("/").pop();
-    if (jobBacalhauID) {
-      dispatch(jobDetailThunk(jobBacalhauID));
+    const jobID = window.location.href.split("/").pop();
+    console.log(`jobId is ${jobID}`)
+    if (jobID) {
+      dispatch(jobDetailThunk(`${jobID}`));
     }
   }, [dispatch]);
 
@@ -98,7 +99,7 @@ export default function JobDetail() {
           <CardTitle className="px-4 flex justify-between items-center border-b pb-4 mb-4">
             Job {job.BacalhauJobID}{" "}
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => dispatch(jobPatchDetailThunk(job.BacalhauJobID))} disabled={loading}>
+              <Button variant="ghost" onClick={() => dispatch(jobPatchDetailThunk(`${job.ID}`))} disabled={loading}>
                 <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
               </Button>
             </div>
@@ -139,13 +140,13 @@ export default function JobDetail() {
         <Card className="mt-4">
           <div className="p-4 font-bold uppercase">Inputs</div>
           <div className="bg-gray-50">
-            <DataTable columns={columns} data={job.Inputs} />
+            <DataTable columns={columns} data={job.InputFiles} />
           </div>
         </Card>
         <Card className="mt-4">
           <div className="p-4 font-bold uppercase">Outputs</div>
           <div className="bg-gray-50">
-            <DataTable columns={columns} data={job.Outputs} />
+            <DataTable columns={columns} data={job.OutputFiles} />
           </div>
         </Card>
       </div>

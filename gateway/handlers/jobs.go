@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,10 +31,13 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Get the ID from the URL
 		params := mux.Vars(r)
-		bacalhauJobID := params["bacalhauJobID"]
+		jobID, err := strconv.Atoi(params["jobID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Job ID (%v) could not be converted to int", params["jobID"]), http.StatusNotFound)
+		}
 
 		var job models.Job
-		if result := db.Preload("Outputs.Tags").Preload("Inputs.Tags").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").First(&job, "id = ?", jobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
@@ -52,29 +56,6 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func addTag(db *gorm.DB, name, tagType string) error {
-	if name == "" || tagType == "" {
-		return fmt.Errorf("Tag name and type are required")
-	}
-
-	tag := models.Tag{
-		Name: name,
-		Type: tagType,
-	}
-
-	result := db.Create(&tag)
-	if result.Error != nil {
-		if utils.IsDuplicateKeyError(result.Error) {
-			log.Printf("A tag with the same name already exists: %s", name)
-			return nil
-		} else {
-			return fmt.Errorf("Error creating tag: %v", result.Error)
-		}
-	}
-
-	return nil
-}
-
 func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPatch {
@@ -84,10 +65,13 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Get the ID from the URL
 		params := mux.Vars(r)
-		bacalhauJobID := params["bacalhauJobID"]
+		jobID, err := strconv.Atoi(params["jobID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Job ID (%v) could not be converted to int", params["jobID"]), http.StatusNotFound)
+		}
 
 		var job models.Job
-		if result := db.Preload("Outputs").Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("OutputFiles").Preload("InputFiles").First(&job, "id = ?", jobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {

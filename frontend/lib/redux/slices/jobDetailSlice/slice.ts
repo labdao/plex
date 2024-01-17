@@ -9,8 +9,8 @@ export interface JobDetail {
   Error: string;
   ToolID: string;
   FlowID: string;
-  Inputs: DataFile[];
-  Outputs: DataFile[];
+  InputFiles: DataFile[];
+  OutputFiles: DataFile[];
   Status: string;
 }
 
@@ -22,7 +22,7 @@ export interface JobDetailSliceState {
 }
 
 const initialState: JobDetailSliceState = {
-  job: { ID: null, BacalhauJobID: "", State: "", Error: "", ToolID: "", FlowID: "", Inputs: [], Outputs: [], Status: "unknown" },
+  job: { ID: null, BacalhauJobID: "", State: "", Error: "", ToolID: "", FlowID: "", InputFiles: [], OutputFiles: [], Status: "unknown" },
   loading: false,
   error: null,
   success: false,
