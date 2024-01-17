@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
@@ -43,7 +44,6 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Make sure toolJson is a valid ipwl.Tool
 		var tool ipwl.Tool
 		err = json.Unmarshal(requestData["toolJson"], &tool)
 		if err != nil {
@@ -51,14 +51,12 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Convert the 'tool' object back to JSON
 		toolJSON, err := json.Marshal(tool)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error re-marshalling tool data: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Create a reader from the JSON data
 		reader := bytes.NewReader(toolJSON)
 		tempFile, err := utils.CreateAndWriteTempFile(reader, tool.Name+".json")
 		if err != nil {
@@ -73,12 +71,12 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Store serialized Tool in DB
 		toolEntry := models.Tool{
 			CID:           cid,
 			WalletAddress: walletAddress,
 			Name:          tool.Name,
 			ToolJson:      toolJSON,
+			Timestamp:     time.Now(),
 		}
 
 		result := db.Create(&toolEntry)
@@ -95,7 +93,6 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// Get a single tool by CID
 func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -125,7 +122,6 @@ func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// List tools based on multiple parameters
 func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

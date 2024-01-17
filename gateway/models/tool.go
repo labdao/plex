@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/datatypes"
 )
 
@@ -9,4 +11,5 @@ type Tool struct {
 	Name          string         `gorm:"type:text;not null;unique"`
 	WalletAddress string         `gorm:"type:varchar(42);not null"`
 	ToolJson      datatypes.JSON `gorm:"type:json"`
+	Timestamp     time.Time      `gorm:""`
 }

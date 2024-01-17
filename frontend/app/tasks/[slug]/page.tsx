@@ -1,5 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
-import { PageLoader } from "@/components/shared/PageLoader";
+import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,13 +17,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectWalletAddress, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
-import { VariantSummary } from "./VariantSummary";
+import { TaskSummary } from "./TaskSummary";
 
 type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
 
@@ -41,6 +42,7 @@ type TransformedJSON = {
 export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const { user } = usePrivy();
 
   // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
   const task = useMemo(
@@ -61,7 +63,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
-  const walletAddress = useSelector(selectWalletAddress);
+  const walletAddress = user?.wallet?.address;
 
   // On page load fetch the default tool details
   useEffect(() => {
@@ -112,26 +114,31 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     return () => subscription.unsubscribe();
   }, [dispatch, form]);
 
-  function transformJson(
-    originalJson: any,
-    walletAddress: string
-  ): TransformedJSON {
-    const { name, tool, ...dynamicKeys } = originalJson;
+  function transformJson(originalJson: any, walletAddress: string): TransformedJSON {
+    const { name, tool: toolCid, ...dynamicKeys } = originalJson;
 
-    // Define the transformation for the dynamic keys using a more specific type
-    // @ts-ignore
+    const toolJsonInputs = tool.ToolJson.inputs;
+
     const kwargs = Object.fromEntries(
-      // @ts-ignore
-      Object.entries<DynamicKeys>(dynamicKeys).map(([key, valueArray]: [string, JsonValueArray]) => [
-        key,
-        valueArray.map((valueObject) => valueObject.value),
-      ])
+      Object.entries(dynamicKeys).map(([key, valueArray]) => {
+        // Check if the 'array' property for this key is true
+        // @ts-ignore
+        if (toolJsonInputs[key] && toolJsonInputs[key]["array"]) {
+          // Group the entire array as a single element in another array
+          // @ts-ignore
+          return [key, [valueArray.map((valueObject) => valueObject.value)]];
+        } else {
+          // Process normally
+          // @ts-ignore
+          return [key, valueArray.map((valueObject) => valueObject.value)];
+        }
+      })
     );
 
     // Return the transformed JSON
     return {
       name: name,
-      toolCid: tool,
+      toolCid: toolCid,
       walletAddress: walletAddress,
       scatteringMethod: "crossProduct",
       kwargs: kwargs,
@@ -141,26 +148,29 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
 
-    console.log('transformed payload')
+    console.log("transformed payload");
+    if (!walletAddress) {
+      console.error("Wallet address missing");
+      return;
+    }
     const transformedPayload = transformJson(values, walletAddress);
     console.log(transformedPayload);
-    console.log('submitting')
+    console.log("submitting");
 
     try {
       const response = await createFlow(transformedPayload);
       if (response && response.cid) {
-        console.log('Flow created', response);
+        console.log("Flow created", response);
         // Redirecting to another page, for example, a success page or dashboard
         router.push(`/experiments/${response.cid}`);
       } else {
-        console.log("something went wrong", response)
+        console.log("something went wrong", response);
       }
     } catch (error) {
-      console.error('Failed to create flow', error);
+      console.error("Failed to create flow", error);
       // Handle error, maybe show message to user
     }
   }
-
   return (
     <>
       <div className="container mt-8">
@@ -171,106 +181,106 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           </Alert>
         )}
         <>
-          <TaskPageHeader tool={tool} task={task} />
+          <TaskPageHeader tool={tool} task={task} loading={toolDetailLoading} />
+          <ProtectedComponent method="overlay" message="Log in to run an experiment">
+            <div className="grid min-h-screen grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="col-span-2">
+                <Form {...form}>
+                  <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
+                    <Card>
+                      <CardContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Name <LabelDescription>string</LabelDescription>
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormDescription>Name your experiment</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="tool"
+                          key={tool?.CID}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Model</FormLabel>
+                              <FormControl>
+                                <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
+                              </FormControl>
+                              <FormDescription>
+                                <a
+                                  className="text-accent hover:underline"
+                                  target="_blank"
+                                  href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`}
+                                >
+                                  View Tool Manifest
+                                </a>
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </CardContent>
+                    </Card>
+                    {!toolDetailLoading && (
+                      <>
+                        {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
+                          return (
+                            <Card key={groupKey}>
+                              <CardHeader>
+                                <CardTitle className="uppercase">{groupKey}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-4">
+                                {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
+                                  // @ts-ignore
+                                  const input = groupedInputs?.standard?.[groupKey]?.[key];
+                                  return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                                })}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
 
-          <div className="grid grid-cols-3 gap-8">
-            <div className="col-span-2">
-              <Form {...form}>
-                <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
-                  <Card>
-                    <CardContent className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>
-                              Name <LabelDescription>string</LabelDescription>
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormDescription>Name your experiment</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="tool"
-                        key={tool?.CID}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Model</FormLabel>
-                            <FormControl>
-                              <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
-                            </FormControl>
-                            <FormDescription>
-                              <a
-                                className="text-accent hover:underline"
-                                target="_blank"
-                                href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`}
-                              >
-                                View Tool Manifest
-                              </a>
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                  {!toolDetailLoading && (
-                    <>
-                      {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
-                        return (
-                          <Card key={groupKey}>
-                            <CardHeader>
-                              <CardTitle className="uppercase">{groupKey}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
-                                // @ts-ignore
-                                const input = groupedInputs?.standard?.[groupKey]?.[key];
-                                return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
-                              })}
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-
-                      {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
-                        return (
-                          <Card key={groupKey}>
-                            <Collapsible>
-                              <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase text-bold font-heading">
-                                {groupKey.replace("_", "")}
-                                <ChevronsUpDownIcon />
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <CardContent className="pt-0 space-y-4">
-                                  {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
-                                    // @ts-ignore
-                                    const input = groupedInputs?.collapsible?.[groupKey]?.[key];
-                                    return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
-                                  })}
-                                </CardContent>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          </Card>
-                        );
-                      })}
-                    </>
-                  )}
-                </form>
-              </Form>
+                        {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
+                          return (
+                            <Card key={groupKey}>
+                              <Collapsible>
+                                <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase text-bold font-heading">
+                                  {groupKey.replace("_", "")}
+                                  <ChevronsUpDownIcon />
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  <CardContent className="pt-0 space-y-4">
+                                    {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
+                                      // @ts-ignore
+                                      const input = groupedInputs?.collapsible?.[groupKey]?.[key];
+                                      return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
+                                    })}
+                                  </CardContent>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            </Card>
+                          );
+                        })}
+                      </>
+                    )}
+                  </form>
+                </Form>
+              </div>
+              <div>
+                <TaskSummary sortedInputs={sortedInputs} form={form} outputs={tool?.ToolJson?.outputs} />
+              </div>
             </div>
-            <div>
-              <VariantSummary sortedInputs={sortedInputs} form={form} />
-            </div>
-          </div>
+          </ProtectedComponent>
         </>
-        {toolDetailLoading && <PageLoader />}
       </div>
     </>
   );
