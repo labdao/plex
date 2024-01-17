@@ -5,6 +5,7 @@ import random
 from utils import squeeze_seq
 from utils import generate_contig
 from utils import read_second_line_of_fasta
+from utils import reinsert_deletions
 
 class StateGenerator:
     def __init__(self, evo_cycle, generator_list, sequence, action_mask, cfg, outputs_directory, df):
@@ -32,69 +33,87 @@ class StateGenerator:
             if generator=='RFdiffusion+ProteinMPNN':
                 print(f"Running {generator}")
 
-                print(os.getcwd())
+                if 'X' in self.action_mask: # check if there is any diffusion to be done
 
-                contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
-                print('contig for diffusion', contig)
-                # define arguments and run RFDiffusion
+                    print('diffusing...')
 
-                # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
-                env = os.environ.copy()
-                env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
+                    print('action mask', self.action_mask)
+                    contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
+                    print('diffusion contig', contig)
+                    # define arguments and run RFDiffusion
 
-                command = [
-                    'python', 'RFdiffusion/scripts/run_inference.py',
-                    f'inference.output_prefix={os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding")}',
-                    'inference.model_directory_path=RFdiffusion/models',
-                    f'inference.input_pdb={self.df["absolute pdb path"].iloc[0]}',
-                    'inference.num_designs=1',
-                    f'contigmap.contigs={[contig]}'
-                ]
+                    # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
+                    env = os.environ.copy()
+                    env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
 
-                result = subprocess.run(command, capture_output=True, text=True, env=env)
+                    command = [
+                        'python', 'RFdiffusion/scripts/run_inference.py',
+                        f'inference.output_prefix={os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding")}',
+                        'inference.model_directory_path=RFdiffusion/models',
+                        f'inference.input_pdb={self.df["absolute pdb path"].iloc[0]}',
+                        'inference.num_designs=1',
+                        f'contigmap.contigs={[contig]}'
+                    ]
 
-                # Check if the command was successful
-                if result.returncode == 0:
-                    print("Inference script ran successfully")
-                    print(result.stdout)
+                    result = subprocess.run(command, capture_output=True, text=True, env=env)
+
+                    # Check if the command was successful
+                    if result.returncode == 0:
+                        print("Inference script ran successfully")
+                        print(result.stdout)
+                    else:
+                        print("Error running inference script")
+                        print(result.stderr)
+                    
+                    print('Running MPNN')
+
+                    # Activate the conda environment 'mlfold'
+                    subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
+
+                    # Define the paths and parameters
+                    path_to_PDB = os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding_0.pdb")
+                    output_dir = generator_directory
+                    chains_to_design = 'A'
+
+                    # Create the output directory if it doesn't exist
+                    os.makedirs(output_dir, exist_ok=True)
+
+                    print("pdb path", path_to_PDB)
+
+                    # Define the command and arguments
+                    command = [
+                        'python', 'ProteinMPNN/protein_mpnn_run.py',
+                        '--pdb_path', path_to_PDB,
+                        '--pdb_path_chains', chains_to_design,
+                        '--out_folder', output_dir,
+                        '--num_seq_per_target', '1',
+                        '--sampling_temp', '0.1',
+                        '--seed', '37',
+                        '--batch_size', '1'
+                    ]
+
+                    # Run the command
+                    subprocess.run(command, capture_output=True, text=True)
+
+                    # Usage
+                    fasta_file_path = os.path.join(generator_directory, f"seqs/evocycle_{self.evo_cycle}_motifscaffolding_0.fa")
+                    modified_seq = read_second_line_of_fasta(fasta_file_path)
+                    print('modified sequence after ProteinMPNN', modified_seq)
+
+                    # insert the deletions back into the sequence:
+                    print('modified sequence (before del insertion)', modified_seq)
+                    modified_seq = reinsert_deletions(modified_seq, self.action_mask)
+                    print('modified sequence (after del insertion)', modified_seq)
+
                 else:
-                    print("Error running inference script")
-                    print(result.stderr)
-                
-                print('Running MPNN')
+                    modified_seq = self.sequence
 
-                # Activate the conda environment 'mlfold'
-                subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
-
-                # Define the paths and parameters
-                path_to_PDB = os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding_0.pdb")
-                output_dir = generator_directory
-                chains_to_design = 'A'
-
-                # Create the output directory if it doesn't exist
-                os.makedirs(output_dir, exist_ok=True)
-
-                print("pdb path", path_to_PDB)
-
-                # Define the command and arguments
-                command = [
-                    'python', 'ProteinMPNN/protein_mpnn_run.py',
-                    '--pdb_path', path_to_PDB,
-                    '--pdb_path_chains', chains_to_design,
-                    '--out_folder', output_dir,
-                    '--num_seq_per_target', '1',
-                    '--sampling_temp', '0.1',
-                    '--seed', '37',
-                    '--batch_size', '1'
-                ]
-
-                # Run the command
-                subprocess.run(command, capture_output=True, text=True)
-
-                # Usage
-                fasta_file_path = os.path.join(generator_directory, f"seqs/evocycle_{self.evo_cycle}_motifscaffolding_0.fa")
-                modified_seq = read_second_line_of_fasta(fasta_file_path)
-                print('modified sequence after ProteinMPNN', modified_seq)
+                modified_seq = list(modified_seq) # insert the new deletions
+                for i, char in enumerate(self.action_mask):
+                    if char=='-':
+                        if modified_seq[i]!='-':
+                            print('deleting resiude')
+                            modified_seq[i] = '-'
 
                 return ''.join(modified_seq)
 

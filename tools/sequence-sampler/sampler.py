@@ -86,8 +86,8 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
             elif random_action == 'delete': # important case
                 action_mask.append('-')        
                 permissibility_vector[i] = '-'
-        elif char == '-':
-            action_mask.append('-')  
+        # elif char == '-':
+        #     action_mask.append('-')  
     
     action_mask = ''.join(action_mask)
     permissibility_vector = ''.join(permissibility_vector)

@@ -138,6 +138,26 @@ def read_second_line_of_fasta(file_path):
             return lines[1].strip()
     return None
 
+def reinsert_deletions(modified_seq, action_mask):
+    # Remove '-' from action_mask and check if lengths match
+    print('reinsert deletions - modified seq', modified_seq)
+    print('reinsert deletions - actions_mask', action_mask)
+    if len(modified_seq) != len(action_mask.replace('-', '')):
+        raise ValueError("Length of modified_seq does not match the length of action_mask without '-' characters.")
+
+    seq_with_deletions = ''
+    modified_seq_index = 0
+
+    # Iterate over the action_mask and construct seq_with_deletions
+    for char in action_mask:
+        if char == '-':
+            seq_with_deletions += '-'
+        else:
+            seq_with_deletions += modified_seq[modified_seq_index]
+            modified_seq_index += 1
+
+    return seq_with_deletions
+
 # def read_last_line_of_fasta(file_path):
 #     with open(file_path, 'r') as file:
 #         lines = file.readlines()

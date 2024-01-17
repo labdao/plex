@@ -89,7 +89,7 @@ def my_app(cfg: DictConfig) -> None:
     print("sequence to structure complete...")
 
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
-        print("starting evolution step", t)
+        print("starting evolution step", t+1)
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg, outputs_directory, df)
