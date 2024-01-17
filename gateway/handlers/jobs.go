@@ -68,6 +68,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 		jobID, err := strconv.Atoi(params["jobID"])
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Job ID (%v) could not be converted to int", params["jobID"]), http.StatusNotFound)
+			return
 		}
 
 		var job models.Job
@@ -81,7 +82,7 @@ func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var flow models.Flow
-		if result := db.First(&flow, "cid = ?", job.FlowID); result.Error != nil {
+		if result := db.First(&flow, "id = ?", job.FlowID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				log.Println("Flow not found for given FlowID:", job.FlowID)
 			} else {

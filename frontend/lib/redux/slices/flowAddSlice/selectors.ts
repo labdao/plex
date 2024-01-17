@@ -6,4 +6,5 @@ export const selectFlowAddKwargs = (state: ReduxState) => state.flowAdd.kwargs
 export const selectFlowAddLoading = (state: ReduxState) => state.flowAdd.loading
 export const selectFlowAddError = (state: ReduxState) => state.flowAdd.error
 export const selectFlowAddCid = (state: ReduxState) => state.flowAdd.cid
+export const selectFlowAddID = (state: ReduxState) => state.flowAdd.ID
 export const selectFlowAddSuccess = (state: ReduxState) => state.flowAdd.success

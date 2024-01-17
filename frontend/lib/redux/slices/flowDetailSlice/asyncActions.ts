@@ -1,7 +1,7 @@
 import backendUrl from "lib/backendUrl"
 
-export const getFlow = async (flowCid: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/flows/${flowCid}`, {
+export const getFlow = async (flowID: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/flows/${flowID}`, {
     method: 'Get',
     headers: {
       'Content-Type': 'application/json',
@@ -16,8 +16,8 @@ export const getFlow = async (flowCid: string): Promise<any> => {
   return result
 }
 
-export const patchFlow = async (flowCid: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/flows/${flowCid}`, {
+export const patchFlow = async (flowID: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/flows/${flowID}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

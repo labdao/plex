@@ -7,16 +7,18 @@ export interface Kwargs {
 }
 
 interface FlowAddSliceState {
-  name: string,
-  tool: ToolDetail,
-  kwargs: Kwargs,
-  cid: string,
+  ID: number | null
+  name: string
+  tool: ToolDetail
+  kwargs: Kwargs
+  cid: string
   loading: boolean
   error: string | null
   success: boolean
 }
 
 const initialState: FlowAddSliceState = {
+  ID: null,
   name: "",
   tool: { CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }},
   kwargs: {},
@@ -42,6 +44,9 @@ export const flowAddSlice = createSlice({
     setFlowAddCid: (state, action: PayloadAction<string>) => {
       state.cid = action.payload
     },
+    setFlowAddID: (state, action: PayloadAction<number | null>) => {
+      state.ID = action.payload
+    },
     setFlowAddError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload
     },
@@ -58,6 +63,7 @@ export const {
   setFlowAddName,
   setFlowAddTool,
   setFlowAddCid,
+  setFlowAddID,
   setFlowAddKwargs,
   setFlowAddError,
   setFlowAddLoading,

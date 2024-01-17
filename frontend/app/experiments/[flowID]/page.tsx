@@ -55,11 +55,11 @@ export default function FlowDetail() {
   ];
 
   useEffect(() => {
-    const flowCid = window.location.href.split("/").pop();
-    if (flowCid) {
-      dispatch(flowDetailThunk(flowCid));
+    const flowID = window.location.href.split("/").pop()
+    if (flowID) {
+      dispatch(flowDetailThunk(flowID))
     }
-  }, [dispatch]);
+  }, [dispatch])
 
   return (
     <div className="container mt-8">
@@ -67,7 +67,7 @@ export default function FlowDetail() {
         <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
           <span className="font-bold font-heading">{flow.Name}</span>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => dispatch(flowPatchDetailThunk(flow.CID))} disabled={loading}>
+            <Button variant="ghost" onClick={() => dispatch(flowPatchDetailThunk(`${flow.ID}`))} disabled={loading}>
               <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
             </Button>
             <Button variant="ghost" asChild>

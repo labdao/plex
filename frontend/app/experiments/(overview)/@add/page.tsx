@@ -22,6 +22,7 @@ import {
   selectFlowAddError,
   selectFlowAddKwargs,
   selectFlowAddLoading,
+  selectFlowAddID,
   selectFlowAddName,
   selectFlowAddTool,
   selectToolList,
@@ -34,6 +35,7 @@ import {
   setFlowAddName,
   setFlowAddSuccess,
   setFlowAddTool,
+  setFlowAddID,
   toolListThunk,
 } from "@/lib/redux";
 import { DataFile } from "@/lib/redux/slices/dataFileListSlice/slice";
@@ -48,6 +50,7 @@ export default function AddGraph() {
   const error = useSelector(selectFlowAddError);
   const kwargs = useSelector(selectFlowAddKwargs);
   const cid = useSelector(selectFlowAddCid);
+  const flowID = useSelector(selectFlowAddID);
 
   interface ToolInput {
     position?: string;
@@ -70,19 +73,20 @@ export default function AddGraph() {
   const [inputDataFiles, setInputDataFiles] = useState<Record<string, DataFile[]>>({});
 
   useEffect(() => {
-    if (cid !== "") {
-      dispatch(setFlowAddSuccess(false));
-      dispatch(setFlowAddKwargs({}));
-      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}));
-      dispatch(setFlowAddError(null));
-      dispatch(setFlowAddName(""));
-      dispatch(setFlowAddCid(""));
-      router.push(`/experiments/${cid}`);
-      return;
+    if (flowID != null) {
+      dispatch(setFlowAddSuccess(false))
+      dispatch(setFlowAddKwargs({}))
+      dispatch(setFlowAddTool({ CID: "", WalletAddress: "", Name: "", ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" }}))
+      dispatch(setFlowAddError(null))
+      dispatch(setFlowAddName(""))
+      dispatch(setFlowAddCid(""))
+      dispatch(setFlowAddID(null))
+      router.push(`/experiments/${flowID}`)
+      return
     }
-    dispatch(toolListThunk());
-    dispatch(dataFileListThunk({}));
-  }, [cid, dispatch, router]);
+    dispatch(toolListThunk())
+    dispatch(dataFileListThunk({}))
+  }, [flowID, dispatch, router])
 
   const handleToolChange = async (value: string) => {
     const selectedTool = tools[parseInt(value)];

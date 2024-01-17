@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/bacalhau-project/bacalhau/pkg/model"
@@ -50,7 +51,6 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO McMenemy, update so that jobs are just created to DB and not Bacalhau
 		log.Println("Received Post request at /flows")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -229,7 +229,11 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 		}
-		utils.SendJSONResponseWithCID(w, ioListCid)
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(flow); err != nil {
+			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -241,10 +245,14 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		params := mux.Vars(r)
-		cid := params["cid"]
+		flowID, err := strconv.Atoi(params["flowID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			return
+		}
 
 		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "cid = ?", cid); result.Error != nil {
+		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
@@ -273,11 +281,14 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Received Patch request at /flows")
 
 		params := mux.Vars(r)
-		cid := params["cid"]
-		log.Println("CID: ", cid)
+		flowID, err := strconv.Atoi(params["flowID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			return
+		}
 
 		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "cid = ?", cid); result.Error != nil {
+		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
