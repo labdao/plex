@@ -66,8 +66,6 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	localJobInputs := map[string]interface{}{}
 
 	for key, input := range inputs {
-		fmt.Println("going thru inputs with new code")
-		fmt.Println(input)
 		switch value := input.(type) {
 		case string:
 			if strings.HasPrefix(value, "Qm") {
@@ -218,8 +216,9 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 }
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
-	capacityErrorMsg := "not enough capacity available"
-	return job.State.State == model.JobStateError && strings.HasPrefix(job.State.Executions[0].Status, capacityErrorMsg)
+	capacityErrorMsg := "not enough capacity"
+	fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+	return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
 }
 
 func JobIsRunning(job *model.JobWithInfo) bool {

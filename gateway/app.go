@@ -26,9 +26,9 @@ func ServeWebApp() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second, // Slow SQL threshold
-			LogLevel:      logger.Info, // Log level
-			Colorful:      true,        // Enable color
+			SlowThreshold: time.Second,  // Slow SQL threshold
+			LogLevel:      logger.Error, // Log level
+			Colorful:      true,         // Enable color
 		},
 	)
 
@@ -83,7 +83,7 @@ func ServeWebApp() {
 	go func() {
 		if err := utils.StartJobQueues(db); err != nil {
 			// There should definitely be log alerts set up around this message
-			fmt.Printf("unexpected error processing job queues: %v", err)
+			fmt.Printf("unexpected error processing job queues: %v\n", err)
 		}
 	}()
 
