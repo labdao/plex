@@ -3,6 +3,8 @@ import os
 import glob
 import json
 import numpy as np
+import mdtraj as md
+import subprocess
 from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
 
@@ -76,6 +78,55 @@ def extract_sequence_from_pdb(pdb_file):
 
     return ':'.join(sequences)
 
+def compute_affinity(file_path):
+    if pd.notna(file_path):
+        try:
+        # Run Prodigy and capture the output in temp.txt
+            subprocess.run(
+                ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
+            )
+            # Read the output from temp.txt
+            with open("temp.txt", "r") as f:
+                lines = f.readlines()
+                if lines:  # Check if lines is not empty
+                    # Extract the affinity value from the output
+                    affinity = float(lines[0].split(" ")[-1].split("/")[0])
+                    return affinity
+                else:
+                    print(f"No output from prodigy for {file_path}")
+                    return None  # No output from Prodigy
+        except subprocess.CalledProcessError:
+            print(f"Prodigy command failed for {file_path}")
+            return None  # Prodigy command failed
+    else:
+        print("Invalid file path")
+        return None  # Invalid file path provided
+
+def compute_ipae(pdb_file, pae_matrix):
+
+    traj = md.load(pdb_file)
+
+    distance_cutoff = 0.35
+    contacts = md.compute_contacts(traj, contacts='all', scheme='closest-heavy')
+
+    # Get the contact pairs and distances
+    contact_distances = contacts[0].reshape(-1)  # flatten the distances array
+    contact_pairs = contacts[1]
+
+    # Filter contact pairs based on the distance cutoff
+    contact_indices = contact_pairs[contact_distances < distance_cutoff]
+
+    # extract interface values
+    interface_pae_values = pae_matrix[contact_indices[:, 0], contact_indices[:, 1]]
+
+    # Compute the median PAE for the interface contacts
+    median_pae_interface = np.median(interface_pae_values)
+
+    # Output the median PAE value
+    print("median PAE at the interface:", median_pae_interface)
+
+    return median_pae_interface
+
 def write_af2_update(df, directory, json_pattern):
     # Loop over JSON files that match the given pattern for the current iteration
     for json_file in glob.glob(os.path.join(directory, f"{json_pattern}_scores_rank_001*.json")):
@@ -97,12 +148,11 @@ def write_af2_update(df, directory, json_pattern):
 
         if pdb_file:
             pae_matrix = np.array(data['pae'])
-            # i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
+            i_pae = compute_ipae(os.path.abspath(pdb_file), pae_matrix)
 
             sequence = extract_sequence_from_pdb(os.path.abspath(pdb_file))
 
             pdb_file_path = os.path.abspath(pdb_file)
-            # affinity = compute_affinity(pdb_file_path)
 
             # Add new columns to the DataFrame if they don't exist
             if 'sequence' not in df:
@@ -111,10 +161,8 @@ def write_af2_update(df, directory, json_pattern):
                 df['mean plddt'] = None
             if 'max pae' not in df:
                 df['max pae'] = None
-            # if 'i_pae' not in df:
-            #     df['i_pae'] = None
-            # if 'affinity' not in df:
-            #     df['affinity'] = None
+            if 'i_pae' not in df:
+                df['i_pae'] = None
             if 'absolute json path' not in df:
                 df['absolute json path'] = None
             if 'absolute pdb path' not in df:
@@ -124,30 +172,11 @@ def write_af2_update(df, directory, json_pattern):
             df.at[0, 'sequence'] = sequence
             df.at[0, 'mean plddt'] = avg_plddt
             df.at[0, 'max pae'] = max_pae
-            # df.at[0, 'i_pae'] = i_pae
-            # df.at[0, 'affinity'] = affinity
+            df.at[0, 'i_pae'] = i_pae
             df.at[0, 'absolute json path'] = os.path.abspath(json_file)
             df.at[0, 'absolute pdb path'] = pdb_file_path
 
     return df
-
-# # New function to append `df` to `XXX` using concatenation
-# def concatenate_to_df(df, df_main):
-#     # # Load df_main DataFrame
-#     # df_main = pd.read_csv(df_main_path)
-
-#     # Ensure all columns in df are in df_main, if not, add them
-#     for col in df.columns:
-#         if col not in df_main.columns:
-#             df_main[col] = None
-
-#     # Concatenate the last row of df to df_main
-#     df_main = pd.concat([df_main, df[-1:].reset_index(drop=True)], ignore_index=True)
-
-#     # # Save the updated df_main DataFrame
-#     # df_main.to_csv(df_main_path, index=False)
-
-#     return df_main
 
 def concatenate_to_df(df, df_main):
     # Ensure all columns in df are in df_main, if not, add them

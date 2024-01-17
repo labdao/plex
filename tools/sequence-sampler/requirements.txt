@@ -3,3 +3,4 @@ transformers
 pandas
 numpy
 biopython
+mdtraj

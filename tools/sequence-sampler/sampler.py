@@ -143,10 +143,13 @@ class Sampler:
 
         if self.policy_flag == 'policy_sampling':
 
-            scorer = StateScorer(self.t, ['ESM2', 'AF2'], self.seed, self.cfg, self.outputs_directory)
+            scorer = StateScorer(self.t, ['ESM2', 'AF2', 'Prodigy'], self.seed, self.cfg, self.outputs_directory)
             df, LLmatrix_seed = scorer.run()
             # LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
             LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
+            if 'likelihood' not in df.columns:
+                df['likelihood'] = None  # Initialize the column with None
+            df.at[0, 'likelihood'] = LL_seed
 
             # supplement data frame by scores
             self.df = concatenate_to_df(df, self.df)

@@ -5,6 +5,7 @@ import sequence_transformer
 from AF2_module import AF2Runner
 from utils import squeeze_seq
 from utils import write_af2_update
+from utils import compute_affinity
 
 class StateScorer:
     def __init__(self, evo_cycle, scorer_list, sequence, cfg, outputs_directory):
@@ -58,37 +59,18 @@ class StateScorer:
                 df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{self.evo_cycle}")
                 df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
             
-            # elif scorer=='Prodigy': # not implemented yet
+            elif scorer=='Prodigy': # not implemented yet
 
-            #     Usage example
-            #     pdb_file_path = os.path.abspath(pdb_file)
-            #     affinity = compute_affinity(pdb_file_path)
-            #     if affinity is not None:
-            #         print(f"The affinity for the file {pdb_file_path} is {affinity}")
+                pdb_file_path = df_score['absolute pdb path'].iloc[0]
+                affinity = compute_affinity(pdb_file_path)
+                if 'affinity' not in df_score.columns:
+                    df_score['affinity'] = None  # Initialize the column with None
 
-            #     def compute_affinity(file_path):
-            #     if pd.notna(file_path):
-            #         try:
-            #             # Run Prodigy and capture the output in temp.txt
-            #             subprocess.run(
-            #                 ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
-            #             )
-            #             # Read the output from temp.txt
-            #             with open("temp.txt", "r") as f:
-            #                 lines = f.readlines()
-            #                 if lines:  # Check if lines is not empty
-            #                     # Extract the affinity value from the output
-            #                     affinity = float(lines[0].split(" ")[-1].split("/")[0])
-            #                     return affinity
-            #                 else:
-            #                     print(f"No output from prodigy for {file_path}")
-            #                     return None  # No output from Prodigy
-            #         except subprocess.CalledProcessError:
-            #             print(f"Prodigy command failed for {file_path}")
-            #             return None  # Prodigy command failed
-            #     else:
-            #         print("Invalid file path")
-            #         return None  # Invalid file path provided
+                # Assuming you have a single row, set the value of 'affinity' for the first row
+                df_score.at[0, 'affinity'] = affinity
+
+                if affinity is not None:
+                    print(f"The affinity for the complex {pdb_file_path} is {affinity}")
         
         print(f"Scoring job complete. Results are in {self.outputs_directory}")
 
