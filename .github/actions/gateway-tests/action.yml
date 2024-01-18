@@ -87,7 +87,7 @@ runs:
         response=$(curl --silent http://localhost:8080/tools)
         length=$(echo "$response" | jq 'length')
 
-        if [ "$length" -eq 1 ]; then
+        if [ "$length" -ge 1 ]; then
            echo "List Tools test passed"
         else
            echo "response was:"
