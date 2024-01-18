@@ -12,6 +12,7 @@ import (
 	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/config"
 	"github.com/bacalhau-project/bacalhau/pkg/model"
+	"github.com/bacalhau-project/bacalhau/pkg/publicapi/apimodels/legacymodels"
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/labdao/plex/internal/ipfs"
 )
@@ -231,4 +232,19 @@ func JobCompleted(job *model.JobWithInfo) bool {
 
 func JobFailed(job *model.JobWithInfo) bool {
 	return job.State.State == model.JobStateError
+
+func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
+	client, err := CreateBacalhauClient()
+	if err != nil {
+		return nil, err
+	}
+
+	options := legacymodels.EventFilterOptions{}
+
+	events, err := client.GetEvents(context.Background(), jobId, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return events, err
 }

@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
@@ -142,6 +143,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			CID:           ioListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
+			StartTime:     time.Now(),
 		}
 
 		log.Println("Creating Flow entry")
@@ -170,6 +172,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: walletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
+        CreatedAt:     time.Now(),
 			}
 			result := db.Create(&job)
 			if result.Error != nil {
@@ -258,8 +261,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			return
 		}
-
-		log.Println("Fetched flow from DB: ", flow)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {

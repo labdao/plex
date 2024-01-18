@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/datatypes"
 )
 
@@ -14,4 +16,5 @@ type Tool struct {
 	Cpu           float64        `gorm:"type:float"`
 	Gpu           int            `gorm:"type:int"`
 	Network       bool           `gorm:"type:boolean"`
+	Timestamp     time.Time      `gorm:""`
 }

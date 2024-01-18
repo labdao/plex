@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface DynamicFieldProps {
   form: UseFormReturn<any>;
@@ -22,8 +23,10 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
     control: form.control,
   });
 
+  const hasError = form.formState.errors?.[inputKey];
+
   return (
-    <div className="p-4 space-y-4 border rounded-lg">
+    <div className={cn("p-4 space-y-4 border rounded-lg", hasError && "border-destructive")}>
       {fields.map((field, index) => (
         <FormField
           key={field.id}

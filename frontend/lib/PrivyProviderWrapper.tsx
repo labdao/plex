@@ -21,13 +21,13 @@ export default function PrivyProviderWrapper({
     return (
         <PrivyAuthContext.Provider value={{ user, authenticated }}>
             <PrivyProvider
-                appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'clo7adk6w07q7jq0f08yrnkur'}
+                appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'clnf5ptkk01h1jn0fzhh4xldt'}
                 onSuccess={handleLogin}
                 config={{
                     appearance: {
                         theme: "dark",
                         accentColor: "#6bdaad",
-                        logo: "https://imgur.com/6egHxy0.png"
+                        logo: "https://raw.githubusercontent.com/labdao/lab-exchange/main/LabDAO_Logo_Teal.png",
                     }
                 }}
             >

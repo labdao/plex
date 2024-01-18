@@ -25,7 +25,6 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Get the ID from the URL
 		params := mux.Vars(r)
 		jobID, err := strconv.Atoi(params["jobID"])
 		if err != nil {
@@ -42,8 +41,6 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		log.Println("Fetched Job from DB: ", job)
-
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {
 			http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
@@ -58,8 +55,6 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
-			// Check the origin of the request and return true if it's allowed
-			// Here's a simple example that allows any origin:
 			return true
 		},
 	}
@@ -93,10 +88,8 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Channel to gather output
 	outputChan := make(chan string)
 
-	// Read from stdout
 	go func() {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
@@ -104,7 +97,6 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// Read from stderr
 	go func() {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
@@ -112,16 +104,13 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// Write to WebSocket
 	go func() {
 		for {
 			select {
 			case outputLine, ok := <-outputChan:
 				if !ok {
-					// Handle closed channel, if necessary
 					return
 				}
-				// Send to WebSocket
 				if err := conn.WriteMessage(websocket.TextMessage, []byte(outputLine)); err != nil {
 					log.Println("Error sending message through WebSocket:", err)
 					return
@@ -130,6 +119,5 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// If you need to wait for cmd to finish
 	cmd.Wait()
 }
