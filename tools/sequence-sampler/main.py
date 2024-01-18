@@ -9,6 +9,7 @@ from hydra.core.hydra_config import HydraConfig
 from omegaconf import DictConfig, OmegaConf
 
 from sampler import Sampler
+from utils import slash_to_convexity_notation
 
 # def get_plex_job_inputs():
 #     # Retrieve the environment variable
@@ -55,11 +56,16 @@ def load_initial_data(fasta_file, cfg):
                 )
                 seq_num += 1
             else:
+
+                
                 # Add sequence data to the most recently added sequence entry
                 sequences[-1]['seed'] += line.strip()
                 sequences[-1]['modified_seq'] += sequences[-1]['seed']
-                sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
-                sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
+                contig_in_convexity_notation = slash_to_convexity_notation(sequences[-1]['seed'], cfg.params.basic_settings.init_permissibility_vec)
+                sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
+                sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
+                # sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
+                # sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
     
     # sequences['t'] = sequences['t'].astype(int) # TD: make this work
     # sequences['sample_number'] =sequences['sample_number'].astype(int)

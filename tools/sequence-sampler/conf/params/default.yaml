@@ -4,7 +4,7 @@ basic_settings:
   number_of_evo_cycles: 45
   policy_flag: policy_sampling
   target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
-  init_permissibility_vec: '++++++++++++++++++++++++++FWDKAMGWXXQAPGKEREFVAGIGW----NTNYADSVKGRFTISRDNAKNTVYXXXNSLKPEDTAVYYCAVLDNYLYYYEDSLWYNFIYWGQGTQVTV--'
+  init_permissibility_vec: 'B2-10/+11-16/B27-50/x52-55/B57/+62-66'
   temperature: 100.
   max_levenshtein_step_size: 4
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
@@ -14,3 +14,4 @@ basic_settings:
   # consider adding the dictionary which relates actions and code
   # consider adding the set of non-tirival actions
   # add start and end resiude
+    # init_permissibility_vec: '++++++++++++++++++++++++++FWDKAMGWXXQAPGKEREFVAGIGW----NTNYADSVKGRFTISRDNAKNTVYXXXNSLKPEDTAVYYCAVLDNYLYYYEDSLWYNFIYWGQGTQVTV--'

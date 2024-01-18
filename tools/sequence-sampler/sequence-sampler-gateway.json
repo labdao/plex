@@ -77,7 +77,7 @@
       },
       "permissibility_mask": {
         "type": "string",
-        "description": "Definition of permissible changes. -: deleted, +: deleted or diffuse, X: diffuse",
+        "description": "Definition of permissible changes: B) keep fixed, +) delete or diffuse, x) diffuse only",
         "array": false,
         "glob": [
           ""
@@ -85,7 +85,7 @@
         "default": "",
         "min": "",
         "max": "",
-        "example": "TLGA++IMNXXFH-AL",
+        "example": "B2-10/+11-16/B27-50/x52-55/B57/+62-66",
         "grouping": "evolution parameters",
         "position": "203",
         "required": true

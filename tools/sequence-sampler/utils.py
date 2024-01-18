@@ -218,11 +218,42 @@ def reinsert_deletions(modified_seq, action_mask):
 
     return seq_with_deletions
 
-# def read_last_line_of_fasta(file_path):
-#     with open(file_path, 'r') as file:
-#         lines = file.readlines()
-#         # Skip to the last non-empty line that starts with '>'
-#         for last_line in reversed(lines):
-#             if last_line.strip() and not last_line.startswith('>'):
-#                 return last_line.strip()
-#     return None
+def slash_to_convexity_notation(sequence, slash_contig):
+    # Find the maximum index required
+    max_index = 0
+    parts = slash_contig.split('/')
+    for part in parts:
+        if '-' in part:
+            _, end = map(int, part[1:].split('-'))
+            max_index = max(max_index, end)
+        elif part:
+            max_index = max(max_index, int(part[1:]))
+
+    # Ensure permissibility_seed is long enough and initialize with '-'
+    permissibility_seed = ['-'] * max(max_index, len(sequence))
+
+    # Process each part of the slash_contig
+    for part in parts:
+        if part:
+            type_char = part[0]
+            if '-' in part:
+                start, end = map(int, part[1:].split('-'))
+            else:
+                start = end = int(part[1:])
+
+            for i in range(start, end + 1):
+                if type_char == 'B':
+                    permissibility_seed[i-1] = sequence[i-1] if i-1 < len(sequence) else '-'
+                elif type_char == 'x':
+                    permissibility_seed[i-1] = 'X'
+                elif type_char == '+':
+                    permissibility_seed[i-1] = '+'
+
+    # Join the list into a string and return
+    return ''.join(permissibility_seed)
+
+# # Example usage
+# sequence = "QVQLQESGGGLVQAGGSLRLSCAASGNIFWDKAMGWYRQAPGKEREFVAGIGWGTNTNYADSVKGRFTISRDNAKNTVYLQMNSLKPEDTAVYYCAVLDNYLYYYEDSLWYNFIYWGQGTQVTVSS"
+# baker_contig = "B2-10/+11-16/B27-50/x52-55/B57/+62-66"
+# permissibility_seed = slash_to_convexity_notation(sequence, baker_contig)
+# print(permissibility_seed)
