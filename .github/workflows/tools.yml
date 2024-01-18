@@ -57,6 +57,10 @@ jobs:
             - 'tools/colabdesign-autoprompt/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
+          sequence-sampler:
+            - 'tools/sequence-sampler/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
 
 
   tools:
