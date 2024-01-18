@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ESM2Runner:
-    def __init__(self, model_name="facebook/esm2_t6_8M_UR50D"):
+    def __init__(self, model_name="facebook/esm2_t33_650M_UR50D"):
         verbosity = os.getenv('VERBOSITY', 'WARNING').upper()
         logger.setLevel(verbosity)
 
