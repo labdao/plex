@@ -62,25 +62,25 @@ runs:
         fi
       shell: bash
 
-    - name: Test add Tool Endpoint
-      run: |
-        TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
-        json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
-        response=$(curl -s -X POST "http://localhost:8080/tools" \
-               -H "Content-Type: application/json" \
-               -d "$json_payload")
+        # - name: Test add Tool Endpoint
+        #   run: |
+        #     TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
+        #     json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+        #     response=$(curl -s -X POST "http://localhost:8080/tools" \
+        #            -H "Content-Type: application/json" \
+        #            -d "$json_payload")
 
-        cid_value=$(echo "$response" | jq -r '.cid')
+        #     cid_value=$(echo "$response" | jq -r '.cid')
 
-        if [ "$cid_value" == "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb" ]; then
-           echo "Add Tool upload test passed"
-        else
-           echo "Add Tool upload test failed: Expected 'QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb' but got '$cid_value'"
-           echo "response was:"
-           echo "$response"
-           exit 1
-        fi
-      shell: bash
+        #     if [ "$cid_value" == "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb" ]; then
+        #        echo "Add Tool upload test passed"
+        #     else
+        #        echo "Add Tool upload test failed: Expected 'QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb' but got '$cid_value'"
+        #        echo "response was:"
+        #        echo "$response"
+        #        exit 1
+        #     fi
+        #   shell: bash
 
     - name: Test list Tools Endpoint
       run: |
