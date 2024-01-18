@@ -87,12 +87,12 @@ runs:
         response=$(curl --silent http://localhost:8080/tools)
         length=$(echo "$response" | jq 'length')
 
-        if [ "$length" -eq 1 ]; then
+        if [ "$length" -gt 1 ]; then
            echo "List Tools test passed"
         else
            echo "response was:"
            echo "$response"
-           echo "List Tools test failed: Expected length of 1 but got '$length'"
+           echo "List Tools test failed: Expected length of > 1 but got '$length'"
            exit 1
         fi
       shell: bash
