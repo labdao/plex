@@ -117,12 +117,12 @@ runs:
 
         # Extract the CID from the response
         echo "$response"
-        cid_value=$(echo "$response" | jq -r '.cid')
-        echo "$response" | jq -r '.cid'
+        cid_value=$(echo "$response" | jq -r '.CID')
+        echo "$response" | jq -r '.CID'
 
         # Check if the CID exists
         if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
-           echo "$response" | jq -r '.cid'
+           echo "$response" | jq -r '.CID'
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"
