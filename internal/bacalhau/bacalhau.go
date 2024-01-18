@@ -232,6 +232,7 @@ func JobCompleted(job *model.JobWithInfo) bool {
 
 func JobFailed(job *model.JobWithInfo) bool {
 	return job.State.State == model.JobStateError
+}
 
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
 	client, err := CreateBacalhauClient()
