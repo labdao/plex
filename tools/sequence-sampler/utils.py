@@ -178,18 +178,6 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
-# def concatenate_to_df(df, df_main):
-#     # Ensure all columns in df are in df_main, if not, add them
-#     for col in df.columns:
-#         if col not in df_main.columns:
-#             df_main[col] = pd.NA  # Use pd.NA for missing entries
-
-#     # Assign the values from the single row of df to the last row of df_main
-#     last_index = df_main.index[-1]
-#     for col in df.columns:
-#         df_main.at[last_index, col] = df.at[df.index[0], col]
-
-#     return df_main
 def concatenate_to_df(df, df_main):
     # Ensure all columns in df are in df_main, if not, add them with the values from df
     for col in df.columns:
@@ -261,9 +249,3 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
     # Join the list into a string and return
     return ''.join(permissibility_seed)
-
-# # Example usage
-# sequence = "QVQLQESGGGLVQAGGSLRLSCAASGNIFWDKAMGWYRQAPGKEREFVAGIGWGTNTNYADSVKGRFTISRDNAKNTVYLQMNSLKPEDTAVYYCAVLDNYLYYYEDSLWYNFIYWGQGTQVTVSS"
-# baker_contig = "B2-10/+11-16/B27-50/x52-55/B57/+62-66"
-# permissibility_seed = slash_to_convexity_notation(sequence, baker_contig)
-# print(permissibility_seed)
