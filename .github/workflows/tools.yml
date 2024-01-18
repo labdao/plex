@@ -4,8 +4,11 @@
 name: tools
 
 on:
+  workflow_dispatch:
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     # Pattern matched against refs/tags
     tags:
       - '**'
@@ -15,7 +18,9 @@ on:
       - '.github/workflows/docker.yml'
 
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths:
       - 'tools/**'
       - '.github/workflows/tools.yml'
@@ -48,17 +53,15 @@ jobs:
             - 'tools/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          colabfold:
-            - 'tools/colabfold/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          oddt:
-            - 'tools/oddt/**'
+          colabdesign-autoprompt:
+            - 'tools/colabdesign-autoprompt/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
 
+
   tools:
     needs: changes-tools
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:

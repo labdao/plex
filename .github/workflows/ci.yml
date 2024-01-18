@@ -10,20 +10,27 @@ on:
       preview-enabled:
         description: 'check whether to enable preview by setting up tunnel and keep environment up. Default `true`'
         required: false
-        type: bool
         default: true
+        type: choice
+        options:
+          - true
+          - false
       preview-timeout:
-        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `300m`'
+        description: 'preview environment timeout. This setting is how long the environment would be available for. Set it less than Github Action timeout of 360 minutes. This value is passed into `sleep` command, so follow the sleep command syntax. Default `360m`'
         required: false
         type: string
-        default: "300m"
+        default: "360m"
   push:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'
   pull_request:
-    branches: ["main"]
+    branches:
+      - "main"
+      - "staging"
     paths-ignore:
       - 'docs/**'
       - 'infrastructure/**'
@@ -34,26 +41,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # # Only downloading cli for macos
-  # ci-setup-compose:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [macos-13]
-  #   runs-on: ${{ matrix.os }}
-  #   environment: ci
-  #   steps:
-  #     - name: Download docker compose
-  #       run: |
-  #         # Download docker-compose plugin
-  #         curl -sSL https://github.com/docker/compose/releases/download/v2.20.3/docker-compose-darwin-aarch64 -o docker-compose
-
-  #     - name: upload docker-compose plugin to be used later
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: docker-compose-plugin-${{ matrix.os }}
-  #         path: ./docker-compose
-
   # Download Bacalhau CLI for troubleshooting
   ci-setup-bacalhau:
     strategy:
@@ -63,7 +50,9 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
+          - 1.2.0
     runs-on: ${{ matrix.os }}
     environment: ci
     steps:
@@ -94,7 +83,9 @@ jobs:
           - ubuntu-22.04
           # - macos-13
         bacalhau_version:
+          - 1.1.2
           - 1.1.4
+          - 1.2.0
         network_mode:
           - public
           - private
@@ -156,44 +147,35 @@ jobs:
 
       - name: Bring tunnel for previewing environment
         if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          #
+          set -x
+
           # Create empty file to avoid issues
           touch ./docker/.env.tunnel
 
           # Setup docker compose tunnel
           docker compose -f docker-compose.tunnel.yml up -d --wait
 
-          # Dump file contents
-          cat ./docker/.env.tunnel
-
-      - name: Tunnel URLs
-        if: inputs.preview-enabled == 'true'
-        run: |
-          cat ./docker/.env.tunnel
+          # copy tunnel info to .env
+          cat docker/.env.tunnel >> .env
 
       - name: docker compose build
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Build compose
           docker compose build --parallel
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml up -d --wait
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
         run: |
-          # Source tunnel URL file
-          source ./docker/.env.tunnel || true
-
           # Compose up
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
 
@@ -212,46 +194,6 @@ jobs:
 
       - name: Go Test
         run: go test ./... -v
-
-      - name: Run Equibind
-        run: |
-          set -x
-
-          # Dump BACALHAU_API_HOST
-          echo "BACALHAU_API_HOST set to ${BACALHAU_API_HOST}"
-
-          # Create bacalhau config file
-          ./bacalhau version
-
-          # Pull equibind image before running the job to get better idea of job run
-          docker pull $(cat tools/equibind-ci.json | jq -r '.dockerPull')
-
-          # Get node list
-          ./bacalhau node list
-
-          # Run the job
-          ./plex init -t tools/equibind-ci.json -i '{"protein": ["testdata/binding/abl/7n9g.pdb"], "small_molecule": ["testdata/binding/abl/ZINC000003986735.sdf"]}' --scatteringMethod=dotProduct --autoRun=true --showAnimation=false -a test -a ci | tee -a plex_run_output.log
-          result_dir=$(cat plex_run_output.log | grep 'Finished processing, results written to' | sed -n 's/^.*Finished processing, results written to //p' | sed 's/\/io.json//')
-
-          # Get equibind job id
-          echo EQUIBIND_JOB_ID=$(cat plex_run_output.log | grep -oP "^Bacalhau job id.*"  | cut -d ":" -f2 | awk '{print $1}') >> $GITHUB_ENV
-
-          # chdir for outputs
-          cd "$result_dir/entry-0/outputs"
-
-          if [ "$(find . -name '*docked.sdf' | grep 'docked.sdf')" == "" ]; then
-            echo "No docked files found"
-            exit 1
-          else
-            echo "Docked files found:"
-            find . -name '*docked.sdf' | grep 'docked.sdf'
-          fi
-
-      - name: Run bacalhau describe
-        # run always even when
-        if: always()
-        run: |
-          ./bacalhau describe ${{ env.EQUIBIND_JOB_ID }}
 
       - name: Run Gateway Integration Tests
         uses: ./.github/actions/gateway-tests
@@ -291,6 +233,41 @@ jobs:
         if: inputs.preview-enabled == 'true'
         run: |
           cat ./docker/.env.tunnel
+
+      - name: Post tunnel URLs to PR
+        if: inputs.preview-enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #
+          set -x
+
+          # Comment output
+          source ./docker/.env.tunnel
+
+          # Adding comment
+          echo '---' >> comment.md
+          echo  >> comment.md
+          echo ':information_source: NOTE' >> comment.md
+          echo  >> comment.md
+          echo 'The URLs will only be available for 6 hours'  >> comment.md
+          echo '---'  >> comment.md
+
+          echo '## Preview URLs' >> comment.md
+          echo 'Bacalhau Version: ${{ matrix.bacalhau_version }}' >> comment.md
+          echo 'OS: ${{ matrix.os }}' >> comment.md
+          echo 'Network Mode: ${{ matrix.network_mode }}' >> comment.md
+          echo "| Endpoint | URL |" >> comment.md
+          echo "|---|---|"  >> comment.md
+          echo "| FRONTEND_URL | ${FRONTEND_URL} |" >> comment.md
+          echo "| BACKEND_URL | ${NEXT_PUBLIC_BACKEND_URL} |" >> comment.md
+          echo "| IPFS_GATEWAY_URL | ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT} |" >> comment.md
+
+          # Comment on PR with URLs
+          PR_NUMBER=$(gh pr view --json number | jq -r '.number')
+          if [[ ! -z "${PR_NUMBER}" ]]; then
+            gh pr comment "${PR_NUMBER}" --body-file comment.md
+          fi
 
       - name: Sleep for preview-timeout
         if: inputs.preview-enabled == 'true'

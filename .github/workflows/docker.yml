@@ -40,7 +40,7 @@ on:
         type: string
         default: 'labdao'
       deploy-environment:
-        description: 'environemnt to deploy into'
+        description: 'environment to deploy into'
         required: false
         type: string
 
@@ -97,13 +97,12 @@ jobs:
         uses: docker/build-push-action@v5
         id: build-and-push
         with:
-          build-args: ${{ inputs.build-args }}|
+          build-args: |
+            ${{ inputs.build-args }}
+            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{ inputs.context }}
-          # TODO dirty hack to make frontend work
-          secrets: |
-            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -120,10 +119,16 @@ jobs:
 
       - name: Trigger deploy to stg
         id: deploy-to-ecs
-        if: |
-          github.ref == 'ref/heads/main' &&
-          (inputs.name == 'backend' ||
-          (inputs.name == 'frontend' && inputs.deploy-environment == 'stg'))
+        if: >-
+          ${{
+            github.ref_name == 'main' &&
+            (
+              inputs.name == 'backend' ||
+                (
+                  inputs.name == 'frontend' && inputs.deploy-environment == 'stg'
+                )
+            )
+          }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

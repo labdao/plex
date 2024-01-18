@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/models",
+        destination: "/tasks",
         permanent: true,
       },
     ];

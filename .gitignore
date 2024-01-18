@@ -315,9 +315,6 @@ yarn-debug.log*
 # gorm
 gateway/gorm.db
 
-# dev script debugging
-*.csv
-
 # Ignore vim files
 *~
 *.swp
@@ -330,3 +327,6 @@ tools/tmp*
 
 # Ignore docker stuff
 docker/.env.tunnel
+
+#
+tools/*/test-runs/

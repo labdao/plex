@@ -43,7 +43,7 @@
     # GPU
     - name: Install tools and binaries for GPU support
       ansible.builtin.include_tasks: tasks/install_gpu_tasks.yaml
-      when: num_of_gpus | int > 0
+      when: num_of_gpus | int > 0 or (force_gpu_install is defined and force_gpu_install | bool)
 
     # Ensure handlers are restarted before continuing
     - name: flush handlers
@@ -63,6 +63,11 @@
       ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
 
   handlers:
+    - name: Reload systemd
+      become: true
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
     - name: Restart docker
       become: true
       ansible.builtin.service:
