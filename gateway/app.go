@@ -81,9 +81,23 @@ func ServeWebApp() {
 
 	// Start queue watcher in a separate goroutine
 	go func() {
-		if err := utils.StartJobQueues(db); err != nil {
-			// There should definitely be log alerts set up around this message
-			fmt.Printf("unexpected error processing job queues: %v\n", err)
+		for {
+			if err := utils.StartJobQueues(db); err != nil {
+				fmt.Printf("unexpected error processing job queues: %v\n", err)
+				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
+			}
+		}
+	}()
+
+	// Start running jobs watcher in a separate goroutine
+	go func() {
+		for {
+			if err := utils.MonitorRunningJobs(db); err != nil {
+				fmt.Printf("unexpected error monitoring running jobs: %v\n", err)
+				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
+			} else {
+				break // exit the loop if no error (optional based on your use case)
+			}
 		}
 	}()
 

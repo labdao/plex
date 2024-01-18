@@ -11,11 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	"gorm.io/datatypes"
@@ -262,70 +260,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		log.Println("Fetched flow from DB: ", flow)
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Patch request at /flows")
-		if r.Method != http.MethodPatch {
-			utils.SendJSONError(w, "Only PATCH method is supported", http.StatusBadRequest)
-			return
-		}
-		log.Println("Received Patch request at /flows")
-
-		params := mux.Vars(r)
-		flowID, err := strconv.Atoi(params["flowID"])
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
-			return
-		}
-
-		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
-			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
-			}
-			return
-		}
-
-		log.Println("Fetched flow from DB")
-		for index, job := range flow.Jobs {
-			log.Println("Updating job: ", index)
-			updatedJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
-			}
-			if updatedJob.State.State == model.JobStateCancelled {
-				flow.Jobs[index].State = "failed"
-			} else if updatedJob.State.State == model.JobStateError {
-				flow.Jobs[index].State = "error"
-			} else if updatedJob.State.State == model.JobStateQueued {
-				flow.Jobs[index].State = "queued"
-			} else if updatedJob.State.State == model.JobStateInProgress {
-				flow.Jobs[index].State = "processing"
-			} else if updatedJob.State.State == model.JobStateCompleted {
-				flow.Jobs[index].State = "completed"
-			} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
-				flow.Jobs[index].State = "failed"
-			}
-
-			log.Println("Updated job")
-			if err := db.Save(&flow.Jobs[index]).Error; err != nil {
-				http.Error(w, fmt.Sprintf("Error saving job: %v", err), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		log.Println("Updated flow from DB: ", flow)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {

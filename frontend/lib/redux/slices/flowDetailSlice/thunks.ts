@@ -23,26 +23,3 @@ export const flowDetailThunk = createAppAsyncThunk(
     }
   }
 )
-
-export const flowPatchDetailThunk = createAppAsyncThunk(
-  'flow/flowPatchDetail',
-  async (flowID: string, { dispatch }) => {
-    dispatch(setFlowDetailLoading(true))
-    try {
-      const responseData = await patchFlow(flowID)
-      dispatch(setFlowDetailLoading(false))
-      dispatch(setFlowDetailSuccess(true))
-      dispatch(setFlowDetail(responseData))
-      return responseData
-    } catch (error: unknown) {
-      console.log('Failed to get Flow.', error)
-      if (error instanceof Error) {
-        dispatch(setFlowDetailError(error.message))
-      } else {
-        dispatch(setFlowDetailError('Failed to patch Flow.'))
-      }
-      dispatch(setFlowDetailLoading(false))
-      return false
-    }
-  }
-)
