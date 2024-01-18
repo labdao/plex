@@ -1,0 +1,11 @@
+{
+    "experiment_name": "default",
+    "AF2_repeats_per_seq": 1,
+    "number_of_evo_cycles": 45,
+    "policy_flag": "policy_sampling",
+    "target_seq": "TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF",
+    "init_permissibility_vec": "x40:120",
+    "temperature": 100,
+    "max_levenshtein_step_size": 10,
+    "alphabet": "LAGVSERTIDPKQNFYMHWC"
+}

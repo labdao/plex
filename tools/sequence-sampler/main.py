@@ -64,8 +64,6 @@ def load_initial_data(fasta_file, cfg):
                 contig_in_convexity_notation = slash_to_convexity_notation(sequences[-1]['seed'], cfg.params.basic_settings.init_permissibility_vec)
                 sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
                 sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
-                # sequences[-1]['permissibility_seed'] += cfg.params.basic_settings.init_permissibility_vec
-                # sequences[-1]['permissibility_modified_seq'] += cfg.params.basic_settings.init_permissibility_vec
     
     # sequences['t'] = sequences['t'].astype(int) # TD: make this work
     # sequences['sample_number'] =sequences['sample_number'].astype(int)
@@ -75,8 +73,6 @@ def load_initial_data(fasta_file, cfg):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
-    # user_inputs = get_plex_job_inputs()
-    # print(f"user inputs from plex: {user_inputs}")
 
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
@@ -87,6 +83,20 @@ def my_app(cfg: DictConfig) -> None:
     else:
         outputs_directory = cfg.outputs.directory
     print(f"Output directory : {outputs_directory}")
+
+    ## plex user inputs
+    # user_inputs = get_plex_job_inputs()
+    # print(f"user inputs from plex: {user_inputs}")
+    # = user_inputs["experiment_name"]
+    # = user_inputs["AF2_repeats_per_seq"]
+    # = user_inputs["number_of_evo_cycles"]
+    # = user_inputs["policy_flag"]
+    # = user_inputs["target_seq"]
+    # = user_inputs["init_permissibility_vec"]
+    # = user_inputs["temperature"]
+    # = user_inputs["max_levenshtein_step_size"]
+    # = user_inputs["alphabet"]
+    # print(f"user inputs from plex: {user_inputs}")
 
     print('inputs directory', cfg.inputs.directory)
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame

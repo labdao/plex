@@ -101,9 +101,7 @@ class StateGenerator:
                     print('modified sequence after ProteinMPNN', modified_seq)
 
                     # insert the deletions back into the sequence:
-                    print('modified sequence (before del insertion)', modified_seq)
                     modified_seq = reinsert_deletions(modified_seq, self.action_mask)
-                    print('modified sequence (after del insertion)', modified_seq)
 
                 else:
                     modified_seq = self.sequence
