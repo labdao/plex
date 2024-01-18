@@ -134,7 +134,7 @@ class Sampler:
         self.permissibility_seed = permissibility_seed
         self.cfg = cfg
         self.policy_flag = cfg.params.basic_settings.policy_flag
-        self.temperature = cfg.params.basic_settings.temperature
+        self.temperature = cfg.params.basic_settings.temperature # TD: replace by 
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
         self.outputs_directory = outputs_directory
         self.df = df
@@ -161,11 +161,12 @@ class Sampler:
                 print('sample number', sample_number)
 
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
-                print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector, action_mask)
+                print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector.replace('X', 'x'), action_mask.replace('X', 'x'))
 
                 mod_seq = generate_proposed_state(self.t, self.seed, action_mask, self.cfg, self.outputs_directory, df)
 
                 LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
+                # draft: LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, self.cfg, self.outputs_directory) # TD: pass df to function
 
                 accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
                 print('action accepted', accept_flag)

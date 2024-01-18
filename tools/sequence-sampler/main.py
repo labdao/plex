@@ -84,19 +84,31 @@ def my_app(cfg: DictConfig) -> None:
         outputs_directory = cfg.outputs.directory
     print(f"Output directory : {outputs_directory}")
 
-    ## plex user inputs
+    # ## plex user inputs # some of these are currently not used!
     # user_inputs = get_plex_job_inputs()
     # print(f"user inputs from plex: {user_inputs}")
-    # = user_inputs["experiment_name"]
-    # = user_inputs["AF2_repeats_per_seq"]
-    # = user_inputs["number_of_evo_cycles"]
-    # = user_inputs["policy_flag"]
-    # = user_inputs["target_seq"]
-    # = user_inputs["init_permissibility_vec"]
-    # = user_inputs["temperature"]
-    # = user_inputs["max_levenshtein_step_size"]
-    # = user_inputs["alphabet"]
+    # experiment_name = user_inputs["experiment_name"]
+    # AF2_repeats_per_seq = user_inputs["AF2_repeats_per_seq"]
+    # number_of_evo_cycles = user_inputs["number_of_evo_cycles"]
+    # policy_fla = user_inputs["policy_flag"]
+    # target_seq = user_inputs["target_seq"]
+    # permissibility_seed = user_inputs["init_permissibility_vec"]
+    # temperature = user_inputs["temperature"]
+    # max_levenshtein_step_size = user_inputs["max_levenshtein_step_size"]
+    # alphabet = user_inputs["alphabet"]
     # print(f"user inputs from plex: {user_inputs}")
+
+    # # # Override Hydra default params with user supplied params
+    # OmegaConf.update(cfg, "params.basic_settings.experiment_name", user_inputs["experiment_name"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.AF2_repeats_per_seq", user_inputs["AF2_repeats_per_seq"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.policy_flag", user_inputs["policy_flag"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
+
 
     print('inputs directory', cfg.inputs.directory)
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
