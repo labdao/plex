@@ -223,21 +223,21 @@ def slash_to_convexity_notation(sequence, slash_contig):
     max_index = 0
     parts = slash_contig.split('/')
     for part in parts:
-        if '-' in part:
-            _, end = map(int, part[1:].split('-'))
+        if ':' in part:
+            _, end = map(int, part[1:].split(':'))
             max_index = max(max_index, end)
         elif part:
             max_index = max(max_index, int(part[1:]))
 
-    # Ensure permissibility_seed is long enough and initialize with '-'
+    # Ensure permissibility_seed is long enough and initialize with ':'
     permissibility_seed = ['-'] * max(max_index, len(sequence))
 
     # Process each part of the slash_contig
     for part in parts:
         if part:
             type_char = part[0]
-            if '-' in part:
-                start, end = map(int, part[1:].split('-'))
+            if ':' in part:
+                start, end = map(int, part[1:].split(':'))
             else:
                 start = end = int(part[1:])
 

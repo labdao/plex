@@ -4,7 +4,7 @@ basic_settings:
   number_of_evo_cycles: 45
   policy_flag: policy_sampling
   target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
-  init_permissibility_vec: 'B2-10/+11-16/B27-50/x52-55/B57/+62-66'
+  init_permissibility_vec: 'B30:59/x60:61/B67:82/x83:85/B92:120'
   temperature: 100.
   max_levenshtein_step_size: 4
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
