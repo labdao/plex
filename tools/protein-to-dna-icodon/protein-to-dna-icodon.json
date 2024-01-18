@@ -19,7 +19,7 @@
     ],
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "quay.io/labdao/protein-to-dna-icodon@sha256:83ce079b85de6aec92245fc46d10babc9cb067f278e059741e1f2ab63a8f263d",
+    "dockerPull": "quay.io/labdao/protein-to-dna-icodon@sha256:9e0bb766e47c8d10a1afb5b871efadde5b02b1082373072e4172abd92ff78be8",
     "gpuBool": false,
     "networkBool": false,
     "inputs": {
