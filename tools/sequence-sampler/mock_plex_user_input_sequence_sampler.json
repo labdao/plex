@@ -7,5 +7,7 @@
     "init_permissibility_vec": "x40:120",
     "temperature": 100,
     "max_levenshtein_step_size": 10,
-    "alphabet": "LAGVSERTIDPKQNFYMHWC"
+    "alphabet": "LAGVSERTIDPKQNFYMHWC",
+    "scoring_metrics": "pseudolikelihood,mean plddt,affinity",
+    "scoring_weights": "0.7,0.2,0.1"
 }

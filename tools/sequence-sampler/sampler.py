@@ -10,7 +10,7 @@ from utils import squeeze_seq
 from utils import write_af2_update
 from utils import concatenate_to_df
 
-def compute_log_likelihood(sequence, LLmatrix):
+def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module, or even utils or sequence-transformer
 
     sequence = squeeze_seq(sequence)
 
@@ -35,17 +35,34 @@ def compute_log_likelihood(sequence, LLmatrix):
 
     return total_log_likelihood
 
-def acceptance_probability(ref_score, mod_score, T):
+def rejection_sampling(t, df, cfg):
 
-    k = 1.
-    p_mod = np.exp((ref_score - mod_score)/(k*T)) # TD: think carefully about the sign in the exponent
+    T = cfg.params.basic_settings.temperature
+    # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
+    scoring_weights = cfg.params.basic_settings.scoring_weights
+    scoring_weights = scoring_weights.split(',')
+    weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
+    loss = 0.
+    scoring_metrics = cfg.params.basic_settings.scoring_metrics
+    scoring_weights = cfg.params.basic_settings.scoring_metrics
+    for metric in scoring_metrics.split(','):
+
+        ref_metric = df.iloc[t-1][metric]
+        mod_metric = df.iloc[t][metric]
+        # if metric=='pseudolikelihood': # useful when transforming metrics
+        #     ref_metric = ...
+        #     mod_metric = ...
+        # if metric=='mean plddt':
+        #     ref_metric = ...
+        #     mod_metric = ...
+        # if metric=='affinity':
+        #     ref_metric = ...
+        #     mod_metric = ...
+        
+        loss += weights[metric] * (ref_metric - mod_metric)
+
+    p_mod = np.exp(loss / T)
     print('acceptance probability', np.minimum(1.,p_mod))
-
-    return np.minimum(1.,p_mod)
-
-def action_bouncer(ref_score, mod_score, T):
-
-    p_mod = acceptance_probability(ref_score, mod_score, T)
 
     return random.random() < p_mod
 
@@ -112,18 +129,23 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
 
     return permissibility_vector, action_mask, levenshtein_step_size
 
-def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, outputs_directory): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
-    if squeeze_seq(mod_seq) !=[]:
-        if levenshtein_distance==0:
-            LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
-        elif levenshtein_distance>0:
+def score_sequence_fullmetrics(t, sequence, cfg, outputs_directory, df): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
+    if squeeze_seq(sequence) !=[]:
+        scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
+        df_scorer, LLmatrix_mod = scorer.run()
+        LL_mod = compute_log_likelihood(sequence, LLmatrix_mod) # TD: normalization by sequence length?
 
-            scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
-            df, LLmatrix_mod = scorer.run()
-            # LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
-            LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod) # TD: normalization by sequence length?
+        if 'pseudolikelihood' not in df_scorer.columns:
+            df_scorer['pseudolikelihood'] = None  # Initialize the column with None
+        if t==1:
+            df_scorer.at[0, 'pseudolikelihood'] = LL_mod
+        else:
+            df_scorer.iloc[-1, df_scorer.columns.get_loc('pseudolikelihood')] = LL_mod
 
-    return LL_mod
+        # supplement data frame by scores
+        df = concatenate_to_df(df_scorer, df)
+
+    return df
 
 
 class Sampler:
@@ -134,7 +156,7 @@ class Sampler:
         self.permissibility_seed = permissibility_seed
         self.cfg = cfg
         self.policy_flag = cfg.params.basic_settings.policy_flag
-        self.temperature = cfg.params.basic_settings.temperature # TD: replace by 
+        self.temperature = cfg.params.basic_settings.temperature
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
         self.outputs_directory = outputs_directory
         self.df = df
@@ -143,16 +165,8 @@ class Sampler:
 
         if self.policy_flag == 'policy_sampling':
 
-            scorer = StateScorer(self.t, ['ESM2', 'AF2', 'Prodigy'], self.seed, self.cfg, self.outputs_directory)
-            df, LLmatrix_seed = scorer.run()
-            # LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
-            LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
-            if 'likelihood' not in df.columns:
-                df['likelihood'] = None  # Initialize the column with None
-            df.at[0, 'likelihood'] = LL_seed
-
-            # supplement data frame by scores
-            self.df = concatenate_to_df(df, self.df)
+            if self.t==1: # compute scores for initial sequence
+                self.df = score_sequence_fullmetrics(self.t, self.seed, self.cfg, self.outputs_directory, self.df)
 
             action_residue_list = []
             sample_number = 1
@@ -163,13 +177,7 @@ class Sampler:
                 permissibility_vector, action_mask, levenshtein_distance = sample_action_mask(self.t, self.seed, self.permissibility_seed, action_residue_list, self.cfg, self.max_levenshtein_step_size)
                 print('levenshtein, permissible vector, mask:', levenshtein_distance, permissibility_vector.replace('X', 'x'), action_mask.replace('X', 'x'))
 
-                mod_seq = generate_proposed_state(self.t, self.seed, action_mask, self.cfg, self.outputs_directory, df)
-
-                LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
-                # draft: LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, self.cfg, self.outputs_directory) # TD: pass df to function
-
-                accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature) # rejection-sampling
-                print('action accepted', accept_flag)
+                mod_seq = generate_proposed_state(self.t, self.seed, action_mask, self.cfg, self.outputs_directory, self.df)
 
                 squeezed_action_mask = squeeze_seq(action_mask)
                 new_row = {
@@ -180,14 +188,59 @@ class Sampler:
                     '(levenshtein-distance, mask)': (levenshtein_distance, squeezed_action_mask.replace('X', 'x')),
                     'modified_seq': mod_seq,
                     'permissibility_modified_seq': ''.join(permissibility_vector),
-                    'acceptance_flag': accept_flag 
+                    'acceptance_flag': False
                 }
+                # concat the new row to the DataFrame
+                self.df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
 
-                # Append the new row to the DataFrame
-                df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
+                self.df = score_sequence_fullmetrics(self.t, mod_seq, self.cfg, self.outputs_directory, self.df)
 
-                # supplement data frame with sample_number and accept_flag, and return df
+                accept_flag = rejection_sampling(self.t, self.df, self.cfg)
+                self.df.iloc[-1, self.df.columns.get_loc('acceptance_flag')] = accept_flag
+                print('action accepted', accept_flag)
 
                 sample_number += 1
         
-            return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask, df
+            return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask, self.df
+
+
+### old code
+            # scorer = StateScorer(self.t, ['ESM2', 'AF2', 'Prodigy'], self.seed, self.cfg, self.outputs_directory)
+            # df, LLmatrix_seed = scorer.run()
+            # # LLmatrix_seed = df.at[0, 'LLmatrix_sequence']
+            # LL_seed = compute_log_likelihood(self.seed, LLmatrix_seed)
+            # if 'likelihood' not in df.columns:
+            #     df['likelihood'] = None  # Initialize the column with None
+            # df.at[0, 'likelihood'] = LL_seed
+            # # supplement data frame by scores
+            # self.df = concatenate_to_df(df, self.df)
+                # LL_mod = score_sequence(self.t, self.seed, mod_seq, levenshtein_distance, LLmatrix_seed, self.cfg, self.outputs_directory) # TD: pass df to function
+
+                # accept_flag = action_bouncer(LL_seed, LL_mod, self.temperature)
+
+# def score_sequence(t, seed, mod_seq, levenshtein_distance, LLmatrix_seed, cfg, outputs_directory): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
+#     if squeeze_seq(mod_seq) !=[]:
+#         if levenshtein_distance==0:
+#             LL_mod = compute_log_likelihood(runner, mod_seq, LLmatrix_seed)
+#         elif levenshtein_distance>0:
+
+#             scorer = StateScorer(t, ['ESM2'], mod_seq, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
+#             df, LLmatrix_mod = scorer.run()
+#             # LLmatrix_mod = df.at[0, 'LLmatrix_sequence']
+#             LL_mod = compute_log_likelihood(mod_seq, LLmatrix_mod) # TD: normalization by sequence length?
+
+#     return LL_mod
+
+# def acceptance_probability(ref_score, mod_score, T):
+
+#     k = 1.
+#     p_mod = np.exp((ref_score - mod_score)/(k*T)) # TD: think carefully about the sign in the exponent
+#     print('acceptance probability', np.minimum(1.,p_mod))
+
+#     return np.minimum(1.,p_mod)
+
+# def action_bouncer(ref_score, mod_score, T):
+
+#     p_mod = acceptance_probability(ref_score, mod_score, T)
+
+#     return random.random() < p_mod

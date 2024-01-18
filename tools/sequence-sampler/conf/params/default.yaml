@@ -1,13 +1,15 @@
 basic_settings:
   experiment_name: default
   AF2_repeats_per_seq: 1
-  number_of_evo_cycles: 45
+  number_of_evo_cycles: 4
   policy_flag: policy_sampling
   target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
-  init_permissibility_vec: 'x40:120'
+  init_permissibility_vec: 'B1:5/x6:11/+12:17'
   temperature: 100.
   max_levenshtein_step_size: 10
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
+  scoring_metrics: 'pseudolikelihood,mean plddt,affinity'
+  scoring_weights: '0.7,0.2,0.1'
   # max_number_of_offspring_kept: 1
   # k: 1
   # number of AF2 repeats

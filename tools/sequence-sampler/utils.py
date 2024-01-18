@@ -178,16 +178,29 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
+# def concatenate_to_df(df, df_main):
+#     # Ensure all columns in df are in df_main, if not, add them
+#     for col in df.columns:
+#         if col not in df_main.columns:
+#             df_main[col] = pd.NA  # Use pd.NA for missing entries
+
+#     # Assign the values from the single row of df to the last row of df_main
+#     last_index = df_main.index[-1]
+#     for col in df.columns:
+#         df_main.at[last_index, col] = df.at[df.index[0], col]
+
+#     return df_main
 def concatenate_to_df(df, df_main):
-    # Ensure all columns in df are in df_main, if not, add them
+    # Ensure all columns in df are in df_main, if not, add them with the values from df
     for col in df.columns:
         if col not in df_main.columns:
-            df_main[col] = pd.NA  # Use pd.NA for missing entries
-
-    # Assign the values from the single row of df to the last row of df_main
-    last_index = df_main.index[-1]
-    for col in df.columns:
-        df_main.at[last_index, col] = df.at[df.index[0], col]
+            # Add the column to df_main and fill all previous rows with pd.NA
+            df_main[col] = pd.NA
+            # Fill the last row with the value from df
+            df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
+        else:
+            # If the column exists, just append the new value
+            df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
 
     return df_main
 

@@ -16,7 +16,6 @@ class AF2Runner:
         print(f"Cache directory is {self.cache_dir}")
         print(f"Output directory is {self.output_dir}")
 
-        # Clear the cache directory except for colabfold/params ## need to test whether this works!
         for item in os.listdir(self.cache_dir):
             item_path = os.path.join(self.cache_dir, item)
             if item != 'colabfold' and os.path.isfile(item_path):

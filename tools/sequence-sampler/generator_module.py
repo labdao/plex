@@ -6,6 +6,7 @@ from utils import squeeze_seq
 from utils import generate_contig
 from utils import read_second_line_of_fasta
 from utils import reinsert_deletions
+import logging
 
 class StateGenerator:
     def __init__(self, evo_cycle, generator_list, sequence, action_mask, cfg, outputs_directory, df):
@@ -30,8 +31,8 @@ class StateGenerator:
             if not os.path.exists(generator_directory):
                 os.makedirs(generator_directory, exist_ok=True)
 
+            logging.info(f"Running {generator}")
             if generator=='RFdiffusion+ProteinMPNN':
-                print(f"Running {generator}")
 
                 if 'X' in self.action_mask: # check if there is any diffusion to be done
 

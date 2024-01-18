@@ -11,6 +11,8 @@ from omegaconf import DictConfig, OmegaConf
 from sampler import Sampler
 from utils import slash_to_convexity_notation
 
+import logging
+
 # def get_plex_job_inputs():
 #     # Retrieve the environment variable
 #     json_str = os.getenv("PLEX_JOB_INPUTS")
@@ -109,7 +111,6 @@ def my_app(cfg: DictConfig) -> None:
     # OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
 
-
     print('inputs directory', cfg.inputs.directory)
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
     print('fasta_file', fasta_file)
@@ -122,7 +123,8 @@ def my_app(cfg: DictConfig) -> None:
     print("sequence to structure complete...")
 
     for t in range(cfg.params.basic_settings.number_of_evo_cycles):
-        print("starting evolution step", t+1)
+        # print("starting evolution step", t+1)
+        logging.info(f"starting evolution step, {t+1}")
         print('seed', seed)
 
         sampler = Sampler(t+1, seed, permissibility_seed, cfg, outputs_directory, df)

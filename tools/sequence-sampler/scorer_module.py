@@ -6,6 +6,7 @@ from AF2_module import AF2Runner
 from utils import squeeze_seq
 from utils import write_af2_update
 from utils import compute_affinity
+import logging
 
 class StateScorer:
     def __init__(self, evo_cycle, scorer_list, sequence, cfg, outputs_directory):
@@ -26,13 +27,12 @@ class StateScorer:
             if not os.path.exists(scorer_directory):
                 os.makedirs(scorer_directory, exist_ok=True)
 
+            logging.info(f"Running {scorer}")
             if scorer=='ESM2':
-                print(f"Running {scorer}")
                 runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
                 LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(self.sequence)
             
-            elif scorer=='AF2':
-                print(f"Running {scorer}")
+            elif scorer=='Colabfold':
                 target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{self.sequence}"
                 
                 # include a function that combines binder and target sequence
