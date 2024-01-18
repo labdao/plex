@@ -41,7 +41,7 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 		Type: model.PublisherIpfs,
 	}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = int64(maxTime * 60)
+	job.Spec.Timeout = int64(maxTime)
 
 	nodeSelectorRequirements, err := parse.NodeSelector(selector)
 	if err != nil {
@@ -218,8 +218,11 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 	capacityErrorMsg := "not enough capacity"
-	fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
-	return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
+	if len(job.State.Executions) > 0 {
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
+	}
+	return false
 }
 
 func JobIsRunning(job *model.JobWithInfo) bool {

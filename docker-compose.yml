@@ -103,6 +103,8 @@ services:
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      MAX_QUEUE_TIME_SECONDS: ${MAX_QUEUE_TIME_SECONDS:-259200} # default 72 hours
+      MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
     depends_on:
       dbbackend:
         condition: service_healthy

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,7 +17,22 @@ import (
 	"gorm.io/gorm"
 )
 
-const maxQueueTime = 5 * time.Minute
+func getEnvAsInt(name string, defaultValue int) int {
+	valueStr := os.Getenv(name)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
+		return defaultValue
+	}
+	return value
+}
+
+// Consider allowing Job creation payloads to configure lower times
+var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
+var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
 
 func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 2) // Buffer for two types of jobs
@@ -115,7 +132,7 @@ func processJob(job *models.Job, db *gorm.DB) error {
 			return setJobStatus(job, models.JobStateRunning, "", db)
 		} else if bacalhau.JobFailed(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(job, models.JobStateFailed, bacalhauJob.State.Executions[0].Status, db)
+			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
 			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
 			return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
@@ -282,9 +299,8 @@ func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	network := job.Tool.Network
 
 	selector := ""
-	maxTime := 60 * 72
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations)
 	if err != nil {
 		return err
 	}
