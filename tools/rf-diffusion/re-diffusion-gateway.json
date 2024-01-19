@@ -1,0 +1,132 @@
+{
+    "name": "sequence-sampler v0.1 (beta)",
+    "description": "Evolutionary sampling of sequences.",
+    "author": "Convexity Labs",
+    "github": "...",
+    "paper": "...",
+    "task": "sequence design",
+    "baseCommand": [
+    ],
+    "arguments": [
+    ],
+    "dockerPull": "quay.io/labdao/...",
+    "gpuBool": true,
+    "memoryGB": 12,
+    "cpu": 3,
+    "networkBool": true,
+    "inputs": {
+      "target_seq": {
+        "type": "string",
+        "description": "Sequence of target protein",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "TLGAVQIMNGLFHIAL",
+        "grouping": "protein complex",
+        "position": "101",
+        "required": true
+      },
+      "binder_template_sequence": {
+        "type": "file",
+        "description": "Binder template from which the sequence sampling is initialised",
+        "array": false,
+        "glob": [
+          ".fasta"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "binder_template_sequence.fasta",
+        "grouping": "protein complex",
+        "position": "102",
+        "required": true
+      },
+      "number_of_evo_cycles": {
+        "type": "number",
+        "description": "Number of evolutionary cycles",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "15",
+        "min": "1",
+        "max": "50",
+        "example": "10",
+        "grouping": "evolution parameters",
+        "position": "201",
+        "required": true
+      },
+      "max_levenshtein_step_size": {
+        "type": "number",
+        "description": "Maximum Levenshtein distance covered in one evolution step",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "3",
+        "min": "1",
+        "max": "50",
+        "example": "3",
+        "grouping": "evolution parameters",
+        "position": "202",
+        "required": true
+      },
+      "permissibility_mask": {
+        "type": "string",
+        "description": "Definition of permissible changes: (B) keep fixed, (+) delete or flip, (x) flip only",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "B2:10/+11:16/B27:50/x52:55/B57/+62:66",
+        "grouping": "evolution parameters",
+        "position": "203",
+        "required": true
+      },
+      "temperature": {
+        "type": "number",
+        "description": "Sampling temperature (currently fixed to T=100)",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "100",
+        "min": "100",
+        "max": "100",
+        "example": "100",
+        "grouping": "evolution parameters",
+        "position": "204",
+        "required": true
+      },
+    "outputs": {
+      "all_outputs": {
+        "type": "Array",
+        "item": "File",
+        "glob": [
+          "*.zip"
+        ]
+      },
+      "pdb_designs": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "*.pdb"
+        ]
+      },
+      "summary": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "summary.csv"
+        ]
+      }
+    }
+  }
+}
