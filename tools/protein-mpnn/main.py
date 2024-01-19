@@ -123,11 +123,12 @@ def my_app(cfg: DictConfig) -> None:
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
-    OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspots"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binder_designs"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.pdb", user_inputs["protein_complex"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.num_seqs", user_inputs["num_seqs"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.rm_aa", user_inputs["rm_aa"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["cuse_solubleMPNN"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.initial_guess", user_inputs["initial_guess"], merge=False)
 
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
@@ -154,82 +155,18 @@ def my_app(cfg: DictConfig) -> None:
         input_target_path = [input_target_path]
     print("Identified Targets : ", input_target_path)
 
-    first_residue_target_chain, last_residue_target_chain = find_chain_residue_range(input_target_path[0], user_inputs["target_chain"])
-    if isinstance(user_inputs["target_start_residue"], int) and user_inputs["target_start_residue"] > 0:
-        OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
-    else: OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", first_residue_target_chain, merge=False)
+    # first_residue_target_chain, last_residue_target_chain = find_chain_residue_range(input_target_path[0], user_inputs["target_chain"])
+    # if isinstance(user_inputs["target_start_residue"], int) and user_inputs["target_start_residue"] > 0:
+    #     OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
+    # else: OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", first_residue_target_chain, merge=False)
     
-    if isinstance(user_inputs["target_end_residue"], int) and user_inputs["target_end_residue"] > 0:
-        OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
-    else: OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", last_residue_target_chain, merge=False)
+    # if isinstance(user_inputs["target_end_residue"], int) and user_inputs["target_end_residue"] > 0:
+    #     OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
+    # else: OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", last_residue_target_chain, merge=False)
 
 
-    # running design for every input target file
-    for target_path in input_target_path:
-        start_time = time.time()
+    # running ProteinMPNN
 
-        name = cfg.params.basic_settings.experiment_name
-        pdb = target_path  # cfg.basic_settings.pdb
-        hotspot = cfg.params.advanced_settings.hotspot.replace(" ", "")
-        iterations = cfg.params.expert_settings.RFDiffusion_Binder.iterations
-        num_designs = cfg.params.basic_settings.num_designs
-        use_beta_model = cfg.params.advanced_settings.use_beta_model
-        visual = cfg.params.expert_settings.RFDiffusion_Binder.visual
-
-        # symmetry settings
-        symmetry = cfg.params.expert_settings.RFDiffusion_Symmetry.symmetry
-        order = cfg.params.expert_settings.RFDiffusion_Symmetry.order
-        chains = cfg.params.expert_settings.RFDiffusion_Symmetry.chains
-        add_potential = cfg.params.expert_settings.RFDiffusion_Symmetry.add_potential
-
-        # contig assembly
-        ##TODO: simplify load contig parameters
-        binder_length = cfg.params.basic_settings.binder_length
-        pdb_chain = cfg.params.basic_settings.pdb_chain
-        pdb_start_residue = cfg.params.advanced_settings.pdb_start_residue
-        pdb_end_residue = cfg.params.advanced_settings.pdb_end_residue
-        min_binder_length = cfg.params.advanced_settings.min_binder_length
-        max_binder_length = cfg.params.advanced_settings.max_binder_length
-        contigs_override = (
-            cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
-        )
-
-        binder_chain = user_inputs["binder_chain"]
-        target_chain = pdb_chain
-
-        # cfg.params.expert_settings.RFDiffusion_Binder.contigs_override = contigs_override
-            
-        ## binder length
-        if min_binder_length != None and max_binder_length != None:
-            binder_length_constructed = (
-                str(min_binder_length) + "-" + str(max_binder_length)
-            )
-        else:
-            binder_length_constructed = str(binder_length) + "-" + str(binder_length)
-
-        ## residue start
-        if pdb_start_residue != None and pdb_end_residue != None:
-            residue_constructed = str(pdb_start_residue) + "-" + str(pdb_end_residue)
-        else:
-            residue_constructed = ""
-
-        ## contig assembly
-        contigs_constructed = (
-            pdb_chain + residue_constructed + "/0 " + binder_length_constructed
-        )
-        if contigs_override == "":
-            contigs = contigs_constructed
-        else:
-            contigs = contigs_override
-
-        # determine where to save
-        path = name
-        while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
-            path = (
-                name
-                + "_"
-                + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
-            )
 
         flags = {
             "contigs": contigs,

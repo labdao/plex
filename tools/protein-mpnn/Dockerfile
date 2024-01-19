@@ -39,34 +39,36 @@ RUN pip install -r requirements.txt
 RUN pip install hydra-core omegaconf pandas biopython pyyaml
 
 # RUN git clone https://github.com/sokrypton/RFdiffusion.git
-RUN git clone https://github.com/RosettaCommons/RFdiffusion.git
+# RUN git clone https://github.com/RosettaCommons/RFdiffusion.git
 RUN pip -q install jedi omegaconf hydra-core icecream pyrsistent
 RUN pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html
-RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .
+# RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .
 RUN wget -qnc https://files.ipd.uw.edu/krypton/ananas
 RUN chmod +x ananas
 
-# Download params, modules and schedules
-RUN set -ex; \
-     mkdir -p params && \
-     aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip && \
-     aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt && \
-     aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt && \
-     mkdir -p RFdiffusion/models; mv Base_ckpt.pt Complex_base_ckpt.pt RFdiffusion/models/ && \
-     unzip schedules.zip; rm schedules.zip && \
-     touch params/done.txt
+# # Download params, modules and schedules
+# RUN set -ex; \
+#      mkdir -p params && \
+#      aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip && \
+#      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt && \
+#      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt && \
+#      mkdir -p RFdiffusion/models; mv Base_ckpt.pt Complex_base_ckpt.pt RFdiffusion/models/ && \
+#      unzip schedules.zip; rm schedules.zip && \
+#      touch params/done.txt
 
 # Cleanup
 RUN apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/cache /var/lib/log /var/lib/apt/lists/*
 
+## ProteinMPNN
+RUN mkdir /app/ProteinMPNN && git clone https://github.com/dauparas/ProteinMPNN /app/ProteinMPNN
+
 # Copy in Files
 COPY . /app
 
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
-
 
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
