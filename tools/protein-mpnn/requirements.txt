@@ -1,0 +1,4 @@
+typer
+pandas
+numpy
+biopython
