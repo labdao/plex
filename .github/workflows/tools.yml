@@ -57,6 +57,14 @@ jobs:
             - 'tools/colabdesign-autoprompt/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
+          rf-diffusion:
+            - 'tools/rf-diffusion/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
+          protein-mpnn:
+            - 'tools/protein-mpnn/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
           sequence-sampler:
             - 'tools/sequence-sampler/**'
             - '.github/workflows/tools.yml'
