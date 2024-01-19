@@ -472,13 +472,30 @@ def run_diffusion(
 
     return contigs, copies
 
+def refactor_rename_files(prompt_counter, pdb_path):
+    for filename in os.listdir(f"{pdb_path}/all_pdb"):
+        if filename.startswith('design') and filename.endswith('.pdb'):
+            new_filename = f'prompt{prompt_counter}_{filename}'
+            old_file = os.path.join(f"{pdb_path}/all_pdb", filename)
+            new_file = os.path.join(f"{pdb_path}/all_pdb", new_filename)
+            os.rename(old_file, new_file)
+    for filename in os.listdir(pdb_path):
+        if (filename.startswith('best') and filename.endswith('.pdb')) or (filename.startswith('design') and filename.endswith('.fasta')) or (filename.startswith('mpnn') and filename.endswith('.csv')):
+            new_filename = f'prompt{prompt_counter}_{filename}'
+            old_file = os.path.join(pdb_path, filename)
+            new_file = os.path.join(pdb_path, new_filename)
+            os.rename(old_file, new_file)
+    print("Renamed design*_n*.pdb -> prompt*_design*_n*.pdb")
+    print("Renamed best_design*.pdb -> prompt*_best_design*.pdb")
+    print("Renamed design.fasta -> prompt*_design.fasta")
 
-def prodigy_run(csv_path, pdb_path):
+
+def prodigy_run(prompt_counter, csv_path, pdb_path):
     df = pd.read_csv(csv_path)
     for i, r in df.iterrows():
         design = r["design"]
         n = r["n"]
-        file_path = f"{pdb_path}/design{design}_n{n}.pdb"
+        file_path = f"{pdb_path}/prompt{prompt_counter}_design{design}_n{n}.pdb"
         try:
             subprocess.run(
                 ["prodigy", "-q", file_path], stdout=open("temp.txt", "w"), check=True
@@ -499,6 +516,15 @@ def prodigy_run(csv_path, pdb_path):
     # export results
     df.to_csv(f"{csv_path}", index=None)
 
+def add_column_to_mpnn_results(prompt, prompt_counter, csv_path):
+    df = pd.read_csv(csv_path)
+    add_counter_column_name = 'promptId'
+    add_prompt_column_name = 'prompt'
+    column_to_remove = 'Unnamed: 0'
+    df.insert(0, add_counter_column_name, prompt_counter)
+    df.insert(4, add_prompt_column_name, prompt)
+    df.drop(column_to_remove, axis=1, inplace=True)
+    df.to_csv(csv_path, index=False)
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
@@ -602,7 +628,6 @@ def my_app(cfg: DictConfig) -> None:
 
             contigs_override = prompt
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override = contigs_override
-            prompt_counter += 1
             print("promt: ", contigs_override)
             
             ## binder length
@@ -629,13 +654,7 @@ def my_app(cfg: DictConfig) -> None:
                 contigs = contigs_override
 
             # determine where to save
-            path = name
-            while os.path.exists(f"{outputs_directory}/{path}_0.pdb"):
-                path = (
-                    name
-                    + "_"
-                    + "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
-                )
+            path = f'prompt{prompt_counter}_{name}'
 
             flags = {
                 "contigs": contigs,
@@ -695,15 +714,23 @@ def my_app(cfg: DictConfig) -> None:
             command_design = f"python -u colabdesign/rf/designability_test.py {opts}"
             os.system(command_design)
 
+            refactor_rename_files(
+                prompt_counter,
+                f"{outputs_directory}/{path}"
+                )
+
+            add_column_to_mpnn_results(prompt, prompt_counter, f"{outputs_directory}/{path}/prompt{prompt_counter}_mpnn_results.csv")
+
             print("running Prodigy")
             prodigy_run(
-                f"{outputs_directory}/{path}/mpnn_results.csv",
+                prompt_counter,
+                f"{outputs_directory}/{path}/prompt{prompt_counter}_mpnn_results.csv",
                 f"{outputs_directory}/{path}/all_pdb",
             )
 
             command_mv = f"mkdir {outputs_directory}/{path}/traj && mv {outputs_directory}/traj/{path}* {outputs_directory}/{path}/traj && mv {outputs_directory}/{path}_* {outputs_directory}/{path}"
             command_zip = f"zip -r {path}.result.zip {outputs_directory}/{path}*"
-            command_collect = f"mv {path}.result.zip /{outputs_directory} && mv {outputs_directory}/{path}/best.pdb /{outputs_directory}/{path}_prompt{prompt_counter}_best.pdb && mv {outputs_directory}/{path}/mpnn_results.csv /{outputs_directory}/{path}_scores.csv"
+            command_collect = f"mv {path}.result.zip {outputs_directory} && mv {outputs_directory}/{path}/prompt{prompt_counter}_mpnn_results.csv {outputs_directory}/{path}_scores.csv"
             os.system(command_mv)
             os.system(command_zip)
             os.system(command_collect)
@@ -712,6 +739,7 @@ def my_app(cfg: DictConfig) -> None:
             print("running enricher")
             # enricher(outputs_directory, cfg)
             enrich_and_collect(outputs_directory, path, cfg)
+            prompt_counter += 1
         
         create_conditions_table(outputs_directory, path, cfg, user_inputs)
 
