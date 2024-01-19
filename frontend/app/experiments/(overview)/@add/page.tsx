@@ -84,7 +84,8 @@ export default function AddGraph() {
           Name: "",
           ToolJson: { inputs: {}, outputs: {}, name: "", author: "", description: "", github: "", paper: "" },
         })
-      );      dispatch(setFlowAddError(null))
+      );
+      dispatch(setFlowAddError(null))
       dispatch(setFlowAddName(""))
       dispatch(setFlowAddCid(""))
       dispatch(setFlowAddID(null))

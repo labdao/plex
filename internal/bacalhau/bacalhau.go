@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/config"
@@ -16,6 +17,9 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/labdao/plex/internal/ipfs"
 )
+
+var bacalhauClient *client.APIClient
+var once sync.Once
 
 func GetBacalhauApiHost() string {
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
@@ -27,6 +31,15 @@ func GetBacalhauApiHost() string {
 	} else {
 		return "bacalhau.labdao.xyz"
 	}
+}
+
+// prevents race conditions with Bacalhau Client
+func GetBacalhauClient() (*client.APIClient, error) {
+	var err error
+	once.Do(func() {
+		bacalhauClient, err = CreateBacalhauClient()
+	})
+	return bacalhauClient, err
 }
 
 func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
@@ -199,7 +212,7 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 }
 
 func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +221,7 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 }
 
 func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +251,7 @@ func JobFailed(job *model.JobWithInfo) bool {
 }
 
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
