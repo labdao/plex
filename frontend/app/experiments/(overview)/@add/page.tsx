@@ -79,7 +79,7 @@ export default function AddGraph() {
           CID: "",
           WalletAddress: "",
           Name: "",
-          ToolJson: { inputs: {}, name: "", author: "", description: "", github: "", paper: "" },
+          ToolJson: { inputs: {}, outputs: {}, name: "", author: "", description: "", github: "", paper: "" },
         })
       );
       dispatch(setFlowAddError(null));

@@ -67,6 +67,8 @@ jobs:
             - 'tools/AF2/AF2-gateway.json'
           aggregater:
             - 'tools/aggregater/aggregater.json'
+          sequence-sampler_sequence-sampler-gateway:
+            - 'tools/sequence-sampler/sequence-sampler-gateway.json'
           protein-to-dna-icodon_protein-to-dna-icodon:
             - 'tools/protein-to-dna-icodon/protein-to-dna-icodon.json'
 
