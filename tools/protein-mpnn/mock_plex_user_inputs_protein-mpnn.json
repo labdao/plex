@@ -1,6 +1,6 @@
 {
   "experiment_name": "default",
   "protein_complex": "inputs/protein_complex.pdb",
-  "num_seq": "8",
+  "num_seqs": "8",
   "chains_to_design": "A"
 }
