@@ -1,12 +1,25 @@
+import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
 export const listFlows = async (walletAddress: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/flows?walletAddress=${encodeURIComponent(walletAddress)}`, {
-    method: 'Get',
+  console.log("------- listFlows BEING CALLED -------")
+  let authToken;
+  try {
+    authToken = await getAccessToken()
+  } catch (error) {
+    console.log('Failed to get access token: ', error)
+    throw new Error("Authentication failed");
+  }
+
+  const requestUrl = `${backendUrl()}/flows?walletAddress=${encodeURIComponent(walletAddress)}`;
+  const requestOptions = {
+    method: 'GET',
     headers: {
+      'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
-  })
+  };
+  const response = await fetch(requestUrl, requestOptions);
 
   if (!response) {
     let errorText = "Failed to list Flows"
