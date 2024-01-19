@@ -75,10 +75,10 @@ def my_app(cfg: DictConfig) -> None:
 
     # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.expert_settings.num_seqs", user_inputs["num_seqs"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.rm_aa", user_inputs["rm_aa"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.initial_guess", user_inputs["initial_guess"], merge=False)
+#    OmegaConf.update(cfg, "params.expert_settings.rm_aa", user_inputs["rm_aa"], merge=False)
+#    OmegaConf.update(cfg, "params.expert_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
+#    OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
+#    OmegaConf.update(cfg, "params.expert_settings.initial_guess", user_inputs["initial_guess"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.chains_to_design", user_inputs["chains_to_design"], merge=False)
 
     print(OmegaConf.to_yaml(cfg))
