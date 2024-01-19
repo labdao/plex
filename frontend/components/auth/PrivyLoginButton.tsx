@@ -1,5 +1,4 @@
-import { useLogin } from "@privy-io/react-auth";
-import { usePrivy } from "@privy-io/react-auth";
+import { useLogin, usePrivy } from "@privy-io/react-auth";
 import React from "react";
 import { useDispatch } from "react-redux";
 

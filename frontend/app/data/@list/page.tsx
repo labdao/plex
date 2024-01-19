@@ -1,5 +1,6 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import backendUrl from "lib/backendUrl";
@@ -94,15 +95,40 @@ export default function ListDataFiles() {
   const pageSize = 50;
   const [sorting, setSorting] = useState([{ id: "Timestamp", desc: true }]);
 
+  const { getAccessToken } = usePrivy();
+
   useEffect(() => {
-    fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        setDataFiles(responseJson.data);
-        setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
-      })
-      .catch((error) => console.error("Error fetching data files:", error));
-  }, [currentPage]);  
+    const fetchDataFiles = async () => {
+      let authToken
+      try {
+        authToken = await getAccessToken()
+      } catch (error) {
+        console.error('Failed to get access token: ', error)
+        return
+      }
+
+      try {
+        const response = await fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch data files")
+        }
+
+        const responseJson = await response.json()
+        setDataFiles(responseJson.data)
+        setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize))
+      } catch (error) {
+        console.error("Error fetching data files:", error)
+      }
+    }
+
+    fetchDataFiles()
+  }, [currentPage, getAccessToken])
 
   return (
     <div>
@@ -115,5 +141,5 @@ export default function ListDataFiles() {
         onPageChange={(page) => setCurrentPage(page)}
       />
     </div>
-  );  
+  )
 }
