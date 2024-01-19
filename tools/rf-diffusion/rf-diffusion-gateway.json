@@ -89,7 +89,45 @@
       "grouping": "protein complex",
       "position": "105",
       "required": true
-    }
+    },
+    "binder_length": {
+      "type": "int",
+      "default": "50",
+      "min": "1",
+      "max": "1000",
+      "description": "The length of the protein binder that is being designed",
+      "grouping": "binder",
+      "position": "106",
+      "required":true
+  },
+  "number_of__binder_designs": {
+      "type": "int",
+      "default": "8",
+      "min": "1",
+      "max": "64",
+      "description": "The number of protein binders to be designed",
+      "grouping": "binder",
+      "position": "107",
+      "required":true
+  },
+    "contigs_override": {
+      "type": "string",
+      "default": "",
+      "description": "The complete prompt for the diffusion model. This overrides other GUI inputs. Note the use of /0 to introduce a chain break.",
+      "example": "A1-283/0 B1-6/1/B8-20/22/B43-47",
+      "grouping": "_advanced",
+      "position": "108",
+      "required":false
+  },
+  "hotspots": {
+    "type": "string",
+    "default": "",
+    "grouping": "advanced",
+    "description": "Target residues that should be in contact with the binder.",
+    "example": "A30,A33,A34",
+    "position": "109",
+    "required":false
+  }
   },
   "outputs": {
     "all_outputs": {

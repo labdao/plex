@@ -90,30 +90,14 @@ def run_diffusion(
     env = os.environ.copy()
     env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
 
-    # pdb_filename = f"{full_path}.{pdb}"
-
-    # print('pdb_filename', pdb_filename)
-    print('contigs', contigs)
-    print('outputs_directory',outputs_directory)
-
     command = [
         'python', 'RFdiffusion/scripts/run_inference.py',
         f'inference.output_prefix={os.path.join(outputs_directory, f"design")}',
         'inference.model_directory_path=RFdiffusion/models',
-        f"inference.input_pdb={pdb}", # /app/inputs/protein_complex/UROK_HUMAN_1-133.pdb
+        f"inference.input_pdb={pdb}",
         'inference.num_designs=2',
         f'contigmap.contigs={[contigs]}'
-        # f'contigmap.contigs={contigs}'
     ]
-
-    # command = [
-    #         'python', 'RFdiffusion/scripts/run_inference.py',
-    #         f'inference.output_prefix={os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding")}',
-    #         'inference.model_directory_path=RFdiffusion/models',
-    #         f'inference.input_pdb={self.df["absolute pdb path"].iloc[0]}',
-    #         'inference.num_designs=1',
-    #         f'contigmap.contigs={[contig]}'
-    # ]
 
     print('command', command)
 
@@ -139,8 +123,8 @@ def my_app(cfg: DictConfig) -> None:
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.binder_length", "", merge=False)
-    OmegaConf.update(cfg, "params.advanced_settings.hotspot", "", merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
+    OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspots"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binder_designs"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
@@ -231,7 +215,7 @@ def my_app(cfg: DictConfig) -> None:
 
         ## contig assembly
         contigs_constructed = (
-            pdb_chain + residue_constructed + "/0: " + binder_length_constructed
+            pdb_chain + residue_constructed + "/0 " + binder_length_constructed
         )
         if contigs_override == "":
             contigs = contigs_constructed

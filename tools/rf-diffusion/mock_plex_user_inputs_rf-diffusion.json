@@ -1,8 +1,8 @@
 {
   "binder_length": "",
-  "contigs_override": "5/A40-100/0 B10-80/20",
-  "hotspot": "",
-  "number_of_binder_designs": 1,
+  "contigs_override": "A1-100/0 B10-80/20",
+  "hotspots": "",
+  "number_of_binder_designs": 3,
   "protein_complex": "inputs/protein_complex/UROK_HUMAN_1-133.pdb",
   "target_chain": "A",
   "target_start_residue": "",
