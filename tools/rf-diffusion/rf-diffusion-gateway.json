@@ -102,7 +102,7 @@
   },
   "number_of__binder_designs": {
       "type": "int",
-      "default": "8",
+      "default": "10",
       "min": "1",
       "max": "64",
       "description": "The number of protein binders to be designed",
