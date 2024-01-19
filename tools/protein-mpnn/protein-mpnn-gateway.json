@@ -56,8 +56,8 @@
       "min": "",
       "max": "",
       "example": "8",
-      "grouping": "protein complex",
-      "position": "103",
+      "grouping": "Design parameters",
+      "position": "201",
       "required": true
     },
     "mpnn_sampling_temp": {
@@ -67,17 +67,17 @@
       "glob": [
         ""
       ],
-      "default": "",
+      "default": "0.1",
       "min": "",
       "max": "",
       "example": "0.1",
-      "grouping": "protein complex",
-      "position": "104",
+      "grouping": "Design parameters",
+      "position": "202",
       "required": true
     },
     "use_solubleMPNN": {
       "type": "bool",
-      "description": "use soluble",
+      "description": "",
       "array": false,
       "glob": [
         ""
@@ -86,30 +86,40 @@
       "min": "",
       "max": "",
       "example": "true",
-      "grouping": "protein complex",
-      "position": "105",
+      "grouping": "Design parameters",
+      "position": "203",
       "required": true
     },
     "initial_guess": {
       "type": "bool",
-      "default": "true",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "True",
       "min": "",
       "max": "",
-      "description": "use initial guess",
-      "grouping": "binder",
-      "position": "106",
-      "required":true
-  },
-  "rm_aa": {
-      "type": "int",
-      "default": "C",
-      "min": "1",
-      "max": "64",
-      "description": "The number of protein binders to be designed",
-      "grouping": "binder",
-      "position": "107",
+      "example": "true",
+      "grouping": "Design parameters",
+      "position": "204",
       "required": true
-  }
+    },
+    "rm_aa": {
+      "type": "string",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "C",
+      "min": "",
+      "max": "",
+      "example": "true",
+      "grouping": "Design parameters",
+      "position": "205",
+      "required": true
+    }
   },
   "outputs": {
     "output_fasta": {
