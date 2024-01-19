@@ -1,5 +1,5 @@
 {
-  "name": "RFdiffusion v1.0",
+  "name": "RFdiffusion v1.1",
   "description": "RFdiffusion.",
   "author": "RFdiffusion team",
   "github": "https://github.com/RosettaCommons/RFdiffusion",
@@ -115,7 +115,7 @@
       "default": "",
       "description": "The complete prompt for the diffusion model. Overrides other GUI inputs. Note the use of '/0 ' with space to introduce a chain break.",
       "example": "A1-283/0 B1-6/1/B8-20/22/B43-47",
-      "grouping": "_advanced",
+      "grouping": "advanced",
       "position": "108",
       "required":false
   },
