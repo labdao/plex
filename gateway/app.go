@@ -11,6 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
 
@@ -37,6 +38,11 @@ func ServeWebApp() {
 	user := os.Getenv("POSTGRES_USER")
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DB")
+
+	privyVerificationKey := os.Getenv("PRIVY_VERIFICATION_KEY")
+	privyAppId := os.Getenv("NEXT_PUBLIC_PRIVY_APP_ID")
+
+	middleware.SetupConfig(privyVerificationKey, privyAppId)
 
 	// DSN for gorm.Open
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", host, user, password, dbname)
@@ -74,6 +80,7 @@ func ServeWebApp() {
 		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000", "https://editor.swagger.io", "https://editor-next.swagger.io"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PATCH"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
 	})
 
 	mux := server.NewServer(db)
