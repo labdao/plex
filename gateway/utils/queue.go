@@ -160,7 +160,10 @@ func checkRunningJob(job *models.Job, db *gorm.DB) error {
 		return setJobStatus(job, models.JobStateFailed, bacalhauJob.State.Executions[0].Status, db)
 	} else if bacalhau.JobCompleted(bacalhauJob) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
-		return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+		if len(bacalhauJob.State.Executions) > 0 {
+			return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+		}
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
 	} else {
 		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
