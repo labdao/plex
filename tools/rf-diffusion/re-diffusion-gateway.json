@@ -1,15 +1,15 @@
 {
-  "name": "colabdesign gateway automatic v0.3",
-  "description": "RFdiffusion with automatic prompt generation, based on masking of contact and non-contact regions of the protein binder template.",
-  "author": "sokrypton",
-  "github": "https://github.com/sokrypton/ColabDesign",
+  "name": "RFdiffusion v1.0",
+  "description": "RFdiffusion.",
+  "author": "RFdiffusion team",
+  "github": "https://github.com/RosettaCommons/RFdiffusion",
   "paper": "https://www.nature.com/articles/s41586-023-06415-8",
   "task": "protein design",
   "baseCommand": [
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign-autoprompt@sha256:057ea360fdd26cdb098ed451dd03fd58a1de35c1e4508701f37f69587f501291",
+  "dockerPull": "quay.io/...",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -89,96 +89,6 @@
       "grouping": "protein complex",
       "position": "105",
       "required": true
-    },
-    "cutoff": {
-      "type": "number",
-      "description": "Distance cutoff to define inter-protein contact residues [Angstrom]",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "5.0",
-      "min": "0.0",
-      "max": "20.0",
-      "example": "5.0",
-      "grouping": "auto prompt parameters",
-      "position": "201",
-      "required": true
-    },
-    "domain_distance_threshold": {
-      "type": "number",
-      "description": "Minimum number of residues separating distinct domains",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "6",
-      "min": "0",
-      "max": "20",
-      "example": "6",
-      "grouping": "auto prompt parameters",
-      "position": "202",
-      "required": true
-    },
-    "p_contact_domain_masking": {
-      "type": "string",
-      "description": "Probability of masking a contact domain",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "0.6",
-      "min": "",
-      "max": "",
-      "example": "0.6",
-      "grouping": "auto prompt parameters",
-      "position": "203",
-      "required": true
-    },
-    "p_noncontact_domain_masking": {
-      "type": "string",
-      "description": "Probability of masking a non-contact domain",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "0.1",
-      "min": "",
-      "max": "",
-      "example": "0.1",
-      "grouping": "auto prompt parameters",
-      "position": "204",
-      "required": true
-    },
-    "n_prompts": {
-      "type": "number",
-      "description": "Number of auto prompts generated",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "16",
-      "min": "1",
-      "max": "20",
-      "example": "16",
-      "grouping": "auto prompt parameters",
-      "position": "205",
-      "required": true
-    },
-    "number_of_binder_designs": {
-      "type": "number",
-      "description": "Number of protein binders to be designed per prompt",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "1",
-      "max": "3",
-      "example": "2",
-      "grouping": "binder",
-      "position": "301",
-      "required": true
     }
   },
   "outputs": {
@@ -189,32 +99,18 @@
         "*.zip"
       ]
     },
-    "best_design": {
+    "design_pdb": {
       "type": "File",
       "item": "",
       "glob": [
-        "*_best.pdb"
+        "design_*.pdb"
       ]
     },
-    "scores": {
+    "design_trb": {
       "type": "File",
       "item": "",
       "glob": [
-        "*_scores.csv"
-      ]
-    },
-    "sample_table": {
-      "type": "File",
-      "item": "",
-      "glob": [
-        "*_samples_table.csv"
-      ]
-    },
-    "condition_table": {
-      "type": "File",
-      "item": "",
-      "glob": [
-        "*_conditions_table.csv"
+        "design_*.trb"
       ]
     }
   }

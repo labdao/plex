@@ -1,1 +1,2 @@
-directory: /inputs
+target_directory: /inputs
+target_pattern: target
