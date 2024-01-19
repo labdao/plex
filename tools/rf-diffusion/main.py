@@ -125,7 +125,7 @@ def my_app(cfg: DictConfig) -> None:
     # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspots"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binder_designs"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["num_designs"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
 
