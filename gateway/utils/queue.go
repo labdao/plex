@@ -135,7 +135,10 @@ func processJob(job *models.Job, db *gorm.DB) error {
 			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
 			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
-			return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+			if len(bacalhauJob.State.Executions) > 0 {
+				return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+			}
+			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
 		} else {
 			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
@@ -147,7 +150,7 @@ func checkRunningJob(job *models.Job, db *gorm.DB) error {
 	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
 		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", bacalhauJob.State.State), db)
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
 	} else if err != nil {
 		return err
 	}
@@ -157,7 +160,7 @@ func checkRunningJob(job *models.Job, db *gorm.DB) error {
 		return nil
 	} else if bacalhau.JobFailed(bacalhauJob) {
 		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(job, models.JobStateFailed, bacalhauJob.State.Executions[0].Status, db)
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
 	} else if bacalhau.JobCompleted(bacalhauJob) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
 		if len(bacalhauJob.State.Executions) > 0 {
