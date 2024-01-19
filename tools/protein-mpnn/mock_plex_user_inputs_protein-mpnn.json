@@ -1,9 +1,10 @@
 {
   "experiment_name": "default",
-  "pdb": "inputs/protein_complex.pdb",
-  "num_seqs": 8,
+  "protein_complex": "inputs/protein_complex.pdb",
+  "num_seqs": "8",
   "rm_aa": "C",
-  "mpnn_sampling_temp": 0.1,
+  "mpnn_sampling_temp": "0.1",
   "use_solubleMPNN": true,
-  "initial_guess": true
+  "initial_guess": true,
+  "chains_to_design": "A"
 }

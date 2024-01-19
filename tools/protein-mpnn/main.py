@@ -67,55 +67,6 @@ def get_files_from_directory(root_dir, extension, max_depth=3):
     )
     return pdb_files
 
-def run_diffusion(
-    contigs,
-    path,
-    pdb=None,
-    iterations=50,
-    symmetry="none",
-    order=1,
-    hotspot=None,
-    chains=None,
-    add_potential=False,
-    num_designs=1,
-    use_beta_model=False,
-    visual="none",
-    outputs_directory="outputs",
-):
-    print("Running diffusion with contigs:", contigs, "and path:", path)
-    full_path = f"{outputs_directory}/{path}"
-    os.makedirs(full_path, exist_ok=True)
-
-    # # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
-    env = os.environ.copy()
-    env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
-
-    command = [
-        'python', 'RFdiffusion/scripts/run_inference.py',
-        f'inference.output_prefix={os.path.join(outputs_directory, f"design")}',
-        'inference.model_directory_path=RFdiffusion/models',
-        f"inference.input_pdb={pdb}",
-        'inference.num_designs=2',
-        f'contigmap.contigs={[contigs]}'
-    ]
-
-    print('command', command)
-
-    logging.info(f'starting inference')
-    # Run the command
-    result = subprocess.run(command, capture_output=True, text=True, env=env)
-
-    # Check if the command was successful
-    if result.returncode == 0:
-        print("Inference script ran successfully")
-        print(result.stdout)
-    else:
-        print("Error running inference script")
-        print(result.stderr)
-
-    return result
-
-
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
 
@@ -123,12 +74,12 @@ def my_app(cfg: DictConfig) -> None:
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
-    # OmegaConf.update(cfg, "params.basic_settings.pdb", user_inputs["protein_complex"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.num_seqs", user_inputs["num_seqs"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.rm_aa", user_inputs["rm_aa"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
-    OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["cuse_solubleMPNN"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.initial_guess", user_inputs["initial_guess"], merge=False)
+    OmegaConf.update(cfg, "params.expert_settings.chains_to_design", user_inputs["chains_to_design"], merge=False)
 
     print(OmegaConf.to_yaml(cfg))
     print(f"Working directory : {os.getcwd()}")
@@ -151,51 +102,66 @@ def my_app(cfg: DictConfig) -> None:
                 file for file in input_target_path if cfg.inputs.target_pattern in file
             ]
 
-    if not isinstance(input_target_path, list):
-        input_target_path = [input_target_path]
-    print("Identified Targets : ", input_target_path)
-
-    # first_residue_target_chain, last_residue_target_chain = find_chain_residue_range(input_target_path[0], user_inputs["target_chain"])
-    # if isinstance(user_inputs["target_start_residue"], int) and user_inputs["target_start_residue"] > 0:
-    #     OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
-    # else: OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", first_residue_target_chain, merge=False)
-    
-    # if isinstance(user_inputs["target_end_residue"], int) and user_inputs["target_end_residue"] > 0:
-    #     OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
-    # else: OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", last_residue_target_chain, merge=False)
+    # if not isinstance(input_target_path, list):
+    #     input_target_path = [input_target_path]
+    print("Identified complex: ", input_target_path)
 
 
-    # running ProteinMPNN
+    num_seqs = cfg.params.expert_settings.num_seqs
+    rm_aa = cfg.params.expert_settings.rm_aa
+    mpnn_sampling_temp = cfg.params.expert_settings.mpnn_sampling_temp
+    use_solubleMPNN = cfg.params.expert_settings.use_solubleMPNN
+    initial_guess = cfg.params.expert_settings.initial_guess
+    chains_to_design = cfg.params.expert_settings.chains_to_design
 
+    start_time = time.time()
 
-        flags = {
-            "contigs": contigs,
-            "pdb": pdb,
-            "order": order,
-            "iterations": iterations,
-            "symmetry": symmetry,
-            "hotspot": hotspot,
-            "path": path,
-            "chains": chains,
-            "add_potential": add_potential,
-            "num_designs": num_designs,
-            "use_beta_model": use_beta_model,
-            "visual": visual,
-            "outputs_directory": outputs_directory
-        }
+    logging.info(f'Running MPNN')
 
-        print("outputs_directory", outputs_directory)
+    # Activate the conda environment 'mlfold'
+    subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
 
-        for k, v in flags.items():
-            if isinstance(v, str):
-                flags[k] = v.replace("'", "").replace('"', "")
+    print("pdb path", input_target_path)
+    print("output directory", outputs_directory)
 
-        run_diffusion(**flags)
+    # # Define the command and arguments
+    # command = [
+    #         'python', 'ProteinMPNN/protein_mpnn_run.py',
+    #         '--pdb_path', input_target_path,
+    #         '--pdb_path_chains', chains_to_design,
+    #         '--out_folder', outputs_directory,
+    #         '--num_seq_per_target', num_seqs,
+    #         '--sampling_temp', mpnn_sampling_temp,
+    #         '--seed', '37',
+    #         '--batch_size', '1'
+    #     ]
 
-        logging.info("design complete...")
-        end_time = time.time()
-        duration = end_time - start_time
-        logging.info(f"executed in {duration:.2f} seconds.")
+    # # Run the command
+    # subprocess.run(command, capture_output=True, text=True)  
+
+    # Define the command and arguments
+    command = [
+        'python', 'ProteinMPNN/protein_mpnn_run.py',
+        '--pdb_path', input_target_path,
+        '--pdb_path_chains', chains_to_design,
+        '--out_folder', outputs_directory,
+        '--num_seq_per_target', num_seqs,
+        '--sampling_temp', mpnn_sampling_temp,
+        '--seed', '37',
+        '--batch_size', '1'
+    ]
+
+    # Run the command
+    result = subprocess.run(command, capture_output=True, text=True)
+
+    # Print the output
+    print(result.stdout)
+    print(result.stderr)  
+
+    logging.info("MPNN complete...")
+    end_time = time.time()
+    duration = end_time - start_time
+    logging.info(f"executed in {duration:.2f} seconds.")
 
 if __name__ == "__main__":
     my_app()

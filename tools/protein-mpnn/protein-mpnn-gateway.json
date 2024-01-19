@@ -1,9 +1,9 @@
 {
-  "name": "RFdiffusion v1.0",
-  "description": "RFdiffusion.",
-  "author": "RFdiffusion team",
-  "github": "https://github.com/RosettaCommons/RFdiffusion",
-  "paper": "https://www.nature.com/articles/s41586-023-06415-8",
+  "name": "Protein MPNN v1.0",
+  "description": "Protein MPNN.",
+  "author": "Dauparas, J. et al.",
+  "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
+  "paper": "https://www.science.org/doi/10.1126/science.add2187",
   "task": "protein design",
   "baseCommand": [
   ],
@@ -17,7 +17,7 @@
   "inputs": {
     "protein_complex": {
       "type": "file",
-      "description": "Protein complex defining the design problem.",
+      "description": "Protein complex.",
       "array": false,
       "glob": [
         "*.pdb"
@@ -30,7 +30,7 @@
       "position": "101",
       "required": true
     },
-    "target_chain": {
+    "chains_to_design": {
       "type": "string",
       "description": "The chain of the target protein to design against.",
       "array": false,
@@ -40,29 +40,29 @@
       "default": "A",
       "min": "",
       "max": "",
-      "example": "A",
+      "example": "A B",
       "grouping": "protein complex",
       "position": "102",
       "required": true
     },
-    "target_start_residue": {
+    "num_seq": {
       "type": "number",
-      "description": "First residue consider on target chain.",
+      "description": "Number of design sequences.",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "",
+      "default": "8",
       "min": "",
       "max": "",
-      "example": "1",
+      "example": "8",
       "grouping": "protein complex",
       "position": "103",
       "required": true
     },
-    "target_end_residue": {
+    "mpnn_sampling_temp": {
       "type": "number",
-      "description": "Last residue consider on target chain.",
+      "description": "mpnn smapling temperature",
       "array": false,
       "glob": [
         ""
@@ -70,85 +70,53 @@
       "default": "",
       "min": "",
       "max": "",
-      "example": "100",
+      "example": "0.1",
       "grouping": "protein complex",
       "position": "104",
       "required": true
     },
-    "binder_chain": {
-      "type": "string",
-      "description": "The chain of binder template.",
+    "use_solubleMPNN": {
+      "type": "bool",
+      "description": "use soluble",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "B",
+      "default": true,
       "min": "",
       "max": "",
-      "example": "B",
+      "example": "true",
       "grouping": "protein complex",
       "position": "105",
       "required": true
     },
-    "binder_length": {
-      "type": "int",
-      "default": "50",
-      "min": "1",
-      "max": "1000",
-      "description": "The length of the protein binder that is being designed",
+    "initial_guess": {
+      "type": "bool",
+      "default": "true",
+      "min": "",
+      "max": "",
+      "description": "use initial guess",
       "grouping": "binder",
       "position": "106",
       "required":true
   },
-  "number_of__binder_designs": {
+  "rm_aa": {
       "type": "int",
-      "default": "10",
+      "default": "C",
       "min": "1",
       "max": "64",
       "description": "The number of protein binders to be designed",
       "grouping": "binder",
       "position": "107",
-      "required":true
-  },
-    "contigs_override": {
-      "type": "string",
-      "default": "",
-      "description": "The complete prompt for the diffusion model. Overrides other GUI inputs. Note the use of '/0 ' with space to introduce a chain break.",
-      "example": "A1-283/0 B1-6/1/B8-20/22/B43-47",
-      "grouping": "_advanced",
-      "position": "108",
-      "required":false
-  },
-  "hotspots": {
-    "type": "string",
-    "default": "",
-    "grouping": "advanced",
-    "description": "Target residues that should be in contact with the binder.",
-    "example": "A30,A33,A34",
-    "position": "109",
-    "required":false
+      "required": true
   }
   },
   "outputs": {
-    "all_outputs": {
-      "type": "Array",
-      "item": "File",
-      "glob": [
-        "*.zip"
-      ]
-    },
-    "design_pdb": {
+    "output_fasta": {
       "type": "File",
       "item": "",
       "glob": [
-        "design_*.pdb"
-      ]
-    },
-    "design_trb": {
-      "type": "File",
-      "item": "",
-      "glob": [
-        "design_*.trb"
+        "*.fa"
       ]
     }
   }
