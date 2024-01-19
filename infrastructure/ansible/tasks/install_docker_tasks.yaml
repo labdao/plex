@@ -33,18 +33,28 @@
       - docker-compose-plugin
     update_cache: true
 
-- name: Push custom docker daemon config
-  vars:
-    docker_config:
-      # data-root: /var/lib/docker
-      # pidfile: /var/run/docker.pid
+- name: Define base docker config
+  ansible.builtin.set_fact:
+    docker_base_config:
       live-restore: true
       max-concurrent-downloads: 20
       max-download-attempts: 5
       storage-driver: overlay2
+    docker_custom_config: {}
+
+- name: Update Docker custom config for GPU nodes
+  ansible.builtin.set_fact:
+    docker_custom_config:
+      runtimes:
+        nvidia:
+          path: "/usr/bin/nvidia-container-runtime"
+          runtimeArgs: []
+  when: num_of_gpus is defined and num_of_gpus | int > 0
+
+- name: Push custom docker daemon config
   become: true
   ansible.builtin.copy:
-    content: "{{ docker_config | to_json(indent=2, sort_keys=True) }}"
+    content: "{{ docker_base_config | combine(docker_custom_config) | to_json(indent=2, sort_keys=True) }}"
     dest: /etc/docker/daemon.json
     owner: root
     group: root
