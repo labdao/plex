@@ -13,7 +13,7 @@ export default function TasksMenu() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className="mx-2">
+        <DropdownMenuTrigger asChild className="mx-2">
           <Button>
             Run <span className="hidden md:inline">&nbsp;Experiment</span> <ChevronDownIcon size={18} className="ml-1" />
           </Button>
