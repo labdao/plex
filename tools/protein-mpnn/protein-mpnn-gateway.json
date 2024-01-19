@@ -45,7 +45,7 @@
       "position": "102",
       "required": true
     },
-    "num_seq": {
+    "num_seqs": {
       "type": "number",
       "description": "Number of design sequences.",
       "array": false,
