@@ -67,6 +67,10 @@ jobs:
             - 'tools/AF2/AF2-gateway.json'
           aggregater:
             - 'tools/aggregater/aggregater.json'
+          rf-diffusion_rf-diffusion-gateway:
+            - 'tools/rf-diffusion/rf-diffusion-gateway.json'
+          protein-mpnn_protein-mpnn-gateway:
+            - 'tools/protein-mpnn/protein-mpnn-gateway.json'
           sequence-sampler_sequence-sampler-gateway:
             - 'tools/sequence-sampler/sequence-sampler-gateway.json'
 
