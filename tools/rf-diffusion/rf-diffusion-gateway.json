@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/...",
+  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:cf3d27a4d953012e7ab96a1a82c1d90db55181b299dc97c130565c2305cb8f30",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -113,7 +113,7 @@
     "contigs_override": {
       "type": "string",
       "default": "",
-      "description": "The complete prompt for the diffusion model. This overrides other GUI inputs. Note the use of /0 to introduce a chain break.",
+      "description": "The complete prompt for the diffusion model. Overrides other GUI inputs. Note the use of '/0 ' with space to introduce a chain break.",
       "example": "A1-283/0 B1-6/1/B8-20/22/B43-47",
       "grouping": "_advanced",
       "position": "108",
