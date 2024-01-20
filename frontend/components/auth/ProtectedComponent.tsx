@@ -5,9 +5,10 @@ import { LockIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
 
+import { Card, CardContent } from "@/components/ui/card";
+
 import Logo from "../global/Logo";
 import { PageLoader } from "../shared/PageLoader";
-import { Card, CardContent } from "../ui/card";
 import PrivyLoginButton from "./PrivyLoginButton";
 
 type ProtectedComponentProps = {

@@ -20,6 +20,7 @@ import { LabelDescription } from "@/components/ui/label";
 import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
+import { tasks } from "../taskList";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
@@ -44,19 +45,10 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const router = useRouter();
   const { user } = usePrivy();
 
-  // Temporarily hardcode the task - we'll fetch this from the API later based on the page slug
-  const task = useMemo(
-    () => ({
-      name: "protein design",
-      slug: "protein-design", //Could fetch by a slug or ID, whatever you want the url to be
-      default_tool: {
-        CID: "QmYmKL9fCzxoEQAEvCtLZHXXwjJWdn7bbRE9afTXV5cB3v",
-      },
-    }),
-    []
-  );
+  // Fetch the task from our static list of tasks
+  const task = tasks.find((task) => task.slug === params?.slug);
 
-  if (task.slug !== params?.slug) {
+  if (!task?.slug || !task?.available) {
     notFound();
   }
 

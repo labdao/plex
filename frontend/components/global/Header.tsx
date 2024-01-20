@@ -3,9 +3,9 @@
 import Link from "next/link";
 import React from "react";
 
-import { Button } from "../ui/button";
 import Logo from "./Logo";
 import { NavLink } from "./NavLink";
+import TasksMenu from "./TasksMenu";
 import UserMenu from "./UserMenu";
 
 const navItems = [
@@ -26,20 +26,18 @@ const navItems = [
 export default function Header() {
   return (
     <nav className="flex items-center justify-between p-4 border-b bg-background">
-      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase font-heading">
+      <Link href="/" className="flex items-center gap-4 text-lg font-bold uppercase font-heading whitespace-nowrap">
         <Logo className="w-auto h-8 text-primary" /> Lab Exchange
       </Link>
       <>
-        <div className="flex gap-8 ml-16 mr-auto">
+        <div className="flex gap-4 ml-4 mr-auto sm:ml-8 md:ml-16 sm:gap-8">
           {navItems.map((navItem, idx) => (
             <NavLink key={idx} href={navItem.href} className="font-mono font-bold uppercase">
               {navItem.title}
             </NavLink>
           ))}
         </div>
-        <Button asChild className="mr-4">
-          <Link href="/tasks/protein-design">Run Experiment</Link>
-        </Button>
+        <TasksMenu />
         <UserMenu />
       </>
     </nav>
