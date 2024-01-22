@@ -38,7 +38,7 @@ const ProtectedComponent = ({ children, method = "overlay", message }: Protected
                 <LockIcon size={16} absoluteStrokeWidth className="inline-block mr-2" />
                 {message}
               </span>
-              <PrivyLoginButton />
+              <PrivyLoginButton>Log In</PrivyLoginButton>
             </CardContent>
           </Card>
         </div>

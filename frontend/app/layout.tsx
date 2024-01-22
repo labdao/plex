@@ -4,8 +4,8 @@ import { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 
-import Footer from "@/components/global/Footer";
-import Header from "@/components/global/Header";
+import Nav from "@/components/global/Nav";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -92,10 +92,9 @@ export default function RootLayout(props: React.PropsWithChildren) {
         )}
       >
         <Providers>
-          <div className="flex flex-col w-full min-h-screen bg-gray-100">
-            <Header />
-            <div className="grow">{props.children}</div>
-            <Footer />
+          <div className="flex w-full bg-gray-50">
+            <Nav />
+            <ScrollArea className="h-screen p-8 grow">{props.children}</ScrollArea>
           </div>
         </Providers>
       </body>

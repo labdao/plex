@@ -38,15 +38,19 @@ export default function FlowDetail() {
       },
     },
     {
-      id: 'tool',
-      header: 'Model',
+      id: "tool",
+      header: "Model",
       cell: ({ row }) => {
         const toolName = row.original.Tool.Name;
         const toolCID = row.original.Tool.CID;
         const toolCIDUrl = `${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}/${toolCID}`;
 
-        return <a href={toolCIDUrl} target="_blank">{toolName}</a>; 
-      }
+        return (
+          <a href={toolCIDUrl} target="_blank">
+            {toolName}
+          </a>
+        );
+      },
     },
     {
       accessorKey: "State",
@@ -62,7 +66,7 @@ export default function FlowDetail() {
   }, [dispatch]);
 
   return (
-    <div className="container mt-8">
+    <div className="mt-8">
       <Card className="pt-4">
         <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
           <span className="font-bold font-heading">{flow.Name}</span>

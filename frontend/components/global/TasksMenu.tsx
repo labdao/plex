@@ -1,24 +1,23 @@
 "use client";
 
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronRightIcon, SproutIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
 import { tasks } from "@/app/tasks/taskList";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+import { NavButton } from "./NavItem";
 
 export default function TasksMenu() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild className="mx-2">
-          <Button>
-            Run <span className="hidden md:inline">&nbsp;Experiment</span> <ChevronDownIcon size={18} className="ml-1" />
-          </Button>
+        <DropdownMenuTrigger asChild>
+          <NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" collisionPadding={10}>
+        <DropdownMenuContent align="start" side="right" collisionPadding={10}>
           {tasks.map((task) => (
             <DropdownMenuItem asChild disabled={!task.available} key={task.slug}>
               <Link href={`/tasks/${task.slug}`} className="flex justify-between">

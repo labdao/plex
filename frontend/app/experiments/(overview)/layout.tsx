@@ -9,7 +9,7 @@ type LayoutProps = {
 export default async function Layout({ children, list, add }: LayoutProps) {
   return (
     <>
-      <div className="container mt-8">
+      <div className="mt-8">
         <div className="flex justify-end my-8"> {add}</div>
         {list}
         {children}

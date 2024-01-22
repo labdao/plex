@@ -40,7 +40,7 @@ export default function JobDetail() {
         return "";
       }
     }
-  }
+  };
 
   const columns: ColumnDef<File>[] = [
     {
@@ -53,9 +53,7 @@ export default function JobDetail() {
           <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
             {row.getValue("Filename")}
           </a>
-          <div style={{ fontSize: 'smaller', marginTop: '4px', color: 'gray' }}>
-            {row.getValue("CID")}
-          </div>
+          <div style={{ fontSize: "smaller", marginTop: "4px", color: "gray" }}>{row.getValue("CID")}</div>
         </div>
       ),
     },
@@ -73,13 +71,13 @@ export default function JobDetail() {
             </div>
           );
         }
-      }
+      },
     },
     {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("CID"))
+        return shortenAddressOrCid(row.getValue("CID"));
       },
     },
   ];
@@ -93,9 +91,9 @@ export default function JobDetail() {
 
   return (
     <>
-      <div className="container mt-8">
+      <div className="mt-8">
         <Card className="pt-4">
-          <CardTitle className="px-4 flex justify-between items-center border-b pb-4 mb-4">
+          <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
             Job {job.BacalhauJobID}{" "}
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => dispatch(jobPatchDetailThunk(job.BacalhauJobID))} disabled={loading}>
@@ -132,7 +130,7 @@ export default function JobDetail() {
         </Card>
         <Card className="mt-4">
           <div className="p-4 font-bold uppercase">Logs</div>
-          <div className="bg-gray-50 px-4 pb-6">
+          <div className="px-4 pb-6 bg-gray-50">
             <LogViewer />
           </div>
         </Card>

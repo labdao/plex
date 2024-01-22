@@ -165,7 +165,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   }
   return (
     <>
-      <div className="container mt-8">
+      <div className="mt-8">
         {toolDetailError && (
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>

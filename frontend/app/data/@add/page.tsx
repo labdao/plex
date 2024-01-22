@@ -1,6 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
+import { UploadCloudIcon, UploadIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -66,11 +67,16 @@ export default function DataFileForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <Button size="lg">Add Data</Button>
+        <Button>
+          <span className="mr-2">
+            <UploadIcon />
+          </span>
+          Upload Files
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Data</DialogTitle>
+          <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input type="file" onChange={handleFileChange} />
