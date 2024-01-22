@@ -6,6 +6,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 interface TaskSummaryProps {
   form: UseFormReturn<any>;
@@ -59,7 +60,7 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
   }
 
   return (
-    <div className="sticky max-h-screen overflow-y-auto top-4">
+    <div className="sticky max-h-screen pb-6 pl-6 overflow-y-auto top-4">
       <Card>
         <CardContent>
           <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
@@ -83,22 +84,24 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
             Submit <Badge className="mx-1">{variantSummaryInfo?.total || 1}</Badge> Experimental Run{variantSummaryInfo?.total > 1 && "s"}
           </Button>
         </CardContent>
+
+        {outputs && (
+          <>
+            <Separator className="my-2" />
+            <CardContent>
+              <div className="mb-4 font-mono text-sm font-bold uppercase">Expected Output</div>
+              <div className="space-y-2 lowercase">
+                {(outputSummaryInfo?.items || []).map((item, index) => (
+                  <div key={index}>
+                    {item.multiple ? <div>{item.fileExtensions} files</div> : <div>{item.fileNames} file</div>}
+                    <div className="mr-3 text-xs text-muted-foreground">{item.name}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </>
+        )}
       </Card>
-      {outputs && (
-        <Card className="mt-8 mb-4">
-          <CardContent>
-            <div className="mb-4 font-mono text-sm font-bold uppercase">Expected Output</div>
-            <div className="space-y-2 lowercase">
-              {(outputSummaryInfo?.items || []).map((item, index) => (
-                <div key={index}>
-                  {item.multiple ? <div>{item.fileExtensions} files</div> : <div>{item.fileNames} file</div>}
-                  <div className="mr-3 text-xs text-muted-foreground">{item.name}</div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

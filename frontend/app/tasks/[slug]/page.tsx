@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
+import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
+
+  const { author, name } = tool.ToolJson;
 
   // On page load fetch the default tool details
   useEffect(() => {
@@ -165,7 +168,14 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   }
   return (
     <>
-      <div className="mt-8">
+      <Breadcrumbs
+        items={[
+          { name: "Tasks", href: "/tasks" },
+          { name: task.name, href: `/tasks/${task.slug}` },
+          { name: !toolDetailLoading ? `${author || "unknown"}/${name}` : "" },
+        ]}
+      />
+      <div>
         {toolDetailError && (
           <Alert variant="destructive">
             <AlertTitle>Error</AlertTitle>
@@ -173,9 +183,9 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
           </Alert>
         )}
         <>
-          <TaskPageHeader tool={tool} task={task} loading={toolDetailLoading} />
+          <TaskPageHeader tool={tool} loading={toolDetailLoading} />
           <ProtectedComponent method="overlay" message="Log in to run an experiment">
-            <div className="grid min-h-screen grid-cols-1 gap-8 lg:grid-cols-3">
+            <div className="grid min-h-screen grid-cols-1 p-6 pr-0 lg:grid-cols-3">
               <div className="col-span-2">
                 <Form {...form}>
                   <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">

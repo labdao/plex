@@ -14,13 +14,12 @@ const NavContent = (props: React.PropsWithChildren) => <div className="flex flex
 
 export default function Nav() {
   return (
-    <nav className="flex flex-col justify-between w-48 h-screen border-b shadow-lg bg-background">
+    <nav className="z-50 flex flex-col justify-between w-48 h-screen border-b border-r shadow-lg bg-background">
       <div>
-        <Link href="/" className="flex items-center gap-2 p-2 text-lg font-bold uppercase h-14 font-heading whitespace-nowrap">
+        <Link href="/" className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b h-14 font-heading whitespace-nowrap">
           <Logo className="w-auto h-6 text-primary" />
           Lab Exchange
         </Link>
-        <Separator />
         <NavContent>
           <NavLink href="/tasks" icon={<BoxIcon />} title="Models" />
         </NavContent>

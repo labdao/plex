@@ -94,7 +94,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
         <Providers>
           <div className="flex w-full bg-gray-50">
             <Nav />
-            <ScrollArea className="h-screen p-8 grow">{props.children}</ScrollArea>
+            <ScrollArea className="h-screen pt-14 grow">{props.children}</ScrollArea>
           </div>
         </Providers>
       </body>
