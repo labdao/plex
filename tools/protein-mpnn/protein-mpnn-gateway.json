@@ -1,5 +1,5 @@
 {
-  "name": "Protein MPNN v2.0",
+  "name": "Protein MPNN v2.1",
   "description": "Protein MPNN.",
   "author": "Dauparas, J. et al.",
   "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
@@ -52,12 +52,72 @@
       "glob": [
         ""
       ],
-      "default": "8",
+      "default": 8,
       "min": "",
       "max": "",
-      "example": "8",
+      "example": 8,
       "grouping": "Design parameters",
       "position": "201",
+      "required": true
+    },
+    "mpnn_sampling_temp": {
+      "type": "string",
+      "description": "mpnn sampling temperature",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "0.1",
+      "min": "",
+      "max": "",
+      "example": "0.1",
+      "grouping": "Design parameters",
+      "position": "202",
+      "required": true
+    },
+    "use_solubleMPNN": {
+      "type": "bool",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": true,
+      "min": "",
+      "max": "",
+      "example": "true",
+      "grouping": "Design parameters",
+      "position": "203",
+      "required": true
+    },
+    "initial_guess": {
+      "type": "bool",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "True",
+      "min": "",
+      "max": "",
+      "example": "true",
+      "grouping": "Design parameters",
+      "position": "204",
+      "required": true
+    },
+    "rm_aa": {
+      "type": "string",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "C",
+      "min": "",
+      "max": "",
+      "example": "true",
+      "grouping": "Design parameters",
+      "position": "205",
       "required": true
     }
   },
