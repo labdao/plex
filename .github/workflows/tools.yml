@@ -69,6 +69,10 @@ jobs:
             - 'tools/sequence-sampler/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
+          protein-to-dna-icodon:
+            - 'tools/protein-to-dna-icodon/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
 
 
   tools:

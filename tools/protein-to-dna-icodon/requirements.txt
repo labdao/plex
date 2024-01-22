@@ -1,0 +1,2 @@
+dnachisel==3.2.11
+hydra-core==1.3.2
