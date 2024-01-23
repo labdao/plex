@@ -3,13 +3,15 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DataFile } from "../dataFileListSlice/slice";
 
 export interface JobDetail {
+  ID: number | null;
   BacalhauJobID: string;
   State: string;
   Error: string;
   ToolID: string;
   FlowID: string;
-  Inputs: DataFile[];
-  Outputs: DataFile[];
+  InputFiles: DataFile[];
+  OutputFiles: DataFile[];
+  Status: string;
 }
 
 export interface JobDetailSliceState {
@@ -20,7 +22,7 @@ export interface JobDetailSliceState {
 }
 
 const initialState: JobDetailSliceState = {
-  job: { BacalhauJobID: "", State: "", Error: "", ToolID: "", FlowID: "", Inputs: [], Outputs: [] },
+  job: { ID: null, BacalhauJobID: "", State: "", Error: "", ToolID: "", FlowID: "", InputFiles: [], OutputFiles: [], Status: "unknown" },
   loading: false,
   error: null,
   success: false,

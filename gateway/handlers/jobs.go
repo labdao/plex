@@ -8,16 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
-	"strings"
-	"time"
+	"strconv"
 
-	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/bacalhau"
-	"github.com/labdao/plex/internal/ipfs"
 	"gorm.io/gorm"
 )
 
@@ -29,10 +26,13 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		params := mux.Vars(r)
-		bacalhauJobID := params["bacalhauJobID"]
+		jobID, err := strconv.Atoi(params["jobID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Job ID (%v) could not be converted to int", params["jobID"]), http.StatusNotFound)
+		}
 
 		var job models.Job
-		if result := db.Preload("Outputs.Tags").Preload("Inputs.Tags").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
+		if result := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").First(&job, "id = ?", jobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found", http.StatusNotFound)
 			} else {
@@ -41,233 +41,6 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		log.Println("Fetched Job from DB: ", job)
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(job); err != nil {
-			http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func addTag(db *gorm.DB, name, tagType string) error {
-	if name == "" || tagType == "" {
-		return fmt.Errorf("Tag name and type are required")
-	}
-
-	tag := models.Tag{
-		Name: name,
-		Type: tagType,
-	}
-
-	result := db.Create(&tag)
-	if result.Error != nil {
-		if utils.IsDuplicateKeyError(result.Error) {
-			log.Printf("A tag with the same name already exists: %s", name)
-			return nil
-		} else {
-			return fmt.Errorf("Error creating tag: %v", result.Error)
-		}
-	}
-
-	return nil
-}
-
-func UpdateJobHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPatch {
-			utils.SendJSONError(w, "Only PATCH method is supported", http.StatusBadRequest)
-			return
-		}
-
-		params := mux.Vars(r)
-		bacalhauJobID := params["bacalhauJobID"]
-
-		var job models.Job
-		if result := db.Preload("Outputs").Preload("Inputs").First(&job, "bacalhau_job_id = ?", bacalhauJobID); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Job not found", http.StatusNotFound)
-			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Job: %v", result.Error), http.StatusInternalServerError)
-			}
-			return
-		}
-
-		var flow models.Flow
-		if result := db.First(&flow, "cid = ?", job.FlowID); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				log.Println("Flow not found for given FlowID:", job.FlowID)
-			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
-				return
-			}
-		}
-		log.Println("Flow name:", flow.Name)
-
-		log.Println("Updating job")
-		updatedJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
-		}
-
-		log.Println("Getting job history...")
-		events, err := bacalhau.GetBacalhauJobEvents(job.BacalhauJobID)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error getting job history: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		for _, event := range events {
-			if event.ExecutionState != nil {
-				switch event.ExecutionState.New {
-				case model.ExecutionStateBidAccepted:
-					log.Printf("Bid Accepted Time: %s", event.Time)
-					job.StartedAt = event.Time
-				case model.ExecutionStateCompleted:
-					log.Printf("Job Completed Time: %s", event.Time)
-					job.CompletedAt = event.Time
-				}
-			}
-		}
-
-		if updatedJob.State.State == model.JobStateCancelled {
-			job.State = "failed"
-		} else if updatedJob.State.State == model.JobStateError {
-			job.State = "error"
-		} else if updatedJob.State.State == model.JobStateQueued {
-			job.State = "queued"
-		} else if updatedJob.State.State == model.JobStateInProgress {
-			job.State = "processing"
-		} else if updatedJob.State.State == model.JobStateCompleted {
-			job.State = "completed"
-		} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
-			job.State = "failed"
-		}
-		log.Println("Updated job")
-
-		if err := db.Save(job).Error; err != nil {
-			http.Error(w, fmt.Sprintf("Error saving Job: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		if job.State == "completed" {
-			// we always only do one execution at the moment
-			fmt.Println("Job completed, getting output directory CID...")
-			outputDirCID := updatedJob.State.Executions[0].PublishedResult.CID
-			outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error listing files in directory: %v", err), http.StatusInternalServerError)
-				return
-			}
-
-			existingOutputs := make(map[string]struct{})
-			for _, output := range job.Outputs {
-				existingOutputs[output.CID] = struct{}{}
-			}
-
-			log.Printf("Number of output files: %d\n", len(outputFileEntries))
-			fileNames := make([]string, 0, len(outputFileEntries))
-			for _, fileEntry := range outputFileEntries {
-				fileNames = append(fileNames, fileEntry["filename"])
-			}
-			log.Printf("Output file names: %v\n", fileNames)
-
-			for _, fileEntry := range outputFileEntries {
-				log.Printf("Processing fileEntry with CID: %s, Filename: %s", fileEntry["CID"], fileEntry["filename"])
-
-				if _, exists := existingOutputs[fileEntry["CID"]]; exists {
-					continue
-				}
-
-				log.Println("Attempting to find DataFile in DB with CID: ", fileEntry["CID"])
-
-				var dataFile models.DataFile
-				result := db.Where("cid = ?", fileEntry["CID"]).First(&dataFile)
-				if result.Error != nil {
-					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						log.Println("DataFile not found in DB, creating new record with CID: ", fileEntry["CID"])
-
-						var generatedTag models.Tag
-						if err := db.Where("name = ?", "generated").First(&generatedTag).Error; err != nil {
-							http.Error(w, fmt.Sprintf("Error finding generated tag: %v", err), http.StatusInternalServerError)
-							return
-						}
-
-						experimentTagName := "experiment:" + flow.Name
-						var experimentTag models.Tag
-						result := db.Where("name = ?", experimentTagName).First(&experimentTag)
-						if result.Error != nil {
-							if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-								experimentTag = models.Tag{Name: experimentTagName, Type: "autogenerated"}
-								if err := db.Create(&experimentTag).Error; err != nil {
-									http.Error(w, fmt.Sprintf("Error creating experiment tag: %v", err), http.StatusInternalServerError)
-									return
-								}
-							} else {
-								http.Error(w, fmt.Sprintf("Error querying Tag table: %v", result.Error), http.StatusInternalServerError)
-								return
-							}
-						}
-
-						fileName := fileEntry["filename"]
-						dotIndex := strings.LastIndex(fileName, ".")
-						var extension string
-						if dotIndex != -1 && dotIndex < len(fileName)-1 {
-							extension = fileName[dotIndex+1:]
-						} else {
-							extension = "utility"
-						}
-						extensionTagName := "file_extension:" + extension
-
-						var extensionTag models.Tag
-						result = db.Where("name = ?", extensionTagName).First(&extensionTag)
-						if result.Error != nil {
-							if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-								extensionTag = models.Tag{Name: extensionTagName, Type: "autogenerated"}
-								if err := db.Create(&extensionTag).Error; err != nil {
-									http.Error(w, fmt.Sprintf("Error creating extension tag: %v", err), http.StatusInternalServerError)
-									return
-								}
-							} else {
-								http.Error(w, fmt.Sprintf("Error querying Tag table: %v", result.Error), http.StatusInternalServerError)
-								return
-							}
-						}
-
-						log.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
-
-						dataFile = models.DataFile{
-							CID:           fileEntry["CID"],
-							WalletAddress: job.WalletAddress,
-							Filename:      fileName,
-							Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
-							Timestamp:     time.Now(),
-						}
-
-						if err := db.Create(&dataFile).Error; err != nil {
-							http.Error(w, fmt.Sprintf("Error creating DataFile record: %v", err), http.StatusInternalServerError)
-							return
-						}
-
-						log.Println("DataFile successfully saved to DB:", dataFile)
-					} else {
-						http.Error(w, fmt.Sprintf("Error querying DataFile table: %v", result.Error), http.StatusInternalServerError)
-						return
-					}
-				}
-
-				log.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
-				job.Outputs = append(job.Outputs, dataFile)
-				log.Println("Updated Job.Outputs:", job.Outputs)
-			}
-
-			if err := db.Save(&job).Error; err != nil {
-				http.Error(w, fmt.Sprintf("Error updating job: %v", err), http.StatusInternalServerError)
-				return
-			}
-
-		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {
 			http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
@@ -347,4 +120,80 @@ func StreamJobLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	cmd.Wait()
+}
+
+type JobSummary struct {
+	Count         int     `json:"count"`
+	TotalCpu      float64 `json:"totalCpu"`
+	TotalMemoryGb int     `json:"totalMemoryGb"`
+	TotalGpu      int     `json:"totalGpu"`
+}
+
+type QueueSummary struct {
+	Queued  JobSummary `json:"queued"`
+	Running JobSummary `json:"running"`
+}
+
+type Summary struct {
+	CPU QueueSummary `json:"cpu"`
+	GPU QueueSummary `json:"gpu"`
+}
+
+type AggregatedData struct {
+	QueueType     models.QueueType `gorm:"column:queue"`
+	State         models.JobState  `gorm:"column:state"`
+	TotalCpu      float64
+	TotalMemoryGb int
+	TotalGpu      int
+	Count         int
+}
+
+func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var summary Summary
+		var aggregatedResults []AggregatedData
+
+		// Perform the query using GORM
+		db = db.Debug()
+		result := db.Table("jobs").
+			Select("queue, state, sum(tools.cpu) as total_cpu, sum(tools.memory) as total_memory_gb, sum(tools.gpu) as total_gpu, count(*) as count").
+			Joins("left join tools on tools.cid = jobs.tool_id").
+			Group("queue, state").
+			Find(&aggregatedResults)
+		fmt.Printf("Aggregated Results: %+v\n", aggregatedResults)
+
+		if result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error Querying Job Table (%v)", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		// Compile results into summary
+		for _, data := range aggregatedResults {
+			jobSummary := JobSummary{
+				Count:         data.Count,
+				TotalCpu:      data.TotalCpu,
+				TotalMemoryGb: data.TotalMemoryGb,
+				TotalGpu:      data.TotalGpu,
+			}
+
+			switch data.QueueType {
+			case models.QueueTypeCPU:
+				if data.State == models.JobStateQueued {
+					summary.CPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.CPU.Running = jobSummary
+				}
+			case models.QueueTypeGPU:
+				if data.State == models.JobStateQueued {
+					summary.GPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.GPU.Running = jobSummary
+				}
+			}
+		}
+
+		// Set content type and encode summary to JSON
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(summary)
+	}
 }

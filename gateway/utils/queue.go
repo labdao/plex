@@ -1,0 +1,323 @@
+package utils
+
+import (
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"encoding/json"
+
+	"github.com/labdao/plex/gateway/models"
+	"github.com/labdao/plex/internal/bacalhau"
+	"github.com/labdao/plex/internal/ipfs"
+	"gorm.io/gorm"
+)
+
+func getEnvAsInt(name string, defaultValue int) int {
+	valueStr := os.Getenv(name)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
+		return defaultValue
+	}
+	return value
+}
+
+// Consider allowing Job creation payloads to configure lower times
+var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
+var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
+
+func StartJobQueues(db *gorm.DB) error {
+	errChan := make(chan error, 2) // Buffer for two types of jobs
+
+	go ProcessJobQueue(models.QueueTypeCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeGPU, errChan, db)
+
+	// Wait for error from any queue
+	for i := 0; i < 2; i++ {
+		if err := <-errChan; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.DB) {
+	for {
+		var jobs []models.Job
+		if err := fetchQueuedJobsWithToolData(&jobs, queueType, db); err != nil {
+			errChan <- err
+			return
+		}
+
+		fmt.Printf("There are %d jobs in the %s queue\n", len(jobs), queueType)
+
+		for _, job := range jobs {
+			// there should not be any errors from processJob
+			if err := processJob(&job, db); err != nil {
+				errChan <- err
+				return
+			}
+		}
+
+		fmt.Printf("Finished processing queue, rehydrating %s queue with jobs\n", queueType)
+		time.Sleep(5 * time.Second) // Wait for some time before the next cycle
+	}
+}
+
+func MonitorRunningJobs(db *gorm.DB) error {
+	for {
+		var jobs []models.Job
+		if err := fetchRunningJobsWithToolData(&jobs, db); err != nil {
+			return err
+		}
+		fmt.Printf("There are %d running jobs\n", len(jobs))
+		for _, job := range jobs {
+			// there should not be any errors from checkRunningJob
+			if err := checkRunningJob(&job, db); err != nil {
+				return err
+			}
+		}
+		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
+		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
+	}
+}
+
+func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
+	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
+}
+
+func fetchQueuedJobsWithToolData(jobs *[]models.Job, queueType models.QueueType, db *gorm.DB) error {
+	return db.Preload("Tool").Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Find(jobs).Error
+}
+
+func processJob(job *models.Job, db *gorm.DB) error {
+	fmt.Printf("Processing job %v\n", job.ID)
+	if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
+		return err
+	}
+
+	for {
+		fmt.Printf("Checking status for %v , %v\n", job.ID, job.BacalhauJobID)
+		if time.Since(job.CreatedAt) > maxQueueTime {
+			fmt.Printf("Job %v , %v timed out\n", job.ID, job.BacalhauJobID)
+			return setJobStatus(job, models.JobStateFailed, "timed out in queue", db)
+		}
+
+		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+		if err != nil {
+			return err
+		}
+
+		// keep retrying job if there is a capacity error until job times out
+		// ideally replace with a query if the Bacalhau nodes have capacity
+		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
+			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
+			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
+			if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
+				return err
+			}
+			continue
+		} else if bacalhau.JobIsRunning(bacalhauJob) {
+			fmt.Printf("Job %v , %v is running\n", job.ID, job.BacalhauJobID)
+			return setJobStatus(job, models.JobStateRunning, "", db)
+		} else if bacalhau.JobFailed(bacalhauJob) {
+			fmt.Printf("Job %v , %v failed\n", job.ID, job.BacalhauJobID)
+			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
+		} else if bacalhau.JobCompleted(bacalhauJob) {
+			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
+			if len(bacalhauJob.State.Executions) > 0 {
+				return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+			}
+			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		} else {
+			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
+		}
+	}
+}
+
+func checkRunningJob(job *models.Job, db *gorm.DB) error {
+	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+	if err != nil && strings.Contains(err.Error(), "Job not found") {
+		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.BacalhauJobID)
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
+	} else if err != nil {
+		return err
+	}
+
+	if bacalhau.JobIsRunning(bacalhauJob) {
+		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.BacalhauJobID)
+		return nil
+	} else if bacalhau.JobFailed(bacalhauJob) {
+		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
+	} else if bacalhau.JobCompleted(bacalhauJob) {
+		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
+		if len(bacalhauJob.State.Executions) > 0 {
+			return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+		}
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+	} else {
+		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
+	}
+}
+
+func setJobStatus(job *models.Job, state models.JobState, errorMessage string, db *gorm.DB) error {
+	job.State = state
+	job.Error = errorMessage
+	return db.Save(job).Error
+}
+
+func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, outputDirCID string, db *gorm.DB) error {
+	job.State = state
+	outputFileEntries, err := ipfs.ListFilesInDirectory(outputDirCID)
+	if err != nil {
+		fmt.Printf("Error listing files in directory: %v", err)
+		return err
+	}
+
+	var flow models.Flow
+	if result := db.First(&flow, "id = ?", job.FlowID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			fmt.Println("Flow not found for given FlowID:", job.FlowID)
+		} else {
+			fmt.Printf("Error fetching Flow: %v", result.Error)
+			return result.Error
+		}
+	}
+	log.Println("Flow name:", flow.Name)
+
+	// Create a map of existing output CIDs for quick lookup
+	existingOutputs := make(map[string]struct{})
+	for _, output := range job.OutputFiles {
+		existingOutputs[output.CID] = struct{}{}
+	}
+	fmt.Printf("Number of output files: %d\n", len(outputFileEntries))
+	for _, fileEntry := range outputFileEntries {
+		fmt.Printf("Processing fileEntry with CID: %s, Filename: %s\n", fileEntry["CID"], fileEntry["filename"])
+		if _, exists := existingOutputs[fileEntry["CID"]]; exists {
+			continue
+		}
+		var dataFile models.DataFile
+		result := db.Where("cid = ?", fileEntry["CID"]).First(&dataFile)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				fmt.Println("DataFile not found in DB, creating new record with CID: ", fileEntry["CID"])
+
+				var generatedTag models.Tag
+				if err := db.Where("name = ?", "generated").First(&generatedTag).Error; err != nil {
+					fmt.Printf("Error finding generated tag: %v\n", err)
+					return err
+				}
+				experimentTagName := "experiment:" + flow.Name
+				var experimentTag models.Tag
+				result := db.Where("name = ?", experimentTagName).First(&experimentTag)
+				if result.Error != nil {
+					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+						experimentTag = models.Tag{Name: experimentTagName, Type: "autogenerated"}
+						if err := db.Create(&experimentTag).Error; err != nil {
+							fmt.Printf("Error creating experiment tag: %v\n", err)
+							return err
+						}
+					} else {
+						fmt.Printf("Error querying Tag table: %v\n", result.Error)
+						return result.Error
+					}
+				}
+
+				fileName := fileEntry["filename"]
+				dotIndex := strings.LastIndex(fileName, ".")
+				var extension string
+				if dotIndex != -1 && dotIndex < len(fileName)-1 {
+					extension = fileName[dotIndex+1:]
+				} else {
+					extension = "utility"
+				}
+				extensionTagName := "file_extension:" + extension
+
+				var extensionTag models.Tag
+				result = db.Where("name = ?", extensionTagName).First(&extensionTag)
+				if result.Error != nil {
+					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+						extensionTag = models.Tag{Name: extensionTagName, Type: "autogenerated"}
+						if err := db.Create(&extensionTag).Error; err != nil {
+							fmt.Printf("Error creating extension tag: %v\n", err)
+							return err
+						}
+					} else {
+						fmt.Printf("Error querying Tag table: %v\n", result.Error)
+						return err
+					}
+				}
+
+				fmt.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
+
+				dataFile = models.DataFile{
+					CID:       fileEntry["CID"],
+					Filename:  fileName,
+					Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
+					Timestamp: time.Now(),
+				}
+
+				if err := db.Create(&dataFile).Error; err != nil {
+					fmt.Printf("Error creating DataFile record: %v\n", err)
+					return err
+				}
+			} else {
+				fmt.Printf("Error querying DataFile table: %v\n", result.Error)
+				return err
+			}
+		}
+		// Then add the DataFile to the Job.OutputFiles
+		fmt.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
+		job.OutputFiles = append(job.OutputFiles, dataFile)
+		fmt.Println("Updated Job.Outputs:", job.OutputFiles)
+	}
+	// Update job in the database with new OutputFiles
+	if err := db.Save(&job).Error; err != nil {
+		fmt.Printf("Error updating job: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB) error {
+	var inputs map[string]interface{}
+	if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
+		return err
+	}
+	annotations := []string{}
+	container := job.Tool.Container
+	memory := job.Tool.Memory
+	cpu := job.Tool.Cpu
+	gpu := job.Tool.Gpu == 1
+	network := job.Tool.Network
+
+	selector := ""
+
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations)
+	if err != nil {
+		return err
+	}
+
+	submittedBacalhauJob, err := bacalhau.SubmitBacalhauJob(bacalhauJob)
+	if err != nil {
+		return err
+	}
+
+	job.BacalhauJobID = submittedBacalhauJob.Metadata.ID
+	fmt.Printf("Job had id %v\n", job.ID)
+	fmt.Printf("Creating Job with bacalhau id %v\n", submittedBacalhauJob.Metadata.ID)
+	return db.Save(job).Error
+}

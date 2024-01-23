@@ -71,11 +71,24 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		var toolGpu int
+		if tool.GpuBool {
+			toolGpu = 1
+		} else {
+			toolGpu = 0
+		}
+
+		// Store serialized Tool in DB
 		toolEntry := models.Tool{
 			CID:           cid,
 			WalletAddress: walletAddress,
 			Name:          tool.Name,
 			ToolJson:      toolJSON,
+			Container:     tool.DockerPull,
+			Memory:        *tool.MemoryGB,
+			Cpu:           *tool.Cpu,
+			Gpu:           toolGpu,
+			Network:       tool.NetworkBool,
 			Timestamp:     time.Now(),
 		}
 

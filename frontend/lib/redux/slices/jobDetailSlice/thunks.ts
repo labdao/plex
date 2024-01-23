@@ -6,10 +6,10 @@ import { setJobDetail, setJobDetailError, setJobDetailLoading,setJobDetailSucces
 
 export const jobDetailThunk = createAppAsyncThunk(
   'job/jobDetail',
-  async (bacalhauJobID: string, { dispatch }) => {
+  async (jobID: string, { dispatch }) => {
     dispatch(setJobDetailLoading(true))
     try {
-      const responseData = await getJob(bacalhauJobID)
+      const responseData = await getJob(jobID)
       dispatch(setJobDetailSuccess(true))
       dispatch(setJobDetail(responseData))
       dispatch(setJobDetailLoading(false))
@@ -20,29 +20,6 @@ export const jobDetailThunk = createAppAsyncThunk(
         dispatch(setJobDetailError(error.message))
       } else {
         dispatch(setJobDetailError('Failed to get Job.'))
-      }
-      dispatch(setJobDetailLoading(false))
-      return false
-    }
-  }
-)
-
-export const jobPatchDetailThunk = createAppAsyncThunk(
-  'job/jobPatchDetail',
-  async (bacalhauJobID: string, { dispatch }) => {
-    dispatch(setJobDetailLoading(true))
-    try {
-      const responseData = await patchJob(bacalhauJobID)
-      dispatch(setJobDetailLoading(false))
-      dispatch(setJobDetailSuccess(true))
-      dispatch(setJobDetail(responseData))
-      return responseData
-    } catch (error: unknown) {
-      console.log('Failed to get Job.', error)
-      if (error instanceof Error) {
-        dispatch(setJobDetailError(error.message))
-      } else {
-        dispatch(setJobDetailError('Failed to patch Job.'))
       }
       dispatch(setJobDetailLoading(false))
       return false
