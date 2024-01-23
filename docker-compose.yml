@@ -129,20 +129,20 @@ services:
       backend:
         condition: service_healthy
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: ./Dockerfile
-      cache_from:
-        - quay.io/labdao/frontend:latest
-      args:
-        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
-        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
-        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
-    environment:
-      NODE_ENV: 'production'
-    ports:
-      - 3000:3000
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: ./Dockerfile
+  #     cache_from:
+  #       - quay.io/labdao/frontend:latest
+  #     args:
+  #       NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
+  #       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
+  #       NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
+  #   environment:
+  #     NODE_ENV: 'production'
+  #   ports:
+  #     - 3000:3000
 
   dbreceptor:
     image: "postgres:15.4"
@@ -182,11 +182,13 @@ services:
 
   ipfs:
     hostname: ipfs
+    # If building from Mac, comment out build and uncomment image
     build:
       context: ./docker/images/ipfs
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/ipfs:latest
+    # image: "ipfs/kubo:v0.18.0"
     volumes:
       - ipfs:/data/ipfs
     environment:
