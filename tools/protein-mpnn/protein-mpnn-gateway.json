@@ -1,5 +1,5 @@
 {
-  "name": "Protein MPNN v2.2",
+  "name": "protein mpnn v2.3",
   "description": "Protein MPNN.",
   "author": "Dauparas, J. et al.",
   "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:828417930c4c963c5e793bd5fb176f753327e2010f80a7fef7e4d282f7985d70",
+  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:a943c1eb3f26df7f2b46399848b74a2e840c3e9e58b2879ac47e4a02baf3b8b0",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -52,10 +52,10 @@
       "glob": [
         ""
       ],
-      "default": 8,
+      "default": "8",
       "min": "",
       "max": "",
-      "example": 8,
+      "example": "8",
       "grouping": "Design parameters",
       "position": "201",
       "required": true
@@ -76,31 +76,31 @@
       "required": true
     },
     "use_solubleMPNN": {
-      "type": "boolean",
+      "type": "bool",
       "description": "",
       "array": false,
       "glob": [
         ""
       ],
-      "default": true,
+      "default": "true",
       "min": "",
       "max": "",
-      "example": true,
+      "example": "true",
       "grouping": "Design parameters",
       "position": "203",
       "required": true
     },
     "initial_guess": {
-      "type": "boolean",
+      "type": "bool",
       "description": "",
       "array": false,
       "glob": [
         ""
       ],
-      "default": true,
+      "default": "true",
       "min": "",
       "max": "",
-      "example": true,
+      "example": "true",
       "grouping": "Design parameters",
       "position": "204",
       "required": true

@@ -5,6 +5,6 @@ expert_settings:
   num_seqs: 8
   rm_aa: C
   mpnn_sampling_temp: 0.1
-  use_solubleMPNN: true
-  initial_guess: true
+  use_solubleMPNN: "true"
+  initial_guess: "true"
   chains_to_design: A
