@@ -239,7 +239,12 @@ func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 }
 
 func JobIsRunning(job *model.JobWithInfo) bool {
-	return job.State.State == model.JobStateInProgress
+	// the backend counts a Job as running once it is accepted by Bacalhau
+	if len(job.State.Executions) > 0 {
+		return job.State.State == model.JobStateInProgress || job.State.Executions[0].State == model.ExecutionStateAskForBidAccepted
+	} else {
+		return job.State.State == model.JobStateInProgress
+	}
 }
 
 func JobCompleted(job *model.JobWithInfo) bool {
