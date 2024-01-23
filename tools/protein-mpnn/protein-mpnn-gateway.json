@@ -1,0 +1,103 @@
+{
+  "name": "protein mpnn v3.0",
+  "description": "Protein MPNN.",
+  "author": "Dauparas, J. et al.",
+  "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
+  "paper": "https://www.science.org/doi/10.1126/science.add2187",
+  "task": "protein design",
+  "baseCommand": [
+  ],
+  "arguments": [
+  ],
+  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:e60936c86de9711bbb9964fd9d6ae0f80b5eea598fd2d6dafe25746f45187ba5",
+  "gpuBool": true,
+  "memoryGB": 12,
+  "cpu": 3,
+  "networkBool": true,
+  "inputs": {
+    "protein_complex": {
+      "type": "file",
+      "description": "Protein complex.",
+      "array": false,
+      "glob": [
+        "*.pdb"
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "my_target_protein.pdb",
+      "grouping": "protein complex",
+      "position": "101",
+      "required": true
+    },
+    "chains_to_design": {
+      "type": "string",
+      "description": "The chain of the target protein to design against.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "A",
+      "min": "",
+      "max": "",
+      "example": "A B",
+      "grouping": "protein complex",
+      "position": "102",
+      "required": true
+    },
+    "num_seqs": {
+      "type": "number",
+      "description": "Number of design sequences.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "8",
+      "min": "",
+      "max": "",
+      "example": "8",
+      "grouping": "Design parameters",
+      "position": "201",
+      "required": true
+    },
+    "mpnn_sampling_temp": {
+      "type": "string",
+      "description": "mpnn sampling temperature",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "0.1",
+      "min": "",
+      "max": "",
+      "example": "0.1",
+      "grouping": "Design parameters",
+      "position": "202",
+      "required": true
+    },
+    "rm_aa": {
+      "type": "string",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "C",
+      "min": "",
+      "max": "",
+      "example": "C",
+      "grouping": "Design parameters",
+      "position": "203",
+      "required": true
+    }
+  },
+  "outputs": {
+    "output_fasta": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*.fa"
+      ]
+    }
+  }
+}
