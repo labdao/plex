@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:5e39fc17e37a187860600e88afaada82ab0aca88029d1dbc250b547d585b013a",
+  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:828417930c4c963c5e793bd5fb176f753327e2010f80a7fef7e4d282f7985d70",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -76,22 +76,7 @@
       "required": true
     },
     "use_solubleMPNN": {
-      "type": "bool",
-      "description": "",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": true,
-      "min": "",
-      "max": "",
-      "example": "true",
-      "grouping": "Design parameters",
-      "position": "203",
-      "required": true
-    },
-    "initial_guess": {
-      "type": "bool",
+      "type": "string",
       "description": "",
       "array": false,
       "glob": [
@@ -100,7 +85,22 @@
       "default": "True",
       "min": "",
       "max": "",
-      "example": "true",
+      "example": "True",
+      "grouping": "Design parameters",
+      "position": "203",
+      "required": true
+    },
+    "initial_guess": {
+      "type": "string",
+      "description": "",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "True",
+      "min": "",
+      "max": "",
+      "example": "True",
       "grouping": "Design parameters",
       "position": "204",
       "required": true
@@ -115,7 +115,7 @@
       "default": "C",
       "min": "",
       "max": "",
-      "example": "true",
+      "example": "C",
       "grouping": "Design parameters",
       "position": "205",
       "required": true
