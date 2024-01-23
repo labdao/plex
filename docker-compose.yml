@@ -4,7 +4,7 @@ version: "3.7"
 
 services:
   requester:
-    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4}"
+    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0}"
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
