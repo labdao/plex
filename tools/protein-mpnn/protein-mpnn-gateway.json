@@ -1,5 +1,5 @@
 {
-  "name": "protein mpnn v2.3",
+  "name": "protein mpnn v2.5",
   "description": "Protein MPNN.",
   "author": "Dauparas, J. et al.",
   "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:a943c1eb3f26df7f2b46399848b74a2e840c3e9e58b2879ac47e4a02baf3b8b0",
+  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:feec8221fc343f9613ba7d97854eead2d6b6e43e2b837b519c3670fdeff11356",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -75,36 +75,6 @@
       "position": "202",
       "required": true
     },
-    "use_solubleMPNN": {
-      "type": "bool",
-      "description": "",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "true",
-      "min": "",
-      "max": "",
-      "example": "true",
-      "grouping": "Design parameters",
-      "position": "203",
-      "required": true
-    },
-    "initial_guess": {
-      "type": "bool",
-      "description": "",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "true",
-      "min": "",
-      "max": "",
-      "example": "true",
-      "grouping": "Design parameters",
-      "position": "204",
-      "required": true
-    },
     "rm_aa": {
       "type": "string",
       "description": "",
@@ -117,7 +87,7 @@
       "max": "",
       "example": "C",
       "grouping": "Design parameters",
-      "position": "205",
+      "position": "203",
       "required": true
     }
   },
