@@ -136,7 +136,7 @@ jobs:
         backends: [
           { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},
           { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'},
-          { env: lbbprod, url: 'https://api.lab.bio', gateway: 'https://ipfs.lab.bio/ipfs/'}
+          { env: lbbprod, url: 'https://api.lab.bio', gateway: 'https://ipfs.lab.bio/ipfs/'},
           { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
         ]
     uses: ./.github/workflows/docker.yml
