@@ -110,7 +110,6 @@ def my_app(cfg: DictConfig) -> None:
 
 
     num_seqs = str(cfg.params.expert_settings.num_seqs)
-    print('here', type(num_seqs))
     rm_aa = cfg.params.expert_settings.rm_aa
     mpnn_sampling_temp = str(cfg.params.expert_settings.mpnn_sampling_temp)
     use_solubleMPNN = cfg.params.expert_settings.use_solubleMPNN
