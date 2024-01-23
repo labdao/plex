@@ -1,5 +1,5 @@
 {
-  "name": "Protein MPNN v2.1",
+  "name": "Protein MPNN v2.2",
   "description": "Protein MPNN.",
   "author": "Dauparas, J. et al.",
   "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
@@ -76,31 +76,31 @@
       "required": true
     },
     "use_solubleMPNN": {
-      "type": "string",
+      "type": "boolean",
       "description": "",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "True",
+      "default": true,
       "min": "",
       "max": "",
-      "example": "True",
+      "example": true,
       "grouping": "Design parameters",
       "position": "203",
       "required": true
     },
     "initial_guess": {
-      "type": "string",
+      "type": "boolean",
       "description": "",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "True",
+      "default": true,
       "min": "",
       "max": "",
-      "example": "True",
+      "example": true,
       "grouping": "Design parameters",
       "position": "204",
       "required": true
