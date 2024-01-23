@@ -134,8 +134,9 @@ jobs:
       fail-fast: false
       matrix:
         backends: [
-          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},
-          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'},
+          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'https://ipfs.stg.labdao.xyz/ipfs/'},
+          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'https:/ipfs.prod.labdao.xyz/ipfs/'},
+          { env: lbbprod, url: 'https://api.lab.bio', gateway: 'https://ipfs.lab.bio/ipfs/'}
           { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
         ]
     uses: ./.github/workflows/docker.yml

@@ -16,6 +16,7 @@ on:
         options:
           - stg
           - prod
+          - lbbprod # lab bio prod
       container:
         description: 'name of the container'
         required: true
