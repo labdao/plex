@@ -35,14 +35,14 @@ def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer modul
 
     return total_log_likelihood
 
-def rejection_sampling(t, df, cfg):
+def sequence_bouncer(t, df, cfg):
 
     T = cfg.params.basic_settings.temperature
     # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
     scoring_weights = cfg.params.basic_settings.scoring_weights
     scoring_weights = scoring_weights.split(',')
     weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
-    loss = 0.
+    DeltaE = 0.
     scoring_metrics = cfg.params.basic_settings.scoring_metrics
     scoring_weights = cfg.params.basic_settings.scoring_metrics
     for metric in scoring_metrics.split(','):
@@ -59,14 +59,14 @@ def rejection_sampling(t, df, cfg):
         #     ref_metric = ...
         #     mod_metric = ...
         
-        loss += weights[metric] * (ref_metric - mod_metric)
+        DeltaE += weights[metric] * (ref_metric - mod_metric)
 
-    p_mod = np.exp(loss / T)
+    p_mod = np.exp(DeltaE / T)
     print('acceptance probability', np.minimum(1.,p_mod))
 
     return random.random() < p_mod
 
-def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet):
+def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, alphabet):
     # Identify the indices where permissibility_seed has 'X' or '+'
     permissible_indices = [i for i, char in enumerate(permissibility_seed) if char in ['X', '+']]
 
@@ -79,7 +79,7 @@ def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_si
     # Create a new mask based on the selected indices
     action_mask = list(seed)
     for index in selected_indices:
-            action_mask[index] = permissibility_seed[index]
+        action_mask[index] = permissibility_seed[index]
         
     action_mask = ''.join(action_mask)
     
@@ -103,9 +103,7 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
                 action_mask.append('X')
             elif random_action == 'delete': # important case
                 action_mask.append('-')        
-                permissibility_vector[i] = '-'
-        # elif char == '-':
-        #     action_mask.append('-')  
+                permissibility_vector[i] = '-' 
     
     action_mask = ''.join(action_mask)
     permissibility_vector = ''.join(permissibility_vector)
@@ -121,10 +119,9 @@ def generate_proposed_state(t, seed, action_mask, cfg, outputs_directory, df):
 
 def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, max_levenshtein_step_size):
 
-    n_masks = 1
     alphabet = 'LAGVSERTIDPKQNFYMHWC'
 
-    permissible_mask, levenshtein_step_size = sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, n_masks, alphabet)
+    permissible_mask, levenshtein_step_size = sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, alphabet)
     permissibility_vector, action_mask = sample_actions_for_mask(permissible_mask, permissibility_seed, alphabet)
 
     return permissibility_vector, action_mask, levenshtein_step_size
@@ -195,7 +192,7 @@ class Sampler:
 
                 self.df = score_sequence_fullmetrics(self.t, mod_seq, self.cfg, self.outputs_directory, self.df)
 
-                accept_flag = rejection_sampling(self.t, self.df, self.cfg)
+                accept_flag = sequence_bouncer(self.t, self.df, self.cfg)
                 self.df.iloc[-1, self.df.columns.get_loc('acceptance_flag')] = accept_flag
                 print('action accepted', accept_flag)
 
