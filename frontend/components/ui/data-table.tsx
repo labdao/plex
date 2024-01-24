@@ -32,19 +32,16 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               return (
-                <TableHead 
+                <TableHead
                   key={header.id}
                   onClick={() => {
                     // Custom toggle logic
-                    const isSortedDesc = header.column.getIsSorted() === 'desc';
+                    const isSortedDesc = header.column.getIsSorted() === "desc";
                     header.column.toggleSorting(!isSortedDesc); // Toggle between 'asc' and 'desc'
                   }}
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())
-                  }
-                  {header.column.getIsSorted() === 'desc' ? ' 🔽' : header.column.getIsSorted() === 'asc' ? ' 🔼' : ''}
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.column.getIsSorted() === "desc" ? " 🔽" : header.column.getIsSorted() === "asc" ? " 🔼" : ""}
                 </TableHead>
               );
             })}
@@ -56,9 +53,7 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
           table.getRowModel().rows.map((row) => (
             <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
+                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
               ))}
             </TableRow>
           ))
@@ -71,5 +66,5 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
         )}
       </TableBody>
     </Table>
-  );  
+  );
 }

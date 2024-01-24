@@ -5,8 +5,8 @@ import { format } from "date-fns";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
+import { DataPagination } from "@/components/ui/data-pagination";
 import { DataTable } from "@/components/ui/data-table";
-import { Pagination } from "@/components/ui/pagination";
 
 export default function ListDataFiles() {
   interface Tag {
@@ -30,7 +30,7 @@ export default function ListDataFiles() {
         return "";
       }
     }
-  }
+  };
 
   const columns: ColumnDef<DataFile>[] = [
     {
@@ -46,11 +46,9 @@ export default function ListDataFiles() {
         return (
           <div>
             <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
-                {row.getValue("Filename")}
+              {row.getValue("Filename")}
             </a>
-            <div style={{ fontSize: 'smaller', marginTop: '4px', color: 'gray' }}>
-                {row.getValue("CID")}
-            </div>
+            <div style={{ fontSize: "smaller", marginTop: "4px", color: "gray" }}>{row.getValue("CID")}</div>
           </div>
         );
       },
@@ -66,14 +64,14 @@ export default function ListDataFiles() {
               <div key={index}>{tag.Name}</div>
             ))}
           </div>
-        )
-      }
+        );
+      },
     },
     {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("CID"))
+        return shortenAddressOrCid(row.getValue("CID"));
       },
     },
     {
@@ -82,10 +80,9 @@ export default function ListDataFiles() {
       enableSorting: true,
       sortingFn: "datetime",
       cell: ({ row }) => {
-        return format(new Date(row.getValue("Timestamp")), "yyyy-MM-dd HH:mm:ss")
-      }
+        return format(new Date(row.getValue("Timestamp")), "yyyy-MM-dd HH:mm:ss");
+      },
     },
-
   ];
 
   const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
@@ -102,18 +99,17 @@ export default function ListDataFiles() {
         setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
       })
       .catch((error) => console.error("Error fetching data files:", error));
-  }, [currentPage]);  
+  }, [currentPage]);
 
   return (
-    <div>
-      <div className="border rounded-lg overflow-hidden">
-        <DataTable columns={columns} data={dataFiles} sorting={sorting} />
-      </div>
-      <Pagination
+    <div className="pb-14">
+      <DataTable columns={columns} data={dataFiles} sorting={sorting} />
+      <DataPagination
+        className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={(page) => setCurrentPage(page)}
       />
     </div>
-  );  
+  );
 }

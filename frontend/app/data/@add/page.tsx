@@ -67,7 +67,7 @@ export default function DataFileForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger>
-        <Button>
+        <Button size="sm">
           <UploadIcon />
           Upload Files
         </Button>

@@ -17,7 +17,7 @@ export default function TaskList() {
           <TaskCard {...task} key={task.slug} />
         ))}
         <Link href="https://forms.gle/A5NYYveDiq7gjrMe9" target="_blank" rel="noopener">
-          <Card className="flex items-center justify-center h-full bg-gray-200 hover:border-ring hover:text-accent">
+          <Card className="flex items-center justify-center h-full bg-gray-200 shadow-none hover:border-ring hover:text-accent">
             <CardContent className="flex flex-col items-center text-sm">
               <PlusIcon size={48} className="mb-1" absoluteStrokeWidth />
               Suggest a task
