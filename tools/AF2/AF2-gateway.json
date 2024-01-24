@@ -1,5 +1,5 @@
 {
-    "name": "af2 v1.4",
+    "name": "af2 v2.1",
     "description": "Create structure from sequence with AF2.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -28,7 +28,22 @@
         "example": "input_sequence.fasta",
         "grouping": "input sequences",
         "position": "101",
-        "required": true
+        "required": false
+      },
+      "pdb": {
+        "type": "file",
+        "description": "pdb file with sequence to fold.",
+        "array": false,
+        "glob": [
+          "*.pdb"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "input_pdb.pdb",
+        "grouping": "input sequences",
+        "position": "102",
+        "required": false
       }
     },
     "pdb_structures": {
