@@ -1,5 +1,5 @@
 {
-  "name": "RFdiffusion v3.1",
+  "name": "RFdiffusion v3.4",
   "description": "RFdiffusion.",
   "author": "RFdiffusion team",
   "github": "https://github.com/RosettaCommons/RFdiffusion",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:1de944a2c786022a45aad3a75c4ffb80dfde806506f553dd1eae77dd002e852a",
+  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:7517985db906876a223997cb755d2d6ec00e56ff14ade48a78e9c53a8247e1c7",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
