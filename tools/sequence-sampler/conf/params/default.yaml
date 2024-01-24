@@ -10,6 +10,7 @@ basic_settings:
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
   scoring_metrics: 'pseudolikelihood,mean plddt,affinity'
   scoring_weights: '0.7,0.2,0.1'
+  bouncer_flag: 'open-door'
   # max_number_of_offspring_kept: 1
   # k: 1
   # number of AF2 repeats

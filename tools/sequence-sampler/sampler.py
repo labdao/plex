@@ -37,34 +37,40 @@ def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer modul
 
 def sequence_bouncer(t, df, cfg):
 
-    T = cfg.params.basic_settings.temperature
-    # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
-    scoring_weights = cfg.params.basic_settings.scoring_weights
-    scoring_weights = scoring_weights.split(',')
-    weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
-    DeltaE = 0.
-    scoring_metrics = cfg.params.basic_settings.scoring_metrics
-    scoring_weights = cfg.params.basic_settings.scoring_metrics
-    for metric in scoring_metrics.split(','):
+    if cfg.params.basic_settings.bouncer_flag=='open-door':
 
-        ref_metric = df.iloc[t-1][metric]
-        mod_metric = df.iloc[t][metric]
-        # if metric=='pseudolikelihood': # useful when transforming metrics
-        #     ref_metric = ...
-        #     mod_metric = ...
-        # if metric=='mean plddt':
-        #     ref_metric = ...
-        #     mod_metric = ...
-        # if metric=='affinity':
-        #     ref_metric = ...
-        #     mod_metric = ...
-        
-        DeltaE += weights[metric] * (ref_metric - mod_metric)
+        return True
 
-    p_mod = np.exp(DeltaE / T)
-    print('acceptance probability', np.minimum(1.,p_mod))
+    elif cfg.params.basic_settings.bouncer_flag=='boltzmann':
 
-    return random.random() < p_mod
+        T = cfg.params.basic_settings.temperature
+        # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
+        scoring_weights = cfg.params.basic_settings.scoring_weights
+        scoring_weights = scoring_weights.split(',')
+        weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
+        DeltaE = 0.
+        scoring_metrics = cfg.params.basic_settings.scoring_metrics
+        scoring_weights = cfg.params.basic_settings.scoring_metrics
+        for metric in scoring_metrics.split(','):
+
+            ref_metric = df.iloc[t-1][metric]
+            mod_metric = df.iloc[t][metric]
+            # if metric=='pseudolikelihood': # useful when transforming metrics
+            #     ref_metric = ...
+            #     mod_metric = ...
+            # if metric=='mean plddt':
+            #     ref_metric = ...
+            #     mod_metric = ...
+            # if metric=='affinity':
+            #     ref_metric = ...
+            #     mod_metric = ...
+            
+            DeltaE += weights[metric] * (ref_metric - mod_metric)
+
+        p_mod = np.exp(DeltaE / T)
+        print('acceptance probability', np.minimum(1.,p_mod))
+
+        return random.random() < p_mod
 
 def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, alphabet):
     # Identify the indices where permissibility_seed has 'X' or '+'
