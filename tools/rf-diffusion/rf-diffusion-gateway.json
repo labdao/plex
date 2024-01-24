@@ -1,5 +1,5 @@
 {
-  "name": "RFdiffusion v2.0",
+  "name": "RFdiffusion v3.1",
   "description": "RFdiffusion.",
   "author": "RFdiffusion team",
   "github": "https://github.com/RosettaCommons/RFdiffusion",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:a0b96217dd3b3815889cac54f940a19cfad4775f7df4fafc24abd2e2b0d95c8b",
+  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:1de944a2c786022a45aad3a75c4ffb80dfde806506f553dd1eae77dd002e852a",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -114,8 +114,8 @@
     "required":false
   },
   "use_beta_model": {
-    "type": "bool",
-    "description": "Use the beta model.",
+    "type": "string",
+    "description": "Write true/false to indicate the use of the beta model.",
     "array": false,
     "glob": [
       ""
@@ -123,7 +123,7 @@
     "default": "false",
     "min": "",
     "max": "",
-    "example": "false",
+    "example": "true / false",
     "grouping": "advanced",
     "position": "109",
     "required": false

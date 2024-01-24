@@ -10,7 +10,7 @@ advanced_settings:
   hotspot: ''
   min_binder_length: null
   max_binder_length: null
-  use_beta_model: false
+  use_beta_model: 'false'
 expert_settings:
   RFDiffusion_Binder:
     contigs_override: ''
