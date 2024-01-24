@@ -63,6 +63,11 @@ ENV MPLCONFIGDIR /cache
 ENV XDG_CACHE_HOME /cache
 ENV DGLBACKEND="pytorch"
 
+# RUN mamba create -n mlfold python=3.9 some-package another-package
+
+# Set environment variables for the 'mlfold' conda environment
+# ENV PATH /opt/conda/envs/mlfold/bin:$PATH
+
 # Cleanup
 RUN apt-get clean autoclean \
     && apt-get autoremove -y \

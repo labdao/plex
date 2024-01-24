@@ -113,11 +113,8 @@ def my_app(cfg: DictConfig) -> None:
 
     logging.info(f'Running MPNN')
 
-    # Activate the conda environment 'mlfold'
-    subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
-
-    print("pdb path", input_target_path)
-    print("output directory", outputs_directory)
+    # # Activate the conda environment 'mlfold'
+    # subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
 
     # Define the command and arguments
     command = [
