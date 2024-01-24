@@ -4,7 +4,7 @@ version: "3.7"
 
 services:
   requester:
-    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4}"
+    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0}"
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
@@ -103,6 +103,8 @@ services:
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      MAX_QUEUE_TIME_SECONDS: ${MAX_QUEUE_TIME_SECONDS:-259200} # default 72 hours
+      MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
     depends_on:
       dbbackend:
         condition: service_healthy
@@ -180,11 +182,13 @@ services:
 
   ipfs:
     hostname: ipfs
+    # If building from Mac, comment out build and uncomment image
     build:
       context: ./docker/images/ipfs
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/ipfs:latest
+    # image: "ipfs/kubo:v0.18.0"
     volumes:
       - ipfs:/data/ipfs
     environment:

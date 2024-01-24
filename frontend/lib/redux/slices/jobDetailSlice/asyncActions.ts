@@ -1,7 +1,7 @@
 import backendUrl from "lib/backendUrl"
 
-export const getJob = async (bacalhauJobID: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/jobs/${bacalhauJobID}`, {
+export const getJob = async (jobID: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/jobs/${jobID}`, {
     method: 'Get',
     headers: {
       'Content-Type': 'application/json',
@@ -16,8 +16,8 @@ export const getJob = async (bacalhauJobID: string): Promise<any> => {
   return result
 }
 
-export const patchJob = async (bacalhauJobID: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/jobs/${bacalhauJobID}`, {
+export const patchJob = async (jobID: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/jobs/${jobID}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

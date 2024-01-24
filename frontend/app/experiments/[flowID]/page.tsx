@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { AppDispatch, flowDetailThunk, flowPatchDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading } from "@/lib/redux";
 
 export default function FlowDetail() {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,10 +31,10 @@ export default function FlowDetail() {
 
   const columns: ColumnDef<Job>[] = [
     {
-      accessorKey: "BacalhauJobID",
+      accessorKey: "ID",
       header: "Job ID",
       cell: ({ row }) => {
-        return <Link href={`/jobs/${row.getValue("BacalhauJobID")}/`}>{row.getValue("BacalhauJobID")}</Link>;
+        return <Link href={`/jobs/${row.getValue("ID")}/`}>{row.getValue("ID")}</Link>;
       },
     },
     {
@@ -59,11 +59,11 @@ export default function FlowDetail() {
   ];
 
   useEffect(() => {
-    const flowCid = window.location.href.split("/").pop();
-    if (flowCid) {
-      dispatch(flowDetailThunk(flowCid));
+    const flowID = window.location.href.split("/").pop()
+    if (flowID) {
+      dispatch(flowDetailThunk(flowID))
     }
-  }, [dispatch]);
+  }, [dispatch])
 
   return (
     <div className="mt-8">
@@ -71,7 +71,7 @@ export default function FlowDetail() {
         <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
           <span className="font-bold font-heading">{flow.Name}</span>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => dispatch(flowPatchDetailThunk(flow.CID))} disabled={loading}>
+            <Button variant="ghost" onClick={() => dispatch(flowDetailThunk(`${flow.ID}`))} disabled={loading}>
               <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
             </Button>
             <Button variant="ghost" asChild>

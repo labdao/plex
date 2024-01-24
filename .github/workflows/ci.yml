@@ -202,7 +202,7 @@ jobs:
         # run always even when
         if: always()
         run: |
-          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee -a /tmp/output.log
+          ./bacalhau docker run -f ubuntu  -- /bin/bash -c 'for i in {1..5}; do echo Hello World; sleep 1; done' | tee /tmp/output.log
           cat /tmp/output.log
 
       - name: Run docker compose logs

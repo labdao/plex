@@ -8,16 +8,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/bacalhau-project/bacalhau/pkg/model"
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -46,21 +46,6 @@ func pinIoList(ios []ipwl.IO) (string, error) {
 	}
 
 	return cid, nil
-}
-
-func extractCidIfPossible(input interface{}) (cid string, ok bool, err error) {
-	strInput, ok := input.(string)
-	if !ok {
-		return "", false, errors.New("input is not a string")
-	}
-
-	if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-		split := strings.SplitN(strInput, "/", 2)
-		cid = split[0]
-		return cid, true, nil
-	}
-
-	return "", false, nil
 }
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
@@ -92,6 +77,17 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		err = json.Unmarshal(requestData["toolCid"], &toolCid)
 		if err != nil || toolCid == "" {
 			http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
+			return
+		}
+
+		var tool models.Tool
+		result := db.Where("cid = ?", toolCid).First(&tool)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				http.Error(w, "Tool not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -131,55 +127,60 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
+			return
 		}
 		log.Println("Initialized IO List")
 
-		log.Println("Submitting IO List")
-		submittedIoList := ipwl.SubmitIoList(ioList, "", 60*72, []string{})
-		log.Println("pinning submitted IO List")
-		submittedIoListCid, err := pinIoList(submittedIoList)
+		// save ioList to IPFS
+		ioListCid, err := pinIoList(ioList)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error pinning IO: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		flowEntry := models.Flow{
-			CID:           submittedIoListCid,
+		flow := models.Flow{
+			CID:           ioListCid,
 			WalletAddress: walletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
 		}
 
 		log.Println("Creating Flow entry")
-		result := db.Create(&flowEntry)
+		result = db.Create(&flow)
 		if result.Error != nil {
-			if utils.IsDuplicateKeyError(result.Error) {
-				http.Error(w, "A Flow with the same CID already exists", http.StatusConflict)
-			} else {
-				http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
-			}
+			http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		for _, job := range submittedIoList {
+		for _, ioItem := range ioList {
 			log.Println("Creating job entry")
-			jobEntry := models.Job{
-				BacalhauJobID: job.BacalhauJobId,
-				State:         job.State,
-				Error:         job.ErrMsg,
-				WalletAddress: walletAddress,
-				ToolID:        job.Tool.IPFS,
-				FlowID:        flowEntry.CID,
-				CreatedAt:     time.Now(),
+			inputsJSON, err := json.Marshal(ioItem.Inputs)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
+				return
 			}
-			result := db.Create(&jobEntry)
+			var queue models.QueueType
+			if tool.Gpu == 0 {
+				queue = models.QueueTypeCPU
+			} else {
+				queue = models.QueueTypeGPU
+			}
+			job := models.Job{
+				ToolID:        ioItem.Tool.IPFS,
+				FlowID:        flow.ID,
+				WalletAddress: walletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				Queue:         queue,
+        CreatedAt:     time.Now(),
+			}
+			result := db.Create(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
-			for _, input := range job.Inputs {
+			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
 				switch v := input.(type) {
 				case string:
@@ -220,16 +221,20 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 							return
 						}
 					}
-					jobEntry.Inputs = append(jobEntry.Inputs, dataFile)
+					job.InputFiles = append(job.InputFiles, dataFile)
 				}
 			}
-			result = db.Save(&jobEntry)
+			result = db.Save(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
-		utils.SendJSONResponseWithCID(w, submittedIoListCid)
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(flow); err != nil {
+			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -241,10 +246,14 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		params := mux.Vars(r)
-		cid := params["cid"]
+		flowID, err := strconv.Atoi(params["flowID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			return
+		}
 
 		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "cid = ?", cid); result.Error != nil {
+		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
@@ -252,83 +261,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			return
 		}
-
-		log.Println("Fetched flow from DB: ", flow)
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Patch request at /flows")
-		if r.Method != http.MethodPatch {
-			utils.SendJSONError(w, "Only PATCH method is supported", http.StatusBadRequest)
-			return
-		}
-		log.Println("Received Patch request at /flows")
-
-		params := mux.Vars(r)
-		cid := params["cid"]
-		log.Println("CID: ", cid)
-
-		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "cid = ?", cid); result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
-			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
-			}
-			return
-		}
-
-		log.Println("Fetched flow from DB")
-
-		var latestCompletionTime *time.Time
-		for index, job := range flow.Jobs {
-			log.Println("Updating job: ", index)
-			updatedJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error updating job %v", err), http.StatusInternalServerError)
-				return
-			}
-			if updatedJob.State.State == model.JobStateCancelled {
-				flow.Jobs[index].State = "failed"
-			} else if updatedJob.State.State == model.JobStateError {
-				flow.Jobs[index].State = "error"
-			} else if updatedJob.State.State == model.JobStateQueued {
-				flow.Jobs[index].State = "queued"
-			} else if updatedJob.State.State == model.JobStateInProgress {
-				flow.Jobs[index].State = "processing"
-			} else if updatedJob.State.State == model.JobStateCompleted {
-				flow.Jobs[index].State = "completed"
-				if latestCompletionTime == nil || flow.Jobs[index].CompletedAt.After(*latestCompletionTime) {
-					latestCompletionTime = &flow.Jobs[index].CompletedAt
-				}
-			} else if len(updatedJob.State.Executions) > 0 && updatedJob.State.Executions[0].State == model.ExecutionStateFailed {
-				flow.Jobs[index].State = "failed"
-			}
-
-			log.Println("Updated job")
-			if err := db.Save(&flow.Jobs[index]).Error; err != nil {
-				http.Error(w, fmt.Sprintf("Error saving job: %v", err), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		if latestCompletionTime != nil {
-			flow.EndTime = *latestCompletionTime
-			if err := db.Save(&flow).Error; err != nil {
-				http.Error(w, fmt.Sprintf("Error saving Flow with updated EndTime: %v", err), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		log.Println("Updated flow from DB: ", flow)
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {

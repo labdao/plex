@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export interface Flow {
+  ID: number
   CID: string
   WalletAddress: string
   Name: string

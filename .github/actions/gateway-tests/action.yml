@@ -62,25 +62,25 @@ runs:
         fi
       shell: bash
 
-        # - name: Test add Tool Endpoint
-        #   run: |
-        #     TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
-        #     json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
-        #     response=$(curl -s -X POST "http://localhost:8080/tools" \
-        #            -H "Content-Type: application/json" \
-        #            -d "$json_payload")
+    # - name: Test add Tool Endpoint
+    #   run: |
+    #     TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
+    #     json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+    #     response=$(curl -s -X POST "http://localhost:8080/tools" \
+    #            -H "Content-Type: application/json" \
+    #            -d "$json_payload")
 
-        #     cid_value=$(echo "$response" | jq -r '.cid')
+    #     cid_value=$(echo "$response" | jq -r '.cid')
 
-        #     if [ "$cid_value" == "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb" ]; then
-        #        echo "Add Tool upload test passed"
-        #     else
-        #        echo "Add Tool upload test failed: Expected 'QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb' but got '$cid_value'"
-        #        echo "response was:"
-        #        echo "$response"
-        #        exit 1
-        #     fi
-        #   shell: bash
+    #     if [ "$cid_value" == "QmYrMMxqtZsbCguNsx2froTMxU3Sd6SayCY8Ve88ZcPj4h" ]; then
+    #        echo "Add Tool upload test passed"
+    #     else
+    #        echo "Add Tool upload test failed: Expected 'QmYrMMxqtZsbCguNsx2froTMxU3Sd6SayCY8Ve88ZcPj4h' but got '$cid_value'"
+    #        echo "response was:"
+    #        echo "$response"
+    #        exit 1
+    #     fi
+    #   shell: bash
 
     - name: Test list Tools Endpoint
       run: |
@@ -102,7 +102,7 @@ runs:
         payload='{
           "name": "testFlow",
           "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-          "toolCid": "QmW8Y9YMfhAjTeNUs689KXqoGVFLhPk9dafhk6gYBeNwrb",
+          "toolCid": "QmYrMMxqtZsbCguNsx2froTMxU3Sd6SayCY8Ve88ZcPj4h",
           "scatteringMethod": "dotProduct",
           "kwargs": {
             "file_example": ["QmV1e4ZoBrHuPJ1cqbzhkp9g4trte4N21fGLNrQxQpXgK6/haiku2.txt"],
@@ -117,12 +117,12 @@ runs:
 
         # Extract the CID from the response
         echo "$response"
-        cid_value=$(echo "$response" | jq -r '.cid')
-        echo "$response" | jq -r '.cid'
+        cid_value=$(echo "$response" | jq -r '.CID')
+        echo "$response" | jq -r '.CID'
 
         # Check if the CID exists
         if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
-           echo "$response" | jq -r '.cid'
+           echo "$response" | jq -r '.CID'
            echo "Create Flow test passed"
         else
            echo "Create Flow test failed: CID not found in the response"

@@ -44,12 +44,19 @@
         msg: "Running on environment: {{ ansible_ec2_tags_instance_Env }}"
       when: ansible_ec2_tags_instance_Env is defined
 
-    - name: Set fact
+    - name: Set fact when domain variable is defined and not null
+      ansible.builtin.set_fact:
+        requester_hostname: "requester.{{ domain }}"
+        ipfs_hostname: "ipfs.{{ domain }}"
+        receptor_hostname: "receptor.{{ domain }}"
+      when: domain is defined and domain | length > 0
+
+    - name: Set fact when domain is undefined, default to <env>.labdao.xyz
       ansible.builtin.set_fact:
         requester_hostname: "requester.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
         ipfs_hostname: "ipfs.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
         receptor_hostname: "receptor.{{ ansible_ec2_tags_instance_Env | lower }}.labdao.xyz"
-      when: ansible_ec2_tags_instance_Env is defined
+      when: domain is undefined and ansible_ec2_tags_instance_Env is defined
 
     - name: Set requester_peer url
       ansible.builtin.set_fact:

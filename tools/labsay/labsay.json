@@ -1,6 +1,6 @@
 {
     "class": "",
-    "name": "labsay 0.6",
+    "name": "labsay 0.7",
     "description": "simple hello world that plex stack is working",
     "author": "labdao",
     "baseCommand": [],
@@ -8,6 +8,8 @@
     "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
     "gpuBool": false,
     "networkBool": false,
+    "memoryGB": 4,
+    "cpu": 0.8,
     "inputs": {
         "file_example": {
             "type": "file",

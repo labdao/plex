@@ -10,7 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { AppDispatch, jobDetailThunk, jobPatchDetailThunk, selectJobDetail, selectJobDetailError, selectJobDetailLoading } from "@/lib/redux";
+import { AppDispatch, jobDetailThunk, selectJobDetail, selectJobDetailError, selectJobDetailLoading } from "@/lib/redux";
 
 import LogViewer from "./LogViewer";
 
@@ -83,9 +83,10 @@ export default function JobDetail() {
   ];
 
   useEffect(() => {
-    const jobBacalhauID = window.location.href.split("/").pop();
-    if (jobBacalhauID) {
-      dispatch(jobDetailThunk(jobBacalhauID));
+    const jobID = window.location.href.split("/").pop();
+    console.log(`jobId is ${jobID}`)
+    if (jobID) {
+      dispatch(jobDetailThunk(`${jobID}`));
     }
   }, [dispatch]);
 
@@ -96,7 +97,7 @@ export default function JobDetail() {
           <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
             Job {job.BacalhauJobID}{" "}
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={() => dispatch(jobPatchDetailThunk(job.BacalhauJobID))} disabled={loading}>
+              <Button variant="ghost" onClick={() => dispatch(jobDetailThunk(`${job.ID}`))} disabled={loading}>
                 <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
               </Button>
             </div>
@@ -137,13 +138,13 @@ export default function JobDetail() {
         <Card className="mt-4">
           <div className="p-4 font-bold uppercase">Inputs</div>
           <div className="bg-gray-50">
-            <DataTable columns={columns} data={job.Inputs} />
+            <DataTable columns={columns} data={job.InputFiles} />
           </div>
         </Card>
         <Card className="mt-4">
           <div className="p-4 font-bold uppercase">Outputs</div>
           <div className="bg-gray-50">
-            <DataTable columns={columns} data={job.Outputs} />
+            <DataTable columns={columns} data={job.OutputFiles} />
           </div>
         </Card>
       </div>

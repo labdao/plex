@@ -154,10 +154,10 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
 
     try {
       const response = await createFlow(transformedPayload);
-      if (response && response.cid) {
-        console.log("Flow created", response);
+      if (response && response.ID) {
+        console.log('Flow created', response);
         // Redirecting to another page, for example, a success page or dashboard
-        router.push(`/experiments/${response.cid}`);
+        router.push(`/experiments/${response.ID}`);
       } else {
         console.log("something went wrong", response);
       }

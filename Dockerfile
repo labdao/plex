@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY . /app/
 WORKDIR /app/
+
+# Use the race command to search for concurrency issues
+# RUN CGO_ENABLED=1 go build -race -o /go/bin/plex
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
 ARG BACALHAU_VERSION=1.1.4
