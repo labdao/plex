@@ -1,5 +1,5 @@
 {
-  "name": "protein mpnn v3.99",
+  "name": "protein mpnn v4.0",
   "description": "Protein MPNN.",
   "author": "Dauparas, J. et al.",
   "github": "https://github.com/dauparas/ProteinMPNN/tree/main",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:0bed84ebabee1d3499f25ae9dc5c8c2c56d53214806796c39152b0e1176bfc02",
+  "dockerPull": "quay.io/labdao/protein-mpnn@sha256:7285db876d9df78ee0a0a8f36798add8a438461ad52f92f291a5f9f822b0dfc0",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
