@@ -77,7 +77,7 @@ def run_diffusion(
     hotspot=None,
     chains=None,
     add_potential=False,
-    num_designs=1,
+    num_designs=8,
     use_beta_model=False,
     visual="none",
     outputs_directory="outputs",
@@ -90,14 +90,25 @@ def run_diffusion(
     env = os.environ.copy()
     env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
 
-    command = [
-        'python', 'RFdiffusion/scripts/run_inference.py',
-        f'inference.output_prefix={os.path.join(outputs_directory, f"design")}',
-        'inference.model_directory_path=RFdiffusion/models',
-        f"inference.input_pdb={pdb}",
-        'inference.num_designs=2',
-        f'contigmap.contigs={[contigs]}'
-    ]
+    if use_beta_model:
+        command = [
+            'python', 'RFdiffusion/scripts/run_inference.py',
+            f"inference.output_prefix={os.path.join(outputs_directory, f'design')}",
+            'inference.model_directory_path=RFdiffusion/models',
+            f"inference.input_pdb={pdb}",
+            f"inference.ckpt_override_path=RFdiffusion/models/Complex_beta_ckpt.pt",
+            f"inference.num_designs={num_designs}",
+            f"contigmap.contigs={[contigs]}"
+        ]
+    else:
+        command = [
+            'python', 'RFdiffusion/scripts/run_inference.py',
+            f"inference.output_prefix={os.path.join(outputs_directory, f'design')}",
+            'inference.model_directory_path=RFdiffusion/models',
+            f"inference.input_pdb={pdb}",
+            f"inference.num_designs={num_designs}",
+            f"contigmap.contigs={[contigs]}"
+        ]
 
     print('command', command)
 
@@ -120,7 +131,7 @@ def run_diffusion(
 def my_app(cfg: DictConfig) -> None:
 
     user_inputs = get_plex_job_inputs()
-    print(f"user inputs from plex: {user_inputs}")
+    # print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
@@ -128,9 +139,7 @@ def my_app(cfg: DictConfig) -> None:
     OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["num_designs"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.RFDiffusion_Binder.contigs_override", user_inputs["contigs_override"], merge=False)
-
-    print(OmegaConf.to_yaml(cfg))
-    print(f"Working directory : {os.getcwd()}")
+    OmegaConf.update(cfg, "params.advanced_settings.use_beta_model", user_inputs["use_beta_model"], merge=False)
 
     # defining output directory
     if cfg.outputs.directory is None:
@@ -153,6 +162,7 @@ def my_app(cfg: DictConfig) -> None:
     if not isinstance(input_target_path, list):
         input_target_path = [input_target_path]
     print("Identified Targets : ", input_target_path)
+    OmegaConf.update(cfg, "params.basic_settings.pdb", user_inputs["protein_complex"], merge=False)
 
     first_residue_target_chain, last_residue_target_chain = find_chain_residue_range(input_target_path[0], user_inputs["target_chain"])
     if isinstance(user_inputs["target_start_residue"], int) and user_inputs["target_start_residue"] > 0:
@@ -163,6 +173,8 @@ def my_app(cfg: DictConfig) -> None:
         OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
     else: OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", last_residue_target_chain, merge=False)
 
+    print(OmegaConf.to_yaml(cfg))
+    print(f"Working directory : {os.getcwd()}")
 
     # running design for every input target file
     for target_path in input_target_path:
@@ -183,7 +195,6 @@ def my_app(cfg: DictConfig) -> None:
         add_potential = cfg.params.expert_settings.RFDiffusion_Symmetry.add_potential
 
         # contig assembly
-        ##TODO: simplify load contig parameters
         binder_length = cfg.params.basic_settings.binder_length
         pdb_chain = cfg.params.basic_settings.pdb_chain
         pdb_start_residue = cfg.params.advanced_settings.pdb_start_residue
@@ -194,10 +205,7 @@ def my_app(cfg: DictConfig) -> None:
             cfg.params.expert_settings.RFDiffusion_Binder.contigs_override
         )
 
-        binder_chain = user_inputs["binder_chain"]
         target_chain = pdb_chain
-
-        # cfg.params.expert_settings.RFDiffusion_Binder.contigs_override = contigs_override
             
         ## binder length
         if min_binder_length != None and max_binder_length != None:
