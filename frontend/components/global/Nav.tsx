@@ -14,7 +14,7 @@ const NavContent = (props: React.PropsWithChildren) => <div className="flex flex
 
 export default function Nav() {
   return (
-    <nav className="z-50 flex flex-col justify-between w-48 h-screen border-b border-r shadow-lg bg-background">
+    <nav className="z-50 flex flex-col justify-between w-48 h-screen border-b border-r shadow-lg shrink-0 bg-background">
       <div>
         <Link href="/" className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b h-14 font-heading whitespace-nowrap">
           <Logo className="w-auto h-6 text-primary" />
