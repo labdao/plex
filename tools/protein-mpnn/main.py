@@ -1,4 +1,3 @@
-# import glob
 import os
 import time
 import pandas as pd
@@ -71,9 +70,6 @@ def get_files_from_directory(root_dir, extension, max_depth=3):
 def my_app(cfg: DictConfig) -> None:
 
     user_inputs = get_plex_job_inputs()
-    print(f"user inputs from plex: {user_inputs}")
-
-    print(type(user_inputs["mpnn_sampling_temp"]))
 
     # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.expert_settings.num_seqs", user_inputs["num_seqs"], merge=False)
@@ -82,9 +78,6 @@ def my_app(cfg: DictConfig) -> None:
     # OmegaConf.update(cfg, "params.expert_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
     # OmegaConf.update(cfg, "params.expert_settings.initial_guess", user_inputs["initial_guess"], merge=False)
     OmegaConf.update(cfg, "params.expert_settings.chains_to_design", user_inputs["chains_to_design"], merge=False)
-
-    print(OmegaConf.to_yaml(cfg))
-    print(f"Working directory : {os.getcwd()}")
 
     # defining output directory
     if cfg.outputs.directory is None:
@@ -104,10 +97,10 @@ def my_app(cfg: DictConfig) -> None:
                 file for file in input_target_path if cfg.inputs.target_pattern in file
             ]
 
-    # if not isinstance(input_target_path, list):
-    #     input_target_path = [input_target_path]
     print("Identified complex: ", input_target_path)
 
+    print(OmegaConf.to_yaml(cfg))
+    print(f"Working directory : {os.getcwd()}")
 
     num_seqs = str(cfg.params.expert_settings.num_seqs)
     rm_aa = cfg.params.expert_settings.rm_aa
@@ -141,6 +134,15 @@ def my_app(cfg: DictConfig) -> None:
     # Run the command
     result = subprocess.run(command, capture_output=True, text=True)
 
+    # rename .fa files to .fasta
+    for root, dirs, files in os.walk(outputs_directory):
+        for file in files:
+            if file.endswith('.fa'):
+                fa_file_path = os.path.join(root, file)
+                fasta_file_path = os.path.join(root, file[:-3] + '.fasta')
+                os.rename(fa_file_path, fasta_file_path)
+                print(f"Renamed '{fa_file_path}' to '{fasta_file_path}'")
+
     # Print the output
     print(result.stdout)
     print(result.stderr)  
@@ -152,19 +154,3 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
-
-
-    # # Define the command and arguments
-    # command = [
-    #         'python', 'ProteinMPNN/protein_mpnn_run.py',
-    #         '--pdb_path', input_target_path,
-    #         '--pdb_path_chains', chains_to_design,
-    #         '--out_folder', outputs_directory,
-    #         '--num_seq_per_target', num_seqs,
-    #         '--sampling_temp', mpnn_sampling_temp,
-    #         '--seed', '37',
-    #         '--batch_size', '1'
-    #     ]
-
-    # # Run the command
-    # subprocess.run(command, capture_output=True, text=True)  
