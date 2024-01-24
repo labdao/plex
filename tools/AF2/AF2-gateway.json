@@ -1,5 +1,5 @@
 {
-    "name": "af2 v2.1",
+    "name": "af2 v2.2",
     "description": "Create structure from sequence with AF2.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -59,6 +59,13 @@
         "item": "",
         "glob": [
           "*.json"
+        ]
+      },
+      "csv_summary": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "*.csv"
         ]
       }
     }

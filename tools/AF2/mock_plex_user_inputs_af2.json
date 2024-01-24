@@ -1,4 +1,4 @@
 {
-    "fasta_input": "/app/secondInput.fasta",
+    "fasta_input": "",
     "pdb_input": "/app/protein_complex.pdb"
 }
