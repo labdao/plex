@@ -138,7 +138,6 @@ def my_app(cfg: DictConfig) -> None:
                 fa_file_path = os.path.join(root, file)
                 fasta_file_path = os.path.join(root, file[:-3] + '.fasta')
                 os.rename(fa_file_path, fasta_file_path)
-                print(f"Renamed '{fa_file_path}' to '{fasta_file_path}'")
 
     # Print the output
     print(result.stdout)
