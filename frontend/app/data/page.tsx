@@ -1,12 +1,19 @@
 "use client";
-
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import backendUrl from "lib/backendUrl";
+import { UploadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
+import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { TruncatedString } from "@/components/shared/TruncatedString";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DataPagination } from "@/components/ui/data-pagination";
 import { DataTable } from "@/components/ui/data-table";
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+
+import AddDataFileForm from "./AddDataFileForm";
 
 export default function ListDataFiles() {
   interface Tag {
@@ -22,21 +29,10 @@ export default function ListDataFiles() {
     Tags: Tag[];
   }
 
-  const shortenAddressOrCid = (addressOrCid: string) => {
-    if (addressOrCid) {
-      if (addressOrCid.length) {
-        return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
-      } else {
-        return "";
-      }
-    }
-  };
-
   const columns: ColumnDef<DataFile>[] = [
     {
       accessorKey: "Filename",
-      header: "File",
-      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
       sortingFn: "alphanumeric",
       cell: ({ row }) => {
         let cid = row.getValue("CID");
@@ -46,9 +42,9 @@ export default function ListDataFiles() {
         return (
           <div>
             <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
-              {row.getValue("Filename")}
+              <TruncatedString value={row.getValue("Filename")} trimLength={20} />
             </a>
-            <div style={{ fontSize: "smaller", marginTop: "4px", color: "gray" }}>{row.getValue("CID")}</div>
+            <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">{row.getValue("CID")}</div>
           </div>
         );
       },
@@ -59,9 +55,11 @@ export default function ListDataFiles() {
       cell: ({ row }) => {
         const tags: Tag[] = row.getValue("Tags") as Tag[];
         return (
-          <div>
+          <div className="flex flex-wrap gap-1">
             {tags.map((tag, index) => (
-              <div key={index}>{tag.Name}</div>
+              <Badge variant="outline" key={index}>
+                {tag.Name}
+              </Badge>
             ))}
           </div>
         );
@@ -71,45 +69,63 @@ export default function ListDataFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("CID"));
+        return <TruncatedString value={row.getValue("CID")} />;
       },
     },
     {
       accessorKey: "Timestamp",
-      header: "Date",
-      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
+      // @TODO: Need sorting added to API endpoint, this just sorts the current page.
       sortingFn: "datetime",
       cell: ({ row }) => {
-        return format(new Date(row.getValue("Timestamp")), "yyyy-MM-dd HH:mm:ss");
+        return dayjs(row.getValue("Timestamp")).format("YYYY-MM-DD HH:mm:ss");
       },
     },
   ];
 
   const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const pageSize = 50;
-  const [sorting, setSorting] = useState([{ id: "Timestamp", desc: true }]);
-  console.log("dataFiles", dataFiles);
+
   useEffect(() => {
+    setLoading(true);
     fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`)
       .then((response) => response.json())
       .then((responseJson) => {
         setDataFiles(responseJson.data);
         setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
+        setLoading(false);
       })
       .catch((error) => console.error("Error fetching data files:", error));
   }, [currentPage]);
 
   return (
-    <div className="pb-14">
-      <DataTable columns={columns} data={dataFiles} sorting={sorting} />
-      <DataPagination
-        className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
+    <>
+      <Breadcrumbs
+        items={[{ name: "My Files", href: "/data" }]}
+        actions={
+          <AddDataFileForm
+            trigger={
+              <Button size="sm">
+                <UploadIcon />
+                Upload Files
+              </Button>
+            }
+          />
+        }
       />
-    </div>
+
+      <div className="pb-14">
+        <DataTable columns={columns} data={dataFiles} sorting={[{ id: "Timestamp", desc: true }]} loading={loading} />
+        <DataPagination
+          className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
+      </div>
+    </>
   );
 }

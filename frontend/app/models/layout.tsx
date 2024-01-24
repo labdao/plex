@@ -1,5 +1,7 @@
 import React, { ReactNode } from "react";
 
+import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+
 type LayoutProps = {
   children: ReactNode;
   list: any;
@@ -9,11 +11,9 @@ type LayoutProps = {
 export default async function Layout({ children, list, add }: LayoutProps) {
   return (
     <>
-      <div className="mt-8">
-        <div className="flex justify-end my-8"> {add}</div>
-        {list}
-        {children}
-      </div>
+      <Breadcrumbs items={[{ name: "Models", href: "/models" }]} actions={<div>{add}</div>} />
+      {list}
+      {children}
     </>
   );
 }

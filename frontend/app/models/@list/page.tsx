@@ -19,7 +19,7 @@ export default function ListToolFiles() {
     } else {
       return "";
     }
-  }
+  };
 
   const columns: ColumnDef<Tool>[] = [
     {
@@ -42,13 +42,11 @@ export default function ListToolFiles() {
       header: "User",
       cell: ({ row }) => {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
-      }
+      },
     },
   ];
 
   const [tools, setTools] = useState<Tool[]>([]);
-
-  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
 
   useEffect(() => {
     fetch(`${backendUrl()}/tools`)
@@ -67,9 +65,5 @@ export default function ListToolFiles() {
       });
   }, []);
 
-  return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={tools} sorting={sorting}/>
-    </div>
-  );
+  return <DataTable columns={columns} data={tools} />;
 }

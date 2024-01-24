@@ -1,13 +1,16 @@
 "use client";
 
-import { BoxIcon, FlaskRoundIcon, FolderIcon, GithubIcon } from "lucide-react";
+import AddDataFileForm from "app/data/AddDataFileForm";
+import TasksMenu from "app/tasks/TasksMenu";
+import { BoxIcon, FlaskRoundIcon, FolderIcon, GithubIcon, UploadIcon } from "lucide-react";
+import { SproutIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-import { Separator } from "../ui/separator";
+import { NavButton } from "@/components/global/NavItem";
+
 import Logo from "./Logo";
 import { NavLink } from "./NavItem";
-import TasksMenu from "./TasksMenu";
 import UserMenu from "./UserMenu";
 
 const NavContent = (props: React.PropsWithChildren) => <div className="flex flex-col p-1 border-b border-border/50" {...props} />;
@@ -34,7 +37,11 @@ export default function Nav() {
               My Files&nbsp;<span className="opacity-70">(beta)</span>
             </>
           </NavLink>
-          <TasksMenu />
+          <TasksMenu
+            trigger={<NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />}
+            dropdownMenuContentProps={{ side: "right", align: "start" }}
+          />
+          <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
         </NavContent>
       </div>
       <div>

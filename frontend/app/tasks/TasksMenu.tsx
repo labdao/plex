@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRightIcon, SproutIcon } from "lucide-react";
+import { DropdownMenuContentProps } from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import React from "react";
 
@@ -8,16 +8,17 @@ import { tasks } from "@/app/tasks/taskList";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-import { NavButton } from "./NavItem";
+interface TasksMenuProps {
+  trigger: React.ReactNode;
+  dropdownMenuContentProps?: DropdownMenuContentProps;
+}
 
-export default function TasksMenu() {
+export default function TasksMenu({ dropdownMenuContentProps, trigger }: TasksMenuProps) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" side="right" collisionPadding={10}>
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+        <DropdownMenuContent {...dropdownMenuContentProps} collisionPadding={10}>
           {tasks.map((task) => (
             <DropdownMenuItem asChild disabled={!task.available} key={task.slug}>
               <Link href={`/tasks/${task.slug}`} className="flex justify-between">

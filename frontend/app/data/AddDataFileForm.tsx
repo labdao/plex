@@ -1,7 +1,6 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { UploadCloudIcon, UploadIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -20,7 +19,11 @@ import {
   useSelector,
 } from "@/lib/redux";
 
-export default function DataFileForm() {
+interface AddDataFileFormProps {
+  trigger: React.ReactNode;
+}
+
+export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
   const [open, setOpen] = React.useState(false);
   const { user } = usePrivy();
   const dispatch = useDispatch();
@@ -66,12 +69,7 @@ export default function DataFileForm() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm">
-          <UploadIcon />
-          Upload Files
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Upload Files</DialogTitle>

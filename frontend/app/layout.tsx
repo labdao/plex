@@ -5,7 +5,7 @@ import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 
 import Nav from "@/components/global/Nav";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -94,7 +94,11 @@ export default function RootLayout(props: React.PropsWithChildren) {
         <Providers>
           <div className="flex w-full bg-gray-50">
             <Nav />
-            <ScrollArea className="h-screen pt-14 grow">{props.children}</ScrollArea>
+            <ScrollArea className="h-screen pt-14 grow">
+              {props.children}
+              <ScrollBar orientation="horizontal" />
+              <ScrollBar orientation="vertical" />
+            </ScrollArea>
           </div>
         </Providers>
       </body>
