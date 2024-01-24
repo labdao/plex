@@ -52,7 +52,8 @@ RUN set -ex; \
      aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip && \
      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt && \
      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt && \
-     mkdir -p RFdiffusion/models; mv Base_ckpt.pt Complex_base_ckpt.pt RFdiffusion/models/ && \
+     aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Complex_beta_ckpt.pt && \
+     mkdir -p RFdiffusion/models; mv Base_ckpt.pt Complex_base_ckpt.pt Complex_beta_ckpt.pt RFdiffusion/models/ && \
      unzip schedules.zip; rm schedules.zip && \
      touch params/done.txt
 
