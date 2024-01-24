@@ -90,7 +90,7 @@ export default function ListDataFiles() {
   const [totalPages, setTotalPages] = useState(0);
   const pageSize = 50;
   const [sorting, setSorting] = useState([{ id: "Timestamp", desc: true }]);
-
+  console.log("dataFiles", dataFiles);
   useEffect(() => {
     fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`)
       .then((response) => response.json())

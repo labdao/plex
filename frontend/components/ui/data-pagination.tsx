@@ -58,7 +58,7 @@ export const DataPagination: React.FC<PaginationProps> = ({ currentPage, totalPa
   };
 
   return (
-    <div className={cn("flex items-center justify-between", className)}>
+    <div className={cn("flex items-center justify-between whitespace-nowrap", className)}>
       <div>
         <Button variant="ghost" size="icon" onClick={() => onPageChange(1)} disabled={currentPage === 1}>
           <ChevronFirstIcon />
