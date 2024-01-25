@@ -118,7 +118,7 @@ def sample_actions_for_mask(permissible_mask, permissibility_vector, alphabet):
 
 def generate_proposed_state(t, seed, action_mask, cfg, outputs_directory, df):
 
-    generator = StateGenerator(t, ['RFdiffusion+ProteinMPNN'], seed, action_mask, cfg, outputs_directory, df) # TD:
+    generator = StateGenerator(t, seed, action_mask, cfg, outputs_directory, df) # TD:
     modified_seq = generator.run()
 
     return modified_seq

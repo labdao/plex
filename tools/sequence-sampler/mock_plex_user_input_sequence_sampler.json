@@ -4,10 +4,11 @@
     "number_of_evo_cycles": 2,
     "policy_flag": "policy_sampling",
     "target_seq": "TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF",
-    "init_permissibility_vec": "x40:120",
+    "init_permissibility_vec": "x1:10",
     "temperature": 100,
     "max_levenshtein_step_size": 10,
     "alphabet": "LAGVSERTIDPKQNFYMHWC",
     "scoring_metrics": "pseudolikelihood,mean plddt,affinity",
-    "scoring_weights": "0.7,0.2,0.1"
+    "scoring_weights": "0.7,0.2,0.1",
+    "generator_flag": "RFdiffusion+ProteinMPNN"
 }

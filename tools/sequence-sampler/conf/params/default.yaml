@@ -11,6 +11,7 @@ basic_settings:
   scoring_metrics: 'pseudolikelihood,mean plddt,affinity'
   scoring_weights: '0.7,0.2,0.1'
   bouncer_flag: 'open-door'
+  generator_flag: 'RFdiffusion+ProteinMPNN'
   # max_number_of_offspring_kept: 1
   # k: 1
   # number of AF2 repeats

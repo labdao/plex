@@ -4,7 +4,7 @@
 docker build -t pf/sequence-sampler-updated .
 
 # Run the Docker container
-docker run -it --gpus all \
+docker run -it --rm --gpus all \
   -v /home/convexity-research/philipp/lab-exchange/tools/sequence-sampler/:/inputs \
   -v /home/convexity-research/philipp/lab-exchange/tools/sequence-sampler/outputs/:/app/outputs \
   pf/sequence-sampler-updated:latest

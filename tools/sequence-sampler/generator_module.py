@@ -9,7 +9,7 @@ from utils import reinsert_deletions
 import logging
 
 class StateGenerator:
-    def __init__(self, evo_cycle, generator_list, sequence, action_mask, cfg, outputs_directory, df):
+    def __init__(self, evo_cycle, sequence, action_mask, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle
         self.generator_list = generator_list
         self.sequence = sequence # to squeeze or not to squeeze?
@@ -18,13 +18,15 @@ class StateGenerator:
         self.target = cfg.params.basic_settings.target_seq
         self.outputs_directory = outputs_directory
         self.df = df
+        self.generator_flag = cfg.parameters.basic_settings.generator_flag
         # take data frame as input and retrieve the pdb as absolute path
 
     def run_generation(self):
 
         print('\n')
-        print("Running generating job...")
+        logging.info(f"Running generating job...")
         df_generate = pd.DataFrame() # initialize data frame
+        generator_list = list(self.generator_flag)
         for generator in self.generator_list:
 
             generator_directory = os.path.join(self.outputs_directory, generator)
@@ -125,13 +127,13 @@ class StateGenerator:
                 for i, char in enumerate(self.action_mask):
                     if char not in alphabet:
                         if char=='X':
-                            print('applying mutation')
+                            print('applying flip')
                             letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
                             new_letter = random.choice(letter_options)
                             modified_seq[i] = new_letter
                         elif char=='-':
                             if modified_seq[i]!='-':
-                                print('applying deletion')
+                                print('deleting residue')
                                 modified_seq[i] = '-'
 
                 return ''.join(modified_seq)
