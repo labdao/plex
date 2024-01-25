@@ -101,6 +101,7 @@ jobs:
             ${{ inputs.build-args }}
             NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           context: ${{ inputs.context }}
           cache-from: type=gha
