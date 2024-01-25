@@ -95,7 +95,7 @@ interface ExperimentStatusProps {
 }
 
 export function ExperimentStatus({ jobs }: ExperimentStatusProps) {
-  const { status, label, totalJobs, pendingJobs, failedJobs, completedJobs } = aggregateJobStatus(jobs);
+  const { status, label, pendingJobs, failedJobs, completedJobs } = aggregateJobStatus(jobs);
   return (
     <>
       <TooltipProvider>
@@ -108,11 +108,7 @@ export function ExperimentStatus({ jobs }: ExperimentStatusProps) {
           <TooltipContent>
             <div className="text-xs">
               <p className="mb-1 font-mono uppercase">{label}</p>
-              {pendingJobs > 0 && (
-                <p>
-                  {pendingJobs}/{totalJobs} pending
-                </p>
-              )}
+              {pendingJobs > 0 && <p>{pendingJobs} pending</p>}
               <p>{completedJobs} complete</p>
               <p>{failedJobs} failed</p>
             </div>

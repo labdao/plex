@@ -31,6 +31,11 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
         ID: false,
       },
     },
+    defaultColumn: {
+      minSize: 0,
+      size: Number.MAX_SAFE_INTEGER,
+      maxSize: Number.MAX_SAFE_INTEGER,
+    },
   });
 
   return (
@@ -39,10 +44,8 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
-              console.log(header.column.columnDef);
-
               return (
-                <TableHead className={`max-w-[${header.column.columnDef.maxSize}+px]`} key={header.id}>
+                <TableHead style={{ width: header.getSize() === Number.MAX_SAFE_INTEGER ? "auto" : header.getSize() }} key={header.id}>
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               );
@@ -55,7 +58,9 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
           table.getRowModel().rows.map((row) => (
             <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                <TableCell style={{ width: cell.column.getSize() === Number.MAX_SAFE_INTEGER ? "auto" : cell.column.getSize() }} key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
               ))}
             </TableRow>
           ))
