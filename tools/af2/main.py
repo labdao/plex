@@ -264,7 +264,7 @@ def my_app(cfg: DictConfig) -> None:
     seq2struc(df, outputs_directory, cfg)
 
     # create and write a csv file with sequence and metric information for each output struture
-    for file_name in os.listdir('current_sequences/'):
+    for file_name in os.listdir('/app/current_sequences'):
         logging.info(f"current sequence: {file_name}")
 
         if file_name.endswith('.fasta'):            
