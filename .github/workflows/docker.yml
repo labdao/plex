@@ -69,8 +69,6 @@ jobs:
       matrix:
         platform:
           - linux/amd64
-            # - linux/arm/v6
-            # - linux/arm/v7
           - linux/arm64
     steps:
       - name: Prepare
@@ -122,6 +120,7 @@ jobs:
           context: ${{ inputs.context }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          outputs: type=image,name=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
