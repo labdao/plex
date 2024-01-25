@@ -1,6 +1,6 @@
 {
-    "name": "af2 v2.2",
-    "description": "Create structure from sequence with AF2.",
+    "name": "ColabFold v2.XXX",
+    "description": "Create structure from sequence with ColabFold.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
     "paper": "https://www.nature.com/articles/s41592-022-01488-1",
@@ -9,7 +9,7 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/af2@sha256:c97bb3e95fef6141bac208bab18066cd49026ef24583054c102268f30581bc90",
+    "dockerPull": "quay.io/labdao/protein-mpnn@sha256:a6b4a305b56fff98d374186414d417a0395d51a58965c2099cab53e8a82b59e3",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
