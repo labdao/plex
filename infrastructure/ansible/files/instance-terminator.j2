@@ -68,4 +68,5 @@ if [ "${ASG_RUNNING_INSTANCES}" -gt "${ASG_MIN_SIZE}" ]; then
       systemctl kill -s SIGKILL compute.service | tee -a /var/log/instance-terminator.log
       terminate || mark_as_unhealthy
     fi
+  fi
 fi
