@@ -264,6 +264,13 @@ func JobFailed(job *model.JobWithInfo) bool {
 	return job.State.State == model.JobStateError
 }
 
+func JobBidAccepted(job *model.JobWithInfo) bool {
+	if len(job.State.Executions) > 0 {
+		return job.State.Executions[0].State == model.ExecutionStateBidAccepted
+	}
+	return false
+}
+
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
 	client, err := GetBacalhauClient()
 	if err != nil {

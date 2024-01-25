@@ -33,6 +33,7 @@ func getEnvAsInt(name string, defaultValue int) int {
 // Consider allowing Job creation payloads to configure lower times
 var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
 var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
+var retryJobSleepTime = time.Duration(10) * time.Second
 
 func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 2) // Buffer for two types of jobs
@@ -122,14 +123,14 @@ func processJob(job *models.Job, db *gorm.DB) error {
 		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
-			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
+			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
 				return err
 			}
 			continue
 		} else if bacalhau.JobFailedWithBidRejectedError(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed with bid rejected, will try again\n", job.ID, job.BacalhauJobID)
-			time.Sleep(30 * time.Second) // Wait for a slightly longer period of time before rechecking status
+			time.Sleep(retryJobSleepTime) // Wait for a slightly longer period of time before rechecking status
 			if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
 				return err
 			}
@@ -148,7 +149,7 @@ func processJob(job *models.Job, db *gorm.DB) error {
 			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
 		} else {
 			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
-			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
+			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 		}
 	}
 }
@@ -164,6 +165,9 @@ func checkRunningJob(job *models.Job, db *gorm.DB) error {
 
 	if bacalhau.JobIsRunning(bacalhauJob) {
 		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.BacalhauJobID)
+		return nil
+	} else if bacalhau.JobBidAccepted(bacalhauJob) {
+		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.BacalhauJobID)
 		return nil
 	} else if bacalhau.JobFailed(bacalhauJob) {
 		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
