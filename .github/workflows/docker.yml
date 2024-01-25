@@ -116,11 +116,10 @@ jobs:
             NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
           push: true
           platforms: ${{ matrix.platform }}
-          tags: ${{ steps.meta.outputs.tags }}
+            # tags: ${{ steps.meta.outputs.tags }}
           context: ${{ inputs.context }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-            # outputs: type=image,name=${{ inputs.registry }}/${{ inputs.registry-org-name }}/${{ inputs.name }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -151,6 +150,7 @@ jobs:
         id: deploy-to-ecs
         if: >-
           ${{
+            matrix.platform == 'linux/amd64' &&
             github.ref_name == 'main' &&
             (
               inputs.name == 'backend' ||
