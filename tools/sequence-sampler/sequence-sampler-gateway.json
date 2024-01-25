@@ -1,11 +1,5 @@
-"target_seq": "TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF",
-"init_permissibility_vec": "x1:10",
-"scoring_metrics": "pseudolikelihood,mean plddt,affinity",
-"scoring_weights": "0.7,0.2,0.1",
-"generator_flag": "RFdiffusion+ProteinMPNN"
-
 {
-    "name": "sequence-sampler v0.1 (beta)",
+    "name": "sequence-sampler v0.2 (beta)",
     "description": "Evolutionary sampling of sequences.",
     "author": "Convexity Labs",
     "github": "...",
@@ -126,7 +120,7 @@
         "position": "202",
         "required": true
       },
-      "permissibility_mask": {
+      "init_permissibility_vec": {
         "type": "string",
         "description": "Definition of permissible changes: (B) keep fixed, (+) delete or flip, (x) flip only",
         "array": false,
@@ -155,6 +149,51 @@
         "grouping": "evolution parameters",
         "position": "204",
         "required": true
+      },
+      "scoring_metrics": {
+        "type": "string",
+        "description": "type of scoring metrics.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "pseudolikelihood,mean plddt,affinity",
+        "min": "",
+        "max": "",
+        "example": "pseudolikelihood,mean plddt,affinity",
+        "grouping": "evolution parameters",
+        "position": "301",
+        "required": true
+      },
+      "scoring_weights": {
+        "type": "string",
+        "description": "weighting metric contributions.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "0.7,0.2,0.1",
+        "min": "",
+        "max": "",
+        "example": "0.7,0.2,0.1",
+        "grouping": "evolution parameters",
+        "position": "301",
+        "required": false
+      },
+      "generator_flag": {
+        "type": "string",
+        "description": "type of generator used.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "RFdiffusion+ProteinMPNN",
+        "min": "",
+        "max": "",
+        "example": "RFdiffusion+ProteinMPNN",
+        "grouping": "evolution parameters",
+        "position": "301",
+        "required": false
       },
       "alphabet": {
         "type": "string",
