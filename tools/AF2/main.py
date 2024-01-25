@@ -17,6 +17,8 @@ import glob
 import json
 import subprocess
 
+import logging
+
 def get_plex_job_inputs():
     # Retrieve the environment variable
     json_str = os.getenv("PLEX_JOB_INPUTS")
@@ -129,7 +131,7 @@ def create_summary(directory, json_pattern):
         pdb_file_path = os.path.abspath(pdb_file)
         affinity = compute_affinity(pdb_file_path)
         if affinity is not None:
-            print(f"The affinity for the file {pdb_file_path} is {affinity}")
+            logging.info(f"Affinity for {pdb_file_path} is {affinity}.")
         # Prepare new row
         new_row = {
             'sequence': sequence,
@@ -137,7 +139,6 @@ def create_summary(directory, json_pattern):
             'max pae': max_pae,
             'i_pae': i_pae,
             'affinity': affinity,
-            # 'rmsd': rmsd,
             'absolute json path': os.path.abspath(json_file),
             'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
         }
@@ -226,23 +227,23 @@ def seq2struc(df, outputs_directory, cfg):
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
     user_inputs = get_plex_job_inputs()
-    print(f"user inputs from plex: {user_inputs}")
+    # print(f"user inputs from plex: {user_inputs}")
 
     # defining output directory
     if cfg.outputs.directory is None:
         outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     else:
         outputs_directory = cfg.outputs.directory
-    print(f"Output directory : {outputs_directory}")
+    logging.info(f"Output directory : {outputs_directory}")
 
-    print('inputs dir', cfg.inputs.directory)
+    logging.info(f"Inputs directory : {cfg.inputs.directory}")
 
     OmegaConf.update(cfg, "params.pdb_input", user_inputs["pdb_input"], merge=False)
     OmegaConf.update(cfg, "params.fasta_input", user_inputs["fasta_input"], merge=False)
 
     # defining input files
     if not user_inputs.get("fasta_input") and not user_inputs.get("pdb_input"):
-        print("Neither fasta nor pdb input given.")
+        logging.info(f"Error: Neither fasta nor pdb input has been provided.")
         sys.exit(1)
     
     else:
@@ -255,8 +256,8 @@ def my_app(cfg: DictConfig) -> None:
             pdb_file = user_inputs["pdb_input"]
             df = append_pdb_sequence_to_dataframe(pdb_file, df) # read sequence from pdb
 
-    print(OmegaConf.to_yaml(cfg))
-    print(f"Working directory : {os.getcwd()}")
+    logging.info(f"OmegaConf.to_yaml(cfg)")
+    logging.info(f"Working directory : {os.getcwd()}")
 
     start_time = time.time()
 
@@ -264,17 +265,16 @@ def my_app(cfg: DictConfig) -> None:
 
     # create and write a csv file with sequence and metric information for each output struture
     for file_name in os.listdir('current_sequences/'):
-        print('file_name', file_name)
+        logging.info(f"current sequence: {file_name}")
 
         if file_name.endswith('.fasta'):            
             json_pattern = os.path.splitext(file_name)[0]
-            print('json_pattern', json_pattern)
             create_summary(outputs_directory, json_pattern=f"{json_pattern}")
 
-    print("Sequence to structure complete...")
+    logging.info(f"Sequence to structure complete...")
     end_time = time.time()
     duration = end_time - start_time
-    print(f"executed in {duration:.2f} seconds.")
+    logging.info(f"executed in {duration:.2f} seconds.")
 
 if __name__ == "__main__":
     my_app()
