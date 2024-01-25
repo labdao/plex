@@ -1,3 +1,9 @@
+"target_seq": "TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF",
+"init_permissibility_vec": "x1:10",
+"scoring_metrics": "pseudolikelihood,mean plddt,affinity",
+"scoring_weights": "0.7,0.2,0.1",
+"generator_flag": "RFdiffusion+ProteinMPNN"
+
 {
     "name": "sequence-sampler v0.1 (beta)",
     "description": "Evolutionary sampling of sequences.",
@@ -15,19 +21,64 @@
     "cpu": 3,
     "networkBool": true,
     "inputs": {
-      "target_seq": {
-        "type": "string",
-        "description": "Sequence of target protein",
+      "target_template_complex": {
+        "type": "file",
+        "description": "pdb file containing the complex of target and binder template",
         "array": false,
         "glob": [
-          ""
+          ".pdb"
         ],
         "default": "",
         "min": "",
         "max": "",
-        "example": "TLGAVQIMNGLFHIAL",
+        "example": "binder_template_sequence.fasta",
         "grouping": "protein complex",
         "position": "101",
+        "required": true
+      },
+      "target_chain": {
+        "type": "string",
+        "description": "target chain label",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "A",
+        "min": "",
+        "max": "",
+        "example": "A",
+        "grouping": "protein complex",
+        "position": "102",
+        "required": true
+      },
+      "binder_chain": {
+        "type": "string",
+        "description": "binder chain label",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "B",
+        "min": "",
+        "max": "",
+        "example": "B",
+        "grouping": "protein complex",
+        "position": "103",
+        "required": true
+      },
+      "target_seq": {
+        "type": "file",
+        "description": "Sequence of target protein.",
+        "array": false,
+        "glob": [
+          ".fasta"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "target_sequence.fasta",
+        "grouping": "protein complex",
+        "position": "102",
         "required": true
       },
       "binder_template_sequence": {
@@ -42,7 +93,7 @@
         "max": "",
         "example": "binder_template_sequence.fasta",
         "grouping": "protein complex",
-        "position": "102",
+        "position": "103",
         "required": true
       },
       "number_of_evo_cycles": {
@@ -54,7 +105,7 @@
         ],
         "default": "15",
         "min": "1",
-        "max": "50",
+        "max": "60",
         "example": "10",
         "grouping": "evolution parameters",
         "position": "201",
@@ -104,6 +155,21 @@
         "grouping": "evolution parameters",
         "position": "204",
         "required": true
+      },
+      "alphabet": {
+        "type": "string",
+        "description": "Alphabet used to form sequence.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "LAGVSERTIDPKQNFYMHWC",
+        "min": "LAGVSERTIDPKQNFYMHWC",
+        "max": "LAGVSERTIDPKQNFYMHWC",
+        "example": "LAGVSERTIDPKQNFYMHWC",
+        "grouping": "additional",
+        "position": "301",
+        "required": false
       },
     "outputs": {
       "all_outputs": {
