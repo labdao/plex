@@ -86,7 +86,7 @@ def my_app(cfg: DictConfig) -> None:
     user_inputs = get_plex_job_inputs()
     # print(f"user inputs from plex: {user_inputs}")
     experiment_name = user_inputs["experiment_name"]
-    AF2_repeats_per_seq = user_inputs["AF2_repeats_per_seq"]
+    # AF2_repeats_per_seq = user_inputs["AF2_repeats_per_seq"]
     number_of_evo_cycles = user_inputs["number_of_evo_cycles"]
     policy_fla = user_inputs["policy_flag"]
     target_seq = user_inputs["target_seq"]
@@ -98,15 +98,21 @@ def my_app(cfg: DictConfig) -> None:
 
     # # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.basic_settings.experiment_name", user_inputs["experiment_name"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.AF2_repeats_per_seq", user_inputs["AF2_repeats_per_seq"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.policy_flag", user_inputs["policy_flag"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.bouncer_flag", user_inputs["bouncer_flag"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.generator_flag", user_inputs["generator_flag"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_template_sequence", user_inputs["binder_template_sequence"], merge=False)
 
     logging.info(f"{OmegaConf.to_yaml(cfg)}")
     logging.info(f"Working directory : {os.getcwd()}")

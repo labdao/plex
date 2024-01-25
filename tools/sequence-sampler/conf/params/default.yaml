@@ -1,9 +1,7 @@
 basic_settings:
   experiment_name: default
-  AF2_repeats_per_seq: 1
   number_of_evo_cycles: 2
   policy_flag: policy_sampling
-  target_seq: TLGAVQIMNGLFHIALGSLLMIHTDVCAPICITMWYPLWGGIMFIISGSLLAAADKNPRKSLVKGKMIMNSLSLFAAISGIIFLIMDIFNITISHFFKMENLNLIKAPMPYVDIHNCDPANPSEKNSLSIQYCGSIRSVFLGVFAVMLIF
   init_permissibility_vec: 'B1:5/x6:11/+12:17'
   temperature: 100.
   max_levenshtein_step_size: 10
@@ -12,10 +10,8 @@ basic_settings:
   scoring_weights: '0.7,0.2,0.1'
   bouncer_flag: 'open-door'
   generator_flag: 'RFdiffusion+ProteinMPNN'
-  # max_number_of_offspring_kept: 1
-  # k: 1
-  # number of AF2 repeats
-  # consider adding the dictionary which relates actions and code
-  # consider adding the set of non-tirival actions
-  # add start and end resiude
-    # init_permissibility_vec: '++++++++++++++++++++++++++FWDKAMGWXXQAPGKEREFVAGIGW----NTNYADSVKGRFTISRDNAKNTVYXXXNSLKPEDTAVYYCAVLDNYLYYYEDSLWYNFIYWGQGTQVTV--'
+  target_template_complex: '/app/protein_complex.pdb'
+  target_chain: A
+  binder_chain: B
+  target_seq: ''
+  binder_template_sequence: ''
