@@ -1,5 +1,5 @@
 {
-    "name": "ColabFold v3.3",
+    "name": "TEST - ColabFold v3.4 - TEST",
     "description": "Create structure from sequence with ColabFold.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -9,13 +9,13 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/af2@sha256:dbcec90f4fa6891afb9ade59e4bcec4aeff9066cf57c1ef6371d9edcf5a4952e",
+    "dockerPull": "quay.io/labdao/af2@sha256:7ad0d3bd859bc5f3a8431ae86b057a04c1607798a2ee9c705af8bd9d260ffacf",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
     "networkBool": true,
     "inputs": {
-      "sequences": {
+      "fasta_input": {
         "type": "file",
         "description": "fasta file with sequences to fold.",
         "array": false,
@@ -30,7 +30,7 @@
         "position": "101",
         "required": false
       },
-      "pdb": {
+      "pdb_input": {
         "type": "file",
         "description": "pdb file with sequence to fold.",
         "array": false,
