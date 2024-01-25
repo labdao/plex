@@ -127,6 +127,13 @@ func processJob(job *models.Job, db *gorm.DB) error {
 				return err
 			}
 			continue
+		} else if bacalhau.JobFailedWithBidRejectedError(bacalhauJob) {
+			fmt.Printf("Job %v , %v failed with bid rejected, will try again\n", job.ID, job.BacalhauJobID)
+			time.Sleep(30 * time.Second) // Wait for a slightly longer period of time before rechecking status
+			if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
+				return err
+			}
+			continue
 		} else if bacalhau.JobIsRunning(bacalhauJob) {
 			fmt.Printf("Job %v , %v is running\n", job.ID, job.BacalhauJobID)
 			return setJobStatus(job, models.JobStateRunning, "", db)
