@@ -29,8 +29,13 @@ export default function ListExperiments() {
     {
       accessorKey: "Jobs",
       header: "Status",
+      maxSize: 42,
       cell: ({ row }) => {
-        return <ExperimentStatus jobs={row.getValue("Jobs")} />;
+        return (
+          <>
+            <ExperimentStatus jobs={row.getValue("Jobs")} />
+          </>
+        );
       },
     },
     {

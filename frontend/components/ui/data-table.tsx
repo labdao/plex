@@ -39,8 +39,12 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
+              console.log(header.column.columnDef);
+
               return (
-                <TableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</TableHead>
+                <TableHead className={`max-w-[${header.column.columnDef.maxSize}+px]`} key={header.id}>
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
               );
             })}
           </TableRow>
