@@ -1,5 +1,5 @@
 {
-    "name": "ColabFold v2.8",
+    "name": "ColabFold v3.1",
     "description": "Create structure from sequence with ColabFold.",
     "author": "sokrypton",
     "github": "https://github.com/sokrypton/ColabFold",
@@ -9,7 +9,7 @@
     ],
     "arguments": [
     ],
-    "dockerPull": "quay.io/labdao/af2@sha256:4a528fc9b5a9f50c625ca3586d3b494c2f556de72770a6b1aa1a06ed3e94ad90",
+    "dockerPull": "quay.io/labdao/af2@sha256:1f2f0da67a023a167037b5a26704215c1ee421f125e1d2dee04a4e7b48c607c0",
     "gpuBool": true,
     "memoryGB": 12,
     "cpu": 3,
