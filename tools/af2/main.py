@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 import mdtraj as md
 import numpy as np
-from AF2_module import AF2Runner
+from af2_module import AF2Runner
 import csv
 from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
@@ -95,7 +95,7 @@ def compute_ipae(pdb_file, pae_matrix):
     median_pae_interface = np.median(interface_pae_values)
 
     # Output the median PAE value
-    print("median PAE at the interface:", median_pae_interface)
+    logging.info(f"Median pae at the interface:, {median_pae_interface}")
 
     return median_pae_interface
 
