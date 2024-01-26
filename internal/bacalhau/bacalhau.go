@@ -238,6 +238,15 @@ func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 	return false
 }
 
+func JobFailedWithBidRejectedError(job *model.JobWithInfo) bool {
+	capacityErrorMsg := "bid rejected"
+	if len(job.State.Executions) > 0 {
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
+	}
+	return false
+}
+
 func JobIsRunning(job *model.JobWithInfo) bool {
 	// the backend counts a Job as running once it is accepted by Bacalhau
 	if len(job.State.Executions) > 0 {
@@ -253,6 +262,17 @@ func JobCompleted(job *model.JobWithInfo) bool {
 
 func JobFailed(job *model.JobWithInfo) bool {
 	return job.State.State == model.JobStateError
+}
+
+func JobCancelled(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateCancelled
+}
+
+func JobBidAccepted(job *model.JobWithInfo) bool {
+	if len(job.State.Executions) > 0 {
+		return job.State.Executions[0].State == model.ExecutionStateBidAccepted
+	}
+	return false
 }
 
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
