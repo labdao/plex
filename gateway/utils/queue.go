@@ -190,6 +190,9 @@ func processJob(jobID uint, db *gorm.DB) error {
 				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 			}
 			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		} else if bacalhau.JobCancelled(bacalhauJob) {
+			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.BacalhauJobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.BacalhauJobID), db)
 		} else {
 			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
