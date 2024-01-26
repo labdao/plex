@@ -1,0 +1,4 @@
+{
+    "pdb_input": "/app/protein_complex.pdb",
+    "fasta_input": "/app/input_sequence.fasta"
+}

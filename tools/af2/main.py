@@ -1,9 +1,10 @@
 import os
 import time
+import sys
 import pandas as pd
 import mdtraj as md
 import numpy as np
-from AF2_module import AF2Runner
+from af2_module import AF2Runner
 import csv
 from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
@@ -15,6 +16,8 @@ from omegaconf import DictConfig, OmegaConf
 import glob
 import json
 import subprocess
+
+import logging
 
 def get_plex_job_inputs():
     # Retrieve the environment variable
@@ -47,13 +50,13 @@ def compute_affinity(file_path):
                     affinity = float(lines[0].split(" ")[-1].split("/")[0])
                     return affinity
                 else:
-                    print(f"No output from prodigy for {file_path}")
+                    logging.info(f"No output from prodigy for {file_path}")
                     return None  # No output from Prodigy
         except subprocess.CalledProcessError:
-            print(f"Prodigy command failed for {file_path}")
+            logging.info(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
             return None  # Prodigy command failed
     else:
-        print("Invalid file path")
+        logging.info("Invalid file path")
         return None  # Invalid file path provided
 
 def extract_sequence_from_pdb(pdb_file):
@@ -92,7 +95,7 @@ def compute_ipae(pdb_file, pae_matrix):
     median_pae_interface = np.median(interface_pae_values)
 
     # Output the median PAE value
-    print("median PAE at the interface:", median_pae_interface)
+    logging.info(f"Median pae at the interface:, {median_pae_interface}")
 
     return median_pae_interface
 
@@ -128,10 +131,7 @@ def create_summary(directory, json_pattern):
         pdb_file_path = os.path.abspath(pdb_file)
         affinity = compute_affinity(pdb_file_path)
         if affinity is not None:
-            print(f"The affinity for the file {pdb_file_path} is {affinity}")
-
-        # rmsd = calculate_rmsd(os.path.abspath(pdb_file), '/outputs/omegafold_binder.pdb')
-
+            logging.info(f"Affinity for {pdb_file_path} is {affinity}.")
         # Prepare new row
         new_row = {
             'sequence': sequence,
@@ -139,7 +139,6 @@ def create_summary(directory, json_pattern):
             'max pae': max_pae,
             'i_pae': i_pae,
             'affinity': affinity,
-            # 'rmsd': rmsd,
             'absolute json path': os.path.abspath(json_file),
             'absolute pdb path': os.path.abspath(pdb_file) if pdb_file else None
         }
@@ -172,16 +171,7 @@ def write_dataframe_to_fastas(dataframe, cfg):
             file.write(f">{row['sequence_number']}\n{row['seq']}\n")
     return os.path.abspath(input_dir)
 
-
-def find_fasta_file(directory_path):
-    for root, dirs, files in os.walk(directory_path):
-        for file in files:
-            if file.endswith(".fasta"):
-                return os.path.abspath(os.path.join(root, file))
-    return None  # Return None if no .fasta file is found in the directory
-
-
-def load_fasta_to_dataframe(fasta_file):
+def load_fasta_to_dataframe(fasta_file, df):
     sequences = []
     with open(fasta_file, 'r') as file:
         seq_num = 1
@@ -192,7 +182,38 @@ def load_fasta_to_dataframe(fasta_file):
             else:
                 sequences[-1]['seq'] += line.strip()
 
-    return pd.DataFrame(sequences)
+    # Concatenate the new sequences to the existing DataFrame
+    new_df = pd.concat([df, pd.DataFrame(sequences)], ignore_index=True)
+    return new_df
+
+def append_pdb_sequence_to_dataframe(pdb_file, fasta_dataframe):
+    # Initialize PDB parser
+    parser = PDBParser()
+    
+    # Parse the PDB file
+    structure = parser.get_structure('structure', pdb_file)
+    
+    # Extract the sequence of amino acids from the first model
+    for model in structure:
+        sequence = ''
+        chain_sequences = {}
+        for chain in model:
+            chain_id = chain.get_id()
+            chain_sequence = ''
+            for residue in chain:
+                if residue.get_id()[0] == ' ':
+                    chain_sequence += seq1(residue.get_resname())
+            chain_sequences[chain_id] = chain_sequence
+        break  # Only use the first model
+    
+    # Combine all chain sequences into one
+    full_sequence = ':'.join(chain_sequences.values())
+    
+    # Append the new sequence as a new row to the DataFrame
+    new_row = pd.DataFrame({'sequence_number': [len(fasta_dataframe) + 1], 'seq': [full_sequence]})
+    fasta_dataframe = pd.concat([fasta_dataframe, new_row], ignore_index=True)
+    
+    return fasta_dataframe
 
 def seq2struc(df, outputs_directory, cfg):
 
@@ -205,33 +226,65 @@ def seq2struc(df, outputs_directory, cfg):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
-    user_inputs = get_plex_job_inputs()
-    print(f"user inputs from plex: {user_inputs}")
+    # # Configure logging
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format='%(asctime)s.%(msecs)03d %(levelname)s %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S'
+    # )
 
-    print(OmegaConf.to_yaml(cfg))
-    print(f"Working directory : {os.getcwd()}")
+    user_inputs = get_plex_job_inputs()
+    # logging.info(f"user inputs from plex: {user_inputs}")
 
     # defining output directory
     if cfg.outputs.directory is None:
         outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     else:
         outputs_directory = cfg.outputs.directory
-    print(f"Output directory : {outputs_directory}")
+    logging.info(f"Output directory : {outputs_directory}")
 
-    fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    df = load_fasta_to_dataframe(fasta_file)
+    logging.info(f"Inputs directory : {cfg.inputs.directory}")
+
+    OmegaConf.update(cfg, "params.pdb_input", user_inputs["pdb_input"], merge=False)
+    OmegaConf.update(cfg, "params.fasta_input", user_inputs["fasta_input"], merge=False)
+
+    # defining input files
+    if not user_inputs.get("fasta_input") and not user_inputs.get("pdb_input"):
+        logging.info(f"Error: Neither fasta nor pdb input has been provided.")
+        sys.exit(1)
+    
+    else:
+
+        df = pd.DataFrame()
+        if user_inputs.get("fasta_input"):
+            fasta_file = user_inputs["fasta_input"]
+            df = load_fasta_to_dataframe(fasta_file, df) # read sequences from fasta
+        if user_inputs.get("pdb_input"):
+            pdb_file = user_inputs["pdb_input"]
+            df = append_pdb_sequence_to_dataframe(pdb_file, df) # read sequence from pdb
+
+    logging.info(f"OmegaConf.to_yaml(cfg)")
+    logging.info(f"Working directory : {os.getcwd()}")
 
     start_time = time.time()
 
     seq2struc(df, outputs_directory, cfg)
 
-    # create and write a csv file with sequence and metric information for each output structure
-    create_summary(outputs_directory, json_pattern='seq_1')
+    # create and write a csv file with sequence and metric information for each output struture
+    current_sequences_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
+    if not os.path.exists(current_sequences_dir):
+        raise FileNotFoundError(f"The directory {current_sequences_dir} does not exist.")
+    for file_name in os.listdir(current_sequences_dir):
+        logging.info(f"current sequence: {file_name}")
 
-    print("Sequence to structure complete...")
+        if file_name.endswith('.fasta'):            
+            json_pattern = os.path.splitext(file_name)[0]
+            create_summary(outputs_directory, json_pattern=f"{json_pattern}")
+
+    logging.info(f"Sequence to structure complete...")
     end_time = time.time()
     duration = end_time - start_time
-    print(f"executed in {duration:.2f} seconds.")
+    logging.info(f"executed in {duration:.2f} seconds.")
 
 if __name__ == "__main__":
     my_app()
