@@ -13,10 +13,10 @@ WORKDIR /app/
 # RUN CGO_ENABLED=1 go build -race -o /go/bin/plex
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-ARG BACALHAU_VERSION=1.1.4
+ARG BACALHAU_VERSION=1.2.0
 
 # For bacalhau cli
-FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4} as bacalhau
+FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau
 
 FROM busybox:1.31.1-glibc
 
