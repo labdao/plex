@@ -50,13 +50,13 @@ def compute_affinity(file_path):
                     affinity = float(lines[0].split(" ")[-1].split("/")[0])
                     return affinity
                 else:
-                    print(f"No output from prodigy for {file_path}")
+                    logging.info(f"No output from prodigy for {file_path}")
                     return None  # No output from Prodigy
         except subprocess.CalledProcessError:
-            print(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
+            logging.info(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
             return None  # Prodigy command failed
     else:
-        print("Invalid file path")
+        logging.info("Invalid file path")
         return None  # Invalid file path provided
 
 def extract_sequence_from_pdb(pdb_file):
@@ -226,8 +226,15 @@ def seq2struc(df, outputs_directory, cfg):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
+    # # Configure logging
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format='%(asctime)s.%(msecs)03d %(levelname)s %(message)s',
+    #     datefmt='%Y-%m-%d %H:%M:%S'
+    # )
+
     user_inputs = get_plex_job_inputs()
-    # print(f"user inputs from plex: {user_inputs}")
+    # logging.info(f"user inputs from plex: {user_inputs}")
 
     # defining output directory
     if cfg.outputs.directory is None:
@@ -264,7 +271,10 @@ def my_app(cfg: DictConfig) -> None:
     seq2struc(df, outputs_directory, cfg)
 
     # create and write a csv file with sequence and metric information for each output struture
-    for file_name in os.listdir('/app/current_sequences'):
+    current_sequences_dir = os.path.join(cfg.inputs.directory, 'current_sequences')
+    if not os.path.exists(current_sequences_dir):
+        raise FileNotFoundError(f"The directory {current_sequences_dir} does not exist.")
+    for file_name in os.listdir(current_sequences_dir):
         logging.info(f"current sequence: {file_name}")
 
         if file_name.endswith('.fasta'):            
