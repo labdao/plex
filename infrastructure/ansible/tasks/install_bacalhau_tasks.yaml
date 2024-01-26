@@ -102,14 +102,11 @@
     - name: Flush handler to ensure Bacalhau is running
       ansible.builtin.meta: flush_handlers
 
-    - name: Deploy config file
+    - name: Remove the config file if exists
       become: true
-      ansible.builtin.template:
-        src: "files/{{ bacalhau_node_type }}.yaml"
-        dest: /home/ubuntu/.bacalhau/config.yaml
-        owner: ubuntu
-        group: ubuntu
-        mode: "0644"
+      ansible.builtin.file:
+        path: /home/ubuntu/.bacalhau/config.yaml
+        state: absent
       notify:
         - Restart Bacalhau
 
