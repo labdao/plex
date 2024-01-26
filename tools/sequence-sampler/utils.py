@@ -89,14 +89,14 @@ def compute_affinity(file_path):
             with open("temp.txt", "r") as f:
                 lines = f.readlines()
                 if lines:  # Check if lines is not empty
-                    # Extract the affinity value from the output
+                    # extract affinity value from the output
                     affinity = float(lines[0].split(" ")[-1].split("/")[0])
                     return affinity
                 else:
-                    print(f"No output from prodigy for {file_path}")
-                    return None  # No output from Prodigy
+                    logging.info(f"No output from prodigy for {file_path}")
+                    return None  # no output from prodigy
         except subprocess.CalledProcessError:
-            print(f"Prodigy command failed for {file_path}")
+            logging.info(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
             return None  # Prodigy command failed
     else:
         print("Invalid file path")

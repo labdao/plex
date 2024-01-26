@@ -3,13 +3,14 @@ basic_settings:
   number_of_evo_cycles: 2
   policy_flag: policy_sampling
   init_permissibility_vec: 'B1:5/x6:11/+12:17'
-  temperature: 100.
+  temperature: 2.
   max_levenshtein_step_size: 10
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
-  scoring_metrics: 'pseudolikelihood,mean plddt,affinity'
+  scorers: 'Hamming'
+  scoring_metrics: 'hamming_distance'
   scoring_weights: '0.7,0.2,0.1'
-  bouncer_flag: 'open-door'
-  generator_flag: 'RFdiffusion+ProteinMPNN'
+  bouncer_flag: 'boltzmann'
+  generator_flag: 'random_flips'
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A
   binder_chain: B

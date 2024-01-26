@@ -11,15 +11,15 @@ import logging
 class StateGenerator:
     def __init__(self, evo_cycle, sequence, action_mask, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle
-        self.generator_list = generator_list
         self.sequence = sequence # to squeeze or not to squeeze?
         self.action_mask = action_mask
         self.cfg = cfg
         self.target = cfg.params.basic_settings.target_seq
         self.outputs_directory = outputs_directory
         self.df = df
-        self.generator_flag = cfg.parameters.basic_settings.generator_flag
-        # take data frame as input and retrieve the pdb as absolute path
+        self.generator_flag = cfg.params.basic_settings.generator_flag
+        self.alphabet = cfg.params.basic_settings.alphabet
+        self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
 
     def run_generation(self):
 
@@ -27,22 +27,22 @@ class StateGenerator:
         logging.info(f"Running generating job...")
         df_generate = pd.DataFrame() # initialize data frame
         generator_list = list(self.generator_flag)
-        for generator in self.generator_list:
+        for generator in generator_list: # TD: fix this on monday!!!
 
             generator_directory = os.path.join(self.outputs_directory, generator)
             if not os.path.exists(generator_directory):
                 os.makedirs(generator_directory, exist_ok=True)
 
-            logging.info(f"Running {generator}")
             if generator=='RFdiffusion+ProteinMPNN':
+                logging.info(f"Running {generator}")
 
                 if 'X' in self.action_mask: # check if there is any diffusion to be done
 
-                    print('diffusing...')
+                    logging.info(f"diffusing...")
 
-                    print('action mask', self.action_mask)
+                    logging.info(f"action mask, {self.action_mask}")
                     contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
-                    print('diffusion contig', contig)
+                    logging.info(f"diffusion contig, {contig}")
                     # define arguments and run RFDiffusion
 
                     # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
@@ -62,16 +62,16 @@ class StateGenerator:
 
                     # Check if the command was successful
                     if result.returncode == 0:
-                        print("Inference script ran successfully")
-                        print(result.stdout)
+                        logging.info(f"#Inference script ran successfully")
+                        logging.info(result.stdout)
                     else:
-                        print("Error running inference script")
-                        print(result.stderr)
+                        logging.info(f"#Error running inference script")
+                        logging.info(result.stderr)
                     
-                    print('Running MPNN')
+                    logging.info(f"Running MPNN")
 
                     # Activate the conda environment 'mlfold'
-                    subprocess.run(['conda', 'activate', 'mlfold'], shell=True)
+                    subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
 
                     # Define the paths and parameters
                     path_to_PDB = os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding_0.pdb")
@@ -81,7 +81,7 @@ class StateGenerator:
                     # Create the output directory if it doesn't exist
                     os.makedirs(output_dir, exist_ok=True)
 
-                    print("pdb path", path_to_PDB)
+                    logging.info(f"pdb path, {path_to_PDB}")
 
                     # Define the command and arguments
                     command = [
@@ -101,7 +101,7 @@ class StateGenerator:
                     # Usage
                     fasta_file_path = os.path.join(generator_directory, f"seqs/evocycle_{self.evo_cycle}_motifscaffolding_0.fa")
                     modified_seq = read_second_line_of_fasta(fasta_file_path)
-                    print('modified sequence after ProteinMPNN', modified_seq)
+                    logging.info(f"modified sequence after ProteinMPNN, {modified_seq}")
 
                     # insert the deletions back into the sequence:
                     modified_seq = reinsert_deletions(modified_seq, self.action_mask)
@@ -113,32 +113,45 @@ class StateGenerator:
                 for i, char in enumerate(self.action_mask):
                     if char=='-':
                         if modified_seq[i]!='-':
-                            print('deleting resiude')
+                            logging.info(f"deleting resiude")
                             modified_seq[i] = '-'
 
                 return ''.join(modified_seq)
 
             elif generator=='delete+substitute':
-                print(f"Running {generator}")
-
-                alphabet = 'LAGVSERTIDPKQNFYMHWC'
+                logging.info(f"Running {generator}")
         
                 modified_seq = list(self.sequence)
                 for i, char in enumerate(self.action_mask):
-                    if char not in alphabet:
+                    if char not in self.alphabet:
                         if char=='X':
-                            print('applying flip')
-                            letter_options = [letter for letter in alphabet if letter != modified_seq[i]]
+                            logging.info(f"applying random flip")
+                            letter_options = [letter for letter in self.alphabet if letter != modified_seq[i]]
                             new_letter = random.choice(letter_options)
                             modified_seq[i] = new_letter
                         elif char=='-':
                             if modified_seq[i]!='-':
-                                print('deleting residue')
+                                logging.info(f"deleting residue")
                                 modified_seq[i] = '-'
 
                 return ''.join(modified_seq)
+
+            elif generator == 'random_flips':
+                logging.info(f"Running {generator}")
+
+                modified_seq = list(self.sequence)
+                x_positions = [i for i, char in enumerate(self.action_mask) if char == 'X']
+                max_flips = min(self.max_levenshtein_step_size, len(x_positions))
+                positions_to_flip = random.sample(x_positions, max_flips)
+
+                for i in positions_to_flip:
+                    logging.info(f"applying random flip at position {i}")
+                    letter_options = [letter for letter in self.alphabet if letter != modified_seq[i]]
+                    modified_seq[i] = random.choice(letter_options)
+
+                return ''.join(modified_seq)
         
-        print(f"Generating job complete. Results are in {self.outputs_directory}")
+        logging.info(f"Generating job complete. Results are in {self.outputs_directory}")
 
     def run(self):
         return self.run_generation()

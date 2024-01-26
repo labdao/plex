@@ -8,7 +8,6 @@ from generator_module import StateGenerator
 from scorer_module import StateScorer
 from utils import squeeze_seq
 from utils import write_af2_update
-from utils import concatenate_to_df
 
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module, or even utils or sequence-transformer
 
@@ -50,7 +49,7 @@ def sequence_bouncer(t, df, cfg):
         weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
         DeltaE = 0.
         scoring_metrics = cfg.params.basic_settings.scoring_metrics
-        scoring_weights = cfg.params.basic_settings.scoring_metrics
+        scoring_weights = cfg.params.basic_settings.scoring_weights
         for metric in scoring_metrics.split(','):
 
             ref_metric = df.iloc[t-1][metric]
@@ -66,8 +65,9 @@ def sequence_bouncer(t, df, cfg):
             #     mod_metric = ...
             
             DeltaE += weights[metric] * (ref_metric - mod_metric)
+            DeltaE += (mod_metric - ref_metric)
 
-        p_mod = np.exp(DeltaE / T)
+        p_mod = np.exp(-DeltaE / T)
         print('acceptance probability', np.minimum(1.,p_mod))
 
         return random.random() < p_mod
@@ -134,19 +134,22 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
 
 def score_sequence_fullmetrics(t, sequence, cfg, outputs_directory, df): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
     if squeeze_seq(sequence) !=[]:
-        scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
-        df_scorer, LLmatrix_mod = scorer.run()
-        LL_mod = compute_log_likelihood(sequence, LLmatrix_mod) # TD: normalization by sequence length?
+        # scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
+        # df_scorer, LLmatrix_mod = scorer.run()
+        # LL_mod = compute_log_likelihood(sequence, LLmatrix_mod) # TD: normalization by sequence length?
 
-        if 'pseudolikelihood' not in df_scorer.columns:
-            df_scorer['pseudolikelihood'] = None  # Initialize the column with None
-        if t==1:
-            df_scorer.at[0, 'pseudolikelihood'] = LL_mod
-        else:
-            df_scorer.iloc[-1, df_scorer.columns.get_loc('pseudolikelihood')] = LL_mod
+        # if 'pseudolikelihood' not in df_scorer.columns:
+        #     df_scorer['pseudolikelihood'] = None  # Initialize the column with None
+        # if t==1:
+        #     df_scorer.at[0, 'pseudolikelihood'] = LL_mod
+        # else:
+        #     df_scorer.iloc[-1, df_scorer.columns.get_loc('pseudolikelihood')] = LL_mod
 
-        # supplement data frame by scores
-        df = concatenate_to_df(df_scorer, df)
+        # # supplement data frame by scores
+        # df = concatenate_to_df(df_scorer, df)
+
+        scorer = StateScorer(t, sequence, cfg, outputs_directory, df)
+        df = scorer.run()
 
     return df
 
@@ -193,7 +196,7 @@ class Sampler:
                     'permissibility_modified_seq': ''.join(permissibility_vector),
                     'acceptance_flag': False
                 }
-                # concat the new row to the DataFrame
+                # concat new row to data frame
                 self.df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
 
                 self.df = score_sequence_fullmetrics(self.t, mod_seq, self.cfg, self.outputs_directory, self.df)

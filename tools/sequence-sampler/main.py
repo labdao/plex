@@ -80,7 +80,6 @@ def my_app(cfg: DictConfig) -> None:
         outputs_directory = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     else:
         outputs_directory = cfg.outputs.directory
-    print(f"Output directory : {outputs_directory}")
 
     ## plex user inputs # some of these are currently not used!
     user_inputs = get_plex_job_inputs()
@@ -94,7 +93,7 @@ def my_app(cfg: DictConfig) -> None:
     temperature = user_inputs["temperature"]
     max_levenshtein_step_size = user_inputs["max_levenshtein_step_size"]
     alphabet = user_inputs["alphabet"]
-    print(f"user inputs from plex: {user_inputs}")
+    logging.info(f"user inputs from plex: {user_inputs}")
 
     # # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.basic_settings.experiment_name", user_inputs["experiment_name"], merge=False)
@@ -117,11 +116,12 @@ def my_app(cfg: DictConfig) -> None:
     logging.info(f"{OmegaConf.to_yaml(cfg)}")
     logging.info(f"Working directory : {os.getcwd()}")
 
-    print('inputs directory', cfg.inputs.directory)
+    logging.info(f"inputs directory: {cfg.inputs.directory}")
     fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
-    print('fasta_file', fasta_file)
+    logging.info(f"fasta file {fasta_file}")
+
     df = load_initial_data(fasta_file, cfg)
-    print('df', df)
+    logging.info(f"data frame: {df}")
     seed = df.iloc[-1]['seed']
     permissibility_seed = df.iloc[-1]['permissibility_seed']
 

@@ -6,15 +6,17 @@ from AF2_module import AF2Runner
 from utils import squeeze_seq
 from utils import write_af2_update
 from utils import compute_affinity
+from utils import concatenate_to_df
 import logging
 
 class StateScorer:
-    def __init__(self, evo_cycle, scorer_list, sequence, cfg, outputs_directory):
+    def __init__(self, evo_cycle, sequence, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle - 1
-        self.scorer_list = scorer_list
+        self.scorer_list = ['Hamming']#[cfg.params.basic_settings.scorers.split(',')]
         self.sequence = squeeze_seq(sequence)
         self.outputs_directory = outputs_directory
         self.cfg = cfg
+        self.df = df
 
     def run_scoring(self):
 
@@ -31,9 +33,18 @@ class StateScorer:
             if scorer=='ESM2':
                 runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
                 LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(self.sequence)
+
+                LL_mod = compute_log_likelihood(sequence, LLmatrix_mod) # TD: normalization by sequence length?
+
+                if 'pseudolikelihood' not in df_score.columns:
+                    df_score['pseudolikelihood'] = None  # Initialize the column with None
+                if t==1:
+                    df_score.at[0, 'pseudolikelihood'] = LL_mod
+                else:
+                    df_score.iloc[-1, df_score.columns.get_loc('pseudolikelihood')] = LL_mod
             
             elif scorer=='Colabfold':
-                target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{self.sequence}"
+                target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{self.sequence}" # TD: fix this; maybe load the target-sequence into the cfg from the pdb or fasta
                 
                 # include a function that combines binder and target sequence
                 input_dir = os.path.join(self.cfg.inputs.directory, 'current_sequences')
@@ -57,7 +68,6 @@ class StateScorer:
 
                 # append output as new columns of data frame
                 df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{self.evo_cycle}")
-                df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
             
             elif scorer=='Prodigy': # not implemented yet
 
@@ -71,10 +81,43 @@ class StateScorer:
 
                 if affinity is not None:
                     print(f"The affinity for the complex {pdb_file_path} is {affinity}")
-        
-        print(f"Scoring job complete. Results are in {self.outputs_directory}")
 
-        return df_score, LLmatrix_sequence
+            elif scorer=='Hamming':
+
+                # Function to compute Hamming distance
+                def compute_hamming_distance(seq1, seq2):
+                    return sum(c1 != c2 for c1, c2 in zip(seq1, seq2))
+
+                # Filter rows where 't' column is 0
+                filtered_df = self.df[self.df['t'] == 0]
+
+                # Compute Hamming distances for filtered rows
+                hamming_distances = filtered_df['seed'].apply(lambda x: compute_hamming_distance(self.sequence, x))
+
+                # Calculate the mean of the Hamming distances
+                mean_hamming_distance = hamming_distances.mean()
+
+                # Add the mean Hamming distance to df_score
+                if 'hamming_distance' not in df_score.columns:
+                    df_score['hamming_distance'] = None  # Initialize the column with None
+
+                # Set the value of 'hamming_distance' for the first row
+                df_score.at[0, 'hamming_distance'] = mean_hamming_distance
+
+                if mean_hamming_distance is not None:
+                    logging.info(f"The mean Hamming distance for the selected sequences is {mean_hamming_distance}")
+
+            #     df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
+            
+            df_score.to_csv(f"{scorer_directory}/output.csv", index=False)
+        
+        logging.info(f"Scoring job complete. Results are in {self.outputs_directory}")
+
+        # supplement data frame by scores
+        df = concatenate_to_df(df_score, self.df)
+
+        return df
+        # return df_score, LLmatrix_sequence
 
     def run(self):
         return self.run_scoring()
