@@ -101,6 +101,23 @@ func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
 	return db.Preload("Tool").First(&job, id).Error
 }
 
+func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
+	var job models.Job
+	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false, nil
+		} else {
+			return false, result.Error
+		}
+	}
+
+	if job.State == models.JobStateCompleted {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func processJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing job %v\n", jobID)
 	var job models.Job
@@ -121,6 +138,16 @@ func processJob(jobID uint, db *gorm.DB) error {
 		err := fetchJobWithToolData(&job, jobID, db)
 		if err != nil {
 			return err
+		}
+
+		// Safety check against DB to make sure the job hasn't already been completed
+		isCompleted, err := checkDBForJobStateCompleted(jobID, db)
+		if err != nil {
+			return fmt.Errorf("Error checking DB for Job state: %v", err)
+		}
+		if isCompleted {
+			fmt.Printf("Job %v , %v already completed\n", job.ID, job.BacalhauJobID)
+			return nil
 		}
 
 		fmt.Printf("Checking status for %v , %v\n", job.ID, job.BacalhauJobID)
