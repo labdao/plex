@@ -39,6 +39,7 @@ COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
+RUN /usr/local/bin/bacalhau config default > /root/.bacalhau/config.yaml
 
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
