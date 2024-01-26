@@ -172,7 +172,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: walletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-        CreatedAt:     time.Now(),
+				CreatedAt:     time.Now(),
 			}
 			result := db.Create(&job)
 			if result.Error != nil {
