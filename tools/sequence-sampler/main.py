@@ -14,6 +14,7 @@ from utils import slash_to_convexity_notation
 import json
 
 import logging
+import random
 
 def get_plex_job_inputs():
     # Retrieve the environment variable
@@ -56,18 +57,20 @@ def load_initial_data(fasta_file, cfg):
                     '(levenshtein-distance, mask)': 'none',
                     'modified_seq': '',
                     'permissibility_modified_seq': '',
-                    'acceptance_flag': True}
+                    'acceptance_flag': False}
                 )
                 seq_num += 1
             else:
-
-                
                 # Add sequence data to the most recently added sequence entry
                 sequences[-1]['seed'] += line.strip()
                 sequences[-1]['modified_seq'] += sequences[-1]['seed']
                 contig_in_convexity_notation = slash_to_convexity_notation(sequences[-1]['seed'], cfg.params.basic_settings.init_permissibility_vec)
                 sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
                 sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
+
+    # randomly select one sequence and set its 'acceptance_flag' to True ,making it the seed sequence
+    random_choice = random.choice(sequences)
+    random_choice['acceptance_flag'] = True
 
     return pd.DataFrame(sequences)
 
@@ -117,7 +120,8 @@ def my_app(cfg: DictConfig) -> None:
     logging.info(f"Working directory : {os.getcwd()}")
 
     logging.info(f"inputs directory: {cfg.inputs.directory}")
-    fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
+    # fasta_file = find_fasta_file(cfg.inputs.directory) # load fasta with inital sequences and convert to data frame
+    fasta_file = os.path.abspath(os.path.join(cfg.inputs.directory, cfg.params.basic_settings.binder_template_sequence))
     logging.info(f"fasta file {fasta_file}")
 
     df = load_initial_data(fasta_file, cfg)

@@ -13,7 +13,6 @@ class StateScorer:
     def __init__(self, evo_cycle, sequence, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle - 1
         self.scorer_list = cfg.params.basic_settings.scorers.split(',')
-        print('scorer list', self.scorer_list)
         self.sequence = squeeze_seq(sequence)
         self.outputs_directory = outputs_directory
         self.cfg = cfg
@@ -99,11 +98,11 @@ class StateScorer:
                 mean_hamming_distance = hamming_distances.mean()
 
                 # Add the mean Hamming distance to df_score
-                if 'hamming_distance' not in df_score.columns:
-                    df_score['hamming_distance'] = None  # Initialize the column with None
+                if 'mean_hamming_distance_to_init_seqs' not in df_score.columns:
+                    df_score['mean_hamming_distance_to_init_seqs'] = None  # Initialize the column with None
 
                 # Set the value of 'hamming_distance' for the first row
-                df_score.at[0, 'hamming_distance'] = mean_hamming_distance
+                df_score.at[0, 'mean_hamming_distance_to_init_seqs'] = mean_hamming_distance
 
                 if mean_hamming_distance is not None:
                     logging.info(f"The mean Hamming distance for the selected sequences is {mean_hamming_distance}")

@@ -8,6 +8,7 @@ from generator_module import StateGenerator
 from scorer_module import StateScorer
 from utils import squeeze_seq
 from utils import write_af2_update
+import logging
 
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module, or even utils or sequence-transformer
 
@@ -133,7 +134,6 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
     return permissibility_vector, action_mask, levenshtein_step_size
 
 def score_sequence_fullmetrics(t, sequence, cfg, outputs_directory, df): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
-    print('sequence', sequence)
     if squeeze_seq(sequence) !=[]:
         # scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
         # df_scorer, LLmatrix_mod = scorer.run()
@@ -204,7 +204,7 @@ class Sampler:
 
                 accept_flag = sequence_bouncer(self.t, self.df, self.cfg)
                 self.df.iloc[-1, self.df.columns.get_loc('acceptance_flag')] = accept_flag
-                print('action accepted', accept_flag)
+                logging.info(f"action accepted, {accept_flag}")
 
                 sample_number += 1
         
