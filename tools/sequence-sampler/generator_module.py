@@ -17,7 +17,7 @@ class StateGenerator:
         self.target = cfg.params.basic_settings.target_seq
         self.outputs_directory = outputs_directory
         self.df = df
-        self.generator_flag = cfg.params.basic_settings.generator_flag
+        self.generators = cfg.params.basic_settings.generators.split(',')
         self.alphabet = cfg.params.basic_settings.alphabet
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
 
@@ -26,8 +26,8 @@ class StateGenerator:
         print('\n')
         logging.info(f"Running generating job...")
         df_generate = pd.DataFrame() # initialize data frame
-        generator_list = list(self.generator_flag)
-        for generator in generator_list: # TD: fix this on monday!!!
+
+        for generator in self.generators:
 
             generator_directory = os.path.join(self.outputs_directory, generator)
             if not os.path.exists(generator_directory):
@@ -113,7 +113,7 @@ class StateGenerator:
                 for i, char in enumerate(self.action_mask):
                     if char=='-':
                         if modified_seq[i]!='-':
-                            logging.info(f"deleting resiude")
+                            logging.info(f"deleting residue")
                             modified_seq[i] = '-'
 
                 return ''.join(modified_seq)

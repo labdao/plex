@@ -12,7 +12,8 @@ import logging
 class StateScorer:
     def __init__(self, evo_cycle, sequence, cfg, outputs_directory, df):
         self.evo_cycle = evo_cycle - 1
-        self.scorer_list = ['Hamming']#[cfg.params.basic_settings.scorers.split(',')]
+        self.scorer_list = cfg.params.basic_settings.scorers.split(',')
+        print('scorer list', self.scorer_list)
         self.sequence = squeeze_seq(sequence)
         self.outputs_directory = outputs_directory
         self.cfg = cfg

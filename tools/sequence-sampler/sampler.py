@@ -133,6 +133,7 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
     return permissibility_vector, action_mask, levenshtein_step_size
 
 def score_sequence_fullmetrics(t, sequence, cfg, outputs_directory, df): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
+    print('sequence', sequence)
     if squeeze_seq(sequence) !=[]:
         # scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
         # df_scorer, LLmatrix_mod = scorer.run()

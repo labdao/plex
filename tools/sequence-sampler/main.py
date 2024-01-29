@@ -106,7 +106,7 @@ def my_app(cfg: DictConfig) -> None:
     OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.bouncer_flag", user_inputs["bouncer_flag"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.generator_flag", user_inputs["generator_flag"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.generators", user_inputs["generators"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
