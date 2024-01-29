@@ -114,7 +114,7 @@ class StateScorer:
         logging.info(f"Scoring job complete. Results are in {self.outputs_directory}")
 
         # supplement data frame by scores
-        df = concatenate_to_df(df_score, self.df)
+        df = concatenate_to_df(self.t, df_score, self.df)
 
         return df
         # return df_score, LLmatrix_sequence

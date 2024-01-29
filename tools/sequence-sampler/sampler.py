@@ -41,37 +41,60 @@ def sequence_bouncer(t, df, cfg):
 
         return True
 
-    elif cfg.params.basic_settings.bouncer_flag=='boltzmann':
+    elif cfg.params.basic_settings.bouncer_flag=='boltzmann_hamming':
 
         T = cfg.params.basic_settings.temperature
-        # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
-        scoring_weights = cfg.params.basic_settings.scoring_weights
-        scoring_weights = scoring_weights.split(',')
-        weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
-        DeltaE = 0.
-        scoring_metrics = cfg.params.basic_settings.scoring_metrics
-        scoring_weights = cfg.params.basic_settings.scoring_weights
-        for metric in scoring_metrics.split(','):
 
-            ref_metric = df.iloc[t-1][metric]
-            mod_metric = df.iloc[t][metric]
-            # if metric=='pseudolikelihood': # useful when transforming metrics
-            #     ref_metric = ...
-            #     mod_metric = ...
-            # if metric=='mean plddt':
-            #     ref_metric = ...
-            #     mod_metric = ...
-            # if metric=='affinity':
-            #     ref_metric = ...
-            #     mod_metric = ...
+        # find the row with 't' value of t-1 and 'acceptance_flag' set to True
+        print('t', t)
+        print('df', df)
+        ref_row = df[(df['t'] == t-1) & (df['acceptance_flag'] == True)]
+        print('ref_row', ref_row)
+        ref_metric = ref_row['mean_hamming_distance_to_init_seqs'].values[0]
+
+        # get the 'mean_hamming_distance_to_init_seqs' value from the last row of df for mod_metric
+        mod_metric = df.iloc[-1]['mean_hamming_distance_to_init_seqs']
+        print('ref_metric', ref_metric)
+        print('mod_metric', mod_metric)
             
-            DeltaE += weights[metric] * (ref_metric - mod_metric)
-            DeltaE += (mod_metric - ref_metric)
+        deltaE = float(mod_metric - ref_metric)
+        p_mod = np.exp(-deltaE / T)
 
-        p_mod = np.exp(-DeltaE / T)
         print('acceptance probability', np.minimum(1.,p_mod))
 
-        return random.random() < p_mod
+        return random.random() < p_mod    
+
+    # elif cfg.params.basic_settings.bouncer_flag=='boltzmann_general':
+
+    #     T = cfg.params.basic_settings.temperature
+    #     # weights = {'pseudolikelihood': .7, 'mean plddt': .2, 'affinity': .1}
+    #     scoring_weights = cfg.params.basic_settings.scoring_weights
+    #     # scoring_weights = scoring_weights.split(',')
+    #     # weights = {'pseudolikelihood': float(scoring_weights[0]), 'mean plddt': float(scoring_weights[1]), 'affinity': float(scoring_weights[2])}
+    #     DeltaE = 0.
+    #     scoring_metrics = cfg.params.basic_settings.scoring_metrics
+    #     # scoring_weights = cfg.params.basic_settings.scoring_weights
+    #     for metric in scoring_metrics.split(','):
+
+    #         ref_metric = df.iloc[t-1][metric]
+    #         mod_metric = df.iloc[t][metric]
+    #         # if metric=='pseudolikelihood': # useful when transforming metrics
+    #         #     ref_metric = ...
+    #         #     mod_metric = ...
+    #         # if metric=='mean plddt':
+    #         #     ref_metric = ...
+    #         #     mod_metric = ...
+    #         # if metric=='affinity':
+    #         #     ref_metric = ...
+    #         #     mod_metric = ...
+            
+    #         DeltaE += weights[metric] * (ref_metric - mod_metric)
+    #         DeltaE += (mod_metric - ref_metric)
+
+    #     p_mod = np.exp(-DeltaE / T)
+    #     print('acceptance probability', np.minimum(1.,p_mod))
+
+    #     return random.random() < p_mod
 
 def sample_permissible_vector(seed, permissibility_seed, max_levenshtein_step_size, alphabet):
     # Identify the indices where permissibility_seed has 'X' or '+'
@@ -173,7 +196,7 @@ class Sampler:
         if self.policy_flag == 'policy_sampling':
 
             if self.t==1: # compute scores for initial sequence
-                self.df = score_sequence_fullmetrics(self.t, self.seed, self.cfg, self.outputs_directory, self.df)
+                self.df = score_sequence_fullmetrics(0, self.seed, self.cfg, self.outputs_directory, self.df)
 
             action_residue_list = []
             sample_number = 1

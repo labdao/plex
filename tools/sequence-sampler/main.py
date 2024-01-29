@@ -126,8 +126,12 @@ def my_app(cfg: DictConfig) -> None:
 
     df = load_initial_data(fasta_file, cfg)
     logging.info(f"data frame: {df}")
-    seed = df.iloc[-1]['seed']
-    permissibility_seed = df.iloc[-1]['permissibility_seed']
+
+    seed_row = df[(df['t']==0) & (df['acceptance_flag'] == True)]
+    seed = seed_row['seed'].values[0]
+    logging.info(f"initial seed sequence {seed}")
+    # permissibility_seed = df.iloc[-1]['permissibility_seed']
+    permissibility_seed = seed_row['permissibility_seed'].values[0]
 
     logging.info("initial sequence to structure complete...")
 

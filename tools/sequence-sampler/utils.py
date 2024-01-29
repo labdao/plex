@@ -178,7 +178,7 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
-def concatenate_to_df(df, df_main):
+def concatenate_to_df(t, df, df_main):
     # Ensure all columns in df are in df_main, if not, add them with the values from df
     for col in df.columns:
         if col not in df_main.columns:
