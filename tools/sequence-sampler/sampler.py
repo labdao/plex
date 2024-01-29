@@ -35,7 +35,7 @@ def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer modul
 
     return total_log_likelihood
 
-def sequence_bouncer(t, df, cfg):
+def sequence_bouncer(t, df, cfg, accept_flag):
 
     if cfg.params.basic_settings.bouncer_flag=='open-door':
 
@@ -43,26 +43,32 @@ def sequence_bouncer(t, df, cfg):
 
     elif cfg.params.basic_settings.bouncer_flag=='boltzmann_hamming':
 
+        def determine_acceptance(threshold):
+            # Generate a boolean value based on the threshold probability
+            accept_flag = random.choices([True, False], weights=[threshold, 1-threshold], k=1)[0]
+
+            return accept_flag
+
         T = cfg.params.basic_settings.temperature
 
         # find the row with 't' value of t-1 and 'acceptance_flag' set to True
-        print('t', t)
-        print('df', df)
-        ref_row = df[(df['t'] == t-1) & (df['acceptance_flag'] == True)]
-        print('ref_row', ref_row)
+        ref_row = df[df['acceptance_flag'] == True].iloc[-1:] # find the last row where 'acceptance_flag' is True
         ref_metric = ref_row['mean_hamming_distance_to_init_seqs'].values[0]
 
         # get the 'mean_hamming_distance_to_init_seqs' value from the last row of df for mod_metric
         mod_metric = df.iloc[-1]['mean_hamming_distance_to_init_seqs']
-        print('ref_metric', ref_metric)
-        print('mod_metric', mod_metric)
             
-        deltaE = float(mod_metric - ref_metric)
+        deltaE = mod_metric - ref_metric
         p_mod = np.exp(-deltaE / T)
 
-        print('acceptance probability', np.minimum(1.,p_mod))
+        acceptance_probability = np.minimum(1, p_mod)
+        logging.info(f"acceptance probability {acceptance_probability}")
 
-        return random.random() < p_mod    
+        # accept_flag = random.random() < 0.3
+        accept_flag = determine_acceptance(acceptance_probability)
+        print('accept_flag in the bouncer', accept_flag)
+
+        return accept_flag   
 
     # elif cfg.params.basic_settings.bouncer_flag=='boltzmann_general':
 
@@ -158,19 +164,6 @@ def sample_action_mask(t, seed, permissibility_seed, action_residue_list, cfg, m
 
 def score_sequence_fullmetrics(t, sequence, cfg, outputs_directory, df): # TD: receive df as arugment and write the additional scores to frame; generalise to allow for plug-in of other scoring functions
     if squeeze_seq(sequence) !=[]:
-        # scorer = StateScorer(t, ['ESM2', 'Colabfold', 'Prodigy'], sequence, cfg, outputs_directory) # Note: currently only doing AF2 scoring for the selected design.
-        # df_scorer, LLmatrix_mod = scorer.run()
-        # LL_mod = compute_log_likelihood(sequence, LLmatrix_mod) # TD: normalization by sequence length?
-
-        # if 'pseudolikelihood' not in df_scorer.columns:
-        #     df_scorer['pseudolikelihood'] = None  # Initialize the column with None
-        # if t==1:
-        #     df_scorer.at[0, 'pseudolikelihood'] = LL_mod
-        # else:
-        #     df_scorer.iloc[-1, df_scorer.columns.get_loc('pseudolikelihood')] = LL_mod
-
-        # # supplement data frame by scores
-        # df = concatenate_to_df(df_scorer, df)
 
         scorer = StateScorer(t, sequence, cfg, outputs_directory, df)
         df = scorer.run()
@@ -196,7 +189,7 @@ class Sampler:
         if self.policy_flag == 'policy_sampling':
 
             if self.t==1: # compute scores for initial sequence
-                self.df = score_sequence_fullmetrics(0, self.seed, self.cfg, self.outputs_directory, self.df)
+                self.df = score_sequence_fullmetrics(self.t-1, self.seed, self.cfg, self.outputs_directory, self.df) # self.t - 1
 
             action_residue_list = []
             sample_number = 1
@@ -223,12 +216,20 @@ class Sampler:
                 # concat new row to data frame
                 self.df = pd.concat([self.df, pd.DataFrame([new_row])], ignore_index=True)
 
+                # logging.info(f"self df before scorer, {self.df}")
+
                 self.df = score_sequence_fullmetrics(self.t, mod_seq, self.cfg, self.outputs_directory, self.df)
 
-                accept_flag = sequence_bouncer(self.t, self.df, self.cfg)
+                # logging.info(f"self df after scorer, {self.df}")
+
+                accept_flag = sequence_bouncer(self.t, self.df, self.cfg, accept_flag)
+                print('accept_flag', accept_flag)
+
                 self.df.iloc[-1, self.df.columns.get_loc('acceptance_flag')] = accept_flag
-                logging.info(f"action accepted, {accept_flag}")
 
                 sample_number += 1
+                print('sample_number', sample_number)
+            
+            logging.info(f"action accepted after while loop, {accept_flag}")
         
             return mod_seq, permissibility_vector, (levenshtein_distance, squeeze_seq(action_mask)), levenshtein_distance, action_mask, self.df

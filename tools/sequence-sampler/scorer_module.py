@@ -11,7 +11,7 @@ import logging
 
 class StateScorer:
     def __init__(self, evo_cycle, sequence, cfg, outputs_directory, df):
-        self.evo_cycle = evo_cycle - 1
+        self.evo_cycle = evo_cycle #- 1
         self.scorer_list = cfg.params.basic_settings.scorers.split(',')
         self.sequence = squeeze_seq(sequence)
         self.outputs_directory = outputs_directory
@@ -114,7 +114,7 @@ class StateScorer:
         logging.info(f"Scoring job complete. Results are in {self.outputs_directory}")
 
         # supplement data frame by scores
-        df = concatenate_to_df(self.t, df_score, self.df)
+        df = concatenate_to_df(self.evo_cycle, df_score, self.df)
 
         return df
         # return df_score, LLmatrix_sequence

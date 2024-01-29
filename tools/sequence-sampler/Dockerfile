@@ -91,5 +91,6 @@ ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
 
 
-# entrypoint
+# # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
+# ENTRYPOINT ["python", "-m", "debugpy", "--wait-for-client", "--listen", "0.0.0.0:5678", "main.py"]

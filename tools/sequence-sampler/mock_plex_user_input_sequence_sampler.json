@@ -1,10 +1,10 @@
 {
     "experiment_name": "default",
-    "number_of_evo_cycles": 50,
+    "number_of_evo_cycles": 1000,
     "policy_flag": "policy_sampling",
     "init_permissibility_vec": "B1:5/x6:11",
-    "temperature": 3,
-    "max_levenshtein_step_size": 10,
+    "temperature": 0.8,
+    "max_levenshtein_step_size": 7,
     "alphabet": "LAGVSERTIDPKQNFYMHWC",
     "scorers": "Hamming",
     "scoring_metrics": "hamming_distance",

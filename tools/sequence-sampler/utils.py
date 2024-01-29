@@ -178,17 +178,44 @@ def write_af2_update(df, directory, json_pattern):
 
     return df
 
+# def concatenate_to_df(t, df, df_main):
+#     # Ensure all columns in df are in df_main, if not, add them with the values from df
+#     for col in df.columns:
+#         if col not in df_main.columns:
+#             # Add the column to df_main and fill all previous rows with pd.NA
+#             df_main[col] = pd.NA
+#             # Fill the last row with the value from df
+#             df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
+#         else:
+#             # If the column exists, just append the new value
+#             df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
+
+#     return df_main
+
 def concatenate_to_df(t, df, df_main):
-    # Ensure all columns in df are in df_main, if not, add them with the values from df
-    for col in df.columns:
-        if col not in df_main.columns:
-            # Add the column to df_main and fill all previous rows with pd.NA
-            df_main[col] = pd.NA
-            # Fill the last row with the value from df
-            df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
-        else:
-            # If the column exists, just append the new value
-            df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
+    if t == 0:
+        # Find the row in df_main with 't' == 0 and acceptance_flag == True
+        target_row = df_main[(df_main['t'] == 0) & (df_main['acceptance_flag'] == True)].index
+        if not target_row.empty:
+            target_row_index = target_row[0]
+            # Ensure all columns in df are in df_main, if not, add them with the values from df
+            for col in df.columns:
+                if col not in df_main.columns:
+                    # Add the column to df_main and fill all previous rows with pd.NA
+                    df_main[col] = pd.NA
+                # Write the values into the row of df_main which has 't'-column value 0 and acceptance_flag value True
+                df_main.at[target_row_index, col] = df.at[df.index[0], col]
+    else:
+        # Ensure all columns in df are in df_main, if not, add them with the values from df
+        for col in df.columns:
+            if col not in df_main.columns:
+                # Add the column to df_main and fill all previous rows with pd.NA
+                df_main[col] = pd.NA
+                # Fill the last row with the value from df
+                df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
+            else:
+                # If the column exists, just append the new value
+                df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
 
     return df_main
 
