@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DataPagination } from "@/components/ui/data-pagination";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import AddDataFileForm from "./AddDataFileForm";
 
@@ -102,7 +103,7 @@ export default function ListDataFiles() {
   }, [currentPage]);
 
   return (
-    <>
+    <div className="relative flex flex-col h-screen max-w-full grow">
       <Breadcrumbs
         items={[{ name: "My Files", href: "/data" }]}
         actions={
@@ -116,16 +117,18 @@ export default function ListDataFiles() {
           />
         }
       />
-
-      <div className="pb-14">
+      <ScrollArea className="bg-white grow w-[calc(100vw-12rem)]">
         <DataTable columns={columns} data={dataFiles} sorting={[{ id: "Timestamp", desc: true }]} loading={loading} />
-        <DataPagination
-          className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
-    </>
+        <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
+      {/*
+      <DataPagination
+        className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />*/}
+    </div>
   );
 }

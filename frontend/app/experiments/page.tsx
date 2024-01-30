@@ -15,6 +15,7 @@ import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { AppDispatch, Flow, flowListThunk, selectFlowList, selectFlowListLoading } from "@/lib/redux";
 
 import { ExperimentStatus } from "./ExperimentStatus";
@@ -70,7 +71,7 @@ export default function ListExperiments() {
   }, [dispatch, walletAddress]);
 
   return (
-    <>
+    <div className="relative flex flex-col h-screen grow">
       <Breadcrumbs
         items={[{ name: "My Experiments", href: "/experiments" }]}
         actions={
@@ -86,8 +87,12 @@ export default function ListExperiments() {
         }
       />
       <ProtectedComponent method="hide" message="Log in to view your experiments">
-        <DataTable columns={columns} data={flows} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />
+        <ScrollArea className="w-full bg-white grow">
+          <DataTable columns={columns} data={flows} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />
+          <ScrollBar orientation="horizontal" />
+          <ScrollBar orientation="vertical" />
+        </ScrollArea>
       </ProtectedComponent>
-    </>
+    </div>
   );
 }

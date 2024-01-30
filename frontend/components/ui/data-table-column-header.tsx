@@ -17,7 +17,7 @@ export function DataTableColumnHeader<TData, TValue>({ column, title, className 
   }
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn("flex items-center space-x-2 whitespace-nowrap", className)}>
       <span>{title}</span>
       {column.getIsSorted() === "desc" ? (
         <Button variant="ghost" size="icon" onClick={() => column.toggleSorting(false)}>

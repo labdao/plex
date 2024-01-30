@@ -5,6 +5,7 @@ import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function ListToolFiles() {
   interface Tool {
@@ -65,5 +66,10 @@ export default function ListToolFiles() {
       });
   }, []);
 
-  return <DataTable columns={columns} data={tools} />;
+  return (
+    <ScrollArea className="w-full bg-white grow">
+      <DataTable columns={columns} data={tools} /> <ScrollBar orientation="horizontal" />
+      <ScrollBar orientation="vertical" />
+    </ScrollArea>
+  );
 }

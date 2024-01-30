@@ -94,11 +94,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
         <Providers>
           <div className="flex w-full bg-gray-50">
             <Nav />
-            <ScrollArea className="h-screen pt-14 grow">
-              {props.children}
-              <ScrollBar orientation="horizontal" />
-              <ScrollBar orientation="vertical" />
-            </ScrollArea>
+            <div className="grow">{props.children}</div>
           </div>
         </Providers>
       </body>

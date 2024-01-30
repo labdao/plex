@@ -14,7 +14,6 @@ import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, 
 
 export default function ExperimentDetail() {
   const dispatch = useDispatch<AppDispatch>();
-
   const flow = useSelector(selectFlowDetail);
   const loading = useSelector(selectFlowDetailLoading);
   const error = useSelector(selectFlowDetailError);
@@ -66,21 +65,10 @@ export default function ExperimentDetail() {
   }, [dispatch]);
 
   return (
-    <div className="mt-8">
-      <Card className="pt-4">
+    <div>
+      <Card>
         <CardTitle className="flex items-center justify-between px-4 pb-4 mb-4 border-b">
-          <span className="font-bold font-heading">{flow.Name}</span>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => dispatch(flowDetailThunk(`${flow.ID}`))} disabled={loading}>
-              <RefreshCcw size={20} className="mr-2" /> {loading ? "Updating..." : "Update"}
-            </Button>
-            <Button variant="ghost" asChild>
-              <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${flow.CID}/`}>
-                <ExternalLink size={20} className="mr-2" />
-                Open
-              </a>
-            </Button>
-          </div>
+          <span className="font-heading">{flow.Name}</span>
         </CardTitle>
         <CardContent>
           {error && <Alert variant="destructive">{error}</Alert>}

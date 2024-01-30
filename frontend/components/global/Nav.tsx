@@ -17,7 +17,7 @@ const NavContent = (props: React.PropsWithChildren) => <div className="flex flex
 
 export default function Nav() {
   return (
-    <nav className="z-50 flex flex-col justify-between w-48 h-screen border-r shadow-lg border-border/50 shrink-0 bg-background">
+    <nav className="sticky top-0 z-50 flex flex-col justify-between w-48 h-screen border-r shadow-lg border-border/50 shrink-0 bg-background">
       <div>
         <Link
           href="/"
