@@ -8,7 +8,9 @@ export function TruncatedString({ value, trimLength = 6 }: { value: string; trim
       <span>
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger>{`${value.substring(0, trimLength)}...${value.substring(value.length - trimLength)}`}</TooltipTrigger>
+            <TooltipTrigger asChild>
+              <span>{`${value.substring(0, trimLength)}...${value.substring(value.length - trimLength)}`}</span>
+            </TooltipTrigger>
             <TooltipContent>
               <span className="text-xs">{value}</span>
             </TooltipContent>

@@ -21,7 +21,7 @@ import { LabelDescription } from "@/components/ui/label";
 import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
-import { tasks } from "../taskList";
+import { tasks } from "../../taskList";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import TaskPageHeader from "./TaskPageHeader";
@@ -41,7 +41,7 @@ type TransformedJSON = {
   kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
 };
 
-export default function TaskDetail({ params }: { params: { slug: string } }) {
+export default function TaskDetail({ params }: { params: { slug: string; toolCID: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { user } = usePrivy();
@@ -62,11 +62,11 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
 
   // On page load fetch the default tool details
   useEffect(() => {
-    const defaultToolCID = task.default_tool?.CID;
+    const defaultToolCID = params?.toolCID || task.default_tool?.CID;
     if (defaultToolCID) {
       dispatch(toolDetailThunk(defaultToolCID));
     }
-  }, [dispatch, task.default_tool?.CID]);
+  }, [dispatch, task.default_tool?.CID, params?.toolCID]);
 
   // Order and group the inputs by their position and grouping value
   const sortedInputs = Object.entries(tool.ToolJson?.inputs)
@@ -155,7 +155,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
     try {
       const response = await createFlow(transformedPayload);
       if (response && response.ID) {
-        console.log('Flow created', response);
+        console.log("Flow created", response);
+        console.log(response.ID);
         // Redirecting to another page, for example, a success page or dashboard
         router.push(`/experiments/${response.ID}`);
       } else {

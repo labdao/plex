@@ -14,7 +14,7 @@ import { AppDispatch, jobDetailThunk, selectJobDetail, selectJobDetailError, sel
 
 import LogViewer from "./LogViewer";
 
-export default function JobDetail() {
+export default function JobDetail({ jobID }: { jobID: string }) {
   const dispatch = useDispatch<AppDispatch>();
 
   const job = useSelector(selectJobDetail);
@@ -83,8 +83,7 @@ export default function JobDetail() {
   ];
 
   useEffect(() => {
-    const jobID = window.location.href.split("/").pop();
-    console.log(`jobId is ${jobID}`)
+    console.log(`jobId is ${jobID}`);
     if (jobID) {
       dispatch(jobDetailThunk(`${jobID}`));
     }

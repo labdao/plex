@@ -73,7 +73,7 @@ export default function AddTool() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button size="sm">
           <PlusIcon />
           Add Model

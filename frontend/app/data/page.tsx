@@ -122,13 +122,13 @@ export default function ListDataFiles() {
         <ScrollBar orientation="horizontal" />
         <ScrollBar orientation="vertical" />
       </ScrollArea>
-      {/*
+
       <DataPagination
-        className="absolute bottom-0 z-10 w-full px-4 border-t h-14 bg-background"
+        className="absolute bottom-0 z-10 w-full px-4 overflow-hidden border-t h-14 bg-background"
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={(page) => setCurrentPage(page)}
-      />*/}
+      />
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function ListExperiments() {
       header: "Status",
       size: 20,
       cell: ({ row }) => {
-        return <ExperimentStatus jobs={row.getValue("Jobs")} />;
+        return <ExperimentStatus jobs={row.getValue("Jobs")} className="flex justify-center" />;
       },
     },
     {

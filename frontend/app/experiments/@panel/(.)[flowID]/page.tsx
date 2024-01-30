@@ -11,8 +11,8 @@ import ExperimentDetail from "../../ExperimentDetail";
 export default function ExperimentDetailPage({ params }: { params: { flowID: string } }) {
   const router = useRouter();
   return (
-    <div className="relative z-50 flex flex-col h-screen shadow-xl bg-background ">
-      <div className="flex items-center justify-between px-4 py-2 h-14">
+    <ScrollArea className="relative z-50 flex flex-col h-screen min-w-0 shadow-xl bg-background">
+      <div className="flex items-center justify-between px-4 py-2 -mb-6 h-14">
         <Button size="icon" variant="ghost" asChild>
           <a href={`/experiments/${params.flowID}`} target="_blank">
             <ExternalLinkIcon />
@@ -28,9 +28,7 @@ export default function ExperimentDetailPage({ params }: { params: { flowID: str
           <PanelRightCloseIcon />
         </Button>
       </div>
-      <ScrollArea className="grow">
-        <ExperimentDetail />
-      </ScrollArea>
-    </div>
+      <ExperimentDetail />
+    </ScrollArea>
   );
 }

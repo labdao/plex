@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenIcon, FileIcon, GithubIcon, Loader2Icon } from "lucide-react";
+import { FileIcon, GithubIcon, Loader2Icon } from "lucide-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";

@@ -8,6 +8,7 @@ import Link from "next/link";
 import React from "react";
 
 import { NavButton } from "@/components/global/NavItem";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import Logo from "./Logo";
 import { NavLink } from "./NavItem";
@@ -18,7 +19,7 @@ const NavContent = (props: React.PropsWithChildren) => <div className="flex flex
 export default function Nav() {
   return (
     <nav className="sticky top-0 z-50 flex flex-col justify-between w-48 h-screen border-r shadow-lg border-border/50 shrink-0 bg-background">
-      <div>
+      <ScrollArea>
         <Link
           href="/"
           className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-14 font-heading whitespace-nowrap"
@@ -43,7 +44,7 @@ export default function Nav() {
           />
           <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
         </NavContent>
-      </div>
+      </ScrollArea>
       <div>
         <NavContent>
           <NavLink href="https://github.com/labdao" target="_blank" icon={<GithubIcon />} title="GitHub" />

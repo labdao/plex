@@ -17,7 +17,10 @@ const aggregateJobStatus = (jobs: Job[]) => {
 
   const pendingJobs = queuedJobs + runningJobs + newJobs;
 
-  if (totalJobs === completedJobs) {
+  if (totalJobs === 0) {
+    status = "unknown";
+    label = "Status unknown";
+  } else if (totalJobs === completedJobs) {
     status = "completed";
     label = "All conditions completed successfully";
   } else if (failedJobs === totalJobs || errorJobs === totalJobs) {
@@ -56,7 +59,9 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
   return (
     <span className={cn("relative z-0", (status === "queued" || status === "running") && "animate-pulse")}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width={size} height={size} fill="none">
-        {(status === "failed" || status === "partial-failure" || status === "completed") && <circle cx={6} cy={6} r={6} fill={`url(#${status})`} />}
+        {(status === "failed" || status === "partial-failure" || status === "completed" || status === "unknown") && (
+          <circle cx={6} cy={6} r={6} fill={`url(#${status})`} />
+        )}
         {status === "queued" && (
           <>
             <path fill="none" d="M0 6a6 6 0 0 1 12 0H0Z" />
@@ -81,6 +86,10 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
             <stop stopColor="#c8c8c8" />
             <stop offset={1} stopColor="#A5A5A5" stopOpacity={0} />
           </linearGradient>
+          <linearGradient id="unknown" x1={17.5} x2={0} y1={-2.5} y2={16} gradientUnits="userSpaceOnUse">
+            <stop stopColor="#c8c8c8" />
+            <stop offset={1} stopColor="#A5A5A5" stopOpacity={0} />
+          </linearGradient>
           <linearGradient id="running" x1={17.5} x2={0} y1={-2.5} y2={16} gradientUnits="userSpaceOnUse">
             <stop stopColor="#8fd9e9" />
             <stop offset={1} stopColor="#07A4C6" stopOpacity={0} />
@@ -93,17 +102,18 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
 
 interface ExperimentStatusProps {
   jobs: Job[];
+  className?: string;
 }
 
-export function ExperimentStatus({ jobs }: ExperimentStatusProps) {
+export function ExperimentStatus({ jobs, className }: ExperimentStatusProps) {
   const { status, label, pendingJobs, failedJobs, completedJobs } = aggregateJobStatus(jobs);
   return (
     <>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="flex justify-center">
-              <JobStatusIcon status={status} />
+            <span className={className}>
+              <JobStatusIcon status={status || "unknown"} />
             </span>
           </TooltipTrigger>
           <TooltipContent>
