@@ -45,5 +45,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tags", handlers.AddTagHandler(db)).Methods("POST")
 	router.HandleFunc("/tags", handlers.ListTagsHandler(db)).Methods("GET")
 
+	router.HandleFunc("/stripe", handlers.StripeHandler())
+
 	return router
 }
