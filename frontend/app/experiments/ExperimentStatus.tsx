@@ -1,5 +1,6 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Job } from "@/lib/redux";
+import { cn } from "@/lib/utils";
 
 const aggregateJobStatus = (jobs: Job[]) => {
   let status;
@@ -53,7 +54,7 @@ interface JobStatusIconProps {
 
 export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
   return (
-    <>
+    <span className={cn("relative z-0", (status === "queued" || status === "running") && "animate-pulse")}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width={size} height={size} fill="none">
         {(status === "failed" || status === "partial-failure" || status === "completed") && <circle cx={6} cy={6} r={6} fill={`url(#${status})`} />}
         {status === "queued" && (
@@ -86,7 +87,7 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
           </linearGradient>
         </defs>
       </svg>
-    </>
+    </span>
   );
 }
 
