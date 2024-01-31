@@ -17,4 +17,7 @@ type Tool struct {
 	Gpu           int            `gorm:"type:int"`
 	Network       bool           `gorm:"type:boolean"`
 	Timestamp     time.Time      `gorm:""`
+	Display       bool           `gorm:"type:boolean;default:true"`
+	TaskCategory  string         `gorm:"type:text"`
+	DefaultTool   bool           `gorm:"type:boolean"`
 }

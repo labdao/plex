@@ -22,6 +22,8 @@
     "dockerPull": "quay.io/labdao/protein-to-dna-icodon@sha256:9e0bb766e47c8d10a1afb5b871efadde5b02b1082373072e4172abd92ff78be8",
     "gpuBool": false,
     "networkBool": false,
+    "memoryGB": 4,
+    "cpu": 0.8,
     "inputs": {
         "input_file": {
             "type": "file",

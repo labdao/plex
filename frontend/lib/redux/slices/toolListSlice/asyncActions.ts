@@ -1,7 +1,8 @@
 import backendUrl from "lib/backendUrl"
 
-export const listTools = async (): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/tools`, {
+export const listTools = async (taskSlug?: string): Promise<any> => {
+  const url = taskSlug ? `${backendUrl()}/tools?taskCategory=${encodeURIComponent(taskSlug)}` : `${backendUrl()}/tools`;
+  const response = await fetch(url, {
     method: 'Get',
     headers: {
       'Content-Type': 'application/json',

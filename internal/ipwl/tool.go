@@ -32,21 +32,24 @@ type ToolOutput struct {
 }
 
 type Tool struct {
-	Name        string                `json:"name"`
-	Description string                `json:"description"`
-	Author      string                `json:"author"`
-	GitHub      string                `json:"github"`
-	Paper       string                `json:"paper"`
-	Task        string                `json:"task"`
-	BaseCommand []string              `json:"baseCommand"`
-	Arguments   []string              `json:"arguments"`
-	DockerPull  string                `json:"dockerPull"`
-	GpuBool     bool                  `json:"gpuBool"`
-	MemoryGB    *int                  `json:"memoryGB"`
-	Cpu         *float64              `json:"cpu"`
-	NetworkBool bool                  `json:"networkBool"`
-	Inputs      map[string]ToolInput  `json:"inputs"`
-	Outputs     map[string]ToolOutput `json:"outputs"`
+	Name         string                `json:"name"`
+	Description  string                `json:"description"`
+	Author       string                `json:"author"`
+	GitHub       string                `json:"github"`
+	Paper        string                `json:"paper"`
+	Task         string                `json:"task"`
+	BaseCommand  []string              `json:"baseCommand"`
+	Arguments    []string              `json:"arguments"`
+	DockerPull   string                `json:"dockerPull"`
+	GpuBool      bool                  `json:"gpuBool"`
+	MemoryGB     *int                  `json:"memoryGB"`
+	Cpu          *float64              `json:"cpu"`
+	NetworkBool  bool                  `json:"networkBool"`
+	Inputs       map[string]ToolInput  `json:"inputs"`
+	Outputs      map[string]ToolOutput `json:"outputs"`
+	Display      *bool                 `json:"display"`
+	TaskCategory string                `json:"taskCategory"`
+	DefaultTool  *bool                 `json:"defaultTool"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {

@@ -6,14 +6,11 @@ export const tasks = [
     name: "Protein Binder Design",
     slug: "protein-binder-design",
     available: true,
-    default_tool: {
-      CID: "QmYmKL9fCzxoEQAEvCtLZHXXwjJWdn7bbRE9afTXV5cB3v",
-    },
   },
   {
     name: "Protein Folding",
     slug: "protein-folding",
-    available: false,
+    available: true,
   },
   {
     name: "Protein Docking",
@@ -24,5 +21,10 @@ export const tasks = [
     name: "Small Molecule Docking",
     slug: "small-molecule-docking",
     available: false,
+  },
+  {
+    name: "Sample Task",
+    slug: "sample-task",
+    available: true,
   },
 ];

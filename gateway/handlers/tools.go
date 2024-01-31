@@ -78,7 +78,34 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			toolGpu = 0
 		}
 
-		// Store serialized Tool in DB
+		var display bool
+		if tool.Display != nil {
+			display = *tool.Display
+		} else {
+			display = true
+		}
+
+		var defaultTool bool
+		if tool.DefaultTool != nil {
+			defaultTool = *tool.DefaultTool
+		} else {
+			defaultTool = false
+		}
+
+		// Start transaction
+		tx := db.Begin()
+
+		// If the new tool is marked as default, reset the default tool in the same task category
+		if defaultTool {
+			if err := tx.Model(&models.Tool{}).
+				Where("task_category = ? AND default_tool = TRUE", tool.TaskCategory).
+				Update("default_tool", false).Error; err != nil {
+				tx.Rollback()
+				http.Error(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
 		toolEntry := models.Tool{
 			CID:           cid,
 			WalletAddress: walletAddress,
@@ -90,15 +117,25 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			Gpu:           toolGpu,
 			Network:       tool.NetworkBool,
 			Timestamp:     time.Now(),
+			Display:       display,
+			TaskCategory:  tool.TaskCategory,
+			DefaultTool:   defaultTool,
 		}
 
-		result := db.Create(&toolEntry)
+		result := tx.Create(&toolEntry)
 		if result.Error != nil {
+			tx.Rollback()
 			if utils.IsDuplicateKeyError(result.Error) {
 				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
 			} else {
 				http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
 			}
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -154,6 +191,10 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
+		if taskCategory := r.URL.Query().Get("taskCategory"); taskCategory != "" {
+			query = query.Where("task_category = ?", taskCategory)
 		}
 
 		var tools []models.Tool
