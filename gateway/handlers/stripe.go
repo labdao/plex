@@ -15,14 +15,18 @@ import (
 )
 
 func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error) {
-	// TODO read from ENV var
-	stripe.Key = "your_stripe_secret_key"
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
 
 	params := &stripe.CheckoutSessionParams{
-		SuccessURL: stripe.String("https://example.com/success"),
+		SuccessURL: stripe.String("frontendURL"),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String("price_1MotwRLkdIwHu7ixYcPLm5uZ"),
+				Price:    stripe.String("price_1OehLu2mES9P7kjwSQS45ZKq"), // comes from Stripe Product Dashboard
 				Quantity: stripe.Int64(1),
 			},
 		},
