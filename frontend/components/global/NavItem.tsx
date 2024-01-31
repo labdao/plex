@@ -8,8 +8,6 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-import Icon from "../shared/Icon";
-
 interface NavLinkProps {
   href: string;
   exact?: boolean;
