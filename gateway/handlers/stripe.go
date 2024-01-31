@@ -28,10 +28,19 @@ func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error
 			{
 				Price:    stripe.String("price_1OehLu2mES9P7kjwSQS45ZKq"), // comes from Stripe Product Dashboard
 				Quantity: stripe.Int64(1),
+				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
+					Enabled: stripe.Bool(true),
+				},
+			},
+		},
+		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+			Metadata: map[string]string{
+				"walletAddress": walletAddress,
 			},
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
+	params.AddMetadata("walletAddress", walletAddress)
 	result, err := session.New(params)
 	if err != nil {
 		return nil, err
@@ -86,10 +95,7 @@ func StripeFullfillmentHandler() http.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("PaymentIntent succeeded, Amount: %v, Customer: %v\n", paymentIntent.Amount, paymentIntent.Customer)
-
-			// Add credits to the user's account here.
-			// You might need to retrieve the user's account using the Customer ID.
+			fmt.Printf("PaymentIntent succeeded, Amount: %v, WalletAddress: %v\n", paymentIntent.Amount, paymentIntent.Metadata["walletAddress"])
 
 		default:
 			fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)
