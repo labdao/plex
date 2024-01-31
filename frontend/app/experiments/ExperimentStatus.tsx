@@ -2,7 +2,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Job } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
-const aggregateJobStatus = (jobs: Job[]) => {
+export function aggregateJobStatus(jobs: Job[]) {
   let status;
   let label;
   const totalJobs = jobs.length;
@@ -48,7 +48,7 @@ const aggregateJobStatus = (jobs: Job[]) => {
     failedJobs,
     completedJobs,
   };
-};
+}
 
 interface JobStatusIconProps {
   size?: number;
