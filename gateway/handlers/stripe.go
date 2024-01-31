@@ -23,7 +23,7 @@ func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error
 	}
 
 	params := &stripe.CheckoutSessionParams{
-		SuccessURL: stripe.String("frontendURL"),
+		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
 				Price:    stripe.String("price_1OehLu2mES9P7kjwSQS45ZKq"), // comes from Stripe Product Dashboard
@@ -67,7 +67,7 @@ func StripeFullfillmentHandler() http.HandlerFunc {
 			return
 		}
 
-		endpointSecret := "fill in with env var"
+		endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
 
 		event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
 		if err != nil {
