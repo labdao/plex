@@ -3,13 +3,15 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface CopyToClipboardProps {
   string: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
 }
 
-export function CopyToClipboard({ string, children }: CopyToClipboardProps) {
+export function CopyToClipboard({ string, children, className }: CopyToClipboardProps) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     await navigator.clipboard.writeText(string);
@@ -20,16 +22,16 @@ export function CopyToClipboard({ string, children }: CopyToClipboardProps) {
   };
   return (
     <div
-      className="relative flex items-center gap-1 cursor-pointer group"
+      className={cn("relative flex items-center gap-1 cursor-pointer group", className)}
       onClick={() => {
         copy();
       }}
     >
-      <span className="group-hover:underline">{children}</span>
+      {children && <span className="group-hover:underline">{children}</span>}
       <TooltipProvider>
         <Tooltip open={copied}>
           <TooltipTrigger asChild>
-            <Button size="icon" variant="ghost" className="p-1">
+            <Button size="icon" variant="ghost" className="p-1 text-muted-foreground">
               <CopyIcon />
             </Button>
           </TooltipTrigger>

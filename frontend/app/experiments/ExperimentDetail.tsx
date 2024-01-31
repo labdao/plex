@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { TruncatedString } from "@/components/shared/TruncatedString";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,9 +86,11 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                   {dayjs(flow.StartTime).format("YYYY-MM-DD HH:mm:ss")}
                 </div>
                 {/*@TODO: Endtime currently doesn't show a correct datetime and Runtime is missing
-            <dt>Completed:</dt>
-            <dd>{dayjs(flow.EndTime).format("YYYY-MM-DD HH:mm:ss")}</dd>
-             */}
+                <div>
+                  <strong>Completed: </strong>
+                  {dayjs(flow.EndTime).format("YYYY-MM-DD HH:mm:ss")}
+                </div>             
+                */}
                 <div>
                   <strong>Model: </strong>
                   <Button size="xs" variant="outline" asChild>
@@ -98,41 +101,37 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
             </CardContent>
           </Card>
 
-          {flow.Jobs?.map((job, index) => (
-            <JobCollapsible job={job} index={index} key={job.ID} />
-          ))}
+          <Accordion type="multiple">
+            {flow.Jobs?.map((job, index) => {
+              const validStates = ["queued", "running", "failed", "completed"];
+              const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
+
+              return (
+                <AccordionItem value={job.ID.toString()} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
+                  <Card className="my-2 shadow-sm">
+                    <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
+                      <div className="flex items-center gap-2">
+                        <div className="w-28">
+                          <div>condition {index + 1}</div>
+                          <div className="flex gap-1 text-xs text-muted-foreground/70">
+                            id: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
+                          </div>
+                        </div>
+                        <Badge status={status} variant="outline">
+                          {job.State}
+                        </Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-0">
+                      <JobDetail jobID={job.ID} />
+                    </AccordionContent>
+                  </Card>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </>
       )}
     </div>
-  );
-}
-
-function JobCollapsible({ job, index }: { job: any; index: number }) {
-  const validStates = ["queued", "running", "failed", "completed"];
-  const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <Card className={cn("my-2 shadow-sm", isOpen && "shadow-md")}>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className={cn("flex items-center justify-between w-full px-6 py-3 text-left", isOpen && "bg-muted")}>
-          <div className="flex items-center gap-2">
-            <div className="w-28">
-              <div>condition {index + 1}</div>
-              <div className="flex gap-1 text-xs text-muted-foreground/70">
-                id: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
-              </div>
-            </div>
-            <Badge status={status} variant="outline">
-              {job.State}
-            </Badge>
-          </div>
-          <ChevronsUpDownIcon />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <JobDetail jobID={job.ID} />
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
   );
 }

@@ -2,24 +2,22 @@
 
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
+import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { selectJobDetail } from "@/lib/redux";
 
-const LogViewer = () => {
+const LogViewer = ({ jobID }: { jobID: string }) => {
   const [logs, setLogs] = useState("");
-  const job = useSelector(selectJobDetail);
 
   useEffect(() => {
-    if (job.BacalhauJobID) {
-      setLogs(`Connecting to stream with Bacalhau Job Id ${job.BacalhauJobID}`);
+    if (jobID) {
+      setLogs(`Connecting to stream with Bacalhau Job Id ${jobID}`);
 
       let formattedBackendUrl = backendUrl().replace("http://", "").replace("https://", "");
       let wsProtocol = backendUrl().startsWith("https://") ? "wss" : "ws";
 
       console.log(formattedBackendUrl);
-      const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${job.BacalhauJobID}/logs`);
+      const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${jobID}/logs`);
 
       ws.onopen = () => {
         console.log("connected");
@@ -41,14 +39,17 @@ const LogViewer = () => {
     } else {
       setLogs(`Logs will stream after job is sent to the Bacalhau network`);
     }
-  }, [job]);
+  }, [jobID]);
 
   return (
-    <ScrollArea className="w-full h-56 min-w-0 ">
-      <pre className="p-6 font-mono text-xs">{logs}</pre>
-      <ScrollBar orientation="vertical" />
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+    <div className="relative">
+      <CopyToClipboard string={logs} className="absolute z-10 right-6 bg-background" />
+      <ScrollArea className="w-full h-56 min-w-0 ">
+        <pre className="p-6 font-mono text-xs">{logs}</pre>
+        <ScrollBar orientation="vertical" />
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </div>
   );
 };
 
