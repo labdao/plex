@@ -101,13 +101,13 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
             </CardContent>
           </Card>
 
-          <Accordion type="multiple">
+          <Accordion {...(flow?.Jobs?.length > 1 ? { type: "multiple" } : { type: "single", defaultValue: "0", collapsible: true })}>
             {flow.Jobs?.map((job, index) => {
               const validStates = ["queued", "running", "failed", "completed"];
               const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
 
               return (
-                <AccordionItem value={job.ID.toString()} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
+                <AccordionItem value={index.toString()} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
                   <Card className="my-2 shadow-sm">
                     <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                       <div className="flex items-center gap-2">
