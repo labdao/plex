@@ -45,7 +45,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tags", handlers.AddTagHandler(db)).Methods("POST")
 	router.HandleFunc("/tags", handlers.ListTagsHandler(db)).Methods("GET")
 
-	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler()).Methods("GET")
+	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler()).Methods("POST")
 	router.HandleFunc("/stripe/{walletAddress}", handlers.StripeCreateCheckoutSessionHandler(db)).Methods("GET")
 
 	return router
