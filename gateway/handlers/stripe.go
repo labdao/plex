@@ -7,11 +7,54 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/webhook"
+	"github.com/gorilla/mux"
+	"github.com/stripe/stripe-go/v76"
+	"github.com/stripe/stripe-go/v76/checkout/session"
+	"github.com/stripe/stripe-go/v76/webhook"
+	"gorm.io/gorm"
 )
 
-func StripeHandler() http.HandlerFunc {
+func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error) {
+	// TODO read from ENV var
+	stripe.Key = "your_stripe_secret_key"
+
+	params := &stripe.CheckoutSessionParams{
+		SuccessURL: stripe.String("https://example.com/success"),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				Price:    stripe.String("price_1MotwRLkdIwHu7ixYcPLm5uZ"),
+				Quantity: stripe.Int64(1),
+			},
+		},
+		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+	}
+	result, err := session.New(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		walletAddress := params["walletAddress"]
+
+		session, err := createCheckoutSession(walletAddress)
+		if err != nil {
+			// Handle the error appropriately
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Send the session URL back to the client
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"url": session.URL})
+	}
+}
+
+func StripeFullfillmentHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := ioutil.ReadAll(r.Body)
 		if err != nil {
