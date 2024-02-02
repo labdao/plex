@@ -181,6 +181,14 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.Tool{})
 
+		// If display is provided, filter based on it, if not, display only tools where 'display' is true by default
+		displayParam, displayProvided := r.URL.Query()["display"]
+		if displayProvided && len(displayParam[0]) > 0 {
+			query = query.Where("display = ?", displayParam[0] == "true")
+		} else {
+			query = query.Where("display = ?", true)
+		}
+
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
 		}
