@@ -52,9 +52,10 @@ export const toolDetailSlice = createSlice({
     setToolDetailSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
+    resetToolDetail: () => { return initialState; },
   },
 });
 
-export const { setToolDetail, setToolDetailLoading, setToolDetailError, setToolDetailSuccess } = toolDetailSlice.actions;
+export const { setToolDetail, setToolDetailLoading, setToolDetailError, setToolDetailSuccess, resetToolDetail } = toolDetailSlice.actions;
 
 export default toolDetailSlice.reducer;

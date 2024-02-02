@@ -17,7 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectToolList, toolDetailThunk, toolListThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectToolList, toolDetailThunk, toolListThunk, resetToolDetail, resetToolList } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { tasks } from "../taskList";
@@ -59,6 +59,16 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
+
+  useEffect(() => {
+    // When the slug changes, reset the tool detail and list
+    return () => {
+      console.log("resetting tool detail");
+      console.log("tool cid now:", tool?.CID);
+      dispatch(resetToolDetail());
+      dispatch(resetToolList());
+    };
+  }, [params.slug, dispatch]);
 
   const defaultTool = tools.find(tool => tool.DefaultTool === true);
   const default_tool_cid = defaultTool?.CID;
