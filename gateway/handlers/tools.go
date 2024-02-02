@@ -79,12 +79,11 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var display bool = true
-
 		var defaultTool bool = false
 
 		var taskCategory string
 		if tool.TaskCategory == "" {
-			taskCategory = "sample-task"
+			taskCategory = "other-models"
 		} else {
 			taskCategory = tool.TaskCategory
 		}

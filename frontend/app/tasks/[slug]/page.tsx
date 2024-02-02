@@ -4,7 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
@@ -44,8 +44,6 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { user } = usePrivy();
-  const [defaultToolCID, setDefaultToolCID] = useState("");
-  const [selectedToolCID, setSelectedToolCID] = useState("");
 
   // Fetch the task from our static list of tasks
   const task = tasks.find((task) => task.slug === params?.slug);
@@ -61,10 +59,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const walletAddress = user?.wallet?.address;
 
   useEffect(() => {
-    // When the slug changes, reset the tool detail and list
     return () => {
-      console.log("resetting tool detail");
-      console.log("tool cid now:", tool?.CID);
       dispatch(resetToolDetail());
       dispatch(resetToolList());
     };
@@ -72,11 +67,10 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
 
   const defaultTool = tools.find(tool => tool.DefaultTool === true);
   const default_tool_cid = defaultTool?.CID;
-  // On page load fetch the default tool details
+
   useEffect(() => {
-    const defaultToolCID = default_tool_cid;
-    if (defaultToolCID) {
-      dispatch(toolDetailThunk(defaultToolCID));
+    if (default_tool_cid) {
+      dispatch(toolDetailThunk(default_tool_cid));
     }
   }, [dispatch, default_tool_cid]);
 

@@ -24,8 +24,8 @@ export const tasks = [
     available: false,
   },
   {
-    name: "Sample Task",
-    slug: "sample-task",
+    name: "Other Models",
+    slug: "other-models",
     available: true,
   },
 ];
