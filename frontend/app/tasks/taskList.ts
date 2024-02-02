@@ -8,6 +8,7 @@ export const tasks = [
     available: true,
   },
   {
+    // enabled to true for testing this story
     name: "Protein Folding",
     slug: "protein-folding",
     available: true,

@@ -57,6 +57,15 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
 
+  const default_tool_cid = "QmTdB1XAy4T5yUAvUeypo4HsiV6PAkWexjwdTqDTgpNLL5"
+  // On page load fetch the default tool details
+  useEffect(() => {
+    const defaultToolCID = default_tool_cid;
+    if (defaultToolCID) {
+      dispatch(toolDetailThunk(defaultToolCID));
+    }
+  }, [dispatch, default_tool_cid]);
+
   // Order and group the inputs by their position and grouping value
   const sortedInputs = Object.entries(tool.ToolJson?.inputs)
     // @ts-ignore
@@ -197,7 +206,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                             <FormItem>
                               <FormLabel>Model</FormLabel>
                               <FormControl>
-                                <ToolSelect onChange={field.onChange} taskSlug={params.slug} />
+                                <ToolSelect onChange={field.onChange} taskSlug={params.slug} defaultValue={tool?.CID} />
                               </FormControl>
                               <FormDescription>
                                 <a
