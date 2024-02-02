@@ -8,7 +8,7 @@ export const tasks = [
     available: true,
   },
   {
-    // enabled to true for testing story LAB-1166
+    // set to true for testing story LAB-1166
     name: "Protein Folding",
     slug: "protein-folding",
     available: true,
