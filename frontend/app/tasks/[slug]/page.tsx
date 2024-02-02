@@ -4,7 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
@@ -17,7 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectToolList, toolDetailThunk, toolListThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { tasks } from "../taskList";
@@ -44,6 +44,8 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { user } = usePrivy();
+  const [defaultToolCID, setDefaultToolCID] = useState(""); // State to store the default tool's CID
+  const [selectedToolCID, setSelectedToolCID] = useState("");
 
   // Fetch the task from our static list of tasks
   const task = tasks.find((task) => task.slug === params?.slug);
@@ -53,11 +55,14 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   }
 
   const tool = useSelector(selectToolDetail);
+  const tools = useSelector(selectToolList);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
 
-  const default_tool_cid = "QmTdB1XAy4T5yUAvUeypo4HsiV6PAkWexjwdTqDTgpNLL5"
+  // const default_tool_cid = "QmTdB1XAy4T5yUAvUeypo4HsiV6PAkWexjwdTqDTgpNLL5"
+  const defaultTool = tools.find(tool => tool.DefaultTool === true);
+  const default_tool_cid = defaultTool?.CID;
   // On page load fetch the default tool details
   useEffect(() => {
     const defaultToolCID = default_tool_cid;
@@ -65,6 +70,17 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       dispatch(toolDetailThunk(defaultToolCID));
     }
   }, [dispatch, default_tool_cid]);
+
+  // useEffect(() => {
+  //   const defaultTool = tools.find(tool => tool.DefaultTool === true);
+  //   console.log(defaultTool?.Name);
+  //   // const defaultToolCID = default_tool_cid;
+  //   if (defaultTool) {
+  //     setDefaultToolCID(defaultTool.CID);
+  //     dispatch(toolDetailThunk(defaultTool.CID));
+  //     console.log(defaultToolCID);
+  //   }
+  // }, [dispatch, tools]);
 
   // Order and group the inputs by their position and grouping value
   const sortedInputs = Object.entries(tool.ToolJson?.inputs)
