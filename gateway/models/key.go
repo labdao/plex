@@ -13,6 +13,7 @@ type APIKey struct {
 	Key       string    `gorm:"type:varchar(255);not null;unique"`
 	Scope     string    `gorm:"type:varchar(255);not null"`
 	CreatedAt time.Time `gorm:""`
+	ExpiresAt time.Time `gorm:""`
 	UserID    string    `gorm:"type:varchar(42);not null"`
 	User      User      `gorm:"foreignKey:UserID"`
 }
