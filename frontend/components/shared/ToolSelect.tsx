@@ -9,7 +9,7 @@ import { AppDispatch, selectToolList, selectToolListError, toolListThunk } from 
 interface ToolSelectProps {
   onChange: (value: string) => void;
   taskSlug?: string;
-  defaultValue?: string; // New prop for the default value
+  defaultValue?: string;
 }
 
 export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps) {
@@ -26,18 +26,6 @@ export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps
       dispatch(toolListThunk());
     }
   }, [dispatch, taskSlug]);
-
-  // useEffect(() => {
-  //   // Only set default tool if user hasn't made a selection
-  //   console.log("problematic useeffect is called. User has selected:", userHasSelected);
-  //   if (!userHasSelected) {
-  //     const defaultTool = tools.find(tool => tool.DefaultTool);
-  //     if (defaultTool) {
-  //       setSelectedToolCID(defaultTool.CID);
-  //       onChange(defaultTool.CID);
-  //     }
-  //   }
-  // }, [tools, onChange, userHasSelected]); // Add userHasSelected to dependency array
 
   useEffect(() => {
     console.log("Selected Tool CID:", defaultValue);

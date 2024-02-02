@@ -44,7 +44,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const { user } = usePrivy();
-  const [defaultToolCID, setDefaultToolCID] = useState(""); // State to store the default tool's CID
+  const [defaultToolCID, setDefaultToolCID] = useState("");
   const [selectedToolCID, setSelectedToolCID] = useState("");
 
   // Fetch the task from our static list of tasks
@@ -60,7 +60,6 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
 
-  // const default_tool_cid = "QmTdB1XAy4T5yUAvUeypo4HsiV6PAkWexjwdTqDTgpNLL5"
   const defaultTool = tools.find(tool => tool.DefaultTool === true);
   const default_tool_cid = defaultTool?.CID;
   // On page load fetch the default tool details
@@ -70,17 +69,6 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
       dispatch(toolDetailThunk(defaultToolCID));
     }
   }, [dispatch, default_tool_cid]);
-
-  // useEffect(() => {
-  //   const defaultTool = tools.find(tool => tool.DefaultTool === true);
-  //   console.log(defaultTool?.Name);
-  //   // const defaultToolCID = default_tool_cid;
-  //   if (defaultTool) {
-  //     setDefaultToolCID(defaultTool.CID);
-  //     dispatch(toolDetailThunk(defaultTool.CID));
-  //     console.log(defaultToolCID);
-  //   }
-  // }, [dispatch, tools]);
 
   // Order and group the inputs by their position and grouping value
   const sortedInputs = Object.entries(tool.ToolJson?.inputs)
