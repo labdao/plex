@@ -19,5 +19,5 @@ type Tool struct {
 	Timestamp     time.Time      `gorm:""`
 	Display       bool           `gorm:"type:boolean;default:true"`
 	TaskCategory  string         `gorm:"type:text"`
-	DefaultTool   bool           `gorm:"type:boolean"`
+	DefaultTool   bool           `gorm:"type:boolean;default:false"`
 }

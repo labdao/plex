@@ -78,18 +78,15 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			toolGpu = 0
 		}
 
-		var display bool
-		if tool.Display != nil {
-			display = *tool.Display
-		} else {
-			display = true
-		}
+		var display bool = true
 
-		var defaultTool bool
-		if tool.DefaultTool != nil {
-			defaultTool = *tool.DefaultTool
+		var defaultTool bool = false
+
+		var taskCategory string
+		if tool.TaskCategory == "" {
+			taskCategory = "sample-task"
 		} else {
-			defaultTool = false
+			taskCategory = tool.TaskCategory
 		}
 
 		// Start transaction
@@ -118,7 +115,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			Network:       tool.NetworkBool,
 			Timestamp:     time.Now(),
 			Display:       display,
-			TaskCategory:  tool.TaskCategory,
+			TaskCategory:  taskCategory,
 			DefaultTool:   defaultTool,
 		}
 

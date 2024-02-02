@@ -47,9 +47,7 @@ type Tool struct {
 	NetworkBool  bool                  `json:"networkBool"`
 	Inputs       map[string]ToolInput  `json:"inputs"`
 	Outputs      map[string]ToolOutput `json:"outputs"`
-	Display      *bool                 `json:"display"`
 	TaskCategory string                `json:"taskCategory"`
-	DefaultTool  *bool                 `json:"defaultTool"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
