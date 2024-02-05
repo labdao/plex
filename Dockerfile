@@ -13,10 +13,10 @@ WORKDIR /app/
 # RUN CGO_ENABLED=1 go build -race -o /go/bin/plex
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-ARG BACALHAU_VERSION=1.1.4
+ARG BACALHAU_VERSION=1.2.0
 
 # For bacalhau cli
-FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4} as bacalhau
+FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau
 
 FROM busybox:1.31.1-glibc
 
@@ -39,6 +39,7 @@ COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
 
 # This creates config file needed by bacalhau golang client
 RUN /usr/local/bin/bacalhau version
+RUN /usr/local/bin/bacalhau config default > /root/.bacalhau/config.yaml
 
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao

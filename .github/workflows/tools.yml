@@ -73,6 +73,10 @@ jobs:
             - 'tools/protein-to-dna-icodon/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
+          af2:
+            - 'tools/af2/**'
+            - '.github/workflows/tools.yml'
+            - '.github/workflows/docker.yml'
 
 
   tools:

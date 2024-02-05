@@ -33,6 +33,7 @@ func getEnvAsInt(name string, defaultValue int) int {
 // Consider allowing Job creation payloads to configure lower times
 var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
 var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
+var retryJobSleepTime = time.Duration(10) * time.Second
 
 func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 2) // Buffer for two types of jobs
@@ -52,24 +53,21 @@ func StartJobQueues(db *gorm.DB) error {
 
 func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.DB) {
 	for {
-		var jobs []models.Job
-		if err := fetchQueuedJobsWithToolData(&jobs, queueType, db); err != nil {
+		var job models.Job
+		err := fetchOldestQueuedJob(&job, queueType, db)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
+			time.Sleep(5 * time.Second)
+			continue
+		} else if err != nil {
 			errChan <- err
 			return
 		}
 
-		fmt.Printf("There are %d jobs in the %s queue\n", len(jobs), queueType)
-
-		for _, job := range jobs {
-			// there should not be any errors from processJob
-			if err := processJob(&job, db); err != nil {
-				errChan <- err
-				return
-			}
+		if err := processJob(job.ID, db); err != nil {
+			errChan <- err
+			return
 		}
-
-		fmt.Printf("Finished processing queue, rehydrating %s queue with jobs\n", queueType)
-		time.Sleep(5 * time.Second) // Wait for some time before the next cycle
 	}
 }
 
@@ -82,7 +80,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
 			// there should not be any errors from checkRunningJob
-			if err := checkRunningJob(&job, db); err != nil {
+			if err := checkRunningJob(job.ID, db); err != nil {
 				return err
 			}
 		}
@@ -95,21 +93,67 @@ func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
 	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
 }
 
-func fetchQueuedJobsWithToolData(jobs *[]models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Preload("Tool").Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Find(jobs).Error
+func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
 }
 
-func processJob(job *models.Job, db *gorm.DB) error {
-	fmt.Printf("Processing job %v\n", job.ID)
-	if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
+func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
+	return db.Preload("Tool").First(&job, id).Error
+}
+
+func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
+	var job models.Job
+	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return false, nil
+		} else {
+			return false, result.Error
+		}
+	}
+
+	if job.State == models.JobStateCompleted {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func processJob(jobID uint, db *gorm.DB) error {
+	fmt.Printf("Processing job %v\n", jobID)
+	var job models.Job
+	err := fetchJobWithToolData(&job, jobID, db)
+	if err != nil {
 		return err
 	}
 
+	if job.BacalhauJobID == "" {
+		if err := submitBacalhauJobAndUpdateID(&job, db); err != nil {
+			return err
+		}
+	}
+
 	for {
+		// we refresh the Job data from the database on every loop to make sure the state is accurate
+		var job models.Job
+		err := fetchJobWithToolData(&job, jobID, db)
+		if err != nil {
+			return err
+		}
+
+		// Safety check against DB to make sure the job hasn't already been completed
+		isCompleted, err := checkDBForJobStateCompleted(jobID, db)
+		if err != nil {
+			return fmt.Errorf("Error checking DB for Job state: %v", err)
+		}
+		if isCompleted {
+			fmt.Printf("Job %v , %v already completed\n", job.ID, job.BacalhauJobID)
+			return nil
+		}
+
 		fmt.Printf("Checking status for %v , %v\n", job.ID, job.BacalhauJobID)
 		if time.Since(job.CreatedAt) > maxQueueTime {
 			fmt.Printf("Job %v , %v timed out\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(job, models.JobStateFailed, "timed out in queue", db)
+			return setJobStatus(&job, models.JobStateFailed, "timed out in queue", db)
 		}
 
 		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
@@ -122,35 +166,51 @@ func processJob(job *models.Job, db *gorm.DB) error {
 		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
-			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
-			if err := submitBacalhauJobAndUpdateID(job, db); err != nil {
+			if err := submitBacalhauJobAndUpdateID(&job, db); err != nil {
 				return err
 			}
+			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
+			continue
+		} else if bacalhau.JobFailedWithBidRejectedError(bacalhauJob) {
+			fmt.Printf("Job %v , %v failed with bid rejected, will try again\n", job.ID, job.BacalhauJobID)
+			if err := submitBacalhauJobAndUpdateID(&job, db); err != nil {
+				return err
+			}
+			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			continue
 		} else if bacalhau.JobIsRunning(bacalhauJob) {
 			fmt.Printf("Job %v , %v is running\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(job, models.JobStateRunning, "", db)
+			return setJobStatus(&job, models.JobStateRunning, "", db)
 		} else if bacalhau.JobFailed(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
 			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
 			if len(bacalhauJob.State.Executions) > 0 {
-				return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 			}
-			return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		} else if bacalhau.JobCancelled(bacalhauJob) {
+			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.BacalhauJobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.BacalhauJobID), db)
 		} else {
 			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
-			time.Sleep(3 * time.Second) // Wait for a short period before checking the status again
+			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
+			continue
 		}
 	}
 }
 
-func checkRunningJob(job *models.Job, db *gorm.DB) error {
+func checkRunningJob(jobID uint, db *gorm.DB) error {
+	var job models.Job
+	err := fetchJobWithToolData(&job, jobID, db)
+	if err != nil {
+		return err
+	}
 	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
 		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
 	} else if err != nil {
 		return err
 	}
@@ -158,18 +218,21 @@ func checkRunningJob(job *models.Job, db *gorm.DB) error {
 	if bacalhau.JobIsRunning(bacalhauJob) {
 		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.BacalhauJobID)
 		return nil
+	} else if bacalhau.JobBidAccepted(bacalhauJob) {
+		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.BacalhauJobID)
+		return nil
 	} else if bacalhau.JobFailed(bacalhauJob) {
 		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
 	} else if bacalhau.JobCompleted(bacalhauJob) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
 		if len(bacalhauJob.State.Executions) > 0 {
-			return completeJobAndAddOutputFiles(job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+			return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 		}
-		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
 	} else {
 		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
-		return setJobStatus(job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
 	}
 }
 

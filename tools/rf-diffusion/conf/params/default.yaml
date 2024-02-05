@@ -3,14 +3,14 @@ basic_settings:
   binder_length: 50
   pdb: inputs/protein_complex/UROK_HUMAN_1-133.pdb
   pdb_chain: A
-  num_designs: 2
+  num_designs: 5
 advanced_settings:
   pdb_start_residue: 41
   pdb_end_residue: 200
   hotspot: ''
   min_binder_length: null
   max_binder_length: null
-  use_beta_model: false
+  use_beta_model: 'false'
 expert_settings:
   RFDiffusion_Binder:
     contigs_override: ''

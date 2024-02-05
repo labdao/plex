@@ -63,8 +63,8 @@ jobs:
             - 'tools/colabdesign/colabdesign-gateway.json'
           colabdesign-autoprompt_colabdesign-gateway:
             - 'tools/colabdesign-autoprompt/colabdesign-gateway.json'
-          AF2_AF2-gateway:
-            - 'tools/AF2/AF2-gateway.json'
+          af2_af2-gateway:
+            - 'tools/af2/af2-gateway.json'
           aggregater:
             - 'tools/aggregater/aggregater.json'
           rf-diffusion_rf-diffusion-gateway:

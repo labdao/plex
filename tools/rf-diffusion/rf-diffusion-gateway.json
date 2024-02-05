@@ -1,5 +1,5 @@
 {
-  "name": "RFdiffusion v2.0",
+  "name": "RFdiffusion v3.4",
   "description": "RFdiffusion.",
   "author": "RFdiffusion team",
   "github": "https://github.com/RosettaCommons/RFdiffusion",
@@ -9,7 +9,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:a0b96217dd3b3815889cac54f940a19cfad4775f7df4fafc24abd2e2b0d95c8b",
+  "dockerPull": "quay.io/labdao/rf-diffusion@sha256:7517985db906876a223997cb755d2d6ec00e56ff14ade48a78e9c53a8247e1c7",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -75,21 +75,6 @@
       "position": "104",
       "required": true
     },
-    "binder_chain": {
-      "type": "string",
-      "description": "The chain of binder template.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "B",
-      "min": "",
-      "max": "",
-      "example": "B",
-      "grouping": "protein complex",
-      "position": "105",
-      "required": true
-    },
     "binder_length": {
       "type": "int",
       "default": "50",
@@ -97,7 +82,7 @@
       "max": "1000",
       "description": "The length of the protein binder that is being designed",
       "grouping": "binder",
-      "position": "106",
+      "position": "105",
       "required":true
   },
   "num_designs": {
@@ -107,7 +92,7 @@
       "max": "64",
       "description": "The number of protein binders to be designed",
       "grouping": "binder",
-      "position": "107",
+      "position": "106",
       "required":true
   },
     "contigs_override": {
@@ -116,7 +101,7 @@
       "description": "The complete prompt for the diffusion model. Overrides other GUI inputs. Note the use of '/0 ' with space to introduce a chain break.",
       "example": "A1-283/0 B1-6/1/B8-20/22/B43-47",
       "grouping": "advanced",
-      "position": "108",
+      "position": "107",
       "required":false
   },
   "hotspots": {
@@ -125,8 +110,23 @@
     "grouping": "advanced",
     "description": "Target residues that should be in contact with the binder.",
     "example": "A30,A33,A34",
-    "position": "109",
+    "position": "108",
     "required":false
+  },
+  "use_beta_model": {
+    "type": "string",
+    "description": "Write true/false to indicate the use of the beta model.",
+    "array": false,
+    "glob": [
+      ""
+    ],
+    "default": "false",
+    "min": "",
+    "max": "",
+    "example": "true / false",
+    "grouping": "advanced",
+    "position": "109",
+    "required": false
   }
   },
   "outputs": {
