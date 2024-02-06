@@ -148,6 +148,38 @@ func GetUserDIDFromRequest(r *http.Request, db *gorm.DB) (string, error) {
 	}
 }
 
+func GetUserByDID(did string, db *gorm.DB) (*models.User, error) {
+	var user models.User
+	if err := db.Where("did = ?", did).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("User with DID %s not found", did)
+		}
+		return nil, fmt.Errorf("Error fetching user: %v", err)
+	}
+
+	return &user, nil
+}
+
+func GetUserByAPIKey(apiKey string, db *gorm.DB) (*models.User, error) {
+	var key models.APIKey
+	if err := db.Where("key = ?", apiKey).First(&key).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("API key not found")
+		}
+		return nil, fmt.Errorf("Error fetching API key: %v", err)
+	}
+
+	var user models.User
+	if err := db.Where("id = ?", key.UserID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("User not found for the provided API key")
+		}
+		return nil, fmt.Errorf("Error fetching user: %v", err)
+	}
+
+	return &user, nil
+}
+
 func AuthMiddleware(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
