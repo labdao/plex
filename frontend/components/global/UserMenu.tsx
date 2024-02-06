@@ -2,7 +2,8 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useDispatch } from "lib/redux";
-import { DownloadIcon, Loader2Icon, User } from "lucide-react";
+import { CodeIcon, DownloadIcon, Loader2Icon, User } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 import {
@@ -69,6 +70,18 @@ export default function UserMenu() {
                     {!hasEmbeddedWallet && <TooltipContent>Export wallet only available for embedded wallets.</TooltipContent>}
                   </Tooltip>
                 </TooltipProvider>
+
+                <DropdownMenuSeparator />
+
+                <Link href="/api">
+                  <DropdownMenuItem>
+                    <span className="flex items-center">
+                      <CodeIcon size={20} className="mr-1" />
+                      API Keys
+                    </span>
+                  </DropdownMenuItem>
+                </Link>
+
                 <DropdownMenuSeparator />
               </>
             )}
