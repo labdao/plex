@@ -5,7 +5,7 @@ import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 
 import Nav from "@/components/global/Nav";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ViewportWarning } from "@/components/shared/ViewportWarning";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -93,6 +93,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
       >
         <Providers>
           <div className="flex w-full bg-gray-50">
+            <ViewportWarning />
             <Nav />
             <div className="grow">{props.children}</div>
           </div>

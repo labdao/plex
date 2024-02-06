@@ -60,7 +60,7 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
   }
 
   return (
-    <div className="sticky max-h-screen pb-6 pl-6 overflow-y-auto top-4">
+    <div className="sticky max-h-screen pb-6 mt-6 overflow-y-auto lg:mt-0 lg:pl-6 top-4">
       <Card>
         <CardContent>
           <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
@@ -80,8 +80,9 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
               </Badge>
             </div>
           </div>
-          <Button type="submit" form="task-form" className="w-full">
-            Submit <Badge className="mx-1">{variantSummaryInfo?.total || 1}</Badge> Experimental Run{variantSummaryInfo?.total > 1 && "s"}
+          <Button type="submit" form="task-form" className="flex-wrap w-full h-auto">
+            Submit <Badge className="mx-1 bg-black/10">{variantSummaryInfo?.total || 1}</Badge> Experimental Run
+            {variantSummaryInfo?.total > 1 && "s"}
           </Button>
         </CardContent>
 

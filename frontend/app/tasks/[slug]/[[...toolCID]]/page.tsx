@@ -186,7 +186,7 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
         <>
           <TaskPageHeader tool={tool} loading={toolDetailLoading} />
           <ProtectedComponent method="overlay" message="Log in to run an experiment">
-            <div className="grid min-h-screen grid-cols-1 p-6 pr-0 lg:grid-cols-3">
+            <div className="grid min-h-screen grid-cols-1 p-6 lg:pr-0 lg:grid-cols-3">
               <div className="col-span-2">
                 <Form {...form}>
                   <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
