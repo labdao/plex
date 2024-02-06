@@ -1,11 +1,11 @@
 {
     "class": "",
-    "name": "labsay 0.7",
+    "name": "labsay-uuid-test",
     "description": "simple hello world that plex stack is working",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
+    "dockerPull": "docker.io/supraja968/labsay-uuid-test@sha256:fbed00e0ce524c6d7d0c168c624c9353cb42fedd25b4fbdf24d936c9880e0e28",
     "gpuBool": false,
     "networkBool": false,
     "memoryGB": 4,

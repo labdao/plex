@@ -366,10 +366,11 @@ func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	cpu := job.Tool.Cpu
 	gpu := job.Tool.Gpu == 1
 	network := job.Tool.Network
+	jobuuid := job.JobUUID
 
 	selector := ""
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations, jobuuid)
 	if err != nil {
 		return err
 	}

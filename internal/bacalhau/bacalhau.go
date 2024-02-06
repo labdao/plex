@@ -42,7 +42,7 @@ func GetBacalhauClient() (*client.APIClient, error) {
 	return bacalhauClient, err
 }
 
-func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, jobUUID string) (job *model.Job, err error) {
 	fmt.Println("CreatebacalhauJob")
 	fmt.Println(inputs)
 	job, err = model.NewJobWithSaneProductionDefaults()
@@ -174,7 +174,7 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	}
 
 	jsonString := string(jsonBytes)
-	envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString)
+	envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s JOB_UUID=%s", jsonString, jobUUID)
 
 	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVar).Build()
 
