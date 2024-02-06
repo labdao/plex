@@ -82,6 +82,7 @@ export default function AddGraph() {
           CID: "",
           WalletAddress: "",
           Name: "",
+          DefaultTool: false, 
           ToolJson: { inputs: {}, outputs: {}, name: "", author: "", description: "", github: "", paper: "" },
         })
       );
