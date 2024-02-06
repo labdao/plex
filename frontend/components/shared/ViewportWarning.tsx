@@ -32,7 +32,7 @@ export function ViewportWarning() {
         <AlertDialogHeader>
           <AlertDialogTitle>Optimized for larger screens</AlertDialogTitle>
           <AlertDialogDescription>
-            We're still working on optimizing the UI for smaller screens. For the best experience, please use a device with a larger screen.
+            We&lsquo;re still working on optimizing the UI for smaller screens. For the best experience, please use a device with a larger screen.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
