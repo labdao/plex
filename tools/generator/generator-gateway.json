@@ -1,0 +1,147 @@
+{
+    "name": "generator v0.1 (beta)",
+    "description": "Generator tool.",
+    "author": "Convexity Labs",
+    "github": "https://github.com/sokrypton/ColabFold",
+    "paper": "https://www.nature.com/articles/s41592-022-01488-1",
+    "task": "generate binder sequences",
+    "baseCommand": [
+    ],
+    "arguments": [
+    ],
+    "dockerPull": "quay.io/labdao/...",
+    "gpuBool": true,
+    "memoryGB": 12,
+    "cpu": 3,
+    "networkBool": true,
+    "inputs": {
+      "target_template_complex": {
+        "type": "file",
+        "description": "pdb file containing the complex of target and binder template",
+        "array": false,
+        "glob": [
+          ".pdb"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "binder_template_sequence.fasta",
+        "grouping": "protein complex",
+        "position": "101",
+        "required": true
+      },
+      "target_chain": {
+        "type": "string",
+        "description": "target chain label",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "A",
+        "min": "",
+        "max": "",
+        "example": "A",
+        "grouping": "protein complex",
+        "position": "102",
+        "required": false
+      },
+      "binder_chain": {
+        "type": "string",
+        "description": "binder chain label",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "B",
+        "min": "",
+        "max": "",
+        "example": "B",
+        "grouping": "protein complex",
+        "position": "103",
+        "required": false
+      },
+      "evolution_flag": {
+        "type": "string",
+        "description": "Flag to signal whether to run evolution or not.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "True",
+        "min": "",
+        "max": "",
+        "example": "True",
+        "grouping": "evolution parameters",
+        "position": "301",
+        "required": true
+      },
+      "number_of_evo_cycles": {
+        "type": "number",
+        "description": "Number of evolutionary cycles",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "15",
+        "min": "1",
+        "max": "60",
+        "example": "10",
+        "grouping": "evolution parameters",
+        "position": "201",
+        "required": false
+      },
+      "init_permissibility_vec": {
+        "type": "string",
+        "description": "Definition of permissible changes: (B) keep fixed, (+) delete or flip, (x) flip only",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "B1:5/x6:17",
+        "grouping": "evolution parameters",
+        "position": "203",
+        "required": true
+      },
+      "max_levenshtein_step_size": {
+        "type": "number",
+        "description": "Maximum Levenshtein distance covered in one evolution step",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "3",
+        "min": "1",
+        "max": "50",
+        "example": "3",
+        "grouping": "evolution parameters",
+        "position": "202",
+        "required": true
+      },
+    "outputs": {
+      "all_outputs": {
+        "type": "Array",
+        "item": "File",
+        "glob": [
+          "*.zip"
+        ]
+      },
+      "pdb_designs": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "*.pdb"
+        ]
+      },
+      "summary": {
+        "type": "File",
+        "item": "",
+        "glob": [
+          "summary.csv"
+        ]
+      }
+    }
+  }
+}
