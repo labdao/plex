@@ -21,7 +21,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 func createProtectedRouteHandler(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(handler http.HandlerFunc) http.HandlerFunc {
-		return middleware.JWTMiddleware(db, privyPublicKey)(handler)
+		return middleware.AuthMiddleware(db, privyPublicKey)(handler)
 	}
 }
 
@@ -33,7 +33,8 @@ func NewServer(db *gorm.DB) *mux.Router {
 	protected := createProtectedRouteHandler(db, privyVerificationKey)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
-	router.HandleFunc("/user", handlers.AddUserHandler(db))
+
+	router.HandleFunc("/user", protected(handlers.AddUserHandler(db)))
 
 	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
@@ -47,14 +48,15 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/flows", protected(handlers.AddFlowHandler(db))).Methods("POST")
 	router.HandleFunc("/flows", protected(handlers.ListFlowsHandler(db))).Methods("GET")
 	router.HandleFunc("/flows/{cid}", protected(handlers.GetFlowHandler(db))).Methods("GET")
-	router.HandleFunc("/flows/{cid}", protected(handlers.UpdateFlowHandler(db))).Methods("PATCH")
 
 	router.HandleFunc("/jobs/{bacalhauJobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
-	router.HandleFunc("/jobs/{bacalhauJobID}", protected(handlers.UpdateJobHandler(db))).Methods("PATCH")
 	router.HandleFunc("/jobs/{bacalhauJobID}/logs", protected(handlers.StreamJobLogsHandler)).Methods("GET")
+	router.HandleFunc("/queue-summary", protected(handlers.GetJobsQueueSummaryHandler(db))).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
+
+	router.HandleFunc("/generate-api-key", handlers.GenerateAPIKeyHandler(db)).Methods("GET")
 
 	return router
 }
