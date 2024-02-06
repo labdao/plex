@@ -2,7 +2,6 @@ import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
 export const listFlows = async (walletAddress: string): Promise<any> => {
-  console.log("------- listFlows BEING CALLED -------")
   let authToken;
   try {
     authToken = await getAccessToken()

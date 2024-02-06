@@ -20,14 +20,14 @@ const PrivyLoginButton = (props: ButtonProps) => {
         return;
       }
 
-      if (wasAlreadyAuthenticated) {
-        console.log("User was already authenticated");
-      } else if (isNewUser) {
+      if (isNewUser) {
         console.log("New user");
-        dispatch(saveUserAsync({ walletAddress }));
-      } else if (user) {
+      } else if (wasAlreadyAuthenticated) {
+        console.log("User was already authenticated");
+      } else {
         console.log("User authenticated");
       }
+      dispatch(saveUserAsync({ walletAddress }));
     },
     onError: (error) => {
       console.log("onError callback triggered", error);
