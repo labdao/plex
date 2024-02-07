@@ -8,21 +8,30 @@ import { AppDispatch, selectToolList, selectToolListError, toolListThunk } from 
 
 interface ToolSelectProps {
   onChange: (value: string) => void;
-  defaultValue: string;
+  taskSlug?: string;
+  defaultValue?: string;
 }
 
-export function ToolSelect({ onChange, defaultValue }: ToolSelectProps) {
+export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps) {
   const dispatch = useDispatch<AppDispatch>();
 
   const tools = useSelector(selectToolList);
   const toolListError = useSelector(selectToolListError);
 
   useEffect(() => {
-    dispatch(toolListThunk());
-  }, [dispatch]);
+    if (taskSlug) {
+      dispatch(toolListThunk(taskSlug));
+    } else {
+      dispatch(toolListThunk());
+    }
+  }, [dispatch, taskSlug]);
+
+  const handleSelectionChange = (value: string) => {
+    onChange(value);
+  };
 
   return (
-    <Select onValueChange={onChange} defaultValue={defaultValue}>
+    <Select onValueChange={handleSelectionChange} defaultValue={defaultValue}>
       <SelectTrigger>
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>

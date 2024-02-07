@@ -102,7 +102,7 @@ runs:
         payload='{
           "name": "testFlow",
           "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-          "toolCid": "QmYrMMxqtZsbCguNsx2froTMxU3Sd6SayCY8Ve88ZcPj4h",
+          "toolCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
           "scatteringMethod": "dotProduct",
           "kwargs": {
             "file_example": ["QmV1e4ZoBrHuPJ1cqbzhkp9g4trte4N21fGLNrQxQpXgK6/haiku2.txt"],
