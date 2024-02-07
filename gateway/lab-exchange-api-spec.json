@@ -164,6 +164,22 @@
               "schema": {
                 "type": "string"
               }
+            },
+            {
+              "name": "display",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            {
+              "name": "taskCategory",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
             }
           ],
           "responses": {
@@ -856,6 +872,34 @@
             },
             "toolJson": {
               "type": "object"
+            },
+            "Container": {
+              "type": "string"
+            },
+            "Memory": {
+              "type": "integer"
+            },
+            "Cpu": {
+              "type": "number"
+            },
+            "Gpu": {
+              "type": "integer"
+            },
+            "Network": {
+              "type": "boolean"
+            },
+            "Timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "Display": {
+              "type": "boolean"
+            },
+            "TaskCategory": {
+              "type": "string"
+            },
+            "DefaultTool": {
+              "type": "boolean"
             }
           }
         },
