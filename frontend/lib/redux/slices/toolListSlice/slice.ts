@@ -38,9 +38,10 @@ export const toolListSlice = createSlice({
     setToolListSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
+    resetToolList: () => { return initialState; },
   },
 });
 
-export const { setToolList, setToolListLoading, setToolListError, setToolListSuccess } = toolListSlice.actions;
+export const { setToolList, setToolListLoading, setToolListError, setToolListSuccess, resetToolList } = toolListSlice.actions;
 
 export default toolListSlice.reducer;

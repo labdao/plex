@@ -4,7 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
@@ -17,7 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectToolList, toolDetailThunk, toolListThunk, resetToolDetail, resetToolList } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { tasks } from "../taskList";
@@ -53,17 +53,26 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
   }
 
   const tool = useSelector(selectToolDetail);
+  const tools = useSelector(selectToolList);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
   const toolDetailError = useSelector(selectToolDetailError);
   const walletAddress = user?.wallet?.address;
 
-  // On page load fetch the default tool details
   useEffect(() => {
-    const defaultToolCID = task.default_tool?.CID;
-    if (defaultToolCID) {
-      dispatch(toolDetailThunk(defaultToolCID));
+    return () => {
+      dispatch(resetToolDetail());
+      dispatch(resetToolList());
+    };
+  }, [params.slug, dispatch]);
+
+  const defaultTool = tools.find(tool => tool.DefaultTool === true);
+  const default_tool_cid = defaultTool?.CID;
+
+  useEffect(() => {
+    if (default_tool_cid) {
+      dispatch(toolDetailThunk(default_tool_cid));
     }
-  }, [dispatch, task.default_tool?.CID]);
+  }, [dispatch, default_tool_cid]);
 
   // Order and group the inputs by their position and grouping value
   const sortedInputs = Object.entries(tool.ToolJson?.inputs)
@@ -205,7 +214,7 @@ export default function TaskDetail({ params }: { params: { slug: string } }) {
                             <FormItem>
                               <FormLabel>Model</FormLabel>
                               <FormControl>
-                                <ToolSelect onChange={field.onChange} defaultValue={tool?.CID} />
+                                <ToolSelect onChange={field.onChange} taskSlug={params.slug} defaultValue={tool?.CID} />
                               </FormControl>
                               <FormDescription>
                                 <a

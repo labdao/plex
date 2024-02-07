@@ -78,7 +78,30 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			toolGpu = 0
 		}
 
-		// Store serialized Tool in DB
+		var display bool = true
+		var defaultTool bool = false
+
+		var taskCategory string
+		if tool.TaskCategory == "" {
+			taskCategory = "other-models"
+		} else {
+			taskCategory = tool.TaskCategory
+		}
+
+		// Start transaction
+		tx := db.Begin()
+
+		// If the new tool is marked as default, reset the default tool in the same task category
+		if defaultTool {
+			if err := tx.Model(&models.Tool{}).
+				Where("task_category = ? AND default_tool = TRUE", tool.TaskCategory).
+				Update("default_tool", false).Error; err != nil {
+				tx.Rollback()
+				http.Error(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
 		toolEntry := models.Tool{
 			CID:           cid,
 			WalletAddress: walletAddress,
@@ -90,15 +113,25 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			Gpu:           toolGpu,
 			Network:       tool.NetworkBool,
 			Timestamp:     time.Now(),
+			Display:       display,
+			TaskCategory:  taskCategory,
+			DefaultTool:   defaultTool,
 		}
 
-		result := db.Create(&toolEntry)
+		result := tx.Create(&toolEntry)
 		if result.Error != nil {
+			tx.Rollback()
 			if utils.IsDuplicateKeyError(result.Error) {
 				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
 			} else {
 				http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
 			}
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -144,6 +177,14 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.Tool{})
 
+		// If display is provided, filter based on it, if not, display only tools where 'display' is true by default
+		displayParam, displayProvided := r.URL.Query()["display"]
+		if displayProvided && len(displayParam[0]) > 0 {
+			query = query.Where("display = ?", displayParam[0] == "true")
+		} else {
+			query = query.Where("display = ?", true)
+		}
+
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
 		}
@@ -154,6 +195,10 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
+		if taskCategory := r.URL.Query().Get("taskCategory"); taskCategory != "" {
+			query = query.Where("task_category = ?", taskCategory)
 		}
 
 		var tools []models.Tool

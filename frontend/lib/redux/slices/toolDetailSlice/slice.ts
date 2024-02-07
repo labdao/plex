@@ -4,6 +4,7 @@ export interface ToolDetail {
   CID: string;
   WalletAddress: string;
   Name: string;
+  DefaultTool: boolean;
   ToolJson: { inputs: {}; outputs: {}; name: string; author: string; description: string; github: string; paper: string };
 }
 
@@ -19,6 +20,7 @@ const initialState: ToolDetailSliceState = {
     CID: "",
     WalletAddress: "",
     Name: "",
+    DefaultTool: false, 
     ToolJson: {
       inputs: {},
       outputs: {},
@@ -50,9 +52,10 @@ export const toolDetailSlice = createSlice({
     setToolDetailSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
+    resetToolDetail: () => { return initialState; },
   },
 });
 
-export const { setToolDetail, setToolDetailLoading, setToolDetailError, setToolDetailSuccess } = toolDetailSlice.actions;
+export const { setToolDetail, setToolDetailLoading, setToolDetailError, setToolDetailSuccess, resetToolDetail } = toolDetailSlice.actions;
 
 export default toolDetailSlice.reducer;

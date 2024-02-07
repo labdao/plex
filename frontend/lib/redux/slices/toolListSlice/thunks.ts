@@ -7,10 +7,10 @@ import { setToolList,setToolListError, setToolListSuccess } from './slice'
 
 export const toolListThunk = createAppAsyncThunk(
   'tool/listTools',
-  async (_, { dispatch }) => {
+  async (taskSlug: string | undefined, { dispatch }) => {
     console.log('toolListThunk')
     try {
-      const response = await listTools()
+      const response = await listTools(taskSlug)
       if (response) {
         dispatch(setToolListSuccess(true))
         dispatch(setToolList(response))
