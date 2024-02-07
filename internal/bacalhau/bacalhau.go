@@ -174,9 +174,15 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	}
 
 	jsonString := string(jsonBytes)
-	envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s JOB_UUID=%s", jsonString, jobUUID)
+	// envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s JOB_UUID=%s", jsonString, jobUUID)
+	envVars := []string{
+		fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString),
+		fmt.Sprintf("JOB_UUID=%s", jobUUID),
+		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
+		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
+	}
 
-	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVar).Build()
+	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVars...).Build()
 
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	log.Println("returning job")

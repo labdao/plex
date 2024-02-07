@@ -1,13 +1,13 @@
 {
     "class": "",
-    "name": "labsay 0.7",
-    "description": "simple hello world that plex stack is working",
+    "name": "labsay-checkpoint-test",
+    "description": "simple hello world that checkpoint upload to s3 is working",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
+    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:cbe8089f1febcd4769198de9ce7bf3fa6dd9ef9156d211af0264d08cf7b0b4c3",
     "gpuBool": false,
-    "networkBool": false,
+    "networkBool": true,
     "memoryGB": 4,
     "cpu": 0.8,
     "inputs": {
