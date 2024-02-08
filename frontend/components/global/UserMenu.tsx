@@ -2,7 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useDispatch } from "lib/redux";
-import { CodeIcon, DownloadIcon, Loader2Icon, User } from "lucide-react";
+import { Code2Icon, DownloadIcon, Loader2Icon, User } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -76,7 +76,7 @@ export default function UserMenu() {
                 <Link href="/api">
                   <DropdownMenuItem>
                     <span className="flex items-center">
-                      <CodeIcon size={20} className="mr-1" />
+                      <Code2Icon size={20} className="mr-1" />
                       API Keys
                     </span>
                   </DropdownMenuItem>

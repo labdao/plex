@@ -5,7 +5,6 @@ import { Kwargs,setFlowAddCid, setFlowAddError, setFlowAddSuccess } from './slic
 
 interface FlowPayload {
   name: string,
-  walletAddress: string,
   toolCid: string,
   scatteringMethod: string,
   kwargs: Kwargs
@@ -13,9 +12,9 @@ interface FlowPayload {
 
 export const addFlowThunk = createAppAsyncThunk(
   'flow/addFlow',
-  async ({ name, walletAddress, toolCid, scatteringMethod, kwargs }: FlowPayload, { dispatch }) => {
+  async ({ name, toolCid, scatteringMethod, kwargs }: FlowPayload, { dispatch }) => {
     try {
-      const response = await createFlow({ name, walletAddress, toolCid, scatteringMethod, kwargs })
+      const response = await createFlow({ name, toolCid, scatteringMethod, kwargs })
       if (response && response.cid) {
         dispatch(setFlowAddSuccess(true))
         dispatch(setFlowAddCid(response.cid))

@@ -5,14 +5,13 @@ import { setAddToolError, setAddToolSuccess } from './toolSlice'
 
 interface ToolPayload {
   toolJson: { [key: string]: any }
-  walletAddress: string
 }
 
 export const createToolThunk = createAppAsyncThunk(
   'tool/addTool',
-  async ({ toolJson, walletAddress }: ToolPayload, { dispatch }) => {
+  async ({ toolJson }: ToolPayload, { dispatch }) => {
     try {
-      const response = await createTool({ toolJson, walletAddress })
+      const response = await createTool({ toolJson })
       if (response && response.cid) {
         dispatch(setAddToolSuccess(true))
       } else {

@@ -2,7 +2,7 @@ import { getAccessToken } from "@privy-io/react-auth"
 import backendUrl from "lib/backendUrl"
 
 export const createTool = async (
-    payload: { toolJson: { [key: string]: any }, walletAddress: string }
+    payload: { toolJson: { [key: string]: any } }
 ): Promise<any> => {
     let authToken
     try {
