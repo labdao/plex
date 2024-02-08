@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"hash/crc32"
 	"strings"
+	"time"
+
+	"github.com/labdao/plex/gateway/models"
 )
 
 func GenerateAPIKey(length int, label string) (string, error) {
@@ -44,4 +47,8 @@ func ValidateAPIKey(key string) (bool, error) {
 	computedChecksum := crc32.ChecksumIEEE(decoded)
 
 	return computedChecksum == checksum, nil
+}
+
+func IsAPIKeyExpired(apiKey models.APIKey) bool {
+	return apiKey.ExpiresAt.Before(time.Now())
 }
