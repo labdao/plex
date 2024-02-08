@@ -3,6 +3,7 @@
 import { JsonInput } from "@mantine/core";
 import { MantineProvider } from "@mantine/core";
 import { usePrivy } from "@privy-io/react-auth";
+import { PlusIcon } from "lucide-react";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -72,8 +73,11 @@ export default function AddTool() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button size="lg">Add Model</Button>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <PlusIcon />
+          Add Model
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
