@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
-export const getJob = async (bacalhauJobID: string): Promise<any> => {
+export const getJob = async (jobID: string): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -10,7 +10,7 @@ export const getJob = async (bacalhauJobID: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  const response = await fetch(`${backendUrl()}/jobs/${bacalhauJobID}`, {
+  const response = await fetch(`${backendUrl()}/jobs/${jobID}`, {
     method: 'Get',
     headers: {
       'Authorization': `Bearer ${authToken}`,
@@ -26,10 +26,19 @@ export const getJob = async (bacalhauJobID: string): Promise<any> => {
   return result
 }
 
-export const patchJob = async (bacalhauJobID: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/jobs/${bacalhauJobID}`, {
+export const patchJob = async (jobID: string): Promise<any> => {
+  let authToken;
+  try {
+    authToken = await getAccessToken()
+  } catch (error) {
+    console.log('Failed to get access token: ', error)
+    throw new Error("Authentication failed");
+  }
+
+  const response = await fetch(`${backendUrl()}/jobs/${jobID}`, {
     method: 'PATCH',
     headers: {
+      'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
   })

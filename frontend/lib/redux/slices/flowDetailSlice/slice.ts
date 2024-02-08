@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Tool } from '../toolListSlice/slice'
 
 export interface Job {
+  ID: number
   BacalhauJobID: string
   State: string
   Error: string
@@ -11,10 +12,11 @@ export interface Job {
 }
 
 export interface FlowDetail {
-  CID: string,
-  Jobs: Job[],
-  Name: string,
-  WalletAddress: string,
+  ID: number | null
+  CID: string
+  Jobs: Job[]
+  Name: string
+  WalletAddress: string
 }
 
 interface FlowDetailSliceState {
@@ -25,7 +27,7 @@ interface FlowDetailSliceState {
 }
 
 const initialState: FlowDetailSliceState = {
-  flow: { CID: '', Jobs: [], Name: '', WalletAddress: '' },
+  flow: { ID: null, CID: '', Jobs: [], Name: '', WalletAddress: '' },
   loading: false,
   error: null,
   success: false,

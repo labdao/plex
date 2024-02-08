@@ -13,31 +13,34 @@ const LogViewer = () => {
   const job = useSelector(selectJobDetail)
 
   useEffect(() => {
-    const BacalhauJobId = job.BacalhauJobID || window.location.href.split("/").pop();
-    setLogs(`Connecting to stream with Bacalhau Job Id ${BacalhauJobId}`)
+    if (job.BacalhauJobID) {
+      setLogs(`Connecting to stream with Bacalhau Job Id ${job.BacalhauJobID}`)
 
-    let formattedBackendUrl = backendUrl().replace('http://', '').replace('https://', '');
-    let wsProtocol = backendUrl().startsWith('https://') ? 'wss' : 'ws';
+      let formattedBackendUrl = backendUrl().replace('http://', '').replace('https://', '');
+      let wsProtocol = backendUrl().startsWith('https://') ? 'wss' : 'ws';
   
-    console.log(formattedBackendUrl)
-    const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${BacalhauJobId}/logs`)
+      console.log(formattedBackendUrl)
+      const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${job.BacalhauJobID}/logs`)
 
-    ws.onopen = () => {
-      console.log('connected')
-    }
+      ws.onopen = () => {
+        console.log('connected')
+      }
 
-    ws.onmessage = (event) => {
-      // Handle incoming message
-      console.log(event.data);
-      setLogs((prevLogs) => `${prevLogs}\n${event.data}`);
-    };
+      ws.onmessage = (event) => {
+        // Handle incoming message
+        console.log(event.data);
+        setLogs((prevLogs) => `${prevLogs}\n${event.data}`);
+      };
 
-    ws.onclose = () => {
-      console.log('disconnected')
-    }
+      ws.onclose = () => {
+        console.log('disconnected')
+      }
 
-    return () => {
-      ws.close()
+      return () => {
+        ws.close()
+      }
+    } else {
+      setLogs(`Logs will stream after job is sent to the Bacalhau network`)
     }
   }, [job])
 

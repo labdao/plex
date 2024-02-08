@@ -8,17 +8,11 @@ import { useDispatch, useSelector } from "react-redux";
 
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { DataTable } from "@/components/ui/data-table";
-import { AppDispatch, flowListThunk, selectFlowList } from "@/lib/redux";
+import { AppDispatch, flowListThunk, selectFlowList, Flow } from "@/lib/redux";
+
 
 export default function ListFlowFiles() {
   const { user } = usePrivy();
-
-  interface Flow {
-    CID: string;
-    Name: string;
-    WalletAddress: string;
-  }
-
   const shortenAddressOrCid = (addressOrCid: string) => {
     if (addressOrCid.length) {
       return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
@@ -29,11 +23,14 @@ export default function ListFlowFiles() {
 
   const columns: ColumnDef<Flow>[] = [
     {
+      accessorKey: "ID", // Accessor for the ID, needed even if not displayed
+    },
+    {
       accessorKey: "Name",
       header: "Experiment",
       enableSorting: true,
       cell: ({ row }) => {
-        return <Link href={`/experiments/${row.getValue("CID")}`}>{row.getValue("Name")}</Link>;
+        return <Link href={`/experiments/${row.getValue("ID")}`}>{row.getValue("Name")}</Link>;
       },
     },
     {
