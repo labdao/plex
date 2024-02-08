@@ -39,6 +39,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
+	// router.HandleFunc("/tools", handlers.ListToolsHandler(db)).Methods("GET")
 
 	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db))).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
@@ -58,7 +59,8 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
 
-	router.HandleFunc("/generate-api-key", handlers.GenerateAPIKeyHandler(db)).Methods("GET")
+	router.HandleFunc("/api-keys", protected(handlers.AddAPIKeyHandler(db))).Methods("POST")
+	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
 
 	return router
 }
