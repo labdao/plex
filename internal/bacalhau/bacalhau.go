@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/bacalhau-project/bacalhau/cmd/util/parse"
 	"github.com/bacalhau-project/bacalhau/pkg/config"
@@ -16,6 +17,9 @@ import (
 	"github.com/bacalhau-project/bacalhau/pkg/publicapi/client"
 	"github.com/labdao/plex/internal/ipfs"
 )
+
+var bacalhauClient *client.APIClient
+var once sync.Once
 
 func GetBacalhauApiHost() string {
 	bacalApiHost, exists := os.LookupEnv("BACALHAU_API_HOST")
@@ -27,6 +31,15 @@ func GetBacalhauApiHost() string {
 	} else {
 		return "bacalhau.labdao.xyz"
 	}
+}
+
+// prevents race conditions with Bacalhau Client
+func GetBacalhauClient() (*client.APIClient, error) {
+	var err error
+	once.Do(func() {
+		bacalhauClient, err = CreateBacalhauClient()
+	})
+	return bacalhauClient, err
 }
 
 func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
@@ -41,7 +54,7 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 		Type: model.PublisherIpfs,
 	}
 	job.Spec.Annotations = annotations
-	job.Spec.Timeout = int64(maxTime * 60)
+	job.Spec.Timeout = int64(maxTime)
 
 	nodeSelectorRequirements, err := parse.NodeSelector(selector)
 	if err != nil {
@@ -67,8 +80,6 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	localJobInputs := map[string]interface{}{}
 
 	for key, input := range inputs {
-		fmt.Println("going thru inputs with new code")
-		fmt.Println(input)
 		switch value := input.(type) {
 		case string:
 			if strings.HasPrefix(value, "Qm") {
@@ -201,7 +212,7 @@ func CreateBacalhauClient() (*client.APIClient, error) {
 }
 
 func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +221,7 @@ func SubmitBacalhauJob(job *model.Job) (submittedJob *model.Job, err error) {
 }
 
 func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
@@ -218,8 +229,64 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 	return updatedJob, err
 }
 
+func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
+	capacityErrorMessages := []string{"not enough capacity", "not enough nodes"}
+	falseCapacityMessages := []string{"Could not inspect image", "node does not support the available image platforms"}
+	if len(job.State.Executions) > 0 {
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		for _, errorMsg := range falseCapacityMessages {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+				return false
+			}
+		}
+		for _, errorMsg := range capacityErrorMessages {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func JobFailedWithBidRejectedError(job *model.JobWithInfo) bool {
+	capacityErrorMsg := "bid rejected"
+	if len(job.State.Executions) > 0 {
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
+	}
+	return false
+}
+
+func JobIsRunning(job *model.JobWithInfo) bool {
+	// the backend counts a Job as running once it is accepted by Bacalhau
+	if len(job.State.Executions) > 0 {
+		return job.State.State == model.JobStateInProgress || job.State.Executions[0].State == model.ExecutionStateBidAccepted
+	} else {
+		return job.State.State == model.JobStateInProgress
+	}
+}
+
+func JobCompleted(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateCompleted
+}
+
+func JobFailed(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateError
+}
+
+func JobCancelled(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateCancelled
+}
+
+func JobBidAccepted(job *model.JobWithInfo) bool {
+	if len(job.State.Executions) > 0 {
+		return job.State.Executions[0].State == model.ExecutionStateBidAccepted
+	}
+	return false
+}
+
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {
-	client, err := CreateBacalhauClient()
+	client, err := GetBacalhauClient()
 	if err != nil {
 		return nil, err
 	}
