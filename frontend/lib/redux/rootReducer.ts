@@ -1,5 +1,7 @@
 /* Instruments */
 import {
+  apiKeyAddSlice,
+  apiKeyListSlice,
   dataFileAddSlice,
   dataFileListSlice,
   flowAddSlice,
@@ -23,4 +25,6 @@ export const reducer = {
   flowList: flowListSlice.reducer,
   flowDetail: flowDetailSlice.reducer,
   jobDetail: jobDetailSlice.reducer,
+  apiKeyAdd: apiKeyAddSlice.reducer,
+  apiKeyList: apiKeyListSlice.reducer,
 };

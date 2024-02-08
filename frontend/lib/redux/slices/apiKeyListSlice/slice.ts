@@ -1,9 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface ApiKey {
-  id: string;
   key: string;
-  name: string;
+  scope: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 interface ApiKeyListSliceState {
