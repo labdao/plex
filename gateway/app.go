@@ -14,6 +14,7 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
+	"github.com/labdao/plex/gateway/utils"
 
 	"github.com/rs/cors"
 
@@ -26,9 +27,9 @@ func ServeWebApp() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second, // Slow SQL threshold
-			LogLevel:      logger.Info, // Log level
-			Colorful:      true,        // Enable color
+			SlowThreshold: time.Second,  // Slow SQL threshold
+			LogLevel:      logger.Error, // Log level
+			Colorful:      true,         // Enable color
 		},
 	)
 
@@ -84,6 +85,28 @@ func ServeWebApp() {
 	})
 
 	mux := server.NewServer(db)
+
+	// Start queue watcher in a separate goroutine
+	go func() {
+		for {
+			if err := utils.StartJobQueues(db); err != nil {
+				fmt.Printf("unexpected error processing job queues: %v\n", err)
+				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
+			}
+		}
+	}()
+
+	// Start running jobs watcher in a separate goroutine
+	go func() {
+		for {
+			if err := utils.MonitorRunningJobs(db); err != nil {
+				fmt.Printf("unexpected error monitoring running jobs: %v\n", err)
+				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
+			} else {
+				break // exit the loop if no error (optional based on your use case)
+			}
+		}
+	}()
 
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")

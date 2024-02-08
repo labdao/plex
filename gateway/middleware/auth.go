@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labdao/plex/gateway/models"
+	"github.com/labdao/plex/gateway/utils"
 	"gorm.io/gorm"
 )
 
@@ -82,30 +84,25 @@ func SetupConfig(key string, appID string) {
 	fmt.Printf("Config setup. Verification key: %v, app ID: %v\n", verificationKey, appId)
 }
 
-func validateJWT(authHeader string, w http.ResponseWriter, r *http.Request) (*PrivyClaims, bool) {
-	splitToken := strings.Split(authHeader, "Bearer ")
-	if len(splitToken) != 2 {
-		fmt.Println("Invalid JWT format")
-		return nil, false
-	}
-
-	tokenString := splitToken[1]
-	token, err := jwt.ParseWithClaims(tokenString, &PrivyClaims{}, keyFunc)
-	if err != nil {
-		fmt.Println("JWT signature is invalid.")
-		return nil, false
-	}
-
-	privyClaim, ok := token.Claims.(*PrivyClaims)
-	if !ok || privyClaim.Valid() != nil {
-		fmt.Println("JWT claims are invalid.")
-		return nil, false
-	}
-
-	return privyClaim, true
+func IsJWT(token string) bool {
+	parts := strings.Split(token, ".")
+	return len(parts) == 3
 }
 
-func validateAPIKey(apiKey string, db *gorm.DB) bool {
+func ValidateJWT(tokenString string, db *gorm.DB) (*PrivyClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &PrivyClaims{}, keyFunc)
+	if err != nil {
+		return nil, fmt.Errorf("JWT signature is invalid: %v", err)
+	}
+
+	if claims, ok := token.Claims.(*PrivyClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, errors.New("JWT claims are invalid")
+	}
+}
+
+func ValidateAPIKey(apiKey string, db *gorm.DB) bool {
 	var key models.APIKey
 	if err := db.Where("key = ?", apiKey).First(&key).Error; err != nil {
 		return false
@@ -160,6 +157,14 @@ func GetUserByDID(did string, db *gorm.DB) (*models.User, error) {
 	return &user, nil
 }
 
+func GetWalletAddressFromJWTClaims(claims *PrivyClaims, db *gorm.DB) (string, error) {
+	user, err := GetUserByDID(claims.UserId, db)
+	if err != nil {
+		return "", err
+	}
+	return user.WalletAddress, nil
+}
+
 func GetUserByAPIKey(apiKey string, db *gorm.DB) (*models.User, error) {
 	var key models.APIKey
 	if err := db.Where("key = ?", apiKey).First(&key).Error; err != nil {
@@ -180,26 +185,41 @@ func GetUserByAPIKey(apiKey string, db *gorm.DB) (*models.User, error) {
 	return &user, nil
 }
 
+func GetWalletAddressFromAPIKey(apiKey string, db *gorm.DB) (string, error) {
+	user, err := GetUserByAPIKey(apiKey, db)
+	if err != nil {
+		return "", err
+	}
+
+	return user.WalletAddress, nil
+}
+
 func AuthMiddleware(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
-				fmt.Println("Missing Authorization header")
-				http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+			token, err := utils.ExtractAuthHeader(r)
+			if err != nil {
+				fmt.Println("Error extracting JWT from header:", err)
+				http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
 				return
 			}
 
-			if strings.Contains(authHeader, "Bearer") {
-				if _, valid := validateJWT(authHeader, w, r); !valid {
+			if IsJWT(token) {
+				claims, err := ValidateJWT(token, db)
+				if err != nil {
+					fmt.Println("JWT validation error:", err)
 					http.Error(w, "Invalid JWT", http.StatusUnauthorized)
 					return
 				}
+				ctx := context.WithValue(r.Context(), "claims", claims)
+				r = r.WithContext(ctx)
 			} else {
-				if !validateAPIKey(authHeader, db) {
+				if !ValidateAPIKey(token, db) {
 					http.Error(w, "Invalid API Key", http.StatusUnauthorized)
 					return
 				}
+				ctx := context.WithValue(r.Context(), "apiKey", token)
+				r = r.WithContext(ctx)
 			}
 
 			next(w, r)
