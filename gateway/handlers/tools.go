@@ -207,6 +207,13 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		// Check if any rows were affected
+		if result.RowsAffected == 0 {
+			tx.Rollback() // Rollback the transaction as no update was performed
+			utils.SendJSONError(w, "Tool with the specified CID not found", http.StatusNotFound)
+			return
+		}
+
 		// Commit the transaction
 		if err := tx.Commit().Error; err != nil {
 			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
