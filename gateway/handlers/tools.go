@@ -139,6 +139,84 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
+	acceptedTaskCategories := map[string]bool{
+		"protein-binder-design": true,
+		"protein-folding":       true,
+		"other-models":          true,
+		// To do: add tool task category should also only accept these accepted categories
+		// To do: remove hardcoding later to match one of the available slugs from tasks taskList.ts with available: true
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
+			return
+		}
+
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var requestData struct {
+			TaskCategory *string `json:"taskCategory,omitempty"`
+			Display      *bool   `json:"display,omitempty"`
+			DefaultTool  *bool   `json:"defaultTool,omitempty"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+			http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		// Validate taskCategory if provided
+		if requestData.TaskCategory != nil {
+			if _, ok := acceptedTaskCategories[*requestData.TaskCategory]; !ok {
+				utils.SendJSONError(w, "Task category not accepted", http.StatusBadRequest)
+				return
+			}
+		}
+
+		// Start transaction
+		tx := db.Begin()
+
+		updateData := make(map[string]interface{})
+		if requestData.TaskCategory != nil {
+			updateData["task_category"] = *requestData.TaskCategory
+		}
+		if requestData.Display != nil {
+			updateData["display"] = *requestData.Display
+		}
+		if requestData.DefaultTool != nil {
+			updateData["default_tool"] = *requestData.DefaultTool
+		}
+
+		if len(updateData) == 0 {
+			utils.SendJSONError(w, "No valid fields provided for update", http.StatusBadRequest)
+			return
+		}
+
+		result := tx.Model(&models.Tool{}).Where("cid = ?", cid).Updates(updateData)
+
+		if result.Error != nil {
+			tx.Rollback()
+			http.Error(w, fmt.Sprintf("Error updating tool: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		utils.SendJSONResponse(w, "Tool updated successfully")
+	}
+}
+
 func GetToolHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

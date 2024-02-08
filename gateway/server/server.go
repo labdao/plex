@@ -28,6 +28,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tools", handlers.AddToolHandler(db)).Methods("POST")
 	router.HandleFunc("/tools/{cid}", handlers.GetToolHandler(db)).Methods("GET")
 	router.HandleFunc("/tools", handlers.ListToolsHandler(db)).Methods("GET")
+	router.HandleFunc("/update-tool/{cid}", handlers.UpdateToolHandler(db)).Methods("PUT")
 
 	router.HandleFunc("/datafiles", handlers.AddDataFileHandler(db)).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", handlers.GetDataFileHandler(db)).Methods("GET")
