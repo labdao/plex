@@ -1,5 +1,6 @@
 "use client";
 
+import { getAccessToken } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
@@ -51,6 +52,22 @@ export default function ListToolFiles() {
   const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
 
   useEffect(() => {
+    // let authToken;
+    // try {
+    //   authToken = getAccessToken();
+    // } catch (error) {
+    //   console.error("Error getting access token:", error);
+    //   return;
+    // }
+
+    // const requestOptions = {
+    //   method: 'GET',
+    //   headers: { 
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${authToken}`
+    //   }
+    // }
+
     fetch(`${backendUrl()}/tools`)
       .then((response) => {
         if (!response.ok) {
