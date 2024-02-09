@@ -4,7 +4,7 @@ version: "3.7"
 
 services:
   requester:
-    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4}"
+    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0}"
     hostname: requester
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type requester --private-internal-ipfs=false --peer none --labels "owner=labdao" --job-selection-probe-http "http://receptor:8080/judge"
     environment:
@@ -32,7 +32,7 @@ services:
       start_period: 10s
 
   compute:
-    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.1.4}"
+    image: "ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0}"
     hostname: compute
     user: root
     command: serve --ipfs-connect '/dns4/ipfs/tcp/5001' --node-type compute --labels "owner=labdao" --private-internal-ipfs=false --peer "/dns4/requester/tcp/1234/http" --job-selection-probe-http "http://receptor:8080/judge" --job-selection-accept-networked --job-selection-data-locality anywhere
@@ -92,7 +92,7 @@ services:
       cache_from:
         - quay.io/labdao/backend:latest
       args:
-        BACALHAU_VERSION: ${BACALHAU_VERSION:-1.1.4}
+        BACALHAU_VERSION: ${BACALHAU_VERSION:-1.2.0}
     ports:
       - 8080:8080
     environment:
@@ -103,6 +103,8 @@ services:
       BACALHAU_API_HOST: requester
       IPFS_API_HOST: ipfs
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      MAX_QUEUE_TIME_SECONDS: ${MAX_QUEUE_TIME_SECONDS:-259200} # default 72 hours
+      MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
     depends_on:
       dbbackend:
         condition: service_healthy
@@ -112,6 +114,20 @@ services:
       timeout: 10s
       retries: 10
       start_period: 10s
+
+  default-tool-setup:
+    image: "alpine"
+    command: >
+      sh -exc "
+      apk add --no-cache curl jq &&
+      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/colabdesign/colabdesign-gateway.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
+      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/labsay/labsay.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
+      sleep infinity"
+    volumes:
+      - ./:/opt/plex:ro
+    depends_on:
+      backend:
+        condition: service_healthy
 
   frontend:
     build:
@@ -166,11 +182,13 @@ services:
 
   ipfs:
     hostname: ipfs
+    # If building from Mac, comment out build and uncomment image
     build:
       context: ./docker/images/ipfs
       dockerfile: ./Dockerfile
       cache_from:
         - quay.io/labdao/ipfs:latest
+    # image: "ipfs/kubo:v0.18.0"
     volumes:
       - ipfs:/data/ipfs
     environment:

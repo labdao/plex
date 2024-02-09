@@ -8,7 +8,7 @@
     ipfs_version: "0.18.0"
     ipfs_path: "/opt/ipfs"
     go_version: 1.20.3
-    bacalhau_version: "v1.1.2"
+    bacalhau_version: "v1.2.0"
     bacalhau_node_type: "compute"
     ipfs_connect: /ip4/127.0.0.1/tcp/5001
     owner: labdao
@@ -23,10 +23,6 @@
     - name: Run common tasks
       ansible.builtin.include_tasks: tasks/common_tasks.yaml
 
-    # Docker
-    - name: Install Docker
-      ansible.builtin.include_tasks: tasks/install_docker_tasks.yaml
-
     # Get GPU info from system
     - name: Get lshw display info
       become: true
@@ -39,6 +35,11 @@
         query: "[?vendor=='NVIDIA Corporation']"
       ansible.builtin.set_fact:
         num_of_gpus: "{{ lshw_output.stdout | from_json | json_query(query) | length }}"
+
+    # Docker
+    # Run it after number of GPUs have been determined on the node
+    - name: Install Docker
+      ansible.builtin.include_tasks: tasks/install_docker_tasks.yaml
 
     # GPU
     - name: Install tools and binaries for GPU support

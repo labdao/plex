@@ -1,7 +1,7 @@
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
 
 import { createFlow } from './asyncActions'
-import { Kwargs,setFlowAddCid, setFlowAddError, setFlowAddSuccess } from './slice'
+import { Kwargs,setFlowAddCid, setFlowAddError, setFlowAddID,setFlowAddSuccess } from './slice'
 
 interface FlowPayload {
   name: string,
@@ -17,7 +17,8 @@ export const addFlowThunk = createAppAsyncThunk(
       const response = await createFlow({ name, toolCid, scatteringMethod, kwargs })
       if (response && response.cid) {
         dispatch(setFlowAddSuccess(true))
-        dispatch(setFlowAddCid(response.cid))
+        dispatch(setFlowAddCid(response.CID))
+        dispatch(setFlowAddID(response.ID))
       } else {
         console.log('Failed to add tool.', response)
         dispatch(setFlowAddError('Failed to add tool.'))

@@ -1,9 +1,8 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
-export const getFlow = async (flowId: string): Promise<any> => {
+export const getFlow = async (flowID: string): Promise<any> => {
   let authToken;
-
   try {
     authToken = await getAccessToken()
   } catch (error) {
@@ -11,11 +10,7 @@ export const getFlow = async (flowId: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  console.log(`Fetching flow details with CID: ${flowId}`); // Log the flow CID
-  console.log(`Using Authorization token: ${authToken}`); // Log the token for debugging
-  console.log(`URL: ${backendUrl()}/flows/${flowId}`); // Log the URL for debugging
-
-  const response = await fetch(`${backendUrl()}/flows/${flowId}`, {
+  const response = await fetch(`${backendUrl()}/flows/${flowID}`, {
     method: 'Get',
     headers: {
       'Authorization': `Bearer ${authToken}`,
@@ -31,7 +26,7 @@ export const getFlow = async (flowId: string): Promise<any> => {
   return result
 }
 
-export const patchFlow = async (flowCid: string): Promise<any> => {
+export const patchFlow = async (flowID: string): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken();
@@ -40,7 +35,7 @@ export const patchFlow = async (flowCid: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  const response = await fetch(`${backendUrl()}/flows/${flowCid}`, {
+  const response = await fetch(`${backendUrl()}/flows/${flowID}`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${authToken}`,

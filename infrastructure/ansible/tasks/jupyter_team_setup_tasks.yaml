@@ -35,7 +35,7 @@
   become: true
   ansible.builtin.user:
     name: jupyter-{{ user }}
-    append: true #add users to groups and leave current groups alone
+    append: true # add users to groups and leave current groups alone
     groups: "{{ item.team }}"
   loop: "{{ item.users }}"
   loop_control:

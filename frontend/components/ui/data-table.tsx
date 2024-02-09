@@ -5,13 +5,16 @@ import { useState } from "react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+import { PageLoader } from "../shared/PageLoader";
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   sorting?: SortingState;
+  loading?: boolean;
 }
 
-export function DataTable<TData, TValue>({ columns, data, sorting: initialSorting }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, sorting: initialSorting, loading }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting || []);
 
   const table = useReactTable({
@@ -23,6 +26,16 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    initialState: {
+      columnVisibility: {
+        ID: false,
+      },
+    },
+    defaultColumn: {
+      minSize: 0,
+      size: Number.MAX_SAFE_INTEGER,
+      maxSize: Number.MAX_SAFE_INTEGER,
+    },
   });
 
   return (
@@ -32,19 +45,8 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               return (
-                <TableHead 
-                  key={header.id}
-                  onClick={() => {
-                    // Custom toggle logic
-                    const isSortedDesc = header.column.getIsSorted() === 'desc';
-                    header.column.toggleSorting(!isSortedDesc); // Toggle between 'asc' and 'desc'
-                  }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())
-                  }
-                  {header.column.getIsSorted() === 'desc' ? ' 🔽' : header.column.getIsSorted() === 'asc' ? ' 🔼' : ''}
+                <TableHead style={{ width: header.getSize() === Number.MAX_SAFE_INTEGER ? "auto" : header.getSize() }} key={header.id}>
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               );
             })}
@@ -56,7 +58,7 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
           table.getRowModel().rows.map((row) => (
             <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
+                <TableCell style={{ width: cell.column.getSize() === Number.MAX_SAFE_INTEGER ? "auto" : cell.column.getSize() }} key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
@@ -65,11 +67,17 @@ export function DataTable<TData, TValue>({ columns, data, sorting: initialSortin
         ) : (
           <TableRow>
             <TableCell colSpan={columns.length} className="h-24 text-center">
-              No results.
+              {loading ? (
+                <div className="min-h-screen">
+                  <PageLoader />
+                </div>
+              ) : (
+                <>No results</>
+              )}
             </TableCell>
           </TableRow>
         )}
       </TableBody>
     </Table>
-  );  
+  );
 }

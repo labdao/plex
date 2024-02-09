@@ -1,0 +1,96 @@
+{
+    "class": "",
+    "name": "protein-to-dna-icodon",
+    "description": "Optimizing DNA sequences through reverse translation of provided protein sequences using DNA Chisel, followed by iCodon",
+    "author": "LabDAO",
+    "dependencies": [
+      {
+        "author": "Edinburgh Genome Foundry",
+        "title": "DNAChisel",
+        "url": "https://github.com/Edinburgh-Genome-Foundry/DnaChisel",
+        "year": "2019"
+      },
+      {
+        "author": "Santiago Gerardo Medina",
+        "title": "iCodon",
+        "url": "https://github.com/santiago1234/iCodon",
+        "year": "2020"
+      }
+    ],
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "quay.io/labdao/protein-to-dna-icodon@sha256:9e0bb766e47c8d10a1afb5b871efadde5b02b1082373072e4172abd92ff78be8",
+    "gpuBool": false,
+    "networkBool": false,
+    "inputs": {
+        "input_file": {
+            "type": "file",
+            "description": "Protein sequence file for reverse translation and optimization.",
+            "array": false,
+            "glob": ["*.pdb","*.txt"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Protein Sequence",
+            "position": "1",
+            "required": true
+        },
+        "species": {
+            "type": "string",
+            "array": false,
+            "description": "Species",
+            "glob": [""],
+            "default": "human",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "iCodon Optimizer Params",
+            "position": "2",
+            "required": true
+        },
+        "iterations": {
+            "type": "string",
+            "array": false,
+            "description": "Iterations.",
+            "glob": [""],
+            "default": "10",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "iCodon Optimizer Params",
+            "position": "3",
+            "required": true
+        },
+        "make_more_optimal": {
+            "type": "string",
+            "array": false,
+            "description": "Make more optimal true or false.",
+            "glob": [""],
+            "default": "T",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "iCodon Optimizer Params",
+            "position": "4",
+            "required": true
+        }
+    },
+    "outputs": {
+        "dna_sequence_after_reverse_translation": {
+            "type": "File",
+            "item": "",
+            "glob": ["*.txt"]
+        },
+        "optimized_shiny": {
+            "type": "File",
+            "item": "",
+            "glob": ["*.csv"]
+        },
+        "optimizer_result": {
+            "type": "File",
+            "item": "",
+            "glob": ["*.csv"]
+        }
+    }
+}
