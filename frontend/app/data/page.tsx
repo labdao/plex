@@ -1,4 +1,6 @@
 "use client";
+
+import { getAccessToken } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import dayjs from "dayjs";
 import backendUrl from "lib/backendUrl";
@@ -91,15 +93,29 @@ export default function ListDataFiles() {
   const pageSize = 50;
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`)
-      .then((response) => response.json())
-      .then((responseJson) => {
+    const fetchDataFiles = async () => {
+      setLoading(true);
+      try {
+        const authToken = await getAccessToken();
+        const response = await fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch data files');
+        }
+        const responseJson = await response.json();
         setDataFiles(responseJson.data);
         setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
+      } catch (error) {
+        console.error("Error fetching data files:", error);
+      } finally {
         setLoading(false);
-      })
-      .catch((error) => console.error("Error fetching data files:", error));
+      }
+    };
+  
+    fetchDataFiles();
   }, [currentPage]);
 
   return (
