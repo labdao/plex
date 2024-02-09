@@ -9,7 +9,7 @@ mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
 docker run \
--e PLEX_JOB_INPUTS='{"file_example": "/inputs/file_example/message.txt", "string_example": "hello world", "number_example": 196883}' \
+-e PLEX_JOB_INPUTS='{"file_example": "/inputs/file_example/message.txt", "string_example": "hello world", "number_example": 196883, "speedup": true}' \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs labsay
 

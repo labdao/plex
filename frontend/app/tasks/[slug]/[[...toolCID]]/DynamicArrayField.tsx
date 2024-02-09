@@ -8,6 +8,7 @@ import { DataFileSelect } from "@/components/shared/DataFileSelect";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { BooleanInput } from "@/components/ui/boolean-input";
 import { LabelDescription } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,9 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                     )}
                     {input.type === "string" && <Input placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
                     {(input.type === "number" || input.type === "int") && <Input type="number" {...field} />}
+                    {(input.type === "bool" || input.type === "boolean") && (
+                      <BooleanInput {...field} checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                    )}
                   </>
                 </FormControl>
               </div>

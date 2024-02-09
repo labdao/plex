@@ -1,11 +1,11 @@
 {
     "class": "",
-    "name": "labsay 0.7",
+    "name": "labsay 0.8",
     "description": "simple hello world that plex stack is working",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/openzyme/labsay@sha256:1fc55dd505f088644379fd0c65c02943649786802ff138fe7d29f31ba6e2f03f",
+    "dockerPull": "docker.io/openzyme/labsay@sha256:8e01b5d9f9d5a44a979c129887de5dbfbd4e7daed88d1186481f9b7c6698047c",
     "gpuBool": false,
     "networkBool": false,
     "memoryGB": 4,
@@ -47,6 +47,19 @@
             "max": "",
             "example": "",
             "grouping": "Number Params",
+            "position": "3",
+            "required": true
+        },
+        "speedup": {
+            "type": "boolean",
+            "array": false,
+            "description": "Selecting this option will make LabSay print the logo faster",
+            "glob": [""],
+            "default": false,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Boolean Params",
             "position": "3",
             "required": true
         }
