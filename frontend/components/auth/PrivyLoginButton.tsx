@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-import { useLogin, usePrivy } from "@privy-io/react-auth";
-=======
 import { useLogin } from "@privy-io/react-auth";
 import { usePrivy } from "@privy-io/react-auth";
 import { Slot } from "@radix-ui/react-slot";
->>>>>>> main
 import React from "react";
 import { useDispatch } from "react-redux";
 
