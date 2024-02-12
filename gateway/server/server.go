@@ -39,7 +39,6 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
-	// router.HandleFunc("/tools", handlers.ListToolsHandler(db)).Methods("GET")
 
 	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db))).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
@@ -47,10 +46,8 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
 	router.HandleFunc("/flows", protected(handlers.AddFlowHandler(db))).Methods("POST")
-	// router.HandleFunc("/flows", protected(handlers.ListFlowsHandler(db))).Methods("GET")
-	// router.HandleFunc("/flows/{cid}", protected(handlers.GetFlowHandler(db))).Methods("GET")
-	router.HandleFunc("/flows", handlers.ListFlowsHandler(db)).Methods("GET")
-	router.HandleFunc("/flows/{flowID}", handlers.GetFlowHandler(db)).Methods("GET")
+	router.HandleFunc("/flows", protected(handlers.ListFlowsHandler(db))).Methods("GET")
+	router.HandleFunc("/flows/{flowID}", protected(handlers.GetFlowHandler(db))).Methods("GET")
 
 	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
 	router.HandleFunc("/jobs/{bacalhauJobID}/logs", protected(handlers.StreamJobLogsHandler)).Methods("GET")
