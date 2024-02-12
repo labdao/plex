@@ -1,123 +1,61 @@
-import subprocess
-import os
 import pandas as pd
-import numpy as np
-from utils import generate_contig
-from utils import read_second_line_of_fasta
-from utils import reinsert_deletions
-import logging
+from utils import squeeze_seq
 
-class StateGenerator:
-    def __init__(self, evo_cycle, sequence, action_mask, cfg, outputs_directory, df, permissibility_vector):
+from generators.rf_diffusion_protein_mpnn_generator import RFdiffusionProteinMPNNGenerator
+from generators.complete_sequence import complete_sequence_Generator
+
+class GenerationArgs:
+    def __init__(self, evo_cycle, sequence, permissibility_vector, df, cfg, outputs_directory, generator_name):
         self.evo_cycle = evo_cycle
         self.sequence = sequence
-        self.action_mask = action_mask
-        self.cfg = cfg
-        self.target = cfg.params.basic_settings.target_seq
-        self.outputs_directory = outputs_directory
+        self.permissibility_vector = permissibility_vector
         self.df = df
-        self.generators = cfg.params.basic_settings.generators.split(',')
+        self.cfg = cfg
+        self.outputs_directory = outputs_directory
+        self.generator_name = generator_name
+        self.target = cfg.params.basic_settings.target_seq
         self.alphabet = cfg.params.basic_settings.alphabet
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
-        self.permissibility_vector = permissibility_vector
+        self.num_designs = cfg.params.RFdiffusion_settings.inference.num_designs
+        self.num_seqs = cfg.params.pMPNN_settings.num_seqs
 
-    def run_generation(self):
+class Generator:
+    def __init__(self, cfg, outputs_directory):
 
-        print('\n')
-        logging.info(f"Running generating job...")
-        df_generate = pd.DataFrame() # initialize data frame
+        self.cfg = cfg
+        self.outputs_directory = outputs_directory
 
-        for generator in self.generators:
-
-            generator_directory = os.path.join(self.outputs_directory, generator)
-            if not os.path.exists(generator_directory):
-                os.makedirs(generator_directory, exist_ok=True)
-
-            if generator=='RFdiffusion+ProteinMPNN':
-                logging.info(f"Running {generator}")
-
-                if 'X' in self.action_mask: # check if there is any diffusion to be done
-
-                    logging.info(f"diffusing...")
-
-                    logging.info(f"action mask, {self.action_mask}")
-                    contig = generate_contig(self.action_mask, self.target, starting_target_residue=None, end_target_residue=None)
-                    logging.info(f"diffusion contig, {contig}")
-
-                    # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
-                    env = os.environ.copy()
-                    env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
-
-                    command = [
-                        'python', 'RFdiffusion/scripts/run_inference.py',
-                        f'inference.output_prefix={os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding")}',
-                        'inference.model_directory_path=RFdiffusion/models',
-                        f'inference.input_pdb={self.df["absolute pdb path"].iloc[0]}',
-                        'inference.num_designs=3',
-                        f'contigmap.contigs={[contig]}'
-                    ]
-
-                    result = subprocess.run(command, capture_output=True, text=True, env=env)
-
-                    # Check if the command was successful
-                    if result.returncode == 0:
-                        logging.info(f"#Inference script ran successfully")
-                        logging.info(result.stdout)
-                    else:
-                        logging.info(f"#Error running inference script")
-                        logging.info(result.stderr)
-                    
-                    logging.info(f"Running MPNN")
-
-                    # Activate the conda environment 'mlfold'
-                    subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
-
-                    # Define the paths and parameters
-                    path_to_PDB = os.path.join(generator_directory, f"evocycle_{self.evo_cycle}_motifscaffolding_0.pdb")
-                    output_dir = generator_directory
-                    chains_to_design = 'A'
-
-                    # Create the output directory if it doesn't exist
-                    os.makedirs(output_dir, exist_ok=True)
-
-                    logging.info(f"pdb path, {path_to_PDB}")
-
-                    # Define the command and arguments
-                    command = [
-                        'python', 'ProteinMPNN/protein_mpnn_run.py',
-                        '--pdb_path', path_to_PDB,
-                        '--pdb_path_chains', chains_to_design,
-                        '--out_folder', output_dir,
-                        '--num_seq_per_target', '8',
-                        '--sampling_temp', '0.1',
-                        '--seed', '37',
-                        '--batch_size', '1'
-                    ]
-
-                    # Run the command
-                    subprocess.run(command, capture_output=True, text=True)
-
-                    # Usage
-                    fasta_file_path = os.path.join(generator_directory, f"seqs/evocycle_{self.evo_cycle}_motifscaffolding_0.fa")
-                    modified_seq = read_second_line_of_fasta(fasta_file_path)
-                    logging.info(f"modified sequence after ProteinMPNN, {modified_seq}")
-
-                    # insert the deletions back into the sequence:
-                    modified_seq = reinsert_deletions(modified_seq, self.action_mask)
-
-                else:
-                    modified_seq = self.sequence
-
-                modified_seq = list(modified_seq) # insert the new deletions
-                for i, char in enumerate(self.action_mask):
-                    if char=='-':
-                        if modified_seq[i]!='-':
-                            logging.info(f"deleting residue")
-                            modified_seq[i] = '-'
-
-                return ''.join(modified_seq)
+    def _get_generator(self, generator_name):
         
-        logging.info(f"Generating job complete. Results are in {self.outputs_directory}")
+        if generator_name == 'RFdiffusion+ProteinMPNN':
+            return RFdiffusionProteinMPNNGenerator()
+        elif generator_name == 'delete_and_substitute_random':
+            return greedy_SequenceDiffusion_Generator()
+        elif generator_name == 'complete_sequence':
+            return complete_sequence_Generator()
+        # ... add other generators to this list  ...
+        else:
+            raise ValueError(f"Unknown generator: {generator_name}")
 
-    def run(self):
-        return self.run_generation()
+    def run(self, t, sample_number, seed, permissibility_seed, permissibility_vector, df):
+
+        generator_name = self.cfg.params.basic_settings.generators
+        if t == 0:
+            generator_name = 'complete_sequence'
+        args = GenerationArgs(t, seed, permissibility_vector, df, self.cfg, self.outputs_directory, generator_name)
+        generator = self._get_generator(generator_name)
+        modified_seq, permissibility_vector = generator.generate(args)
+
+        new_row = {
+            't': int(t),
+            'sample_number': int(sample_number),
+            'seed': squeeze_seq(seed),
+            'permissibility_seed': ''.join(permissibility_seed),
+            '(levenshtein-distance, mask)': (None, squeeze_seq(permissibility_vector).replace('X', 'x')),
+            'modified_seq': modified_seq,
+            'permissibility_modified_seq': ''.join(permissibility_vector),
+            'acceptance_flag': False
+        }
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+
+        return modified_seq, permissibility_vector, df

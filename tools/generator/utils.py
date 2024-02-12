@@ -9,6 +9,9 @@ from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
 import random
 
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module or even to sequence-transformer
 
     sequence = squeeze_seq(sequence)
@@ -36,58 +39,6 @@ def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer modul
 
 def squeeze_seq(new_sequence):
     return ''.join(filter(lambda x: x != '-', new_sequence))
-
-def generate_contig(action_mask, target, starting_target_residue=None, end_target_residue=None):
-    if starting_target_residue is None:
-        starting_target_residue = 1
-    if end_target_residue is None:
-        end_target_residue = len(target)
-    
-    # Initialize variables
-    action_mask_contig = ''
-    current_group = ''
-    alphabet = 'LAGVSERTIDPKQNFYMHWC'
-    position = 0  # Position within the action_mask
-    
-    # Iterate over the squeezed_action_mask to form groups
-    for char in action_mask:
-        if char in alphabet:
-            if current_group == '' or current_group[-1] in alphabet:
-                current_group += char  # Continue the current alphabet group
-            elif current_group[-1]=='X':
-                action_mask_contig += f'{len(current_group)}/'
-                current_group = char
-        elif char=='X':  # char is 'X'
-            if current_group == '' or current_group[-1] == 'X':
-                current_group += char  # Continue the current X group
-            elif current_group[-1] in alphabet:
-                action_mask_contig += f'B{position-len(current_group)+1}-{position}/'
-                current_group = char
-        elif char=='-':
-            if current_group!='' and current_group[-1] in alphabet:
-                action_mask_contig += f'B{position-len(current_group)+1}-{position}/'
-                current_group = ''
-            elif current_group!='' and current_group[-1]=='X':
-                action_mask_contig += f'{len(current_group)}/'
-                current_group = ''
-
-        position += 1
-    
-    # Add the last group to the contig
-    if current_group:
-        if current_group[-1] == 'X':
-            action_mask_contig += f'{len(current_group)}/'  # X group
-        else:
-            action_mask_contig += f'B{position-len(current_group)+1}-{position}/'  # Alphabet group
-    
-    # Remove the trailing '/' if it exists
-    if action_mask_contig.endswith('/'):
-        action_mask_contig = action_mask_contig[:-1]
-    
-    # Construct the final contig string
-    contig = f'A{starting_target_residue}-{end_target_residue}/0 {action_mask_contig}'
-    
-    return contig
 
 def extract_sequence_from_pdb(pdb_file):
     parser = PDBParser()
@@ -210,20 +161,6 @@ def determine_acceptance(threshold):
 
     return accept_flag
 
-# def concatenate_to_df(t, df, df_main):
-#     # Ensure all columns in df are in df_main, if not, add them with the values from df
-#     for col in df.columns:
-#         if col not in df_main.columns:
-#             # Add the column to df_main and fill all previous rows with pd.NA
-#             df_main[col] = pd.NA
-#             # Fill the last row with the value from df
-#             df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
-#         else:
-#             # If the column exists, just append the new value
-#             df_main.at[df_main.index[-1], col] = df.at[df.index[0], col]
-
-#     return df_main
-
 def concatenate_to_df(t, df, df_main):
     if t == 0:
         # Find the row in df_main with 't' == 0 and acceptance_flag == True
@@ -258,23 +195,6 @@ def read_second_line_of_fasta(file_path):
             return lines[1].strip()
     return None
 
-def reinsert_deletions(modified_seq, action_mask):
-    if len(modified_seq) != len(action_mask.replace('-', '')): # check if lengths match when '-' is removed from action mask
-        raise ValueError("Length of modified_seq does not match the length of action_mask without '-' characters.")
-
-    seq_with_deletions = ''
-    modified_seq_index = 0
-
-    # Iterate over the action_mask and construct seq_with_deletions
-    for char in action_mask:
-        if char == '-':
-            seq_with_deletions += '-'
-        else:
-            seq_with_deletions += modified_seq[modified_seq_index]
-            modified_seq_index += 1
-
-    return seq_with_deletions
-
 def slash_to_convexity_notation(sequence, slash_contig):
     # Find the maximum index required
     max_index = 0
@@ -303,8 +223,43 @@ def slash_to_convexity_notation(sequence, slash_contig):
                     permissibility_seed[i-1] = sequence[i-1] if i-1 < len(sequence) else '-'
                 elif type_char == 'x':
                     permissibility_seed[i-1] = 'X'
-                elif type_char == '+':
-                    permissibility_seed[i-1] = '+'
+                elif type_char == '*':
+                    permissibility_seed[i-1] = '*'
 
     # Join the list into a string and return
     return ''.join(permissibility_seed)
+
+def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
+    # Override Hydra default params with user supplied params
+    OmegaConf.update(cfg, "params.basic_settings.experiment_name", user_inputs["experiment_name"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.bouncer_flag", user_inputs["bouncer_flag"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.generators", user_inputs["generators"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.binder_template_sequence", user_inputs["binder_template_sequence"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.n_samples", user_inputs["n_samples"], merge=False)
+    OmegaConf.update(cfg, "params.RFdiffusion_settings.inference.num_designs", user_inputs["num_designs"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.num_seqs", user_inputs["num_seqs"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.rm_aa", user_inputs["rm_aa"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.initial_guess", user_inputs["initial_guess"], merge=False)
+    OmegaConf.update(cfg, "params.pMPNN_settings.chains_to_design", user_inputs["chains_to_design"], merge=False)
+    
+    return cfg
+
+def replace_invalid_characters(seed, alphabet):
+    # Replace characters not in alphabet and not '*' or 'x' with 'X'
+    return ''.join(['X' if c not in alphabet and c not in ['*', 'x'] else c for c in seed])

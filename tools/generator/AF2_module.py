@@ -1,5 +1,6 @@
 import subprocess
 import os
+import shutil
 
 class AF2Runner:
     def __init__(self, fasta_file, output_dir):

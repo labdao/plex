@@ -83,16 +83,19 @@ RUN apt-get clean autoclean \
 
 ## ProteinMPNN
 RUN mkdir /app/ProteinMPNN && git clone https://github.com/dauparas/ProteinMPNN /app/ProteinMPNN
-# Copy in Files
-COPY . /app
 
-# Make binaries executable
-RUN chmod +x /app/hdock /app/createpl
+# ESM2
+# Download and cache the Hugging Face model
+#RUN echo "source activate evodiff" > ~/.bashrc
+#ENV PATH /opt/conda/envs/base/bin:$PATH
+#RUN python -c "from transformers import AutoTokenizer, EsmForMaskedLM; model_name='facebook/esm2_t33_650M_UR50D'; AutoTokenizer.from_pretrained(model_name); EsmForMaskedLM.from_pretrained(model_name)"
+RUN /bin/bash -c "source activate base && \
+                pip install transformers && \
+                python -c \"from transformers import AutoTokenizer, EsmForMaskedLM; model_name='facebook/esm2_t33_650M_UR50D'; AutoTokenizer.from_pretrained(model_name); EsmForMaskedLM.from_pretrained(model_name)\""
+COPY . /app
 
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
 
-
 # # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
-# ENTRYPOINT ["python", "-m", "debugpy", "--wait-for-client", "--listen", "0.0.0.0:5678", "main.py"]
