@@ -51,36 +51,27 @@ export default function ListToolFiles() {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    // let authToken;
-    // try {
-    //   authToken = getAccessToken();
-    // } catch (error) {
-    //   console.error("Error getting access token:", error);
-    //   return;
-    // }
+    const fetchData = async () => {
+      try {
+        const authToken = await getAccessToken();
+        const response = await fetch(`${backendUrl()}/tools`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
 
-    // const requestOptions = {
-    //   method: 'GET',
-    //   headers: { 
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${authToken}`
-    //   }
-    // }
-
-    fetch(`${backendUrl()}/tools`)
-      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Fetched tools:", data);
+
+        const data = await response.json();
         setTools(data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching tools:", error);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
