@@ -1,62 +1,59 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { Tool } from '../toolListSlice/slice'
+import { Tool } from "../toolListSlice/slice";
 
 export interface Job {
-  ID: number
-  BacalhauJobID: string
-  State: string
-  Error: string
-  Tool: Tool
-  FlowId: string
+  ID: number;
+  BacalhauJobID: string;
+  State: string;
+  Error: string;
+  Tool: Tool;
+  FlowId: string;
 }
 
 export interface FlowDetail {
-  ID: number | null
-  CID: string
-  Jobs: Job[]
-  Name: string
-  WalletAddress: string
+  ID: number | null;
+  CID: string;
+  Jobs: Job[];
+  Name: string;
+  WalletAddress: string;
+  StartTime: string;
+  EndTime: string;
 }
 
 interface FlowDetailSliceState {
-  flow: FlowDetail
-  loading: boolean
-  error: string | null
-  success: boolean
+  flow: FlowDetail;
+  loading: boolean;
+  error: string | null;
+  success: boolean;
 }
 
 const initialState: FlowDetailSliceState = {
-  flow: { ID: null, CID: '', Jobs: [], Name: '', WalletAddress: '' },
-  loading: false,
+  flow: { ID: null, CID: "", Jobs: [], Name: "", WalletAddress: "", StartTime: "", EndTime: "" },
+  loading: true,
   error: null,
   success: false,
-}
+};
 
 export const flowDetailSlice = createSlice({
-  name: 'flowDetail',
+  name: "flowDetail",
   initialState,
   reducers: {
     setFlowDetail: (state, action: PayloadAction<FlowDetail>) => {
-      state.flow = action.payload
+      state.flow = action.payload;
     },
     setFlowDetailLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload
+      state.loading = action.payload;
     },
     setFlowDetailError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload
+      state.error = action.payload;
     },
     setFlowDetailSuccess: (state, action: PayloadAction<boolean>) => {
-      state.success = action.payload
-    }
-  }
-})
+      state.success = action.payload;
+    },
+  },
+});
 
-export const {
-  setFlowDetail,
-  setFlowDetailLoading,
-  setFlowDetailError,
-  setFlowDetailSuccess
-} = flowDetailSlice.actions
+export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailSuccess } = flowDetailSlice.actions;
 
-export default flowDetailSlice.reducer
+export default flowDetailSlice.reducer;

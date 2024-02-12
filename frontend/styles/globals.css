@@ -25,7 +25,7 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     --secondary-foreground: 0 0% 9%;
 
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 60%;
+    --muted-foreground: 0 0% 40%;
 
     --accent: 219 97% 37%;
     --accent-foreground: 0 0% 100%;
@@ -33,7 +33,7 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 79.8%;
+    --border: 0 0% 90%;
     --input: 0 0% 79.8%;
     --ring: 219 97% 37%;
 
@@ -91,4 +91,14 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+}
+
+.lucide {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.5;
+}
+
+.lucide * {
+  vector-effect: non-scaling-stroke;
 }

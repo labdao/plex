@@ -3,14 +3,12 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto">
-    <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
-  </div>
+  <table ref={ref} className={cn("w-full caption-bottom text-sm bg-background", className)} {...props} />
 ));
 Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("font-mono bg-background [&_tr]:border-b", className)} {...props} />
+  <thead ref={ref} className={cn("bg-background [&_tr]:border-0 sticky top-0 shadow-md z-30", className)} {...props} />
 ));
 TableHeader.displayName = "TableHeader";
 
@@ -32,7 +30,7 @@ TableRow.displayName = "TableRow";
 const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(({ className, ...props }, ref) => (
   <th
     ref={ref}
-    className={cn("h-12 px-4 text-left align-middle uppercase font-bold text-foreground [&:has([role=checkbox])]:pr-0", className)}
+    className={cn("h-11 px-4 text-left align-middle text-xs uppercase font-mono text-foreground [&:has([role=checkbox])]:pr-0", className)}
     {...props}
   />
 ));

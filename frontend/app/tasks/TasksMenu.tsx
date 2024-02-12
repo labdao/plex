@@ -1,24 +1,24 @@
 "use client";
 
-import { ChevronDownIcon } from "lucide-react";
+import { DropdownMenuContentProps } from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import React from "react";
 
 import { tasks } from "@/app/tasks/taskList";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-export default function TasksMenu() {
+interface TasksMenuProps {
+  trigger: React.ReactNode;
+  dropdownMenuContentProps?: DropdownMenuContentProps;
+}
+
+export default function TasksMenu({ dropdownMenuContentProps, trigger }: TasksMenuProps) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger asChild className="mx-2">
-          <Button>
-            Run <span className="hidden md:inline">&nbsp;Experiment</span> <ChevronDownIcon size={18} className="ml-1" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" collisionPadding={10}>
+        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+        <DropdownMenuContent {...dropdownMenuContentProps} collisionPadding={10}>
           {tasks.map((task) => (
             <DropdownMenuItem asChild disabled={!task.available} key={task.slug}>
               <Link href={`/tasks/${task.slug}`} className="flex justify-between">

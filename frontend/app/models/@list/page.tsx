@@ -5,6 +5,7 @@ import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function ListToolFiles() {
   interface Tool {
@@ -19,7 +20,7 @@ export default function ListToolFiles() {
     } else {
       return "";
     }
-  }
+  };
 
   const columns: ColumnDef<Tool>[] = [
     {
@@ -42,13 +43,11 @@ export default function ListToolFiles() {
       header: "User",
       cell: ({ row }) => {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
-      }
+      },
     },
   ];
 
   const [tools, setTools] = useState<Tool[]>([]);
-
-  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
 
   useEffect(() => {
     fetch(`${backendUrl()}/tools`)
@@ -68,8 +67,9 @@ export default function ListToolFiles() {
   }, []);
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={tools} sorting={sorting}/>
-    </div>
+    <ScrollArea className="w-full bg-white grow">
+      <DataTable columns={columns} data={tools} /> <ScrollBar orientation="horizontal" />
+      <ScrollBar orientation="vertical" />
+    </ScrollArea>
   );
 }

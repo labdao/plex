@@ -233,6 +233,128 @@
           }
         }
       },
+      "/update-tool/{cid}": {
+        "put": {
+          "operationId": "updateTool",
+          "summary": "Update Tool",
+          "parameters": [
+            {
+              "name": "cid",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              },
+              "description": "The CID of the tool to update"
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "taskCategory": {
+                      "type": "string",
+                      "description": "The new task category for the tool"
+                    },
+                    "display": {
+                      "type": "boolean",
+                      "description": "Flag indicating whether the tool should be displayed"
+                    },
+                    "defaultTool": {
+                      "type": "boolean",
+                      "description": "Flag indicating whether the tool is the default tool for its category"
+                    }
+                  },
+                  "anyOf": [
+                    {
+                      "required": ["taskCategory"]
+                    },
+                    {
+                      "required": ["display"]
+                    },
+                    {
+                      "required": ["defaultTool"]
+                    }
+                  ],
+                  "minProperties": 1
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Tool updated successfully",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "example": "Tool updated successfully"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request, such as no request body or invalid request body",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "examples": {
+                    "emptyRequestBody": {
+                      "value": {
+                        "message": "No valid fields provided for update"
+                      }
+                    },
+                    "invalidTaskCategory": {
+                      "value": {
+                        "message": "Task category not accepted"
+                      }
+                    },
+                    "dataTypeError": {
+                      "value": {
+                        "message": "Invalid request body: json: cannot unmarshal string into Go struct field .display of type bool"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Tool with the specified CID not found",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "example": "Tool with the specified CID not found"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error"
+            }
+          }
+        }
+      },
       "/datafiles": {
         "post": {
           "operationId": "addDataFile",

@@ -19,7 +19,11 @@ import {
   useSelector,
 } from "@/lib/redux";
 
-export default function DataFileForm() {
+interface AddDataFileFormProps {
+  trigger: React.ReactNode;
+}
+
+export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
   const [open, setOpen] = React.useState(false);
   const { user } = usePrivy();
   const dispatch = useDispatch();
@@ -65,12 +69,10 @@ export default function DataFileForm() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button size="lg">Add Data</Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Data</DialogTitle>
+          <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input type="file" onChange={handleFileChange} />
