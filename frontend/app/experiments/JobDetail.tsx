@@ -1,5 +1,6 @@
 "use client";
 
+import { getAccessToken } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import { DownloadIcon } from "lucide-react";
@@ -50,22 +51,30 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${backendUrl()}/jobs/${jobID}`)
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const authToken = await getAccessToken(); // Get the access token
+        const response = await fetch(`${backendUrl()}/jobs/${jobID}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // Include the authorization header
+          },
+        });
+  
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
-        return response.json();
-      })
-      .then((data) => {
+  
+        const data = await response.json();
         console.log("Fetched job:", data);
         setJob(data);
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching job:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+  
+    fetchData();
   }, [jobID]);
 
   console.log(job);
