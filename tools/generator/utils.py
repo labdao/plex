@@ -231,7 +231,6 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.experiment_name", user_inputs["experiment_name"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)

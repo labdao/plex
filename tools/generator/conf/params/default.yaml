@@ -1,5 +1,4 @@
 basic_settings:
-  experiment_name: default
   sequence_input: 'QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG'
   number_of_evo_cycles: 6
   init_permissibility_vec: ''
