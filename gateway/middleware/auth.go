@@ -78,10 +78,9 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfhkUDY7OF5Dfx5yxehJsf7svxjOj5Ix6C+PihnsYSlsD
 	return jwt.ParseECPublicKeyFromPEM([]byte(verificationKey))
 }
 
-func SetupConfig(key string, appID string) {
-	verificationKey = key
+func SetupConfig(appID string) {
 	appId = appID
-	fmt.Printf("Config setup. Verification key: %v, app ID: %v\n", verificationKey, appId)
+	fmt.Printf("Config setup. App ID: %v\n", appId)
 }
 
 func IsJWT(token string) bool {
@@ -194,7 +193,7 @@ func GetWalletAddressFromAPIKey(apiKey string, db *gorm.DB) (string, error) {
 	return user.WalletAddress, nil
 }
 
-func AuthMiddleware(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			token, err := utils.ExtractAuthHeader(r)

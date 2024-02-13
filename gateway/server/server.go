@@ -3,7 +3,6 @@ package server
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/handlers"
@@ -19,9 +18,9 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func createProtectedRouteHandler(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) http.HandlerFunc {
+func createProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
 	return func(handler http.HandlerFunc) http.HandlerFunc {
-		return middleware.AuthMiddleware(db, privyPublicKey)(handler)
+		return middleware.AuthMiddleware(db)(handler)
 	}
 }
 
@@ -29,8 +28,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
-	privyVerificationKey := os.Getenv("PRIVY_VERIFICATION_KEY")
-	protected := createProtectedRouteHandler(db, privyVerificationKey)
+	protected := createProtectedRouteHandler(db)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
