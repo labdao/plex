@@ -30,7 +30,7 @@ class Generator:
         
         if generator_name == 'RFdiffusion+ProteinMPNN':
             return RFdiffusionProteinMPNNGenerator()
-        elif generator_name == 'delete_and_substitute_random':
+        elif generator_name == 'relaxed_masking':
             return RelaxedMaskingGenerator()
         elif generator_name == 'complete_sequence':
             return complete_sequence_Generator()

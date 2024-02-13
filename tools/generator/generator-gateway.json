@@ -1,15 +1,16 @@
 {
-  "name": "generator v0.93 (beta)",
+  "name": "generator v0.99 (beta)",
   "description": "Squence sampling tool.",
   "author": "Convexity Labs",
-  "github": "...",
-  "paper": "...",
+  "github": "",
+  "paper": "",
   "taskCategory": "protein-binder-design",
+  "task": "sequence design",
   "baseCommand": [
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:369ecb2610b263b48a9b5721b4e8386b439c1fd0e30c9c7fa5de7b40bf13b9a6",
+  "dockerPull": "quay.io/labdao/generator@sha256:4cdf218ebd1d2cbd3e35a24ae64a0df4558074c1a2c17c566efcca9b56bddd17",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
