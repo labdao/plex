@@ -1,8 +1,13 @@
 import { getAccessToken } from "@privy-io/react-auth"
 import backendUrl from "lib/backendUrl"
 
-export const createTool = async (
-    payload: { toolJson: { [key: string]: any } }
+export interface ApiKeyPayload {
+  name: string;
+  // Add any other properties that are needed for creating an API key
+}
+
+export const createApiKey = async (
+    payload: ApiKeyPayload
 ): Promise<any> => {
     let authToken
     try {
@@ -12,7 +17,7 @@ export const createTool = async (
         throw new Error("Authentication failed")
     }
 
-    const response = await fetch(`${backendUrl()}/tools`, {
+    const response = await fetch(`${backendUrl()}/api-keys`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -21,8 +26,9 @@ export const createTool = async (
         body: JSON.stringify(payload),
     })
 
-    if (!response) {
-        throw new Error("Failed to create Tool")
+    if (!response.ok) {
+        const errorResult = await response.json();
+        throw new Error(errorResult.message || "Failed to create API Key")
     }
 
     const result = await response.json()

@@ -1,7 +1,8 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
+import { Code2Icon, DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,15 @@ export default function UserMenu() {
                   <DropdownMenuSeparator />
                 </>
               )}
+
+              <Link href="/api" passHref>
+                <DropdownMenuItem>
+                  <Code2Icon size={20} className="mr-1" />
+                  API Keys
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+
             </DropdownMenuContent>
           </DropdownMenu>
           <NavButton icon={<LogOutIcon />} title="Log Out" onClick={handleLogout} />

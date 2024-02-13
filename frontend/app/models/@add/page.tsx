@@ -63,7 +63,7 @@ export default function AddTool() {
         dispatch(setAddToolError("Wallet address missing"));
         return;
       }
-      await dispatch(createToolThunk({ walletAddress, toolJson: toolJsonParsed }));
+      await dispatch(createToolThunk({ toolJson: toolJsonParsed }));
     } catch (error) {
       console.error("Error creating tool", error);
       dispatch(setAddToolError("Error creating tool"));
