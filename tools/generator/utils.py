@@ -248,7 +248,7 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.binder_template_sequence", user_inputs["binder_template_sequence"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.n_samples", user_inputs["n_samples"], merge=False)
     OmegaConf.update(cfg, "params.RFdiffusion_settings.inference.num_designs", user_inputs["num_designs"], merge=False)
     OmegaConf.update(cfg, "params.pMPNN_settings.num_seqs", user_inputs["num_seqs"], merge=False)

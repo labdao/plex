@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v1.1 (beta)",
+  "name": "protein-binder-design v1.2 (beta)",
   "description": "Squence sampling tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:4854d95c577665612c4bf4fd06f84a408ee1756580513f54015b03d9468dbf0a",
+  "dockerPull": "quay.io/labdao/generator@sha256:8a05fb29e241f989750949131c26854219222f4944f754b1c25dacb76a7b5f83",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -121,19 +121,6 @@
       "position": "303",
       "required": false
     },
-    "evolve": {
-      "type": "boolean",
-      "array": false,
-      "description": "Evolution of sequences across iterations.",
-      "glob": [""],
-      "default": true,
-      "min": "",
-      "max": "",
-      "example": "",
-      "grouping": "Sampler parameters",
-      "position": "304",
-      "required": true
-      },
     "number_of_evo_cycles": {
       "type": "number",
       "description": "Number of evolutionary cycles",
@@ -146,7 +133,7 @@
       "max": "60",
       "example": "10",
       "grouping": "Sampler parameters",
-      "position": "305",
+      "position": "304",
       "required": true
     },
     "max_levenshtein_step_size": {
@@ -161,7 +148,7 @@
       "max": "50",
       "example": "3",
       "grouping": "Sampler parameters",
-      "position": "306",
+      "position": "305",
       "required": false
     },
     "temperature": {
@@ -176,7 +163,7 @@
       "max": "1",
       "example": "1",
       "grouping": "Sampler parameters",
-      "position": "307",
+      "position": "306",
       "required": true
     },
     "num_designs": {
