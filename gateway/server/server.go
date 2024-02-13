@@ -25,18 +25,25 @@ func createProtectedRouteHandler(db *gorm.DB, privyPublicKey string) func(http.H
 	}
 }
 
+func createAdminProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
+	return func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.AdminCheckMiddleware(db)(handler)
+	}
+}
+
 func NewServer(db *gorm.DB) *mux.Router {
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
 	privyVerificationKey := os.Getenv("PRIVY_VERIFICATION_KEY")
 	protected := createProtectedRouteHandler(db, privyVerificationKey)
+	adminProtected := createAdminProtectedRouteHandler(db)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
 	router.HandleFunc("/user", protected(handlers.AddUserHandler(db)))
 
-	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
+	router.HandleFunc("/tools", adminProtected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
 

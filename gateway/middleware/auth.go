@@ -226,3 +226,40 @@ func AuthMiddleware(db *gorm.DB, privyPublicKey string) func(http.HandlerFunc) h
 		}
 	}
 }
+
+func AdminCheckMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			token, err := utils.ExtractAuthHeader(r)
+			if err != nil {
+				fmt.Println("Error extracting JWT from header:", err)
+				http.Error(w, "Invalid Authorization header", http.StatusUnauthorized)
+				return
+			}
+
+			var user *models.User
+			if IsJWT(token) {
+				claims, err := ValidateJWT(token, db)
+				if err != nil {
+					http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+					return
+				}
+				user, err = GetUserByDID(claims.UserId, db)
+			} else {
+				user, err = GetUserByAPIKey(token, db)
+			}
+
+			if err != nil {
+				http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+				return
+			}
+
+			if !user.Admin {
+				http.Error(w, "Unauthorized: user is not an admin", http.StatusUnauthorized)
+				return
+			}
+
+			next(w, r)
+		}
+	}
+}
