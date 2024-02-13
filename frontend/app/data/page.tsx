@@ -74,7 +74,6 @@ export default function ListDataFiles() {
               <TruncatedString value={row.getValue("Filename")} trimLength={20} />
             </a>
             <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">
-              {/* {row.getValue("CID")} */}
               <CopyToClipboard string={cid}>
                 <span className="cursor-pointer">
                   cid: <TruncatedString value={cid} />
