@@ -1,5 +1,5 @@
 {
-  "name": "generator v0.91 (beta)",
+  "name": "generator v0.93 (beta)",
   "description": "Squence sampling tool.",
   "author": "Convexity Labs",
   "github": "...",
@@ -9,24 +9,24 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "pf/generator-deployment-test:latest",
+  "dockerPull": "quay.io/labdao/generator@sha256:369ecb2610b263b48a9b5721b4e8386b439c1fd0e30c9c7fa5de7b40bf13b9a6",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
   "networkBool": true,
-  "inputs": {
-    "binder_template_sequence": {
-      "type": "file",
-      "description": "Binder template from which the sequence sampling is initialised",
+  "sequence_input": {
+    "target_seq": {
+      "type": "string",
+      "description": "Sequence input in the form: target_sequence,binder_sequence. Binder sequence may be contain X and * characters to indicate masked residues.",
       "array": false,
       "glob": [
-        ".fasta"
+        ""
       ],
       "default": "",
       "min": "",
       "max": "",
-      "example": "binder_template_sequence.fasta",
-      "grouping": "sequence input information",
+      "example": "QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG",
+      "grouping": "Sequence input information",
       "position": "101",
       "required": true
     },
@@ -41,24 +41,9 @@
       "min": "",
       "max": "",
       "example": "B",
-      "grouping": "sequence input information",
-      "position": "102",
-      "required": true
-    },
-    "target_seq": {
-      "type": "string",
-      "description": "Sequence of target protein.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "",
-      "min": "",
-      "max": "",
-      "example": "QVQLQESGGGL",
-      "grouping": "sequence input information",
-      "position": "103",
-      "required": true
+      "grouping": "Advanced input information",
+      "position": "201",
+      "required": false
     },
     "target_chain": {
       "type": "string",
@@ -71,9 +56,9 @@
       "min": "",
       "max": "",
       "example": "A",
-      "grouping": "sequence input information",
-      "position": "104",
-      "required": true
+      "grouping": "Advanced input information",
+      "position": "202",
+      "required": false
     },
     "init_permissibility_vec": {
       "type": "string",
@@ -86,8 +71,8 @@
       "min": "",
       "max": "",
       "example": "B2:10/11:16/B27:50/x52:55/B57/62:66",
-      "grouping": "sequence input information",
-      "position": "105",
+      "grouping": "Advanced input information",
+      "position": "203",
       "required": false
     },
     "generators": {
@@ -102,8 +87,8 @@
       "max": "",
       "example": "RFdiffusion+ProteinMPNN",
       "grouping": "Sampler parameters",
-      "position": "201",
-      "required": false
+      "position": "301",
+      "required": true
     },
     "scorers": {
       "type": "string",
@@ -117,7 +102,7 @@
       "max": "",
       "example": "Colabfold,prodigy",
       "grouping": "Sampler parameters",
-      "position": "202",
+      "position": "302",
       "required": false
     },
     "scoring_metrics": {
@@ -132,7 +117,7 @@
       "max": "",
       "example": "pseudolikelihood,mean plddt,affinity",
       "grouping": "Sampler parameters",
-      "position": "203",
+      "position": "303",
       "required": false
     },
     "evolve": {
@@ -145,7 +130,7 @@
       "max": "",
       "example": "",
       "grouping": "Sampler parameters",
-      "position": "204",
+      "position": "304",
       "required": true
       },
     "number_of_evo_cycles": {
@@ -160,7 +145,7 @@
       "max": "60",
       "example": "10",
       "grouping": "Sampler parameters",
-      "position": "205",
+      "position": "305",
       "required": true
     },
     "max_levenshtein_step_size": {
@@ -175,7 +160,7 @@
       "max": "50",
       "example": "3",
       "grouping": "Sampler parameters",
-      "position": "206",
+      "position": "306",
       "required": false
     },
     "temperature": {
@@ -190,7 +175,7 @@
       "max": "1",
       "example": "1",
       "grouping": "Sampler parameters",
-      "position": "207",
+      "position": "307",
       "required": true
     },
     "num_designs": {
@@ -205,7 +190,7 @@
       "max": "32",
       "example": "2",
       "grouping": "RFdiffusion",
-      "position": "301",
+      "position": "401",
       "required": false
     },
     "num_seqs": {
@@ -220,21 +205,6 @@
       "max": "5",
       "example": "1",
       "grouping": "Protein MPNN",
-      "position": "401",
-      "required": false
-    },
-    "alphabet": {
-      "type": "string",
-      "description": "Alphabet used to form sequence. Currently fixed.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "LAGVSERTIDPKQNFYMHWC",
-      "min": "LAGVSERTIDPKQNFYMHWC",
-      "max": "LAGVSERTIDPKQNFYMHWC",
-      "example": "LAGVSERTIDPKQNFYMHWC",
-      "grouping": "additional",
       "position": "501",
       "required": false
     }
