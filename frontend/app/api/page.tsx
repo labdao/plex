@@ -8,6 +8,7 @@ import { Code2Icon, CopyCheck, CopyIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
@@ -42,20 +43,11 @@ export default function ListApiKeys() {
                 const apiKey: string = row.getValue("Key");
                 const trimmedApiKey = apiKey.length > 10 ? `${apiKey.substring(0, 10)}...${apiKey.slice(-4)}` : apiKey;
                 return (
-                    <div
-                        style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px"}}
-                        onClick={() => handleApiKeyClick(apiKey)}
-                        className="copy-container"
-                    >
-                        {trimmedApiKey}
-                        {copiedKey === apiKey ? (
-                            <CopyCheck size={16} />
-                        ) : (
-                            <span className="copy-icon-hover">
-                                <CopyIcon size={16} className="copy-icon"/>
-                            </span>
-                        )}
-                    </div>
+                    <CopyToClipboard string={apiKey}>
+                        <span style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                            {trimmedApiKey}
+                        </span>
+                    </CopyToClipboard>
                 );
             },
         },

@@ -8,6 +8,7 @@ import { UploadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,16 +39,48 @@ export default function ListDataFiles() {
       header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
       sortingFn: "alphanumeric",
       cell: ({ row }) => {
-        let cid = row.getValue("CID");
+        let cid: string = row.getValue("CID");
         if (!cid) {
           cid = "null";
         }
+
+        const handleDownloadClick = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+          event.preventDefault();
+          const authToken = await getAccessToken();
+          const response = await fetch(`${backendUrl()}/datafiles/${cid}/download`, {
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+            },
+          });
+          if (!response.ok) {
+            console.error('Failed to download file');
+            return;
+          } else {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = row.getValue("Filename");
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
+        };
+
         return (
           <div>
-            <a target="_blank" href={`${backendUrl()}/datafiles/${row.getValue("CID")}/download`}>
+            <a target="#" onClick={handleDownloadClick} style={{ cursor: 'pointer' }}>
               <TruncatedString value={row.getValue("Filename")} trimLength={20} />
             </a>
-            <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">{row.getValue("CID")}</div>
+            <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">
+              {/* {row.getValue("CID")} */}
+              <CopyToClipboard string={cid}>
+                <span className="cursor-pointer">
+                  cid: <TruncatedString value={cid} />
+                </span>
+              </CopyToClipboard>
+            </div>
           </div>
         );
       },
@@ -72,6 +105,7 @@ export default function ListDataFiles() {
       accessorKey: "CID",
       header: "CID",
       cell: ({ row }) => {
+        const cid: string = row.getValue("CID");
         return <TruncatedString value={row.getValue("CID")} />;
       },
     },

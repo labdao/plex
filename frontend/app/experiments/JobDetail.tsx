@@ -111,6 +111,31 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 }
 
 function FileList({ files }: { files: DataFile[] }) {
+  const handleDownload = async (file: DataFile) => {
+    try {
+      const authToken = await getAccessToken();
+      const response = await fetch(`${backendUrl()}/datafiles/${file.CID}/download`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+        return;
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.Filename || 'download';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div>
       {!!files?.length ? (
@@ -118,7 +143,7 @@ function FileList({ files }: { files: DataFile[] }) {
           {files.map((file: DataFile) => (
             <div key={file.CID} className="flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none">
               <div>
-                <a target="_blank" href={`${backendUrl()}/datafiles/${file.CID}/download`} className="text-accent">
+                <a target="#" onClick={() => handleDownload(file)} className="text-accent" style={{ cursor: 'pointer' }}>
                   <TruncatedString value={file.Filename} trimLength={30} />
                 </a>
                 <div className="opacity-70 text-muted-foreground">
@@ -129,7 +154,7 @@ function FileList({ files }: { files: DataFile[] }) {
               </div>
               {/* @TODO: Add Filesize */}
               <Button size="icon" variant="outline" asChild>
-                <a target="_blank" href={`${backendUrl()}/datafiles/${file.CID}/download`}>
+                <a target="#" onClick={() => handleDownload(file)} style={{ cursor: 'pointer' }}>
                   <DownloadIcon />
                 </a>
               </Button>
