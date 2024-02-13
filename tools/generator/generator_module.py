@@ -3,6 +3,7 @@ from utils import squeeze_seq
 
 from generators.rf_diffusion_protein_mpnn_generator import RFdiffusionProteinMPNNGenerator
 from generators.complete_sequence import complete_sequence_Generator
+from generators.relaxed_masking import RelaxedMaskingGenerator
 
 class GenerationArgs:
     def __init__(self, evo_cycle, sequence, permissibility_vector, df, cfg, outputs_directory, generator_name):
@@ -30,7 +31,7 @@ class Generator:
         if generator_name == 'RFdiffusion+ProteinMPNN':
             return RFdiffusionProteinMPNNGenerator()
         elif generator_name == 'delete_and_substitute_random':
-            return greedy_SequenceDiffusion_Generator()
+            return RelaxedMaskingGenerator()
         elif generator_name == 'complete_sequence':
             return complete_sequence_Generator()
         # ... add other generators to this list  ...
