@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v0.99 (beta)",
+  "name": "protein-binder-design v0.999 (beta)",
   "description": "Squence sampling tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -15,8 +15,8 @@
   "memoryGB": 12,
   "cpu": 3,
   "networkBool": true,
-  "sequence_input": {
-    "target_seq": {
+  "inputs": {
+    "sequence_input": {
       "type": "string",
       "description": "Sequence input in the form: target_sequence,binder_sequence. Binder sequence may be contain X and * characters to indicate masked residues.",
       "array": false,
