@@ -7,7 +7,7 @@ import { ToolDetail } from "@/lib/redux";
 type InputType = { [key: string]: any };
 
 const inputsToSchema = (inputs: InputType) => {
-  const schema: { [key: string]: z.ZodArray<z.ZodObject<{ value: z.ZodString | z.ZodNumber }>> } = {};
+  const schema: { [key: string]: z.ZodArray<z.ZodObject<{ value: z.ZodString | z.ZodNumber | z.ZodBoolean }>> } = {};
   for (var key in inputs) {
     const input = inputs[key];
     if (input.type === "File" || input.type === "file") {
@@ -30,6 +30,12 @@ const inputsToSchema = (inputs: InputType) => {
       schema[key] = z.array(
         z.object({
           value: z.coerce.number().int().min(min).max(max),
+        })
+      );
+    } else if (input.type === "bool" || input.type === "boolean") {
+      schema[key] = z.array(
+        z.object({
+          value: z.boolean(),
         })
       );
     }
