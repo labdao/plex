@@ -41,8 +41,13 @@ func ServeWebApp() {
 	dbname := os.Getenv("POSTGRES_DB")
 
 	privyAppId := os.Getenv("NEXT_PUBLIC_PRIVY_APP_ID")
+	publicKey := os.Getenv("PRIVY_PUBLIC_KEY")
 
-	middleware.SetupConfig(privyAppId)
+	privyVerificationKey := fmt.Sprintf(`-----BEGIN PUBLIC KEY-----
+%s
+-----END PUBLIC KEY-----`, publicKey)
+
+	middleware.SetupConfig(privyAppId, privyVerificationKey)
 
 	// DSN for gorm.Open
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", host, user, password, dbname)

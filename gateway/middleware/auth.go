@@ -71,16 +71,16 @@ func keyFunc(token *jwt.Token) (interface{}, error) {
 	if token.Method.Alg() != "ES256" {
 		return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 	}
-	verificationKey = `-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfhkUDY7OF5Dfx5yxehJsf7svxjOj5Ix6C+PihnsYSlsD4r8UQMu+RKYJw+Cyu2tSsvXJT7czfy0RM29YcmInrw==
------END PUBLIC KEY-----`
 
 	return jwt.ParseECPublicKeyFromPEM([]byte(verificationKey))
 }
 
-func SetupConfig(appID string) {
+func SetupConfig(appID string, publicKey string) (string, string) {
 	appId = appID
-	fmt.Printf("Config setup. App ID: %v\n", appId)
+	verificationKey = publicKey
+	fmt.Printf("Config setup. Verification Key: %v\n App ID: %v\n", verificationKey, appId)
+
+	return appId, verificationKey
 }
 
 func IsJWT(token string) bool {
