@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -66,11 +68,30 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var walletAddress string
-		err = json.Unmarshal(requestData["walletAddress"], &walletAddress)
-		if err != nil || walletAddress == "" {
-			http.Error(w, "Invalid or missing walletAddress", http.StatusBadRequest)
+		token, err := utils.ExtractAuthHeader(r)
+		if err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
 			return
+		}
+
+		var walletAddress string
+		if middleware.IsJWT(token) {
+			claims, err := middleware.ValidateJWT(token, db)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
+				return
+			}
+			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		} else {
+			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
 		}
 
 		var toolCid string

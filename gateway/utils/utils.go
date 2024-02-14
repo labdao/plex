@@ -10,6 +10,19 @@ import (
 	"strings"
 )
 
+func ExtractAuthHeader(r *http.Request) (string, error) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("missing Authorization header")
+	}
+
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return "", fmt.Errorf("authorization header format must be 'Bearer {token}'")
+	}
+
+	return strings.TrimPrefix(authHeader, "Bearer "), nil
+}
+
 func SendJSONResponse(w http.ResponseWriter, response interface{}) {
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {

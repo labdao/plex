@@ -6,5 +6,4 @@ interface AuthState {
     authenticated: boolean;
 }
 
-// export const PrivyAuthContext = React.createContext<User | null>(null);
 export const PrivyAuthContext = React.createContext<AuthState>({ user: null, authenticated: false});

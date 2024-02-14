@@ -1,5 +1,6 @@
 "use client";
 
+import { getAccessToken } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
@@ -50,20 +51,27 @@ export default function ListToolFiles() {
   const [tools, setTools] = useState<Tool[]>([]);
 
   useEffect(() => {
-    fetch(`${backendUrl()}/tools`)
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const authToken = await getAccessToken();
+        const response = await fetch(`${backendUrl()}/tools`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Fetched tools:", data);
+
+        const data = await response.json();
         setTools(data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching tools:", error);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (

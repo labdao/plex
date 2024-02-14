@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -22,30 +24,54 @@ import (
 func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request at /add-tool")
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+		defer r.Body.Close()
 
 		log.Println("Request body: ", string(body))
 
-		requestData := make(map[string]json.RawMessage)
-		err = json.Unmarshal(body, &requestData)
+		var toolRequest struct {
+			ToolJson json.RawMessage `json:"toolJson"`
+		}
+		err = json.Unmarshal(body, &toolRequest)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
-		var walletAddress string
-		err = json.Unmarshal(requestData["walletAddress"], &walletAddress)
-		if err != nil || walletAddress == "" {
-			http.Error(w, "Invalid or missing walletAddress", http.StatusBadRequest)
+		token, err := utils.ExtractAuthHeader(r)
+		if err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
+		var walletAddress string
+		if middleware.IsJWT(token) {
+			claims, err := middleware.ValidateJWT(token, db)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
+				return
+			}
+			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		} else {
+			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		}
+
+		// Unmarshal the tool from the tool JSON
 		var tool ipwl.Tool
-		err = json.Unmarshal(requestData["toolJson"], &tool)
+		err = json.Unmarshal(toolRequest.ToolJson, &tool)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
 			return
