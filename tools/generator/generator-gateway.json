@@ -1,6 +1,6 @@
 {
-  "name": "protein-binder-design v1.2 (beta)",
-  "description": "Squence sampling tool.",
+  "name": "protein-binder-design v1.4 (beta)",
+  "description": "Protein binder design tool.",
   "author": "Convexity Labs",
   "github": "",
   "paper": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:8a05fb29e241f989750949131c26854219222f4944f754b1c25dacb76a7b5f83",
+  "dockerPull": "quay.io/labdao/generator@sha256:cc23be38e98f0f41f366d62b403da6a0aca78404c7c3d1d2dad3f4fb97e3932e",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
