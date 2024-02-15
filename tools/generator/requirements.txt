@@ -4,3 +4,7 @@ pandas
 numpy
 biopython
 mdtraj
+hydra-core 
+omegaconf
+pyyaml
+pyarrow
