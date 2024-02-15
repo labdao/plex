@@ -163,43 +163,29 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
             # Define the directory where fasta files are located
             fasta_directory = os.path.join(generator_directory, "seqs")
 
-            start_line = 3
-            # Iterate over the lines in the fasta file, starting from start_line
-            for i in range(start_line, len(lines), 2):
-                header = lines[i - 1]
-                sequence = lines[i].strip()
-                                
-                # Extract the score from the header
-                match = re.search(r'score=(\d+\.\d+)', header)
-                if match:
-                    score = float(match.group(1))
-                    # If this is the first score or a higher score than the current highest, update the highest score and sequence
-                    if highest_overall_score is None or score > highest_overall_score:
-                        highest_overall_score = score
-                        highest_overall_score_sequence = sequence
+            # Loop over all fasta files in the fasta_directory
+            for fasta_file in os.listdir(fasta_directory):
+                if fasta_file.startswith(f"evocycle_{evo_cycle}_motifscaffolding") and fasta_file.endswith(".fa"):
+                    fasta_file_path = os.path.join(fasta_directory, fasta_file)
+                            
+                    # Read the contents of the fasta file
+                    with open(fasta_file_path, 'r') as file:
+                        lines = file.readlines()
 
-            # # Loop over all fasta files in the fasta_directory
-            # for fasta_file in os.listdir(fasta_directory):
-            #     if fasta_file.startswith(f"evocycle_{evo_cycle}_motifscaffolding") and fasta_file.endswith(".fa"):
-            #         fasta_file_path = os.path.join(fasta_directory, fasta_file)
-                            
-            #         # Read the contents of the fasta file
-            #         with open(fasta_file_path, 'r') as file:
-            #             lines = file.readlines()
-                            
-            #         # Iterate over the lines in the fasta file, skipping the first line
-            #         for i in range(1, len(lines), 2):
-            #             header = lines[i - 1]
-            #             sequence = lines[i].strip()
-                                
-            #             # Extract the score from the header
-            #             match = re.search(r'score=(\d+\.\d+)', header)
-            #             if match:
-            #                 score = float(match.group(1))
-            #                 # If this is the first score or a higher score than the current highest, update the highest score and sequence
-            #                 if highest_overall_score is None or score > highest_overall_score:
-            #                     highest_overall_score = score
-            #                     highest_overall_score_sequence = sequence
+                    start_line = 3
+                    # Iterate over the lines in the fasta file, starting from start_line
+                    for i in range(start_line, len(lines), 2):
+                        header = lines[i - 1]
+                        sequence = lines[i].strip()
+                                        
+                        # Extract the score from the header
+                        match = re.search(r'score=(\d+\.\d+)', header)
+                        if match:
+                            score = float(match.group(1))
+                            # If this is the first score or a higher score than the current highest, update the highest score and sequence
+                            if highest_overall_score is None or score > highest_overall_score:
+                                highest_overall_score = score
+                                highest_overall_score_sequence = sequence
 
             # Check if a highest scoring sequence was found across all fasta files
             if highest_overall_score_sequence:
