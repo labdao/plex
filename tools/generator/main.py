@@ -16,7 +16,7 @@ import logging
 from sampler import Sampler
 from generator_module import Generator
 from scorer_module import Scorer
-from disriminator_module import SequenceDiscriminator
+from selector_module import SequenceSelector
 
 def get_plex_job_inputs():
     # Retrieve the environment variable
@@ -48,52 +48,6 @@ def apply_initial_permissibility_vector(seed, permissibility_seed, cfg):
     mod_sequence = ''.join(mod_sequence)
 
     return mod_sequence
-
-# def load_initial_data(fasta_file, cfg, outputs_directory):
-#     sequences = []
-#     with open(fasta_file, 'r') as file:
-#         seq_num = 1
-#         for line in file:
-#             if line.startswith('>'):
-#                 # Add an entry for a new sequence, including the 'step' column set to 0
-#                 sequences.append({
-#                     't': 0,
-#                     'sample_number': 0,
-#                     'seed': '',
-#                     'permissibility_seed': '',
-#                     '(levenshtein-distance, mask)': 'none',
-#                     'modified_seq': '',
-#                     'permissibility_modified_seq': '',
-#                     'acceptance_flag': False}
-#                 )
-#                 seq_num += 1
-#             else:
-#                 # Add sequence data to the most recently added sequence entry
-#                 sequences[-1]['seed'] += line.strip()
-
-#                 contig_in_convexity_notation = ''
-#                 if cfg.params.basic_settings.init_permissibility_vec == '':
-#                     contig_in_convexity_notation = replace_invalid_characters(sequences[-1]['seed'], cfg.params.basic_settings.alphabet)
-#                 else:
-#                     print('converting to convexity notation')
-#                     contig_in_convexity_notation = slash_to_convexity_notation(sequences[-1]['seed'], cfg.params.basic_settings.init_permissibility_vec)
-
-#                 if 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']: # uncomment to enable sequence completion
-#                     seed = sequences[-1]['seed']
-#                     generator = Generator(cfg, outputs_directory)
-#                     seed, _, _ = generator.run(0, 1, seed, '', '', None)
-#                     sequences[-1]['seed'] = seed
-#                     del generator
-
-#                 logging.info(f"contig_in_convexity_notation, {contig_in_convexity_notation}")
-#                 sequences[-1]['modified_seq'] += apply_initial_permissibility_vector(sequences[-1]['seed'], contig_in_convexity_notation, cfg)
-#                 logging.info(f"modified sequence, {sequences[-1]['modified_seq']}")
-#                 sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
-#                 sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
-
-#     sequences[0]['acceptance_flag'] = True # manual selection of starting sequence
-
-#     return pd.DataFrame(sequences)
 
 def load_initial_data(cfg, outputs_directory):
     sequence_input = cfg.params.basic_settings.sequence_input
@@ -157,14 +111,11 @@ def my_app(cfg: DictConfig) -> None:
 
     start_time = time.time()
 
-    discriminator = SequenceDiscriminator(cfg)
     generator = Generator(cfg, outputs_directory)
     scorer = Scorer(cfg, outputs_directory)
-    sampler = Sampler(cfg, outputs_directory, generator, discriminator, scorer, cfg.params.basic_settings.evolve, cfg.params.basic_settings.n_samples)
+    selector = SequenceSelector(cfg)
+    sampler = Sampler(cfg, outputs_directory, generator, selector, scorer, cfg.params.basic_settings.evolve, cfg.params.basic_settings.n_samples)
 
-    # fasta_file = os.path.abspath(os.path.join(cfg.inputs.directory, cfg.params.basic_settings.binder_template_sequence))
-    # logging.info(f"fasta file {fasta_file}")
-    # df = load_initial_data(fasta_file, cfg, outputs_directory)
     df, cfg = load_initial_data(cfg, outputs_directory)
 
     seed_row = df[(df['t']==0) & (df['acceptance_flag'] == True)]

@@ -29,7 +29,7 @@ class Scorer:
                 os.makedirs(scorer_directory, exist_ok=True)
 
             logging.info(f"Running {scorer}")
-            if scorer=='ESM2':
+            if scorer=='ESM2' or scorer=='esm2':
                 runner = sequence_transformer.ESM2Runner() # initialize ESM2Runner with the default model
                 LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(squeeze_seq(sequence))
 
@@ -41,7 +41,7 @@ class Scorer:
                 # Set the value of 'pseudolikelihood' for the first row
                 df_score.at[0, 'pseudolikelihood'] = LL_mod
 
-            elif scorer=='Colabfold':
+            elif scorer=='Colabfold' or scorer=='colabfold':
                 target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{squeeze_seq(sequence)}" # TD: fix this; maybe load the target-sequence into the cfg from the pdb or fasta
                 
                 # include a function that combines binder and target sequence
@@ -67,7 +67,7 @@ class Scorer:
                 # append output as new columns of data frame
                 df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{t}")
             
-            elif scorer=='Prodigy': # not implemented yet
+            elif scorer=='Prodigy' or scorer=='prodigy': # not implemented yet
 
                 pdb_file_path = df_score['absolute pdb path'].iloc[0]
                 affinity = compute_affinity(pdb_file_path)

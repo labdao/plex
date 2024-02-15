@@ -9,8 +9,9 @@ from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
 import random
 
-import hydra
 from omegaconf import DictConfig, OmegaConf
+
+import logging
 
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module or even to sequence-transformer
 
@@ -76,7 +77,7 @@ def compute_affinity(file_path):
             logging.info(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
             return None  # Prodigy command failed
     else:
-        print("Invalid file path")
+        logging.info(f"Invalid file path")
         return None  # Invalid file path provided
 
 def compute_ipae(pdb_file, pae_matrix):
@@ -100,7 +101,7 @@ def compute_ipae(pdb_file, pae_matrix):
     median_pae_interface = np.median(interface_pae_values)
 
     # Output the median PAE value
-    print("median PAE at the interface:", median_pae_interface)
+    logging.info(f"median PAE at the interface {median_pae_interface}")
 
     return median_pae_interface
 
@@ -120,8 +121,6 @@ def write_af2_update(df, directory, json_pattern):
         for pdb in glob.glob(os.path.join(directory, f"{json_pattern}_unrelaxed_rank_001*.pdb")):
             pdb_file = pdb
             break
-        print('pdb file', pdb_file)
-        print('rank str', rank_str)
 
         if pdb_file:
             pae_matrix = np.array(data['pae'])
@@ -231,17 +230,22 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # Override Hydra default params with user supplied params
+    OmegaConf.update(cfg, "params.basic_settings.generators", user_inputs["generators"], merge=False)
+    if user_inputs["generators"] == 'RFdiff+ProteinMPNN':
+        OmegaConf.update(cfg, "params.basic_settings.scorers", 'Colabfold', merge=False)
+    elif user_inputs["generators"] == 'RFdiff+ProteinMPNN+ESM2':
+        OmegaConf.update(cfg, "params.basic_settings.scorers", 'Colabfold,ESM2', merge=False)
+
     OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.bouncer_flag", user_inputs["bouncer_flag"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.generators", user_inputs["generators"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)

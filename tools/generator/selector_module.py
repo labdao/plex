@@ -2,7 +2,7 @@ import numpy as np
 import logging
 from utils import determine_acceptance
 
-class SequenceDiscriminator:
+class SequenceSelector:
     def __init__(self, cfg):
         self.cfg = cfg
 

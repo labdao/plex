@@ -4,13 +4,13 @@ import logging
 
 class Sampler:
 
-    def __init__(self,cfg, outputs_directory, generator, discriminator, scorer, evolve, n_samples):
+    def __init__(self,cfg, outputs_directory, generator, selector, scorer, evolve, n_samples):
 
         self.cfg = cfg
         self.outputs_directory = outputs_directory
         self.scorer = scorer
         self.generator = generator
-        self.discriminator = discriminator
+        self.selector = selector
         self.evolve = evolve
         self.n_samples = n_samples
 
@@ -53,7 +53,7 @@ class Sampler:
                 df.iloc[-1, df.columns.get_loc('acceptance_flag')] = False
                 break
             elif self.evolve == True:
-                accept_flag = self.discriminator.run(t, df, accept_flag)
+                accept_flag = self.selector.run(t, df, accept_flag)
                 df.iloc[-1, df.columns.get_loc('acceptance_flag')] = accept_flag
 
             sample_number += 1

@@ -2,10 +2,13 @@ import subprocess
 import os
 import re
 import logging
+from utils import squeeze_seq
+import sequence_transformer
+import numpy as np
 
 from .base_generator import BaseGenerator
 
-class RelaxedMaskingGenerator(BaseGenerator):
+class RMEGenerator(BaseGenerator):
 
     def _generate_contig(self, permissibility_vector, target, starting_target_residue=None, end_target_residue=None):
         if starting_target_residue is None:
@@ -75,6 +78,52 @@ class RelaxedMaskingGenerator(BaseGenerator):
                 modified_seq_index += 1
 
         return seq_with_deletions
+    
+    def _create_reverse_index_map(self, original, with_dashes):
+        reverse_map_indices = {}
+        j = 0  # Index for the string with dashes
+        for i, char in enumerate(original):
+            # Find the next non-dash character in with_dashes starting from j
+            while with_dashes[j] == '-':
+                j += 1
+            reverse_map_indices[i] = j
+            j += 1  # Move to the next character for the next iteration
+        return reverse_map_indices
+
+    def _sequence_likelihood_vector(self, sequence, LL_matrix, runner):
+
+        if len(sequence) != LL_matrix.shape[1]:
+            raise ValueError("Length of mutated_sequence must match the number of columns in LL_matrix.")
+                    
+        amino_acid_code = ''.join(runner.amino_acids)
+
+        likelihood_vector = []
+        for i, aa in enumerate(sequence):
+            row_index = amino_acid_code.index(aa)
+            likelihood_vector.append(LL_matrix[row_index, i])
+
+        likelihood_vector = np.reshape(likelihood_vector, (1,len(sequence)))
+
+        return likelihood_vector
+
+    def _pseudoLL_matrix(self, sequence, LLmatrix_sequence, runner):
+
+        likelihood_vector = self._sequence_likelihood_vector(sequence, LLmatrix_sequence, runner)
+        total_sum = np.sum(likelihood_vector)
+        adjusted_sums = total_sum - likelihood_vector
+        adjusted_sums = adjusted_sums.reshape(1, -1)
+        matrix = LLmatrix_sequence + adjusted_sums # broadcasting happening here
+
+        return matrix
+    
+    def _sequence_pseudoLL(self, sequence, runner, LLmatrix_sequence):
+
+        if LLmatrix_sequence is None or LLmatrix_sequence.size == 0:
+            LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(sequence)
+
+        sequence_likelihood_vector = self._sequence_likelihood_vector(sequence, LLmatrix_sequence, runner)
+
+        return np.mean(sequence_likelihood_vector)
 
     def generate(self, args):
 
@@ -94,6 +143,8 @@ class RelaxedMaskingGenerator(BaseGenerator):
         logging.info(f"Running {generator_name}")
 
         if 'X' in permissibility_vector or '*' in permissibility_vector: # check if there is any diffusion to be done
+
+            print('sequence before diffusion', sequence)
 
             logging.info(f"diffusing...")
 
@@ -171,9 +222,10 @@ class RelaxedMaskingGenerator(BaseGenerator):
                     # Read the contents of the fasta file
                     with open(fasta_file_path, 'r') as file:
                         lines = file.readlines()
-                            
-                    # Iterate over the lines in the fasta file, skipping the first line
-                    for i in range(1, len(lines), 2):
+
+                    start_line = 3
+                    # Iterate over the lines in the fasta file, starting from start_line
+                    for i in range(start_line, len(lines), 2):
                         header = lines[i - 1]
                         sequence = lines[i].strip()
                                 
@@ -202,6 +254,43 @@ class RelaxedMaskingGenerator(BaseGenerator):
             if char=='-':
                 if modified_seq[i]!='-':
                     logging.info(f"deleting residue")
-                    modified_seq[i] = '-'        
+                    modified_seq[i] = '-'
+        
+        logging.info(f"Running ESM2")
+        runner = sequence_transformer.ESM2Runner()
+
+        current_pseudoLL = self._sequence_pseudoLL(squeeze_seq(modified_seq), runner, None)
+        iter_num = 0
+        Delta_pseudoLL = 1000 # hack!
+        while Delta_pseudoLL > 0.:
+
+            runner = sequence_transformer.ESM2Runner()
+            logging.info(f"iteration number {iter_num}")
+            iter_num += 1
+            modified_seq = ''.join(modified_seq)
+
+            LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(squeeze_seq(modified_seq))
+
+            pseudoLL_matrix = self._pseudoLL_matrix(squeeze_seq(modified_seq), LLmatrix_sequence, runner)
+            x_positions = [i for i, char in enumerate(squeeze_seq(args.permissibility_vector)) if char == 'X' or char == '*']
+            sub_pseudoLL_matrix = pseudoLL_matrix[:, x_positions]
+
+            sub_max_index = np.unravel_index(np.argmax(sub_pseudoLL_matrix), sub_pseudoLL_matrix.shape)
+            max_index = (sub_max_index[0], x_positions[sub_max_index[1]])
+
+            reverse_index_map = self._create_reverse_index_map(squeeze_seq(modified_seq), modified_seq)
+            max_index_seq = reverse_index_map.get(max_index[1])
+
+
+            # LAGVSERTIDPKQNFYMHWC
+            amino_acid_code = ''.join(runner.amino_acids)
+            modified_seq = list(modified_seq)
+            if modified_seq[max_index_seq] != '-':
+                modified_seq[max_index_seq] = amino_acid_code[max_index[0]] 
+
+            updated_pseudoLL = self._sequence_pseudoLL(squeeze_seq(modified_seq), runner, LLmatrix_sequence)
+
+            Delta_pseudoLL = updated_pseudoLL - current_pseudoLL
+            current_pseudoLL = updated_pseudoLL
 
         return ''.join(modified_seq), ''.join(args.permissibility_vector)

@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v1.5 (beta)",
+  "name": "protein-binder-design v1.6 (beta)",
   "description": "Protein binder design tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:c8ef9cf61b4a3e6ce9c11faa98a2751cdb99493f92769057f681a56189495b36",
+  "dockerPull": "quay.io/labdao/generator@sha256:83c384a6c429e79ede30cc15c181fe35d67decb95b88ee082044914f1bc4dfe6",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -18,7 +18,7 @@
   "inputs": {
     "sequence_input": {
       "type": "string",
-      "description": "Sequence input in the form: target_sequence,binder_sequence. Binder sequence may be contain X and * characters to indicate masked residues.",
+      "description": "Sequence input in the form: target_sequence,binder_sequence. Binder sequence may contain X characters to indicate masked residues.",
       "array": false,
       "glob": [
         ""
@@ -26,7 +26,7 @@
       "default": "",
       "min": "",
       "max": "",
-      "example": "QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG",
+      "example": "QVQLQESGGGL,QXCLIXXXELVTAXXXDTPG",
       "grouping": "Sequence input information",
       "position": "101",
       "required": true
@@ -42,7 +42,7 @@
       "min": "",
       "max": "",
       "example": "B",
-      "grouping": "Advanced input information",
+      "grouping": "_Advanced input information",
       "position": "201",
       "required": false
     },
@@ -57,7 +57,7 @@
       "min": "",
       "max": "",
       "example": "A",
-      "grouping": "Advanced input information",
+      "grouping": "_Advanced input information",
       "position": "202",
       "required": false
     },
@@ -72,7 +72,7 @@
       "min": "",
       "max": "",
       "example": "B2:10/11:16/B27:50/x52:55/B57/62:66",
-      "grouping": "Advanced input information",
+      "grouping": "_Advanced input information",
       "position": "203",
       "required": false
     },
@@ -91,20 +91,18 @@
       "position": "301",
       "required": true
     },
-    "scorers": {
-      "type": "string",
-      "description": "type of generator used.",
+    "speedup": {
+      "type": "boolean",
       "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "Colabfold",
+      "description": "Flag to evolve sequences.",
+      "glob": [""],
+      "default": false,
       "min": "",
       "max": "",
-      "example": "Colabfold,prodigy",
-      "grouping": "Sampler parameters",
+      "example": "false, true",
+      "grouping": "_Sampler parameters",
       "position": "302",
-      "required": false
+      "required": true
     },
     "scoring_metrics": {
       "type": "string",
@@ -117,7 +115,7 @@
       "min": "",
       "max": "",
       "example": "pseudolikelihood,mean plddt,affinity",
-      "grouping": "Sampler parameters",
+      "grouping": "_Sampler parameters",
       "position": "303",
       "required": false
     },
@@ -132,7 +130,7 @@
       "min": "1",
       "max": "60",
       "example": "10",
-      "grouping": "Sampler parameters",
+      "grouping": "_Sampler parameters",
       "position": "304",
       "required": true
     },
@@ -147,7 +145,7 @@
       "min": "1",
       "max": "50",
       "example": "3",
-      "grouping": "Sampler parameters",
+      "grouping": "_Sampler parameters",
       "position": "305",
       "required": false
     },
@@ -162,7 +160,7 @@
       "min": "1",
       "max": "1",
       "example": "1",
-      "grouping": "Sampler parameters",
+      "grouping": "_Sampler parameters",
       "position": "306",
       "required": true
     },
@@ -177,7 +175,7 @@
       "min": "1",
       "max": "32",
       "example": "2",
-      "grouping": "RFdiffusion",
+      "grouping": "_RFdiffusion",
       "position": "401",
       "required": false
     },
@@ -188,11 +186,11 @@
       "glob": [
         ""
       ],
-      "default": "1",
-      "min": "1",
+      "default": "2",
+      "min": "2",
       "max": "5",
       "example": "1",
-      "grouping": "Protein MPNN",
+      "grouping": "_Protein MPNN",
       "position": "501",
       "required": false
     }

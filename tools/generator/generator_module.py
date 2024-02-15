@@ -1,9 +1,9 @@
 import pandas as pd
 from utils import squeeze_seq
 
-from generators.rf_diffusion_protein_mpnn_generator import RFdiffusionProteinMPNNGenerator
+from generators.RFdiffProteinMPNN import RFdiffusionProteinMPNNGenerator
 from generators.complete_sequence import complete_sequence_Generator
-from generators.relaxed_masking import RelaxedMaskingGenerator
+from generators.RME_generator import RMEGenerator
 
 class GenerationArgs:
     def __init__(self, evo_cycle, sequence, permissibility_vector, df, cfg, outputs_directory, generator_name):
@@ -28,10 +28,10 @@ class Generator:
 
     def _get_generator(self, generator_name):
         
-        if generator_name == 'RFdiffusion+ProteinMPNN':
+        if generator_name == 'RFdiff+ProteinMPNN':
             return RFdiffusionProteinMPNNGenerator()
-        elif generator_name == 'relaxed_masking':
-            return RelaxedMaskingGenerator()
+        elif generator_name == 'RFdiff+ProteinMPNN+ESM2':
+            return RMEGenerator()
         elif generator_name == 'complete_sequence':
             return complete_sequence_Generator()
         # ... add other generators to this list  ...
