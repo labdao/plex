@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -43,7 +45,33 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		walletAddress := r.FormValue("walletAddress")
+		token, err := utils.ExtractAuthHeader(r)
+		if err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		var walletAddress string
+		if middleware.IsJWT(token) {
+			claims, err := middleware.ValidateJWT(token, db)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
+				return
+			}
+			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		} else {
+			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		}
+
+		// walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
 
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)

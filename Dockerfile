@@ -14,6 +14,8 @@ WORKDIR /app/
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
 ARG BACALHAU_VERSION=1.2.0
+ARG NEXT_PUBLIC_PRIVY_APP_ID
+ARG PRIVY_PUBLIC_KEY
 
 # For bacalhau cli
 FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau

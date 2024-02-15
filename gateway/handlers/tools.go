@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -22,30 +24,54 @@ import (
 func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request at /add-tool")
+
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+		defer r.Body.Close()
 
 		log.Println("Request body: ", string(body))
 
-		requestData := make(map[string]json.RawMessage)
-		err = json.Unmarshal(body, &requestData)
+		var toolRequest struct {
+			ToolJson json.RawMessage `json:"toolJson"`
+		}
+		err = json.Unmarshal(body, &toolRequest)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
-		var walletAddress string
-		err = json.Unmarshal(requestData["walletAddress"], &walletAddress)
-		if err != nil || walletAddress == "" {
-			http.Error(w, "Invalid or missing walletAddress", http.StatusBadRequest)
+		token, err := utils.ExtractAuthHeader(r)
+		if err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
+		var walletAddress string
+		if middleware.IsJWT(token) {
+			claims, err := middleware.ValidateJWT(token, db)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
+				return
+			}
+			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		} else {
+			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		}
+
+		// Unmarshal the tool from the tool JSON
 		var tool ipwl.Tool
-		err = json.Unmarshal(requestData["toolJson"], &tool)
+		err = json.Unmarshal(toolRequest.ToolJson, &tool)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
 			return
@@ -78,7 +104,30 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			toolGpu = 0
 		}
 
-		// Store serialized Tool in DB
+		var display bool = true
+		var defaultTool bool = false
+
+		var taskCategory string
+		if tool.TaskCategory == "" {
+			taskCategory = "other-models"
+		} else {
+			taskCategory = tool.TaskCategory
+		}
+
+		// Start transaction
+		tx := db.Begin()
+
+		// If the new tool is marked as default, reset the default tool in the same task category
+		if defaultTool {
+			if err := tx.Model(&models.Tool{}).
+				Where("task_category = ? AND default_tool = TRUE", tool.TaskCategory).
+				Update("default_tool", false).Error; err != nil {
+				tx.Rollback()
+				http.Error(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
 		toolEntry := models.Tool{
 			CID:           cid,
 			WalletAddress: walletAddress,
@@ -90,10 +139,14 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			Gpu:           toolGpu,
 			Network:       tool.NetworkBool,
 			Timestamp:     time.Now(),
+			Display:       display,
+			TaskCategory:  taskCategory,
+			DefaultTool:   defaultTool,
 		}
 
-		result := db.Create(&toolEntry)
+		result := tx.Create(&toolEntry)
 		if result.Error != nil {
+			tx.Rollback()
 			if utils.IsDuplicateKeyError(result.Error) {
 				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
 			} else {
@@ -102,7 +155,98 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		utils.SendJSONResponseWithCID(w, toolEntry.CID)
+	}
+}
+
+func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
+	acceptedTaskCategories := map[string]bool{
+		"protein-binder-design": true,
+		"protein-folding":       true,
+		"other-models":          true,
+		// To do: add tool task category should also only accept these accepted categories
+		// To do: remove hardcoding later to match one of the available slugs from tasks taskList.ts with available: true
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
+			return
+		}
+
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var requestData struct {
+			TaskCategory *string `json:"taskCategory,omitempty"`
+			Display      *bool   `json:"display,omitempty"`
+			DefaultTool  *bool   `json:"defaultTool,omitempty"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
+			http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		// Validate taskCategory if provided
+		if requestData.TaskCategory != nil {
+			if _, ok := acceptedTaskCategories[*requestData.TaskCategory]; !ok {
+				utils.SendJSONError(w, "Task category not accepted", http.StatusBadRequest)
+				return
+			}
+		}
+
+		// Start transaction
+		tx := db.Begin()
+
+		updateData := make(map[string]interface{})
+		if requestData.TaskCategory != nil {
+			updateData["task_category"] = *requestData.TaskCategory
+		}
+		if requestData.Display != nil {
+			updateData["display"] = *requestData.Display
+		}
+		if requestData.DefaultTool != nil {
+			updateData["default_tool"] = *requestData.DefaultTool
+		}
+
+		if len(updateData) == 0 {
+			utils.SendJSONError(w, "No valid fields provided for update", http.StatusBadRequest)
+			return
+		}
+
+		result := tx.Model(&models.Tool{}).Where("cid = ?", cid).Updates(updateData)
+
+		if result.Error != nil {
+			tx.Rollback()
+			http.Error(w, fmt.Sprintf("Error updating tool: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		// Check if any rows were affected
+		if result.RowsAffected == 0 {
+			tx.Rollback() // Rollback the transaction as no update was performed
+			utils.SendJSONError(w, "Tool with the specified CID not found", http.StatusNotFound)
+			return
+		}
+
+		// Commit the transaction
+		if err := tx.Commit().Error; err != nil {
+			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		utils.SendJSONResponse(w, "Tool updated successfully")
 	}
 }
 
@@ -144,6 +288,14 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.Tool{})
 
+		// If display is provided, filter based on it, if not, display only tools where 'display' is true by default
+		displayParam, displayProvided := r.URL.Query()["display"]
+		if displayProvided && len(displayParam[0]) > 0 {
+			query = query.Where("display = ?", displayParam[0] == "true")
+		} else {
+			query = query.Where("display = ?", true)
+		}
+
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
 		}
@@ -154,6 +306,10 @@ func ListToolsHandler(db *gorm.DB) http.HandlerFunc {
 
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
+		}
+
+		if taskCategory := r.URL.Query().Get("taskCategory"); taskCategory != "" {
+			query = query.Where("task_category = ?", taskCategory)
 		}
 
 		var tools []models.Tool

@@ -107,6 +107,8 @@ services:
       MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET_KEY: ${STRIPE_WEBHOOK_SECRET_KEY}
+      NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
+      PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
     depends_on:
       dbbackend:
         condition: service_healthy

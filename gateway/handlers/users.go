@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/web3"
@@ -41,30 +42,57 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var existingUser models.User
-		if err := db.Where("wallet_address = ?", requestData.WalletAddress).First(&existingUser).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				newUser := models.User{
-					WalletAddress: requestData.WalletAddress,
-					CreatedAt:     time.Now(),
-				}
-				if result := db.Create(&newUser); result.Error != nil {
-					utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
-					fmt.Println("Error creating user in database:", result.Error)
+		err := db.Where("wallet_address = ?", requestData.WalletAddress).First(&existingUser).Error
+		if err != nil && err != gorm.ErrRecordNotFound {
+			utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
+			fmt.Println("Database error:", err)
+			return
+		}
+
+		did, err := middleware.GetUserDIDFromRequest(r, db)
+		if err != nil {
+			utils.SendJSONError(w, "Error getting user DID from request", http.StatusInternalServerError)
+			fmt.Println("Error getting user DID from request:", err)
+			return
+		}
+
+		var user models.User
+		err = db.Where("wallet_address = ?", requestData.WalletAddress).First(&user).Error
+
+		if err == gorm.ErrRecordNotFound {
+			newUser := models.User{
+				WalletAddress: requestData.WalletAddress,
+				DID:           did,
+				CreatedAt:     time.Now(),
+			}
+			if result := db.Create(&newUser); result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
+				fmt.Println("Error creating user in database:", result.Error)
+				return
+			}
+			fmt.Printf("Successfully created user with WalletAddress: %s\n", newUser.WalletAddress)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(newUser)
+		} else if err != nil {
+			utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
+			fmt.Println("Database error:", err)
+			return
+		} else {
+			if user.DID == "" {
+				user.DID = did
+				if err := db.Save(&user).Error; err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error updating user: %v", err), http.StatusInternalServerError)
+					fmt.Println("Error updating user in database:", err)
 					return
 				}
-				fmt.Printf("Successfully created user with WalletAddress: %s\n", newUser.WalletAddress)
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusCreated)
-				json.NewEncoder(w).Encode(newUser)
+				fmt.Printf("Successfully updated user with WalletAddress: %s with new DID\n", user.WalletAddress)
 			} else {
-				utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
-				fmt.Println("Database error:", err)
+				fmt.Printf("User already exists with WalletAddress: %s and has a DID\n", user.WalletAddress)
 			}
-		} else {
-			fmt.Printf("User already exists with WalletAddress: %s\n", existingUser.WalletAddress)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(existingUser)
+			json.NewEncoder(w).Encode(user)
 		}
 	}
 }
