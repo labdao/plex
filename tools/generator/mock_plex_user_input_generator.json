@@ -7,7 +7,7 @@
     "alphabet": "LAGVSERTIDPKQNFYMHWC",
     "scoring_metrics": "pseudolikelihood",
     "scoring_weights": "0.7,0.2,0.1",
-    "generator/scorers": "RFdiff+ProteinMPNN/colabfold+prodigy",
+    "generator_scorers": "RFdiff+ProteinMPNN/colabfold+prodigy",
     "selector": "open-door",
     "generator": "RFdiff+ProteinMPNN",
     "target_template_complex": "/app/protein_complex.pdb",

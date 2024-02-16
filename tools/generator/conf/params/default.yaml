@@ -9,7 +9,8 @@ basic_settings:
   scoring_metrics: 'pseudolikelihood'
   scoring_weights: '0.7,0.2,0.1'
   selector: 'closed-door'
-  generator: 'RFdiff+ProteinMPNN/colabfold+prodigy'
+  generator_scorers: 'RFdiff+ProteinMPNN/colabfold+prodigy'
+  generator: 'RFdiff+ProteinMPNN'
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A
   binder_chain: B

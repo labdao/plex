@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v2.0 (beta)",
+  "name": "protein-binder-design v2.2 (beta)",
   "description": "Protein binder design tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:c469c12d65e6db59f41672d84f7f0fa8d99e2dd03a2e37cc308e1401e29bb9c1",
+  "dockerPull": "quay.io/labdao/generator@sha256:9909fe217ebf171c15b9da16ec3ed94b4ff52cd163b0f1506f26152d9d8e597e",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -31,14 +31,14 @@
       "position": "101",
       "required": true
     },
-    "generator": {
+    "generator_scorers": {
       "type": "string",
-      "description": "type of generator used.",
+      "description": "Generator and scorers used",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "RFdiff+ProteinMPNN",
+      "default": "RFdiff+ProteinMPNN/colabfold+prodigy",
       "min": "",
       "max": "",
       "example": "RFdiff+ProteinMPNN+ESM2",
@@ -48,7 +48,7 @@
     },
     "number_of_binders": {
       "type": "number",
-      "description": "Number of evolutionary cycles",
+      "description": "Number of binders designed.",
       "array": false,
       "glob": [
         ""

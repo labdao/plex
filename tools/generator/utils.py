@@ -226,12 +226,11 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.generator", user_inputs["generator"], merge=False)
-    if user_inputs["generator/scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
+    if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
         OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
 
-    elif user_inputs["generator/scorers"] == 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2':
+    elif user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2':
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
         OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
 
