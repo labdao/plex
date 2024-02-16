@@ -50,7 +50,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
 	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
-	router.HandleFunc("/queue-summary", protected(handlers.GetJobsQueueSummaryHandler(db))).Methods("GET")
+	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
@@ -59,7 +59,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
 
 	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler(db)).Methods("POST")
-	router.HandleFunc("/stripe/{walletAddress}", handlers.StripeCreateCheckoutSessionHandler(db)).Methods("GET")
+	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("GET")
 
 	return router
 }

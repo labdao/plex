@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/checkout/session"
@@ -54,17 +54,19 @@ func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error
 
 func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		walletAddress := params["walletAddress"]
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			http.Error(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
 
-		session, err := createCheckoutSession(walletAddress)
+		session, err := createCheckoutSession(user.WalletAddress)
 		if err != nil {
-			// Handle the error appropriately
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Send the session URL back to the client
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"url": session.URL})
 	}
