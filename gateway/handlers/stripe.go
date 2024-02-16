@@ -2,12 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/labdao/plex/gateway/models"
 	"github.com/stripe/stripe-go/v76"
 	"github.com/stripe/stripe-go/v76/checkout/session"
 	"github.com/stripe/stripe-go/v76/webhook"
@@ -67,7 +70,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func StripeFullfillmentHandler() http.HandlerFunc {
+func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -95,7 +98,47 @@ func StripeFullfillmentHandler() http.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("PaymentIntent succeeded, Amount: %v, WalletAddress: %v\n", paymentIntent.Amount, paymentIntent.Metadata["walletAddress"])
+			walletAddress, ok := paymentIntent.Metadata["walletAddress"]
+			if !ok {
+				fmt.Fprintf(os.Stderr, "Wallet address not found in payment intent metadata\n")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// Fetch the User by walletAddress
+			var user models.User
+			result := db.Where("wallet_address ILIKE ?", walletAddress).First(&user)
+			if result.Error != nil {
+				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+					fmt.Fprintf(os.Stderr, "User with wallet address %s not found\n", walletAddress)
+					w.WriteHeader(http.StatusNotFound)
+				} else {
+					fmt.Fprintf(os.Stderr, "Error querying user: %v\n", result.Error)
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+				return
+			}
+
+			// Convert Stripe amount (in cents) to a float64 representation
+			amount := float64(paymentIntent.Amount) / 100.0
+
+			// Create a new Transaction
+			transaction := models.Transaction{
+				ID:          uuid.New().String(),
+				Amount:      amount,
+				IsDebit:     false, // Assuming payment intents are always credits
+				UserID:      user.WalletAddress,
+				Description: "Stripe payment intent succeeded",
+			}
+
+			// Save the Transaction to the database
+			if result := db.Create(&transaction); result.Error != nil {
+				fmt.Fprintf(os.Stderr, "Failed to save transaction: %v\n", result.Error)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			fmt.Printf("PaymentIntent succeeded, Amount: %v, WalletAddress: %v\n", paymentIntent.Amount, walletAddress)
 
 		default:
 			fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)

@@ -58,7 +58,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/api-keys", protected(handlers.AddAPIKeyHandler(db))).Methods("POST")
 	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
 
-	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler()).Methods("POST")
+	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler(db)).Methods("POST")
 	router.HandleFunc("/stripe/{walletAddress}", handlers.StripeCreateCheckoutSessionHandler(db)).Methods("GET")
 
 	return router
