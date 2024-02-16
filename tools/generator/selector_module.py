@@ -13,14 +13,21 @@ class SequenceSelector:
         return sample
 
     def run(self, t, df, accept_flag):
+        if self.cfg.params.basic_settings.bouncer_flag == 'closed-door':
+            acceptance_probability = 0.0
+            logging.info(f"acceptance probability: {acceptance_probability}")
+            accept_flag = False
+            logging.info(f"accept_flag: {accept_flag}")
+            return accept_flag
+
         if self.cfg.params.basic_settings.bouncer_flag == 'open-door':
             acceptance_probability = 1.0
             logging.info(f"acceptance probability: {acceptance_probability}")
             accept_flag = True
             logging.info(f"accept_flag: {accept_flag}")
-            return True
+            return accept_flag
 
-        elif self.cfg.params.basic_settings.bouncer_flag == 'boltzmann':
+        elif self.cfg.params.basic_settings.bouncer_flag == 'Metropolis':
             T = self.cfg.params.basic_settings.temperature
             E = 0.
             scoring_metrics = self.cfg.params.basic_settings.scoring_metrics

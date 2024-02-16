@@ -5,24 +5,24 @@ basic_settings:
   temperature: 0.05
   max_levenshtein_step_size: 1
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
-  scorers: 'Colabfold'
+  scorers: 'colabfold+prodigy'
   scoring_metrics: 'pseudolikelihood'
   scoring_weights: '0.7,0.2,0.1'
-  bouncer_flag: 'open-door'
-  generators: 'RFdiffusion+ProteinMPNN'
+  selector: 'closed-door'
+  generator: 'RFdiff+ProteinMPNN/colabfold+prodigy'
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A
   binder_chain: B
   target_seq: 'QVQLQESGGGL'
   target_pdb: 'target_structure.pdb'
   binder_template_sequence: 'binder_template_seq.fasta'
-  evolve: True
+  evolve: False
   n_samples: 1
 RFdiffusion_settings:
   inference:
     num_designs: 4
 pMPNN_settings:
-  num_seqs: 1
+  num_seqs: 2
   rm_aa: C
   mpnn_sampling_temp: 0.1
   use_solubleMPNN: "true"

@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v1.6 (beta)",
+  "name": "protein-binder-design v2.0 (beta)",
   "description": "Protein binder design tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:83c384a6c429e79ede30cc15c181fe35d67decb95b88ee082044914f1bc4dfe6",
+  "dockerPull": "quay.io/labdao/generator@sha256:c469c12d65e6db59f41672d84f7f0fa8d99e2dd03a2e37cc308e1401e29bb9c1",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -31,35 +31,48 @@
       "position": "101",
       "required": true
     },
-    "binder_chain": {
+    "generator": {
       "type": "string",
-      "description": "binder chain label",
+      "description": "type of generator used.",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "B",
+      "default": "RFdiff+ProteinMPNN",
       "min": "",
       "max": "",
-      "example": "B",
+      "example": "RFdiff+ProteinMPNN+ESM2",
       "grouping": "_Advanced input information",
       "position": "201",
       "required": false
     },
-    "target_chain": {
-      "type": "string",
-      "description": "target chain label",
+    "evolve": {
+      "type": "boolean",
+      "array": false,
+      "description": "Flag to evolve sequences.",
+      "glob": [""],
+      "default": false,
+      "min": "",
+      "max": "",
+      "example": "false, true",
+      "grouping": "_Advanced input information",
+      "position": "202",
+      "required": true
+    },
+    "number_of_evo_cycles": {
+      "type": "number",
+      "description": "Number of evolutionary cycles",
       "array": false,
       "glob": [
         ""
       ],
-      "default": "A",
-      "min": "",
-      "max": "",
-      "example": "A",
+      "default": "3",
+      "min": "1",
+      "max": "60",
+      "example": "10",
       "grouping": "_Advanced input information",
-      "position": "202",
-      "required": false
+      "position": "203",
+      "required": true
     },
     "init_permissibility_vec": {
       "type": "string",
@@ -73,36 +86,8 @@
       "max": "",
       "example": "B2:10/11:16/B27:50/x52:55/B57/62:66",
       "grouping": "_Advanced input information",
-      "position": "203",
+      "position": "204",
       "required": false
-    },
-    "generators": {
-      "type": "string",
-      "description": "type of generator used.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "RFdiffusion+ProteinMPNN",
-      "min": "",
-      "max": "",
-      "example": "RFdiffusion+ProteinMPNN",
-      "grouping": "Sampler parameters",
-      "position": "301",
-      "required": true
-    },
-    "speedup": {
-      "type": "boolean",
-      "array": false,
-      "description": "Flag to evolve sequences.",
-      "glob": [""],
-      "default": false,
-      "min": "",
-      "max": "",
-      "example": "false, true",
-      "grouping": "_Sampler parameters",
-      "position": "302",
-      "required": true
     },
     "scoring_metrics": {
       "type": "string",
@@ -115,24 +100,9 @@
       "min": "",
       "max": "",
       "example": "pseudolikelihood,mean plddt,affinity",
-      "grouping": "_Sampler parameters",
-      "position": "303",
+      "grouping": "_Advanced input information",
+      "position": "205",
       "required": false
-    },
-    "number_of_evo_cycles": {
-      "type": "number",
-      "description": "Number of evolutionary cycles",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "1",
-      "max": "60",
-      "example": "10",
-      "grouping": "_Sampler parameters",
-      "position": "304",
-      "required": true
     },
     "max_levenshtein_step_size": {
       "type": "number",
@@ -145,8 +115,23 @@
       "min": "1",
       "max": "50",
       "example": "3",
-      "grouping": "_Sampler parameters",
-      "position": "305",
+      "grouping": "_Advanced input information",
+      "position": "206",
+      "required": false
+    },
+    "selector": {
+      "type": "string",
+      "description": "selector used",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "closed-door",
+      "min": "",
+      "max": "",
+      "example": "Metropolis, open-door, and closed-door",
+      "grouping": "_Advanced input information",
+      "position": "207",
       "required": false
     },
     "temperature": {
@@ -160,8 +145,8 @@
       "min": "1",
       "max": "1",
       "example": "1",
-      "grouping": "_Sampler parameters",
-      "position": "306",
+      "grouping": "_Advanced input information",
+      "position": "208",
       "required": true
     },
     "num_designs": {
@@ -176,7 +161,7 @@
       "max": "32",
       "example": "2",
       "grouping": "_RFdiffusion",
-      "position": "401",
+      "position": "301",
       "required": false
     },
     "num_seqs": {
@@ -191,7 +176,7 @@
       "max": "5",
       "example": "1",
       "grouping": "_Protein MPNN",
-      "position": "501",
+      "position": "401",
       "required": false
     }
   },

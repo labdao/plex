@@ -16,13 +16,9 @@ import logging
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module or even to sequence-transformer
 
     sequence = squeeze_seq(sequence)
-
-    # Ensure that the length of the mutated sequence matches the number of columns in LLmatrix
     if len(sequence) != LLmatrix.shape[1]:
         raise ValueError("Length of sequence must match the number of columns in LLmatrix.")
     
-    # Define the one-letter amino acid code
-    # amino_acid_code = ''.join(runner.amino_acids) # ESM is using 'LAGVSERTIDPKQNFYMHWC' ordering
     amino_acid_code = ''.join('LAGVSERTIDPKQNFYMHWC')
 
     # Initialize total log likelihood
@@ -230,11 +226,14 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # Override Hydra default params with user supplied params
-    OmegaConf.update(cfg, "params.basic_settings.generators", user_inputs["generators"], merge=False)
-    if user_inputs["generators"] == 'RFdiff+ProteinMPNN':
-        OmegaConf.update(cfg, "params.basic_settings.scorers", 'Colabfold', merge=False)
-    elif user_inputs["generators"] == 'RFdiff+ProteinMPNN+ESM2':
-        OmegaConf.update(cfg, "params.basic_settings.scorers", 'Colabfold,ESM2', merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.generator", user_inputs["generator"], merge=False)
+    if user_inputs["generator/scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
+        OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
+        OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
+
+    elif user_inputs["generator/scorers"] == 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2':
+        OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
+        OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
 
     OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
@@ -245,14 +244,16 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     # OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.bouncer_flag", user_inputs["bouncer_flag"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.binder_template_sequence", user_inputs["binder_template_sequence"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.selector", user_inputs["selector"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
+    if user_inputs["evolve"] == False:
+        OmegaConf.update(cfg, "params.basic_settings.selector", 'closed-door', merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.n_samples", user_inputs["n_samples"], merge=False)
     OmegaConf.update(cfg, "params.RFdiffusion_settings.inference.num_designs", user_inputs["num_designs"], merge=False)
     OmegaConf.update(cfg, "params.pMPNN_settings.num_seqs", user_inputs["num_seqs"], merge=False)

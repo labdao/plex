@@ -40,7 +40,7 @@ class Generator:
 
     def run(self, t, sample_number, seed, permissibility_seed, permissibility_vector, df):
 
-        generator_name = self.cfg.params.basic_settings.generators
+        generator_name = self.cfg.params.basic_settings.generator
         if t == 0:
             generator_name = 'complete_sequence'
         args = GenerationArgs(t, seed, permissibility_vector, df, self.cfg, self.outputs_directory, generator_name)
