@@ -17,6 +17,12 @@ import (
 var verificationKey string
 var appId string
 
+type contextKey string
+
+const (
+	UserContextKey contextKey = "user"
+)
+
 type PrivyClaims struct {
 	SessionID  string `json:"sid,omitempty"`
 	UserId     string `json:"sub,omitempty"`
@@ -203,6 +209,7 @@ func AuthMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
+			var user *models.User
 			if IsJWT(token) {
 				claims, err := ValidateJWT(token, db)
 				if err != nil {
@@ -210,16 +217,24 @@ func AuthMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
 					http.Error(w, "Invalid JWT", http.StatusUnauthorized)
 					return
 				}
-				ctx := context.WithValue(r.Context(), "claims", claims)
-				r = r.WithContext(ctx)
-			} else {
-				if !ValidateAPIKey(token, db) {
-					http.Error(w, "Invalid API Key", http.StatusUnauthorized)
+				user, err = GetUserByDID(claims.UserId, db)
+				if err != nil {
+					fmt.Println("error fetching user from JWT DID:", err)
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 					return
 				}
-				ctx := context.WithValue(r.Context(), "apiKey", token)
-				r = r.WithContext(ctx)
+			} else {
+				user, err = GetUserByAPIKey(token, db)
+				if err != nil {
+					fmt.Println("error fetching user from api key:", err)
+					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					return
+				}
 			}
+
+			// Store the user model in the context so handlers can access user
+			ctx := context.WithValue(r.Context(), UserContextKey, user)
+			r = r.WithContext(ctx)
 
 			next(w, r)
 		}
