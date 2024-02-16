@@ -1,5 +1,5 @@
 {
-  "name": "protein-binder-design v2.2 (beta)",
+  "name": "protein-binder-design v2.3 (beta)",
   "description": "Protein binder design tool.",
   "author": "Convexity Labs",
   "github": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:9909fe217ebf171c15b9da16ec3ed94b4ff52cd163b0f1506f26152d9d8e597e",
+  "dockerPull": "quay.io/labdao/generator@sha256:b2e69c6c0f514f381f04022a5c262f430efe3c7d564fa439e32e66d2240d3fbc",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
