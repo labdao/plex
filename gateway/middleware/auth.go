@@ -180,7 +180,7 @@ func GetUserByAPIKey(apiKey string, db *gorm.DB) (*models.User, error) {
 	}
 
 	var user models.User
-	if err := db.Where("id = ?", key.UserID).First(&user).Error; err != nil {
+	if err := db.Where("wallet_address = ?", key.UserID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("User not found for the provided API key")
 		}
