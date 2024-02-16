@@ -128,7 +128,7 @@ func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			transaction := models.Transaction{
 				ID:          uuid.New().String(),
 				Amount:      amount,
-				IsDebit:     false, // Assuming payment intents are always credits
+				IsDebit:     false, // Assuming payment intents are always credits (money in)
 				UserID:      user.WalletAddress,
 				Description: "Stripe payment intent succeeded",
 			}

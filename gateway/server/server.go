@@ -60,6 +60,8 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler(db)).Methods("POST")
 	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("GET")
+	router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
+	router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
 
 	return router
 }
