@@ -107,7 +107,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
 
             command = [
                 'python', 'RFdiffusion/scripts/run_inference.py',
-                f'inference.output_prefix={os.path.join(generator_directory, f"evocycle_{evo_cycle}_motifscaffolding")}',
+                f'inference.output_prefix={os.path.join(generator_directory, f"designcycle_{evo_cycle}_motifscaffolding")}',
                 'inference.model_directory_path=RFdiffusion/models',
                 f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
                 f'inference.num_designs={num_designs}',
@@ -130,9 +130,9 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
             subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
 
 
-            # Loop over all PDB files starting with 'evocycle_{evo_cycle}_motifscaffolding'
+            # Loop over all PDB files starting with 'designcycle_{evo_cycle}_motifscaffolding'
             for pdb_file in os.listdir(generator_directory):
-                if pdb_file.startswith(f"evocycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
+                if pdb_file.startswith(f"designcycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
                     path_to_PDB = os.path.join(generator_directory, pdb_file)
                     output_dir = generator_directory
                     chains_to_design = 'A'
@@ -165,7 +165,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
 
             # Loop over all fasta files in the fasta_directory
             for fasta_file in os.listdir(fasta_directory):
-                if fasta_file.startswith(f"evocycle_{evo_cycle}_motifscaffolding") and fasta_file.endswith(".fa"):
+                if fasta_file.startswith(f"designcycle_{evo_cycle}_motifscaffolding") and fasta_file.endswith(".fa"):
                     fasta_file_path = os.path.join(fasta_directory, fasta_file)
                             
                     # Read the contents of the fasta file

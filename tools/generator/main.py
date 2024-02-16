@@ -124,7 +124,7 @@ def my_app(cfg: DictConfig) -> None:
     logging.info(f"target sequence {cfg.params.basic_settings.target_seq}")
     logging.info(f"initial seed sequence {seed}")
 
-    for t in range(cfg.params.basic_settings.number_of_evo_cycles):
+    for t in range(cfg.params.basic_settings.number_of_binders):
 
         logging.info(f"starting evolution step, {t+1}")
         logging.info(f"seed sequence, {seed}")

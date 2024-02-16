@@ -1,5 +1,5 @@
 {
-    "number_of_evo_cycles": 3,
+    "number_of_binders": 2,
     "init_permissibility_vec": "",
     "temperature": 0.05,
     "sequence_input": "QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG",

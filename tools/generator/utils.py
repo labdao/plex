@@ -127,8 +127,8 @@ def write_af2_update(df, directory, json_pattern):
             pdb_file_path = os.path.abspath(pdb_file)
 
             # Add new columns to the DataFrame if they don't exist
-            if 'sequence' not in df:
-                df['sequence'] = None
+            if 'sequence of complex' not in df:
+                df['sequence of complex'] = None
             if 'mean plddt' not in df:
                 df['mean plddt'] = None
             if 'max pae' not in df:
@@ -141,7 +141,7 @@ def write_af2_update(df, directory, json_pattern):
                 df['absolute pdb path'] = None
 
             # Update the DataFrame with new values
-            df.at[0, 'sequence'] = sequence
+            df.at[0, 'sequence of complex'] = sequence
             df.at[0, 'mean plddt'] = avg_plddt
             df.at[0, 'max pae'] = max_pae
             df.at[0, 'i_pae'] = i_pae
@@ -235,11 +235,11 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
         OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
 
-    OmegaConf.update(cfg, "params.basic_settings.number_of_evo_cycles", user_inputs["number_of_evo_cycles"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.number_of_binders", user_inputs["number_of_binders"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
     # OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)

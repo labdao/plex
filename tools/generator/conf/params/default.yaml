@@ -1,6 +1,6 @@
 basic_settings:
   sequence_input: 'QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG'
-  number_of_evo_cycles: 6
+  number_of_binders: 6
   init_permissibility_vec: ''
   temperature: 0.05
   max_levenshtein_step_size: 1

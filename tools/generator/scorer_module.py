@@ -55,9 +55,9 @@ class Scorer:
                 else:
                     os.makedirs(input_dir, exist_ok=True)
 
-                file_path = os.path.join(input_dir, f"evo_cycle_{t}.fasta")
+                file_path = os.path.join(input_dir, f"design_cycle_{t}.fasta")
                 with open(file_path, 'w') as file:
-                    file.write(f">evo_cycle_{t}\n{target_binder_sequence}\n")
+                    file.write(f">design_cycle_{t}\n{target_binder_sequence}\n")
 
                 seq_input_dir = os.path.abspath(input_dir)
 
@@ -65,7 +65,7 @@ class Scorer:
                 af2_runner.run()
 
                 # append output as new columns of data frame
-                df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"evo_cycle_{t}")
+                df_score = write_af2_update(df_score, scorer_directory, json_pattern=f"design_cycle_{t}")
             
             elif scorer=='Prodigy' or scorer=='prodigy': # not implemented yet
 

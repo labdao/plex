@@ -43,8 +43,8 @@ RUN pip install -r requirements.txt
 RUN git clone https://github.com/RosettaCommons/RFdiffusion.git
 RUN pip -q install jedi omegaconf hydra-core icecream pyrsistent
 RUN pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html
-# RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .
-RUN cd RFdiffusion/env/SE3Transformer; pip -q install -r requirements.txt; pip -q install .
+RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .
+# RUN cd RFdiffusion/env/SE3Transformer; pip -q install -r requirements.txt; pip -q install .
 RUN wget -qnc https://files.ipd.uw.edu/krypton/ananas
 RUN chmod +x ananas
 
@@ -54,9 +54,9 @@ RUN set -ex; \
      aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip && \
      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt && \
      aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt && \
-    #  aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar && \
-    #  tar -xvf alphafold_params_2022-12-06.tar -C params && \
-    #  rm -rf alphafold_params_2022-12-06.tar && \
+     aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar && \
+     tar -xvf alphafold_params_2022-12-06.tar -C params && \
+     rm -rf alphafold_params_2022-12-06.tar && \
      mkdir -p RFdiffusion/models; mv Base_ckpt.pt Complex_base_ckpt.pt RFdiffusion/models/ && \
      unzip schedules.zip; rm schedules.zip && \
      touch params/done.txt
