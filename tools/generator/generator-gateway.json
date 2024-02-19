@@ -1,6 +1,6 @@
 {
   "name": "protein-binder-design v2.8 (beta)",
-  "description": "Define your protein-binder-design problem by entering sequence information. First, type out the sequence of the target, then put a comma, and then type out whatever information you might have about the binder sequence. The binder information can be incomplete. Whenever you have no information about a resiude, just write an X, and the binder-design method is will design it for you.",
+  "description": "The protein-binder-designer is a method to design protein binders from sequence input. To define a design task, please enter a sequence prompt. The prompt has to contain the protein target sequence and may also include a partially known sequence of the binder. Unknown binder residues, that are to be designed, are indicated by an 'X'.",
   "author": "Convexity Labs",
   "github": "",
   "paper": "",
@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:ce3c15c147771711f39c90264b81b9c550e2824ec9c715e5d1b0a18acbf6748d",
+  "dockerPull": "quay.io/labdao/generator@sha256:cb341a4290acf28d45e3a1c5d5de8766845a427fc584698657bc16adb48c73a1",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -18,7 +18,7 @@
   "inputs": {
     "sequence_input": {
       "type": "string",
-      "description": "Sequence input in the form: target_sequence,binder_sequence. Binder sequence may contain X characters to indicate masked residues.",
+      "description": "Sequence prompt of the form: binder_sequence ; target_sequence. Binder sequence may contain 'X' characters to indicate unkown residues.",
       "array": false,
       "glob": [
         ""
@@ -26,8 +26,8 @@
       "default": "",
       "min": "",
       "max": "",
-      "example": "QVQLQESGGGL,QXCLIXXXELVTAXXXDTPG",
-      "grouping": "Sequence input information",
+      "example": "QXXXXXXXELVTADTPG ; QVQLQESGGGL",
+      "grouping": "Sequence prompt",
       "position": "101",
       "required": true
     },
@@ -42,13 +42,13 @@
       "min": "",
       "max": "",
       "example": "RFdiff+ProteinMPNN+ESM2",
-      "grouping": "_Advanced input information",
+      "grouping": "_Advanced inputs",
       "position": "201",
       "required": false
     },
     "init_permissibility_vec": {
       "type": "string",
-      "description": "Use slash notation with B and x.",
+      "description": "Contig prompt to specific fixed and masked section of the binder sequence, B1:10 fixes residues 1 to 10, and x11:20 masks residues 11 to 20.",
       "array": false,
       "glob": [
         ""
@@ -56,40 +56,44 @@
       "default": "",
       "min": "",
       "max": "",
-      "example": "B2:10/11:16/B27:50/x52:55/B57/62:66",
-      "grouping": "_Advanced input information",
+      "example": "B1:10/x11:20/B21:22",
+      "grouping": "_Advanced inputs",
       "position": "202",
       "required": false
     }
   },
   "outputs": {
+    "summary": {
+      "type": "File",
+      "description": "Summary of all designs including sequences and scores.",
+      "item": "",
+      "glob": [
+        "summary.csv"
+      ]
+    },
     "pdb_designs": {
       "type": "File",
+      "description": "Protein complex structure.",
       "item": "",
       "glob": [
         "*.pdb"
       ]
     },
-    "trb_designs": {
-      "type": "File",
-      "item": "",
-      "glob": [
-        "*.trb"
-      ]
-    },
     "fasta_designs": {
       "type": "File",
+      "description": "Sequence prediction from inverse-folding.",
       "item": "",
       "glob": [
         "*.fa"
       ]
-    },
-    "summary": {
+    },   
+    "trb_designs": {
       "type": "File",
+      "description": "Protein design process trajectory.",
       "item": "",
       "glob": [
-        "summary.csv"
+        "*.trb"
       ]
-    }    
+    }
   }
 }

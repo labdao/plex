@@ -51,7 +51,8 @@ def apply_initial_permissibility_vector(seed, permissibility_seed, cfg):
 
 def load_initial_data(cfg, outputs_directory):
     sequence_input = cfg.params.basic_settings.sequence_input
-    target, binder = sequence_input.split(',')
+    # binder, target = sequence_input.split(',')
+    binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
 
     sequences = [{
         't': 0,
@@ -65,7 +66,7 @@ def load_initial_data(cfg, outputs_directory):
     }]
 
     contig_in_convexity_notation = ''
-    if cfg.params.basic_settings.init_permissibility_vec == '':
+    if cfg.params.basic_settings.init_permissibility_vec == "":
         contig_in_convexity_notation = replace_invalid_characters(sequences[-1]['seed'], cfg.params.basic_settings.alphabet)
     else:
         print('converting to convexity notation')

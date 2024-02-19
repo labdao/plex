@@ -21,7 +21,7 @@ basic_settings:
   n_samples: 1
 RFdiffusion_settings:
   inference:
-    num_designs: 4
+    num_designs: 2
 pMPNN_settings:
   num_seqs: 2
   rm_aa: C
