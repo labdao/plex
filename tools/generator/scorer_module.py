@@ -42,7 +42,7 @@ class Scorer:
                 df_score.at[0, 'pseudolikelihood'] = LL_mod
 
             elif scorer=='Colabfold' or scorer=='colabfold':
-                target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{squeeze_seq(sequence)}" # TD: fix this; maybe load the target-sequence into the cfg from the pdb or fasta
+                target_binder_sequence = f"{self.cfg.params.basic_settings.target_seq}:{squeeze_seq(sequence)}"
                 
                 # include a function that combines binder and target sequence
                 input_dir = os.path.join(self.cfg.inputs.directory, 'current_sequences')

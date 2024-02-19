@@ -1,7 +1,7 @@
 #!/bin/bash
 USER_NAME="philipp"
 CONTAINER_NAME="pf/generator-deployment-test"
-PLEX_JOB_INPUTS=$(cat mock_plex_user_input_generator.json)
+PLEX_JOB_INPUTS=$(cat mock_plex_user_input_generator_local.json)
 HOST_CACHE_DIR=/home/convexity-research/$USER_NAME/lab-exchange/tools/generator/cache
 
 # Build the Docker image
