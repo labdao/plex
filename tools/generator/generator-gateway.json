@@ -1,6 +1,6 @@
 {
-  "name": "protein-binder-design v2.7 (beta)",
-  "description": "Protein binder design tool.",
+  "name": "protein-binder-design v2.8 (beta)",
+  "description": "Define your protein-binder-design problem by entering sequence information. First, type out the sequence of the target, then put a comma, and then type out whatever information you might have about the binder sequence. The binder information can be incomplete. Whenever you have no information about a resiude, just write an X, and the binder-design method is will design it for you.",
   "author": "Convexity Labs",
   "github": "",
   "paper": "",
@@ -46,21 +46,6 @@
       "position": "201",
       "required": false
     },
-    "number_of_binders": {
-      "type": "number",
-      "description": "Number of binders designed.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "3",
-      "min": "1",
-      "max": "60",
-      "example": "10",
-      "grouping": "_Advanced input information",
-      "position": "202",
-      "required": true
-    },
     "init_permissibility_vec": {
       "type": "string",
       "description": "Use slash notation with B and x.",
@@ -73,98 +58,30 @@
       "max": "",
       "example": "B2:10/11:16/B27:50/x52:55/B57/62:66",
       "grouping": "_Advanced input information",
-      "position": "203",
-      "required": false
-    },
-    "scoring_metrics": {
-      "type": "string",
-      "description": "type of scoring metrics.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "",
-      "min": "",
-      "max": "",
-      "example": "pseudolikelihood,mean plddt,affinity",
-      "grouping": "_Advanced input information",
-      "position": "204",
-      "required": false
-    },
-    "selector": {
-      "type": "string",
-      "description": "selector used",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "closed-door",
-      "min": "",
-      "max": "",
-      "example": "Metropolis, open-door, and closed-door",
-      "grouping": "_Advanced input information",
-      "position": "205",
-      "required": false
-    },
-    "temperature": {
-      "type": "number",
-      "description": "Sampling temperature (currently fixed to T=1)",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "1",
-      "min": "1",
-      "max": "1",
-      "example": "1",
-      "grouping": "_Advanced input information",
-      "position": "206",
-      "required": false
-    },
-    "num_designs": {
-      "type": "number",
-      "description": "Number of designs proposed by RFdiffusion",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "1",
-      "min": "1",
-      "max": "1",
-      "example": "1",
-      "grouping": "_RFdiffusion",
-      "position": "301",
-      "required": false
-    },
-    "num_seqs": {
-      "type": "number",
-      "description": "Number of sequences from protein mpnn",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "2",
-      "max": "5",
-      "example": "1",
-      "grouping": "_Protein MPNN",
-      "position": "401",
+      "position": "202",
       "required": false
     }
   },
   "outputs": {
-    "all_outputs": {
-      "type": "Array",
-      "item": "File",
-      "glob": [
-        "*.zip"
-      ]
-    },
     "pdb_designs": {
       "type": "File",
       "item": "",
       "glob": [
         "*.pdb"
+      ]
+    },
+    "trb_designs": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*.trb"
+      ]
+    },
+    "fasta_designs": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*.fa"
       ]
     },
     "summary": {
