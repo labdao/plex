@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { Code2Icon, DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
+import { Code2Icon, CreditCardIcon, DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -17,6 +17,8 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import PrivyLoginButton from "../auth/PrivyLoginButton";
+import StripeCheckoutButton from "../payment/StripeCheckoutButton";
+import TransactionSummaryInfo from "../payment/TransactionSummaryInfo";
 import { NavButton } from "./NavItem";
 
 export default function UserMenu() {
@@ -85,16 +87,19 @@ export default function UserMenu() {
                 </>
               )}
 
-              <Link href="/api" passHref>
-                <DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/api">
                   <Code2Icon size={20} className="mr-1" />
                   API Keys
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator />
+                </Link>
+              </DropdownMenuItem>
 
+              <div className="p-2 rounded-sm bg-primary/10">
+                <TransactionSummaryInfo />
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
+
           <NavButton icon={<LogOutIcon />} title="Log Out" onClick={handleLogout} />
         </>
       )}
