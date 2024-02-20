@@ -92,6 +92,17 @@ RUN mkdir /app/ProteinMPNN && git clone https://github.com/dauparas/ProteinMPNN 
 RUN /bin/bash -c "source activate base && \
                 pip install transformers && \
                 python -c \"from transformers import AutoTokenizer, EsmForMaskedLM; model_name='facebook/esm2_t33_650M_UR50D'; AutoTokenizer.from_pretrained(model_name); EsmForMaskedLM.from_pretrained(model_name)\""
+
+
+# omegafold
+RUN apt-get update && apt-get install -y git nano
+RUN git clone https://github.com/HeliXonProtein/OmegaFold
+RUN cd OmegaFold && python setup.py install
+RUN pip install git+https://github.com/HeliXonProtein/OmegaFold.git
+
+# downloading weights
+RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt
+
 COPY . /app
 
 ENV PYTHONUNBUFFERED=1
