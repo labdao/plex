@@ -107,7 +107,6 @@ func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			// Fetch the User by walletAddress
 			var user models.User
 			result := db.Where("wallet_address ILIKE ?", walletAddress).First(&user)
 			if result.Error != nil {
@@ -124,7 +123,6 @@ func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			// Convert Stripe amount (in cents) to a float64 representation
 			amount := float64(paymentIntent.Amount) / 100.0
 
-			// Create a new Transaction
 			transaction := models.Transaction{
 				ID:          uuid.New().String(),
 				Amount:      amount,
@@ -133,7 +131,6 @@ func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				Description: "Stripe payment intent succeeded",
 			}
 
-			// Save the Transaction to the database
 			if result := db.Create(&transaction); result.Error != nil {
 				fmt.Fprintf(os.Stderr, "Failed to save transaction: %v\n", result.Error)
 				w.WriteHeader(http.StatusInternalServerError)

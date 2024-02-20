@@ -64,24 +64,21 @@ func SummaryTransactionsHandler(db *gorm.DB) http.HandlerFunc {
 
 		var totalDebits, totalCredits float64
 
-		// Calculate total of debit transactions
 		db.Model(&models.Transaction{}).
 			Where("user_id = ? AND is_debit = ?", user.WalletAddress, true).
 			Select("sum(amount)").
 			Row().
 			Scan(&totalDebits)
 
-		// Calculate total of credit transactions
 		db.Model(&models.Transaction{}).
 			Where("user_id = ? AND is_debit = ?", user.WalletAddress, false).
 			Select("sum(amount)").
 			Row().
 			Scan(&totalCredits)
 
-		// Prepare the summary
 		summary := TransactionSummary{
-			Tokens:  totalDebits,                // will change to on chain after airdrop
-			Balance: totalCredits - totalDebits, // Balance (money in - money out)
+			Tokens:  totalDebits,
+			Balance: totalCredits - totalDebits,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
