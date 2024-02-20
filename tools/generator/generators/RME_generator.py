@@ -5,6 +5,7 @@ import logging
 from utils import squeeze_seq
 import sequence_transformer
 import numpy as np
+from utils import squeeze_seq
 
 from .base_generator import BaseGenerator
 
@@ -149,8 +150,8 @@ class RMEGenerator(BaseGenerator):
             logging.info(f"diffusing...")
 
             # logging.info(f"permissibility vector, {permissibility_vector}")
-            contig = self._generate_contig(permissibility_vector, target, starting_target_residue=None, end_target_residue=None)
-            logging.info(f"diffusion contig, {contig}")
+            contig = self._generate_contig(squeeze_seq(permissibility_vector), target, starting_target_residue=None, end_target_residue=None)
+            # logging.info(f"diffusion contig, {contig}")
 
             # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
             env = os.environ.copy()
