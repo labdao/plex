@@ -20,7 +20,7 @@ export default function LoginPage() {
     <div>
       <div className="p-16 text-center">
         <LockIcon size={48} className="mx-auto mb-4" />
-        <h1 className="mb-4 font-mono text-lg font-bold tracking-wide uppercase">Log In to Your Lab Exchange Account</h1>
+        <h1 className="mb-4 font-mono text-lg font-bold tracking-wide uppercase">Log In to Your Lab.Bio Account</h1>
         <PrivyLoginButton>Log In</PrivyLoginButton>
       </div>
     </div>

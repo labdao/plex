@@ -104,7 +104,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
 }
 
 export const metadata: Metadata = {
-  title: "Lab Exchange",
+  title: "Lab.Bio",
   icons: [
     {
       rel: "shortcut icon",

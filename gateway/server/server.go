@@ -32,7 +32,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
-	router.HandleFunc("/user", protected(handlers.AddUserHandler(db)))
+	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 
 	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
@@ -50,13 +50,18 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
 	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
-	router.HandleFunc("/queue-summary", protected(handlers.GetJobsQueueSummaryHandler(db))).Methods("GET")
+	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
 
 	router.HandleFunc("/api-keys", protected(handlers.AddAPIKeyHandler(db))).Methods("POST")
 	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
+
+	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler(db)).Methods("POST")
+	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("GET")
+	router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
+	router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
 
 	return router
 }
