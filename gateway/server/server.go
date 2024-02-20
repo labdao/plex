@@ -32,7 +32,7 @@ func NewServer(db *gorm.DB) *mux.Router {
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
-	router.HandleFunc("/user", protected(handlers.AddUserHandler(db)))
+	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 
 	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
