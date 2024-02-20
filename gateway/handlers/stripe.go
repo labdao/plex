@@ -29,7 +29,7 @@ func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String("price_1OehLu2mES9P7kjwSQS45ZKq"), // comes from Stripe Product Dashboard
+				Price:    stripe.String(os.Getenv("STRIPE_PRODUCT_SLUG")), // comes from Stripe Product Dashboard
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
 					Enabled: stripe.Bool(true),
