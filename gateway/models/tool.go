@@ -18,6 +18,6 @@ type Tool struct {
 	Network       bool           `gorm:"type:boolean"`
 	Timestamp     time.Time      `gorm:""`
 	Display       bool           `gorm:"type:boolean;default:true"`
-	TaskCategory  string         `gorm:"type:text;default:'other-models'"`
+	TaskCategory  string         `gorm:"type:text;default:'community-models'"`
 	DefaultTool   bool           `gorm:"type:boolean;default:false"`
 }

@@ -109,7 +109,7 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 
 		var taskCategory string
 		if tool.TaskCategory == "" {
-			taskCategory = "other-models"
+			taskCategory = "community-models"
 		} else {
 			taskCategory = tool.TaskCategory
 		}
@@ -169,7 +169,7 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 	acceptedTaskCategories := map[string]bool{
 		"protein-binder-design": true,
 		"protein-folding":       true,
-		"other-models":          true,
+		"community-models":      true,
 		// To do: add tool task category should also only accept these accepted categories
 		// To do: remove hardcoding later to match one of the available slugs from tasks taskList.ts with available: true
 	}
