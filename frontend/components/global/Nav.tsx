@@ -25,7 +25,7 @@ export default function Nav() {
           className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-14 font-heading whitespace-nowrap"
         >
           <Logo className="w-auto h-6 text-primary" />
-          Lab Exchange
+          Lab.Bio
         </Link>
         <NavContent>
           <NavLink href="/tasks" icon={<BoxIcon />} title="Tasks" />
