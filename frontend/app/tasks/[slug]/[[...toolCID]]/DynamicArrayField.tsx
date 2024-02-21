@@ -5,11 +5,12 @@ import React from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 
 import { DataFileSelect } from "@/components/shared/DataFileSelect";
+import { BooleanInput } from "@/components/ui/boolean-input";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { BooleanInput } from "@/components/ui/boolean-input";
 import { LabelDescription } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 interface DynamicFieldProps {
@@ -59,10 +60,10 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                         label={input.glob && `${input.glob.join(", ")}`}
                       />
                     )}
-                    {input.type === "string" && <Input placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
+                    {input.type === "string" && <Textarea placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
                     {(input.type === "number" || input.type === "int") && <Input type="number" {...field} />}
                     {(input.type === "bool" || input.type === "boolean") && (
-                      <BooleanInput {...field} checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                      <BooleanInput {...field} checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
                     )}
                   </>
                 </FormControl>

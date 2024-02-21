@@ -12,7 +12,6 @@ interface ModelInfoProps {
 
 export default function ModelInfo({ tool }: ModelInfoProps) {
   const { description, github, paper } = tool.ToolJson;
-  console.log("tool", tool);
   return (
     <>
       <p className="mt-4">{description}</p>
