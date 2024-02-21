@@ -2,13 +2,13 @@
 _Figure: ... ._ -->
 
 
-# Protein-binder-designer
+# Protein-binder-designer (beta)
 
-A library for the design of protein-binder desigs
+A library for the design of protein-binder designs
 
 ## Contents
 
-- [Protein-binder-designer](#Protein-binder-designer)
+- [Protein-binder-designer (beta)](#Protein-binder-designer (beta))
   - [Contents](#contents)
   - [RM-designer](#RM-designer)
   - [fastRM-designer](#fastRM-designer)
