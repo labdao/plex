@@ -93,10 +93,7 @@ export default function UserMenu() {
                   API Keys
                 </Link>
               </DropdownMenuItem>
-
-              <div className="p-2 rounded-sm bg-primary/10">
-                <TransactionSummaryInfo />
-              </div>
+              <TransactionSummaryInfo className="mt-2" />
             </DropdownMenuContent>
           </DropdownMenu>
 

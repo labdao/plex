@@ -20,7 +20,7 @@ const InfoItem = ({ label, value }: { label: string; value: string | number | nu
   </div>
 );
 
-const TransactionSummaryInfo = () => {
+const TransactionSummaryInfo = ({ className }: { className?: string }) => {
   const dispatch = useDispatch<AppDispatch>();
   const transactionsSummary = useSelector(selectTransactionsSummary);
   const loading = useSelector(selectTransactionsSummaryLoading);
@@ -33,10 +33,12 @@ const TransactionSummaryInfo = () => {
   const { tokens, balance } = transactionsSummary;
 
   return (
-    <div className="flex gap-4">
-      <InfoItem label="Tokens" value={tokens} />
-      <InfoItem label="Credits" value={balance} />
-      <StripeCheckoutButton variant="outline" size="sm" className="w-full">
+    <div className={cn("flex flex-wrap justify-between gap-4 p-2 rounded-lg bg-primary/10", className)}>
+      <div className="flex gap-4">
+        <InfoItem label="Tokens" value={tokens} />
+        <InfoItem label="Credits" value={balance} />
+      </div>
+      <StripeCheckoutButton variant="outline" size="sm">
         <CreditCardIcon size={20} className="mr-1" />
         Add Credits
       </StripeCheckoutButton>

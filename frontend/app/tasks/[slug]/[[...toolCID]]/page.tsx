@@ -18,13 +18,23 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
-import { AppDispatch, selectToolDetail, selectToolDetailError, selectToolDetailLoading, selectToolList, toolDetailThunk, toolListThunk, resetToolDetail, resetToolList } from "@/lib/redux";
+import {
+  AppDispatch,
+  resetToolDetail,
+  resetToolList,
+  selectToolDetail,
+  selectToolDetailError,
+  selectToolDetailLoading,
+  selectToolList,
+  toolDetailThunk,
+  toolListThunk,
+} from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { tasks } from "../../taskList";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
-import TaskPageHeader from "./TaskPageHeader";
+import ModelInfo from "./ModelInfo";
 import { TaskSummary } from "./TaskSummary";
 
 type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
@@ -67,7 +77,7 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
     };
   }, [params.slug, dispatch]);
 
-  const defaultTool = tools.find(tool => tool.DefaultTool === true);
+  const defaultTool = tools.find((tool) => tool.DefaultTool === true);
   const default_tool_cid = defaultTool?.CID;
 
   useEffect(() => {
@@ -77,7 +87,7 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
   }, [dispatch, default_tool_cid]);
 
   // Order and group the inputs by their position and grouping value
-  const sortedInputs = Object.entries(tool.ToolJson?.inputs)
+  const sortedInputs = Object.entries(tool.ToolJson?.inputs || {})
     // @ts-ignore
     .sort(([, a], [, b]) => a.position - b.position);
 
@@ -192,19 +202,22 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
           </Alert>
         )}
         <>
-          <TaskPageHeader tool={tool} loading={toolDetailLoading} />
-          <ProtectedComponent method="overlay" message="Log in to run an experiment">
+          <ProtectedComponent method="hide" message="Log in to run an experiment">
             <div className="grid min-h-screen grid-cols-1 p-6 lg:pr-0 lg:grid-cols-3">
               <div className="col-span-2">
                 <Form {...form}>
                   <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))} className="space-y-8">
                     <Card>
-                      <CardContent className="space-y-4">
+                      <CardHeader>
+                        <CardTitle className="uppercase">Model</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="hidden">
                               <FormLabel>
                                 Name <LabelDescription>string</LabelDescription>
                               </FormLabel>
@@ -222,23 +235,14 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                           key={tool?.CID}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Model</FormLabel>
                               <FormControl>
                                 <ToolSelect onChange={field.onChange} taskSlug={params.slug} defaultValue={tool?.CID} />
                               </FormControl>
-                              <FormDescription>
-                                <a
-                                  className="text-accent hover:underline"
-                                  target="_blank"
-                                  href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`}
-                                >
-                                  View Tool Manifest
-                                </a>
-                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
+                        <ModelInfo tool={tool} />
                       </CardContent>
                     </Card>
                     {!toolDetailLoading && (

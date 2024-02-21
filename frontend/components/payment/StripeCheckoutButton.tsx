@@ -26,7 +26,7 @@ const StripeCheckoutButton = (props: ButtonProps) => {
 
   useEffect(() => {
     if (checkoutUrl) {
-      window.location.replace(checkoutUrl);
+      window.location.assign(checkoutUrl);
     }
     if (error) {
       toast.error(error);
