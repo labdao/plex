@@ -198,7 +198,6 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Validate taskCategory if provided
 		if requestData.TaskCategory != nil {
 			if _, ok := acceptedTaskCategories[*requestData.TaskCategory]; !ok {
 				utils.SendJSONError(w, "Task category not accepted", http.StatusBadRequest)
@@ -206,7 +205,6 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 
-		// Start transaction
 		tx := db.Begin()
 
 		updateData := make(map[string]interface{})
@@ -233,14 +231,12 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Check if any rows were affected
 		if result.RowsAffected == 0 {
-			tx.Rollback() // Rollback the transaction as no update was performed
+			tx.Rollback()
 			utils.SendJSONError(w, "Tool with the specified CID not found", http.StatusNotFound)
 			return
 		}
 
-		// Commit the transaction
 		if err := tx.Commit().Error; err != nil {
 			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
 			return

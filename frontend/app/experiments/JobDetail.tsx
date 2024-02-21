@@ -6,6 +6,7 @@ import backendUrl from "lib/backendUrl";
 import { DownloadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
@@ -22,9 +23,19 @@ interface JobDetailProps {
   jobID: number;
 }
 
+interface CheckpointData {
+  cycle: number;
+  proposal: number;
+  factor1: number;
+  factor2: number;
+  dim1: number;
+  dim2: number;
+}
+
 export interface JobDetail {
   ID: number | null;
   BacalhauJobID: string;
+  JobUUID: string;
   State: string;
   Error: string;
   ToolID: string;
@@ -38,6 +49,9 @@ export interface JobDetail {
 export default function JobDetail({ jobID }: JobDetailProps) {
   const [job, setJob] = useState({} as JobDetail);
   const [loading, setLoading] = useState(false);
+  const [checkpoints, setCheckpoints] = useState([]);
+  const [plotData, setPlotData] = useState([]);
+
   interface File {
     CID: string;
     Filename: string;
@@ -75,9 +89,38 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     };
   
     fetchData();
+
+    fetch(`${backendUrl()}/checkpoints/${jobID}`)
+      .then(response => response.json())
+      .then(data => {
+        setCheckpoints(data);
+      })
+      .catch(error => console.error('Error fetching checkpoints:', error));
+
   }, [jobID]);
 
-  console.log(job);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${jobID}`);
+        const checkpointData = await checkpointResponse.json();
+        setCheckpoints(checkpointData);
+  
+        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${jobID}/get-data`);
+        const plotData = await plotDataResponse.json();
+        setPlotData(plotData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    if (job.State === "running" || job.State === "completed") {
+      fetchData();
+      const intervalId = setInterval(fetchData, 5000);
+  
+      return () => clearInterval(intervalId);
+    }
+  }, [jobID, job.State]);
 
   return (
     <Tabs defaultValue="parameters" className="w-full @container ">
@@ -86,6 +129,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
+        <TabsTrigger value="checkpoints">Checkpoints</TabsTrigger>
       </TabsList>
       <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
@@ -106,7 +150,41 @@ export default function JobDetail({ jobID }: JobDetailProps) {
           <LogViewer jobID={job.BacalhauJobID} />
         </div>
       </TabsContent>
+      <TabsContent value="checkpoints">
+      <ScatterChart width={400} height={400} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+        <CartesianGrid />
+        <XAxis type="number" dataKey="factor1" name="Factor 1" />
+        <YAxis type="number" dataKey="factor2" name="Factor 2" />
+        <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+        <Scatter name="Checkpoints" data={plotData} fill="#8884d8" />
+      </ScatterChart>
+        <CheckpointsList checkpoints={checkpoints} />
+      </TabsContent>
     </Tabs>
+  );
+}
+
+function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: string, url: string }> }) {
+  const safeCheckpoints = checkpoints || [];
+  return (
+    <div>
+      {safeCheckpoints.length > 0 ? (
+        safeCheckpoints.map((checkpoint, index) => (
+          <div key={index} className="flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none">
+            <div>
+              <span className="text-accent">{checkpoint.fileName}</span>
+            </div>
+            <Button size="icon" variant="outline" asChild>
+              <a href={checkpoint.url} download target="_blank" rel="noopener noreferrer">
+                <DownloadIcon />
+              </a>
+            </Button>
+          </div>
+        ))
+      ) : (
+        <p>No checkpoint files found.</p>
+      )}
+    </div>
   );
 }
 

@@ -1,0 +1,60 @@
+{
+    "class": "",
+    "name": "labsay-checkpoint-test",
+    "description": "simple hello world that checkpoint upload to s3 is working",
+    "author": "labdao",
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:e1341586df01be0f7e4fc5a61511f401e536294b319ecefad87b3939b86e576d",
+    "gpuBool": false,
+    "networkBool": true,
+    "memoryGB": 4,
+    "cpu": 0.8,
+    "inputs": {
+        "file_example": {
+            "type": "file",
+            "description": "File to have contents added to output result file.",
+            "array": false,
+            "glob": ["*.txt"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "File Params",
+            "position": "1",
+            "required": true
+        },
+        "string_example": {
+            "type": "string",
+            "array": false,
+            "description": "String to append to output result file.",
+            "glob": [""],
+            "default": "hello world",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "String Params",
+            "position": "2",
+            "required": true
+        },
+        "number_example": {
+            "type": "number",
+            "array": false,
+            "description": "Number will get multipled by len of (string_example) and added to the output result file.",
+            "glob": [""],
+            "default": 196883,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Number Params",
+            "position": "3",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["result.txt"]
+        }
+    }
+}

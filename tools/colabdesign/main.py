@@ -13,6 +13,7 @@ import subprocess
 
 import pandas as pd
 import yaml
+import boto3
 
 print("Starting main.py...")
 
@@ -93,6 +94,17 @@ def get_plex_job_inputs():
         # Handle the case where the string is not valid JSON
         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
 
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Successfully uploaded {file_name} to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
+        raise e
 
 def extract_deepest_keys(nested_dict, current_path="", deepest_keys=None):
     if deepest_keys is None:
@@ -123,6 +135,39 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
     return df_results
 
+def create_and_upload_checkpoints(df_results, result_csv_path):
+    checkpoint_csv_path = os.path.dirname(result_csv_path)
+    for index, row in df_results.iterrows():
+        plddt_for_checkpoint = row['plddt'] *100
+        i_pae_for_checkpoint = row['i_pae']
+        design = row['design']
+        n = row['n']
+        pdb_file_name = f"design{design}_n{n}.pdb"
+        pdb_path = f"{checkpoint_csv_path}/default/all_pdb/{pdb_file_name}"
+        # pdb upload to s3 pending
+        new_df = pd.DataFrame({
+            'cycle': design,
+            'proposal': n,
+            'factor1': plddt_for_checkpoint,
+            'factor2': i_pae_for_checkpoint,
+            'dim1': row['rmsd'],
+            'dim2': row['affinity'],
+            'pdbFileName': pdb_file_name
+        }, index=[0])
+        event_csv_filename = f"checkpoint_{index}_event.csv"
+        event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
+        new_df.to_csv(event_csv_filepath, index= False)
+
+        bucket_name = "app-checkpoint-bucket"
+        job_uuid = os.getenv("JOB_UUID")
+        time.sleep(2)
+        object_name = f"checkpoints/{job_uuid}/checkpoint_{index}"
+        upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
+        upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+        os.remove(event_csv_filepath)
+        print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
+
+    return
 
 def enricher(multirun_path, cfg):
     # Find the scores file in multirun_path
@@ -148,6 +193,9 @@ def enricher(multirun_path, cfg):
     print("enriched results", df_results)
 
     df_results.to_csv(results_csv_path, index=False)
+
+    print("creating and uploading checkpoints")
+    create_and_upload_checkpoints(df_results, results_csv_path)
 
 
 def get_files_from_directory(root_dir, extension, max_depth=3):
