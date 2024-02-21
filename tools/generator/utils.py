@@ -234,40 +234,15 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
         OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
 
-    if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/omegafold_with_alignment':
+    if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/omegafold_with_alignment+prodigy':
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-        OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment', merge=False)
+        OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment,prodigy', merge=False)
 
     OmegaConf.update(cfg, "params.basic_settings.number_of_binders", user_inputs["number_of_binders"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.temperature", user_inputs["temperature"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.max_levenshtein_step_size", user_inputs["max_levenshtein_step_size"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.alphabet", user_inputs["alphabet"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.scorers", user_inputs["scorers"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.scoring_metrics", user_inputs["scoring_metrics"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.scoring_weights", user_inputs["scoring_weights"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.target_template_complex", user_inputs["target_template_complex"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.binder_chain", user_inputs["binder_chain"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.binder_template_sequence", user_inputs["binder_template_sequence"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.selector", user_inputs["selector"], merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.evolve", user_inputs["evolve"], merge=False)
-    # if user_inputs["evolve"] == False:
-    #     OmegaConf.update(cfg, "params.basic_settings.selector", 'closed-door', merge=False)
-    # OmegaConf.update(cfg, "params.basic_settings.n_samples", user_inputs["n_samples"], merge=False)
-    # OmegaConf.update(cfg, "params.RFdiffusion_settings.inference.num_designs", user_inputs["num_designs"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.num_seqs", user_inputs["num_seqs"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.rm_aa", user_inputs["rm_aa"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.mpnn_sampling_temp", user_inputs["mpnn_sampling_temp"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.use_solubleMPNN", user_inputs["use_solubleMPNN"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.initial_guess", user_inputs["initial_guess"], merge=False)
-    # OmegaConf.update(cfg, "params.pMPNN_settings.chains_to_design", user_inputs["chains_to_design"], merge=False)
     
     return cfg
 
 def replace_invalid_characters(seed, alphabet):
-    # Replace characters not in alphabet and not '*' or 'x' with 'X'
     return ''.join(['X' if c not in alphabet and c not in ['*', 'x'] else c for c in seed])
