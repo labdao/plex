@@ -4,7 +4,7 @@ _Figure: ... ._ -->
 
 # Protein-binder-designer
 
-A libraray for the design of protein-binder desigs
+A library for the design of protein-binder desigs
 
 ## Contents
 
@@ -55,11 +55,7 @@ $CONTAINER_NAME:latest
 
 ## Copyright Notice
 
-While AlphaFold's and, by extension, OpenFold's source code is licensed under
-the permissive Apache Licence, Version 2.0, DeepMind's pretrained parameters 
-fall under the CC BY 4.0 license, a copy of which is downloaded to 
-`openfold/resources/params` by the installation script. Note that the latter
-replaces the original, more restrictive CC BY-NC 4.0 license as of January 2022.
+...
 
 ## Contributing
 
@@ -71,4 +67,4 @@ welcome pull requests from the community.
 Please cite the Convexity Labs team.
 
 
-Any work that cites OpenFold should also cite [AlphaFold](https://www.nature.com/articles/s41586-021-03819-2) and [AlphaFold-Multimer](https://www.biorxiv.org/content/10.1101/2021.10.04.463034v1) if applicable.
+Any work that cites protein-binder-designer should also cite ... if applicable.
