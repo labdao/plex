@@ -230,7 +230,7 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 }
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
-	capacityErrorMessages := []string{"not enough capacity", "not enough nodes"}
+	capacityErrorMessages := []string{"not enough capacity", "not enough nodes", "does not have capacity"}
 	falseCapacityMessages := []string{"Could not inspect image", "node does not support the available image platforms"}
 	if len(job.State.Executions) > 0 {
 		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
