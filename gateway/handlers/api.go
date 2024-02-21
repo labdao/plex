@@ -78,15 +78,9 @@ func ListAPIKeysHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		did, err := middleware.GetUserDIDFromRequest(r, db)
-		if err != nil {
-			utils.SendJSONError(w, "Failed to get user DID from request: "+err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		user, err := middleware.GetUserByDID(did, db)
-		if err != nil {
-			utils.SendJSONError(w, "Failed to get user by DID: "+err.Error(), http.StatusNotFound)
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
 			return
 		}
 

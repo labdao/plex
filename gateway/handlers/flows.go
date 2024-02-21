@@ -266,6 +266,12 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		params := mux.Vars(r)
 		flowID, err := strconv.Atoi(params["flowID"])
 		if err != nil {
@@ -274,9 +280,9 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
+		if result := db.Preload("Jobs.Tool").First(&flow, "id = ? AND wallet_address = ?", flowID, user.WalletAddress); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
+				http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
 			} else {
 				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
 			}
@@ -298,7 +304,13 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		query := db.Model(&models.Flow{})
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
+		query := db.Model(&models.Flow{}).Where("wallet_address = ?", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)

@@ -71,7 +71,6 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 
-		// walletAddress := r.FormValue("walletAddress")
 		filename := r.FormValue("filename")
 
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
@@ -129,6 +128,12 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		vars := mux.Vars(r)
 		cid := vars["cid"]
 		if cid == "" {
@@ -140,6 +145,11 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -158,6 +168,12 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		var page, pageSize int = 1, 50
 
 		if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
@@ -171,11 +187,10 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.DataFile{})
 
+		query = query.Where("wallet_address = ?", user.WalletAddress)
+
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
-		}
-		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
-			query = query.Where("wallet_address = ?", walletAddress)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
 			query = query.Where("filename LIKE ?", "%"+filename+"%")
@@ -242,9 +257,20 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		var dataFile models.DataFile
 		if err := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile).Error; err != nil {
 			utils.SendJSONError(w, "Data file not found", http.StatusNotFound)
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
