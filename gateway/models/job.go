@@ -40,4 +40,5 @@ type Job struct {
 	StartedAt     time.Time      `gorm:""`
 	CompletedAt   time.Time      `gorm:""`
 	Annotations   string         `gorm:"type:varchar(255)"`
+	JobUUID       string         `gorm:"type:uuid"`
 }
