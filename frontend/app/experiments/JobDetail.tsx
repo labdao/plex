@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
-// import MolstarComponent from "@/components/Molstar";
+import MolstarComponent from "@/components/Molstar";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Alert } from "@/components/ui/alert";
@@ -180,10 +180,10 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         <CheckpointsList checkpoints={checkpoints} />
       </TabsContent>
       <TabsContent value="visualize">
-        {/* <MolstarComponent 
+        <MolstarComponent 
           moleculeUrl={moleculeUrl}
           customDataFormat="pdb" 
-        /> */}
+        />
       </TabsContent>
     </Tabs>
       );
