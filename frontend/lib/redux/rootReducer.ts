@@ -8,9 +8,11 @@ import {
   flowDetailSlice,
   flowListSlice,
   jobDetailSlice,
+  stripeCheckoutSlice,
   toolAddSlice,
   toolDetailSlice,
   toolListSlice,
+  transactionsSummarySlice,
   userSlice,
 } from "./slices";
 
@@ -27,4 +29,6 @@ export const reducer = {
   jobDetail: jobDetailSlice.reducer,
   apiKeyAdd: apiKeyAddSlice.reducer,
   apiKeyList: apiKeyListSlice.reducer,
+  stripeCheckout: stripeCheckoutSlice.reducer,
+  transactionsSummary: transactionsSummarySlice.reducer,
 };

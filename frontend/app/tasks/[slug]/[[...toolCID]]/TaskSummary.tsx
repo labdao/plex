@@ -3,6 +3,7 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 
+import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
   return (
     <div className="sticky max-h-screen pb-6 mt-6 overflow-y-auto lg:mt-0 lg:pl-6 top-4">
       <Card>
+        <TransactionSummaryInfo className="px-6 rounded-b-none" />
         <CardContent>
           <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
           <div className="mb-4 space-y-2 lowercase">

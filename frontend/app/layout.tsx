@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 
 import Nav from "@/components/global/Nav";
 import { ViewportWarning } from "@/components/shared/ViewportWarning";
+import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +98,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
             <Nav />
             <div className="grow">{props.children}</div>
           </div>
+          <Toaster richColors />
         </Providers>
       </body>
     </html>

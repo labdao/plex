@@ -78,11 +78,11 @@ export default function JobDetail({ jobID }: JobDetailProps) {
             Authorization: `Bearer ${authToken}`, // Include the authorization header
           },
         });
-  
+
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
-  
+
         const data = await response.json();
         console.log("Fetched job:", data);
         setJob(data);
@@ -92,7 +92,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         setLoading(false);
       }
     };
-  
+
     fetchData();
 
     fetch(`${backendUrl()}/checkpoints/${jobID}`)
@@ -223,14 +223,14 @@ function FileList({ files }: { files: DataFile[] }) {
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to download file');
+        throw new Error("Failed to download file");
         return;
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = file.Filename || 'download';
+      a.download = file.Filename || "download";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -246,7 +246,7 @@ function FileList({ files }: { files: DataFile[] }) {
           {files.map((file: DataFile) => (
             <div key={file.CID} className="flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none">
               <div>
-                <a target="#" onClick={() => handleDownload(file)} className="text-accent" style={{ cursor: 'pointer' }}>
+                <a target="#" onClick={() => handleDownload(file)} className="text-accent" style={{ cursor: "pointer" }}>
                   <TruncatedString value={file.Filename} trimLength={30} />
                 </a>
                 <div className="opacity-70 text-muted-foreground">
@@ -257,7 +257,7 @@ function FileList({ files }: { files: DataFile[] }) {
               </div>
               {/* @TODO: Add Filesize */}
               <Button size="icon" variant="outline" asChild>
-                <a target="#" onClick={() => handleDownload(file)} style={{ cursor: 'pointer' }}>
+                <a target="#" onClick={() => handleDownload(file)} style={{ cursor: "pointer" }}>
                   <DownloadIcon />
                 </a>
               </Button>
@@ -265,7 +265,7 @@ function FileList({ files }: { files: DataFile[] }) {
         ))}
         </>
       ) : (
-        <>No files found.</>
+        <div className="px-6 py-5">No files found.</div>
       )}
       </div>
   );
