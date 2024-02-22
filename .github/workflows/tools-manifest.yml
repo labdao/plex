@@ -59,6 +59,10 @@ jobs:
           #   - 'tools/mytool/mytool_config_file.json'
           generator_generator-gateway:
             - 'tools/generator/generator-gateway.json'
+          colabdesign-checkpoint_colabdesign-checkpoint:
+            - 'tools/colabdesign-checkpoint/colabdesign-checkpoint.json'
+          labsay-checkpoint_labsay-checkpoint:
+            - 'tools/labsay-checkpoint/labsay-checkpoint.json'
           colabdesign_colabdesign:
             - 'tools/colabdesign/colabdesign.json'
           colabdesign_colabdesign-gateway:
