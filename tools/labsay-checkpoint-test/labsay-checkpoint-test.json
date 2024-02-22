@@ -5,7 +5,7 @@
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:e1341586df01be0f7e4fc5a61511f401e536294b319ecefad87b3939b86e576d",
+    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:cf46925023fe2616998e1bc8e7b8acc18434ea39fb4ac4b78ddb6b68546129c0",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,

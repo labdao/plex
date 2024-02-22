@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
+// import MolstarComponent from "@/components/Molstar";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Alert } from "@/components/ui/alert";
@@ -30,6 +31,7 @@ interface CheckpointData {
   factor2: number;
   dim1: number;
   dim2: number;
+  PdbFilePath: string;
 }
 
 export interface JobDetail {
@@ -51,6 +53,9 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
+  const [moleculeUrl, setMoleculeUrl] = useState('');
+  const [activeTab, setActiveTab] = useState('parameters');
+
 
   interface File {
     CID: string;
@@ -114,28 +119,38 @@ export default function JobDetail({ jobID }: JobDetailProps) {
       }
     };
   
-    if (job.State === "running" || job.State === "completed") {
+    if (job.State === "running") {
       fetchData();
       const intervalId = setInterval(fetchData, 5000);
   
       return () => clearInterval(intervalId);
+    } else { //(job.State === "completed") {
+      fetchData();
     }
   }, [jobID, job.State]);
 
   const handlePointClick = (data: CheckpointData) => {
     console.log('Clicked point data:', data);
+    setMoleculeUrl(data.PdbFilePath);
+    console.log("set molecule url:", data.PdbFilePath);
+    // Switch to the visualize tab
+    console.log(activeTab);
+    setActiveTab('visualize');
+
+    console.log(activeTab);
   };
 
   return (
-    <Tabs defaultValue="parameters" className="w-full @container ">
-      <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container ">
+          <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="checkpoints">Checkpoints</TabsTrigger>
+        <TabsTrigger value="visualize">Visualize</TabsTrigger>
       </TabsList>
-      <TabsContent value="parameters" className="px-6 pt-0">
+            <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
             <span className="text-muted-foreground/50">{key.replaceAll("_", " ")}</span>
@@ -155,17 +170,23 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         </div>
       </TabsContent>
       <TabsContent value="checkpoints">
-      <ScatterChart width={400} height={400} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-        <CartesianGrid />
-        <XAxis type="number" dataKey="factor1" name="Factor 1" />
-        <YAxis type="number" dataKey="factor2" name="Factor 2" />
-        <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-        <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
-      </ScatterChart>
+        <ScatterChart width={400} height={400} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+          <CartesianGrid />
+          <XAxis type="number" dataKey="factor1" name="plddt" />
+          <YAxis type="number" dataKey="factor2" name="i_pae" />
+          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+          <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
+        </ScatterChart>
         <CheckpointsList checkpoints={checkpoints} />
       </TabsContent>
+      <TabsContent value="visualize">
+        {/* <MolstarComponent 
+          moleculeUrl={moleculeUrl}
+          customDataFormat="pdb" 
+        /> */}
+      </TabsContent>
     </Tabs>
-  );
+      );
 }
 
 function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: string, url: string }> }) {
@@ -241,11 +262,11 @@ function FileList({ files }: { files: DataFile[] }) {
                 </a>
               </Button>
             </div>
-          ))}
+        ))}
         </>
       ) : (
         <>No files found.</>
       )}
-    </div>
+      </div>
   );
 }

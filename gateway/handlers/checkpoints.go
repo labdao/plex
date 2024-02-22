@@ -97,6 +97,14 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 	err := svc.ListObjectsV2Pages(listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		for _, object := range page.Contents {
 			if strings.HasSuffix(*object.Key, "event.csv") {
+				keyParts := strings.Split(*object.Key, "/")
+				checkpointIndex := "0" // Default value in case parsing fails"
+				for _, part := range keyParts {
+					if strings.HasPrefix(part, "checkpoint_") {
+						checkpointIndex = strings.TrimPrefix(part, "checkpoint_")
+						break
+					}
+				}
 				getObjectInput := &s3.GetObjectInput{
 					Bucket: aws.String("app-checkpoint-bucket"),
 					Key:    object.Key,
@@ -113,11 +121,11 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					return false
 				}
 
-				for index, record := range records[1:] {
+				for _, record := range records[1:] {
 					factor1, _ := strconv.ParseFloat(record[2], 64)
 					factor2, _ := strconv.ParseFloat(record[3], 64)
 					pdbFileName := record[6]
-					pdbPath := "checkpoints/" + jobUUID + "/checkpoint_" + strconv.Itoa(index) + "/" + pdbFileName
+					pdbPath := "checkpoints/" + jobUUID + "/checkpoint_" + checkpointIndex + "/" + pdbFileName
 					req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 						Bucket: aws.String("app-checkpoint-bucket"),
 						Key:    aws.String(pdbPath),
