@@ -122,6 +122,10 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     }
   }, [jobID, job.State]);
 
+  const handlePointClick = (data: CheckpointData) => {
+    console.log('Clicked point data:', data);
+  };
+
   return (
     <Tabs defaultValue="parameters" className="w-full @container ">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
@@ -156,7 +160,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         <XAxis type="number" dataKey="factor1" name="Factor 1" />
         <YAxis type="number" dataKey="factor2" name="Factor 2" />
         <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-        <Scatter name="Checkpoints" data={plotData} fill="#8884d8" />
+        <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
       </ScatterChart>
         <CheckpointsList checkpoints={checkpoints} />
       </TabsContent>

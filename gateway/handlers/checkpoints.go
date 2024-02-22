@@ -113,10 +113,20 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					return false
 				}
 
-				for _, record := range records[1:] {
+				for index, record := range records[1:] {
 					factor1, _ := strconv.ParseFloat(record[2], 64)
 					factor2, _ := strconv.ParseFloat(record[3], 64)
-					plotData = append(plotData, models.ScatterPlotData{Factor1: factor1, Factor2: factor2})
+					pdbFileName := record[6]
+					pdbPath := "checkpoints/" + jobUUID + "/checkpoint_" + strconv.Itoa(index) + "/" + pdbFileName
+					req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+						Bucket: aws.String("app-checkpoint-bucket"),
+						Key:    aws.String(pdbPath),
+					})
+					presignedURL, err := req.Presign(15 * time.Minute)
+					if err != nil {
+						return false
+					}
+					plotData = append(plotData, models.ScatterPlotData{Factor1: factor1, Factor2: factor2, PdbFilePath: presignedURL})
 				}
 			}
 		}
