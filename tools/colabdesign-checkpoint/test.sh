@@ -16,6 +16,7 @@ echo "Output directory is $OUTPUT_DIR"
 docker run --gpus=all \
 -e PLEX_JOB_INPUTS='{"binder_length":10,"hotspot":"","number_of_binders":1,"target_chain":"B","target_start_residue":50,"target_end_residue":100,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
 --env-file ~/aws.env \
+-e JOB_UUID='1234' \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs colabdesign-noninteractive
 

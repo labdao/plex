@@ -1,6 +1,6 @@
 {
     "class": "",
-    "name": "labsay-checkpoint-test",
+    "name": "labsay checkpoint test v0.1",
     "description": "simple hello world that checkpoint upload to s3 is working",
     "author": "labdao",
     "baseCommand": [],

@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign gateway checkpoint test",
+  "name": "colabdesign gateway checkpoint v0.1",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
