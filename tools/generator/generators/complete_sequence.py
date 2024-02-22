@@ -3,6 +3,7 @@ import numpy as np
 import logging
 from .base_generator import BaseGenerator
 import sequence_transformer
+from utils import check_gpu_availability
 
 class complete_sequence_Generator(BaseGenerator):
 
@@ -17,6 +18,8 @@ class complete_sequence_Generator(BaseGenerator):
         generator_directory = os.path.join(outputs_directory, generator_name)
         if not os.path.exists(generator_directory):
             os.makedirs(generator_directory, exist_ok=True)
+
+        check_gpu_availability()
 
         logging.info(f"Running {generator_name}")
 

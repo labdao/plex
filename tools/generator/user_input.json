@@ -1,6 +1,6 @@
 {
-    "sequence_input": "MKLKQVADKLEEVASKLYHNANELARVAKLLGER ; MKLKQVADKLEE",
-    "generator_scorers": "RFdiff+ProteinMPNN/colabfold+prodigy",
-    "number_of_binders": 2,
-    "init_permissibility_vec": "B3:20/x21:22/B23:27"
+    "sequence_input": "MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE",
+    "generator_scorers": "RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2",
+    "number_of_binders": 1,
+    "init_permissibility_vec": ""
 }

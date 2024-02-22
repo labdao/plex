@@ -11,6 +11,7 @@ from utils import compute_affinity
 from utils import concatenate_to_df
 from utils import compute_log_likelihood
 import logging
+from utils import check_gpu_availability
 
 class Scorer:
 
@@ -61,6 +62,8 @@ class Scorer:
                 file_path = os.path.join(input_dir, f"design_cycle_{t}.fasta")
                 with open(file_path, 'w') as file:
                     file.write(f">design_cycle_{t}\n{target_binder_sequence}\n")
+
+                check_gpu_availability()
 
                 seq_input_dir = os.path.abspath(input_dir)
 
@@ -134,6 +137,8 @@ class Scorer:
                     file_path = os.path.join(input_dir, f"design_cycle_{t}.fasta")
                     with open(file_path, 'w') as file:
                         file.write(f">design_cycle_{t}\n{binder_sequence}\n")
+
+                    check_gpu_availability()
 
                     file_path_abs = os.path.abspath(file_path)
 
