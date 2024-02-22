@@ -19,8 +19,6 @@ class complete_sequence_Generator(BaseGenerator):
         if not os.path.exists(generator_directory):
             os.makedirs(generator_directory, exist_ok=True)
 
-        check_gpu_availability()
-
         logging.info(f"Running {generator_name}")
 
         runner = sequence_transformer.ESM2Runner()

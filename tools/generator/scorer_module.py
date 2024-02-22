@@ -63,9 +63,9 @@ class Scorer:
                 with open(file_path, 'w') as file:
                     file.write(f">design_cycle_{t}\n{target_binder_sequence}\n")
 
-                check_gpu_availability()
-
                 seq_input_dir = os.path.abspath(input_dir)
+
+                check_gpu_availability()
 
                 af2_runner = AF2Runner(seq_input_dir, scorer_directory)
                 af2_runner.run()
@@ -104,6 +104,8 @@ class Scorer:
                         file.write(f">design_cycle_{t}\n{target_binder_sequence}\n")
 
                     seq_input_dir = os.path.abspath(input_dir)
+
+                    check_gpu_availability()
 
                     af2_runner = AF2Runner(seq_input_dir, scorer_directory)
                     af2_runner.run()

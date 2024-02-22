@@ -1,15 +1,15 @@
 basic_settings:
-  sequence_input: 'QVQLQESGGGL,Q*CLI***ELVTAX*XDTPG'
+  sequence_input: 'MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE'
   number_of_binders: 1
   init_permissibility_vec: ''
   temperature: 0.05
   max_levenshtein_step_size: 1
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
-  scorers: 'colabfold+prodigy'
+  scorers: 'colabfold,prodigy'
   scoring_metrics: 'pseudolikelihood'
   scoring_weights: '0.7,0.2,0.1'
   selector: 'closed-door'
-  generator_scorers: 'RFdiff+ProteinMPNN/colabfold+prodigy'
+  generator_scorers: 'RFdiff+ProteinMPNN/colabfold,prodigy'
   generator: 'RFdiff+ProteinMPNN'
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A

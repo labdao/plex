@@ -167,7 +167,6 @@ class RMEGenerator(BaseGenerator):
                 f'contigmap.contigs={[contig]}'
             ]
 
-            check_gpu_availability()
             result = subprocess.run(command, capture_output=True, text=True, env=env)
 
             # Check if the command was successful

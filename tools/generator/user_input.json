@@ -1,6 +1,5 @@
 {
     "sequence_input": "MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE",
-    "generator_scorers": "RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2",
     "number_of_binders": 1,
     "init_permissibility_vec": ""
 }
