@@ -65,8 +65,8 @@ jobs:
             - 'tools/protein-mpnn/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          sequence-sampler:
-            - 'tools/sequence-sampler/**'
+          generator:
+            - 'tools/generator/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
           protein-to-dna-icodon:
