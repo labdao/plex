@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
 	"github.com/labdao/plex/gateway/middleware"
@@ -187,6 +188,8 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				queue = models.QueueTypeGPU
 			}
+			jobUUID := uuid.New().String()
+
 			job := models.Job{
 				ToolID:        ioItem.Tool.IPFS,
 				FlowID:        flow.ID,
@@ -194,6 +197,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
 				CreatedAt:     time.Now(),
+				JobUUID:       jobUUID,
 			}
 			result := db.Create(&job)
 			if result.Error != nil {

@@ -44,6 +44,9 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db))).Methods("GET")
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
+	router.HandleFunc("/checkpoints/{jobID}", handlers.ListCheckpointsHandler(db)).Methods("GET")
+	router.HandleFunc("/checkpoints/{jobID}/get-data", handlers.GetCheckpointDataHandler(db)).Methods("GET")
+
 	router.HandleFunc("/flows", protected(handlers.AddFlowHandler(db))).Methods("POST")
 	router.HandleFunc("/flows", protected(handlers.ListFlowsHandler(db))).Methods("GET")
 	router.HandleFunc("/flows/{flowID}", protected(handlers.GetFlowHandler(db))).Methods("GET")
