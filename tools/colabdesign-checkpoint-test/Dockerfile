@@ -8,7 +8,7 @@ RUN apt-get update -y && \
      apt-get install --no-install-recommends -y wget aria2 git zip unzip less nano build-essential
 
 # Install hydra-core
-RUN pip3 install --no-cache-dir hydra-core --upgrade
+RUN pip3 install --no-cache-dir hydra-core boto3 --upgrade
 
 # Install missing dependencies
 RUN set -ex; \
