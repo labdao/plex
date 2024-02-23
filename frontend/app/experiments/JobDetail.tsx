@@ -27,11 +27,11 @@ interface JobDetailProps {
 interface CheckpointData {
   cycle: number;
   proposal: number;
-  factor1: number;
-  factor2: number;
+  plddt: number;
+  i_pae: number;
   dim1: number;
   dim2: number;
-  PdbFilePath: string;
+  pdbFilePath: string;
 }
 
 export interface JobDetail {
@@ -131,8 +131,8 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 
   const handlePointClick = (data: CheckpointData) => {
     console.log('Clicked point data:', data);
-    setMoleculeUrl(data.PdbFilePath);
-    console.log("set molecule url:", data.PdbFilePath);
+    setMoleculeUrl(data.pdbFilePath);
+    console.log("set molecule url:", data.pdbFilePath);
     // Switch to the visualize tab
     console.log(activeTab);
     setActiveTab('visualize');
@@ -170,13 +170,16 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         </div>
       </TabsContent>
       <TabsContent value="checkpoints">
-        <ScatterChart width={400} height={400} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <CartesianGrid />
-          <XAxis type="number" dataKey="factor1" name="plddt" />
-          <YAxis type="number" dataKey="factor2" name="i_pae" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-          <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
-        </ScatterChart>
+        <div style={{ width: '790px', alignItems: 'left', marginTop: '15px' }}> 
+          <div className="font-heading" style={{ textAlign: 'center' }}>Metrics Space</div>
+          <ScatterChart width={730} height={250} margin={{ top: 20, right: 20, bottom: 20, left: 20}}>
+            <CartesianGrid />
+            <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: 'plddt', position: 'insideBottom', offset: -15, dx: 0 }}/>
+            <YAxis type="number" dataKey="i_pae" name="i_pae" label={{ value: 'i_pae', angle: -90, position: 'insideLeft', dx: 0, dy: 15 }}/>
+            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
+          </ScatterChart>
+        </div>
         <CheckpointsList checkpoints={checkpoints} />
       </TabsContent>
       <TabsContent value="visualize">
@@ -186,7 +189,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         />
       </TabsContent>
     </Tabs>
-      );
+  );
 }
 
 function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: string, url: string }> }) {
