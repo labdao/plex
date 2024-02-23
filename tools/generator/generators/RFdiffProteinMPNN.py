@@ -174,7 +174,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
                     with open(fasta_file_path, 'r') as file:
                         lines = file.readlines()
 
-                    start_line = 3
+                    start_line = 1
                     # Iterate over the lines in the fasta file, starting from start_line
                     for i in range(start_line, len(lines), 2):
                         header = lines[i - 1]

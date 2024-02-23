@@ -225,7 +225,7 @@ class RMEGenerator(BaseGenerator):
                     with open(fasta_file_path, 'r') as file:
                         lines = file.readlines()
 
-                    start_line = 3
+                    start_line = 1
                     # Iterate over the lines in the fasta file, starting from start_line
                     for i in range(start_line, len(lines), 2):
                         header = lines[i - 1]
@@ -251,7 +251,7 @@ class RMEGenerator(BaseGenerator):
         else:
             modified_seq = sequence
 
-        modified_seq = list(modified_seq) # insert the new deletions - TD: remind yourself why this is necessary!
+        modified_seq = list(modified_seq) # insert the new deletions
         for i, char in enumerate(permissibility_vector):
             if char=='-':
                 if modified_seq[i]!='-':
@@ -267,6 +267,7 @@ class RMEGenerator(BaseGenerator):
         while Delta_pseudoLL > 0.:
 
             runner = sequence_transformer.ESM2Runner()
+            print('')
             logging.info(f"iteration number {iter_num}")
             iter_num += 1
             modified_seq = ''.join(modified_seq)
@@ -283,9 +284,7 @@ class RMEGenerator(BaseGenerator):
             reverse_index_map = self._create_reverse_index_map(squeeze_seq(modified_seq), modified_seq)
             max_index_seq = reverse_index_map.get(max_index[1])
 
-
-            # LAGVSERTIDPKQNFYMHWC
-            amino_acid_code = ''.join(runner.amino_acids)
+            amino_acid_code = ''.join(runner.amino_acids) # LAGVSERTIDPKQNFYMHWC
             modified_seq = list(modified_seq)
             if modified_seq[max_index_seq] != '-':
                 modified_seq[max_index_seq] = amino_acid_code[max_index[0]] 
