@@ -24,6 +24,12 @@ interface JobDetailProps {
   jobID: number;
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}
+
 interface CheckpointData {
   cycle: number;
   proposal: number;
@@ -139,6 +145,25 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     console.log(activeTab);
   };
 
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload; 
+      const keysToShow = Object.keys(data).filter(key => key !== 'pdbFilePath');
+  
+      return (
+        <div className="bg-white p-3 border rounded shadow-lg">
+          {keysToShow.map((key) => (
+            <p key={key}>
+              {key}: {data[key]}
+            </p>
+          ))}
+        </div>
+      );
+    }
+  
+    return null;
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container ">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
@@ -150,15 +175,23 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         <TabsTrigger value="logs">Logs</TabsTrigger>
       </TabsList>
       <TabsContent value="dashboard">
-        <div style={{ width: '790px', alignItems: 'left', marginTop: '15px' }}> 
-          <div className="font-heading" style={{ textAlign: 'center' }}>Metrics Space</div>
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: '15px', justifyContent: 'space-around' }}> 
+        <div>
+          <div className="font-heading" style={{ marginLeft: '70px', textAlign: 'center' }}>Metrics Space</div>
           <ScatterChart width={730} height={250} margin={{ top: 20, right: 20, bottom: 20, left: 20}}>
             <CartesianGrid />
             <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: 'plddt', position: 'insideBottom', offset: -15, dx: 0 }}/>
             <YAxis type="number" dataKey="i_pae" name="i_pae" label={{ value: 'i_pae', angle: -90, position: 'insideLeft', dx: 0, dy: 15 }}/>
-            <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+            {/* <Tooltip cursor={{ strokeDasharray: '3 3' }} /> */}
+            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
             <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
           </ScatterChart>
+          </div>
+          <div style={{ maxWidth: '300px', fontSize: '0.75rem', color: 'grey', textAlign: 'left' }}>
+            <p><b>plddt:</b> larger value indicates higher confidence in the predicted local structure</p>
+            <p><b>i_pae:</b> larger value indicates higher confidence in the predicted interface residue distance</p>
+            <p style = {{fontSize: '0.80rem', color: 'black'}}>Click on a datapoint to visualize</p>
+          </div>
         </div>
         <CheckpointsList checkpoints={checkpoints} />
       </TabsContent>

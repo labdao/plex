@@ -56,6 +56,10 @@ func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 		for _, item := range result.Contents {
 			trimmedKey := strings.TrimPrefix(*item.Key, "checkpoints/"+jobUUID+"/")
 
+			if !strings.HasSuffix(trimmedKey, ".pdb") {
+				continue
+			}
+
 			req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 				Bucket: aws.String("app-checkpoint-bucket"),
 				Key:    item.Key,
@@ -134,7 +138,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					if err != nil {
 						return false
 					}
-					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, PdbFilePath: presignedURL})
+					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, ProposedStructure: pdbFileName, PdbFilePath: presignedURL})
 				}
 			}
 		}
