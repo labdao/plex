@@ -5,7 +5,7 @@
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:cf46925023fe2616998e1bc8e7b8acc18434ea39fb4ac4b78ddb6b68546129c0",
+    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:ea5ba832f027f39d56d87516f21dbaae0a93a50019a15f5dbed81dc15de7f94b",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,
@@ -50,7 +50,7 @@
             "position": "301",
             "required": true
         },
-        "pdb_checkpoint_1": {
+        "pdb_checkpoint_0": {
             "type": "file",
             "description": "File to have contents to be shown as checkpoint.",
             "array": false,
@@ -63,7 +63,7 @@
             "position": "401",
             "required": true
         },
-        "pdb_checkpoint_2": {
+        "pdb_checkpoint_1": {
             "type": "file",
             "description": "File to have contents to be shown as checkpoint.",
             "array": false,
@@ -76,7 +76,7 @@
             "position": "402",
             "required": true
         },
-        "pdb_checkpoint_3": {
+        "pdb_checkpoint_2": {
             "type": "file",
             "description": "File to have contents to be shown as checkpoint.",
             "array": false,

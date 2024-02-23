@@ -1,3 +1,4 @@
+import json
 import os
 import boto3
 import time
@@ -36,19 +37,19 @@ def create_event_csv(checkpoint_number, job_inputs):
         file.write("cycle,proposal,plddt,i_pae,dim1,dim2,pdbFileName\n")
         # Hardcoded data lines for each checkpoint
         if checkpoint_number == 0:
-            checkpoint_pdb_filename = job_inputs["pdb_checkpoint_0"]
-            data_line = f"1,1,9,10,5,5,{checkpoint_pdb_filename}\n"
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_0"]
+            data_line = f"1,1,9,10,5,5,{checkpoint_pdb_filepath}\n"
         elif checkpoint_number == 1:
-            checkpoint_pdb_filename = job_inputs["pdb_checkpoint_1"]
-            data_line = f"2,2,20,15,11,3,{checkpoint_pdb_filename}\n"
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_1"]
+            data_line = f"2,2,20,15,11,3,{checkpoint_pdb_filepath}\n"
         elif checkpoint_number == 2:            
-            checkpoint_pdb_filename = job_inputs["pdb_checkpoint_2"]
-            data_line = f"3,3,10,13,9,12,{checkpoint_pdb_filename}\n"
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_2"]
+            data_line = f"3,3,10,13,9,12,{checkpoint_pdb_filepath}\n"
         else:
             data_line = ""
-            checkpoint_pdb_filename = ""
+            checkpoint_pdb_filepath = ""
         file.write(data_line)
-    return file_name, checkpoint_pdb_filename
+    return file_name, checkpoint_pdb_filepath
 
 def main():
     job_inputs = get_plex_job_inputs()
@@ -65,8 +66,8 @@ def main():
     for checkpoint in range(0, 3): 
         time.sleep(10)
         object_name = f"checkpoints/{job_uuid}/checkpoint_{checkpoint}"
-        event_csv_filename, pdb_file_name = create_event_csv(checkpoint, job_inputs)
-        pdb_path = f"/inputs/{pdb_file_name}"
+        event_csv_filename, pdb_path = create_event_csv(checkpoint, job_inputs)
+        pdb_file_name = os.path.basename(pdb_path)
         upload_to_s3(event_csv_filename, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
         os.remove(event_csv_filename)
