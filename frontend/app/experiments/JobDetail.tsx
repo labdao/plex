@@ -54,7 +54,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
   const [moleculeUrl, setMoleculeUrl] = useState('');
-  const [activeTab, setActiveTab] = useState('parameters');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
 
   interface File {
@@ -136,40 +136,20 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     // Switch to the visualize tab
     console.log(activeTab);
     setActiveTab('visualize');
-
     console.log(activeTab);
   };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container ">
-          <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
+      <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <TabsTrigger value="visualize">Visualize</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
-        <TabsTrigger value="checkpoints">Checkpoints</TabsTrigger>
-        <TabsTrigger value="visualize">Visualize</TabsTrigger>
       </TabsList>
-            <TabsContent value="parameters" className="px-6 pt-0">
-        {Object.entries(job.Inputs || {}).map(([key, val]) => (
-          <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
-            <span className="text-muted-foreground/50">{key.replaceAll("_", " ")}</span>
-            <span>{val ? <TruncatedString value={val.toString()} trimLength={10} /> : <span className="text-muted-foreground">n/a</span>}</span>
-          </div>
-        ))}
-      </TabsContent>
-      <TabsContent value="outputs">
-        <FileList files={job.OutputFiles} />
-      </TabsContent>
-      <TabsContent value="inputs">
-        <FileList files={job.InputFiles} />
-      </TabsContent>
-      <TabsContent value="logs">
-        <div className="w-full">
-          <LogViewer jobID={job.BacalhauJobID} />
-        </div>
-      </TabsContent>
-      <TabsContent value="checkpoints">
+      <TabsContent value="dashboard">
         <div style={{ width: '790px', alignItems: 'left', marginTop: '15px' }}> 
           <div className="font-heading" style={{ textAlign: 'center' }}>Metrics Space</div>
           <ScatterChart width={730} height={250} margin={{ top: 20, right: 20, bottom: 20, left: 20}}>
@@ -187,6 +167,25 @@ export default function JobDetail({ jobID }: JobDetailProps) {
           moleculeUrl={moleculeUrl}
           customDataFormat="pdb" 
         />
+      </TabsContent>
+      <TabsContent value="parameters" className="px-6 pt-0">
+        {Object.entries(job.Inputs || {}).map(([key, val]) => (
+          <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
+            <span className="text-muted-foreground/50">{key.replaceAll("_", " ")}</span>
+            <span>{val ? <TruncatedString value={val.toString()} trimLength={10} /> : <span className="text-muted-foreground">n/a</span>}</span>
+          </div>
+        ))}
+      </TabsContent>
+      <TabsContent value="outputs">
+        <FileList files={job.OutputFiles} />
+      </TabsContent>
+      <TabsContent value="inputs">
+        <FileList files={job.InputFiles} />
+      </TabsContent>
+      <TabsContent value="logs">
+        <div className="w-full">
+          <LogViewer jobID={job.BacalhauJobID} />
+        </div>
       </TabsContent>
     </Tabs>
   );
@@ -210,7 +209,7 @@ function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: strin
           </div>
         ))
       ) : (
-        <p>No checkpoint files found.</p>
+        <p>Checkpoints will start appearing soon... Please check back later</p>
       )}
     </div>
   );

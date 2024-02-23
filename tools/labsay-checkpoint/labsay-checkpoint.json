@@ -1,11 +1,11 @@
 {
     "class": "",
-    "name": "labsay checkpoint v0.2",
+    "name": "labsay checkpoint v0.3",
     "description": "A simple hello world checkpoint feature test - this will desmonstrate a simulation of checkpoint creation with the checkpoint pdb files you upload",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:ea5ba832f027f39d56d87516f21dbaae0a93a50019a15f5dbed81dc15de7f94b",
+    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:6aed60bb858250be0d92d0215f9ef1923f43efb68733df05079e4e6c380cc9da",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,

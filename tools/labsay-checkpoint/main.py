@@ -38,13 +38,13 @@ def create_event_csv(checkpoint_number, job_inputs):
         # Hardcoded data lines for each checkpoint
         if checkpoint_number == 0:
             checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_0"]
-            data_line = f"1,1,9,10,5,5,{checkpoint_pdb_filepath}\n"
+            data_line = f"1,1,9,10,5,5,{os.path.basename(checkpoint_pdb_filepath)}\n"
         elif checkpoint_number == 1:
             checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_1"]
-            data_line = f"2,2,20,15,11,3,{checkpoint_pdb_filepath}\n"
+            data_line = f"2,2,20,15,11,3,{os.path.basename(checkpoint_pdb_filepath)}\n"
         elif checkpoint_number == 2:            
             checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_2"]
-            data_line = f"3,3,10,13,9,12,{checkpoint_pdb_filepath}\n"
+            data_line = f"3,3,10,13,9,12,{os.path.basename(checkpoint_pdb_filepath)}\n"
         else:
             data_line = ""
             checkpoint_pdb_filepath = ""

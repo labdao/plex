@@ -110,6 +110,8 @@ services:
       STRIPE_PRODUCT_SLUG: ${STRIPE_PRODUCT_SLUG:-price_1OlwVPE7xzGf7nZbaccQCnHv}
       NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
       PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY : ${AWS_SECRET_ACCESS_KEY}
     depends_on:
       dbbackend:
         condition: service_healthy
