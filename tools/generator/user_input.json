@@ -1,5 +1,5 @@
 {
-    "sequence_input": "QVQLQQPGAELVKPGASVKMS ; SLSIQYCGSIRSVFLGVFAVMLIF",
+    "sequence_input": "QVQxxQPGAELVKPGASVKMS ; SLSIQyCGSIRSVFLGVFAVMLIF",
     "number_of_binders": 1,
-    "init_permissibility_vec": "B3:5/x6:8/B9:12/x13:14"
+    "init_permissibility_vec": ""
 }

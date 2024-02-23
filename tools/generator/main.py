@@ -53,6 +53,8 @@ def load_initial_data(cfg, outputs_directory):
     sequence_input = cfg.params.basic_settings.sequence_input
     # binder, target = sequence_input.split(',')
     binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
+    binder = binder.upper()
+    target = target.upper()
 
     sequences = [{
         't': 0,

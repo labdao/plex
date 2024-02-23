@@ -18,7 +18,7 @@
   "inputs": {
     "sequence_input": {
       "type": "string",
-      "description": "Sequence prompt of the form: binder_sequence ; target_sequence. Binder sequence may contain captial X characters to indicate unkown residues.",
+      "description": "Sequence prompt of the form: binder_sequence ; target_sequence. Binder sequence may contain X characters to indicate unkown residues.",
       "array": false,
       "glob": [
         ""
