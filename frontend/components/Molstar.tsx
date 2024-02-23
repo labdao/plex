@@ -45,13 +45,13 @@ const MolstarComponent: React.FC<MolstarComponentProps> = ({ moleculeUrl, custom
   }, [moleculeUrl, customDataFormat]);
 
   return (
-    <div ref={molstarRef} style={{ width: '50px', height: '50px' }}>
+    <div ref={molstarRef} style={{ width: '400px', height: '400px' }}>
         <pdbe-molstar
             custom-data-url={moleculeUrl}
             custom-data-format={customDataFormat}
             hide-controls="true"
-            style={{ width: '25%', height: '25%' }}
-            // style={{ width: '100%', height: '100%' }}
+            // style={{ width: '25%', height: '25%' }}
+            style={{ width: '100%', height: '100%' }}
         ></pdbe-molstar>
     </div>
   );
