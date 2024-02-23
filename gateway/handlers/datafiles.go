@@ -97,12 +97,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 
 		result := db.Create(&dataFile)
 		if result.Error != nil {
-			log.Println("error saving to DB")
-			if utils.IsDuplicateKeyError(result.Error) {
-				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
-			} else {
-				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
-			}
+			utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
@@ -135,14 +130,14 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var dataFile models.DataFile
-		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
+		result := db.Preload("Tags").Where("id = ?", id).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -330,19 +325,19 @@ func checkIfGenerated(dataFile models.DataFile) bool {
 	return false
 }
 
-func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
-	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
+func AddTagsToDataFile(db *gorm.DB, dataFileID string, tagNames []string) error {
+	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileID)
 
 	var dataFile models.DataFile
-	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
-		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
-		return fmt.Errorf("Data file not found: %v", err)
+	if err := db.Preload("Tags").Where("cid = ?", dataFileID).First(&dataFile).Error; err != nil {
+		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileID, err)
+		return fmt.Errorf("data file not found: %v", err)
 	}
 
 	var tags []models.Tag
 	if err := db.Where("name IN ?", tagNames).Find(&tags).Error; err != nil {
 		log.Printf("Error finding tags: %v\n", err)
-		return fmt.Errorf("Error finding tags: %v", err)
+		return fmt.Errorf("error finding tags: %v", err)
 	}
 
 	existingTagMap := make(map[string]bool)
@@ -359,10 +354,10 @@ func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error
 
 	log.Println("Saving DataFile with new tags to DB")
 	if err := db.Save(&dataFile).Error; err != nil {
-		log.Printf("Error saving DataFile with CID %s: %v\n", dataFileCID, err)
-		return fmt.Errorf("Error saving datafile: %v", err)
+		log.Printf("Error saving DataFile with CID %s: %v\n", dataFileID, err)
+		return fmt.Errorf("error saving datafile: %v", err)
 	}
 
-	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
+	log.Println("DataFile with CID", dataFileID, "successfully updated with new tags")
 	return nil
 }
