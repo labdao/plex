@@ -1,7 +1,24 @@
+import json
 import os
 import boto3
 import time
 
+def get_plex_job_inputs():
+    # Retrieve the environment variable
+    json_str = os.getenv("PLEX_JOB_INPUTS")
+
+    # Check if the environment variable is set
+    if json_str is None:
+        raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
+
+    # Convert the JSON string to a Python dictionary
+    try:
+        data = json.loads(json_str)
+        return data
+    except json.JSONDecodeError:
+        # Handle the case where the string is not valid JSON
+        raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
+    
 def upload_to_s3(file_name, bucket_name, object_name=None):
     if object_name is None:
         object_name = file_name
@@ -14,27 +31,29 @@ def upload_to_s3(file_name, bucket_name, object_name=None):
         print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
         raise e
 
-def create_event_csv(checkpoint_number):
-    file_name = f"checkpoint_{checkpoint_number}_event.csv"
+def create_event_csv(checkpoint_number, job_inputs):
+    file_name = f"checkpoint_{checkpoint_number}_summary.csv"
     with open(file_name, 'w') as file:
-        file.write("cycle,proposal,factor1,factor2,dim1,dim2,pdbFileName\n")
+        file.write("cycle,proposal,plddt,i_pae,dim1,dim2,pdbFileName\n")
         # Hardcoded data lines for each checkpoint
         if checkpoint_number == 0:
-            data_line = "1,1,9,10,5,5,example.pdb\n"
-            checkpoint_pdb_filename = "example.pdb"
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_0"]
+            data_line = f"1,1,9,10,5,5,{os.path.basename(checkpoint_pdb_filepath)}\n"
         elif checkpoint_number == 1:
-            data_line = "2,2,20,15,11,3,design_1.pdb\n"
-            checkpoint_pdb_filename = "design_1.pdb"
-        elif checkpoint_number == 2:
-            data_line = "3,3,10,13,9,12,BioCD202b18_aa_7fd4f_unrelaxed_rank_003_alphafold2_multimer_v3_model_2_seed_000.pdb\n"
-            checkpoint_pdb_filename = "BioCD202b18_aa_7fd4f_unrelaxed_rank_003_alphafold2_multimer_v3_model_2_seed_000.pdb"
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_1"]
+            data_line = f"2,2,20,15,11,3,{os.path.basename(checkpoint_pdb_filepath)}\n"
+        elif checkpoint_number == 2:            
+            checkpoint_pdb_filepath = job_inputs["pdb_checkpoint_2"]
+            data_line = f"3,3,10,13,9,12,{os.path.basename(checkpoint_pdb_filepath)}\n"
         else:
             data_line = ""
-            checkpoint_pdb_filename = ""
+            checkpoint_pdb_filepath = ""
         file.write(data_line)
-    return file_name, checkpoint_pdb_filename
+    return file_name, checkpoint_pdb_filepath
 
 def main():
+    job_inputs = get_plex_job_inputs()
+    print("Job Inputs:", job_inputs)
     job_uuid = os.getenv("JOB_UUID")
     if not job_uuid:
         raise ValueError("JOB_UUID environment variable is missing.")
@@ -47,8 +66,8 @@ def main():
     for checkpoint in range(0, 3): 
         time.sleep(10)
         object_name = f"checkpoints/{job_uuid}/checkpoint_{checkpoint}"
-        event_csv_filename, pdb_file_name = create_event_csv(checkpoint)
-        pdb_path = f"/inputs/{pdb_file_name}"
+        event_csv_filename, pdb_path = create_event_csv(checkpoint, job_inputs)
+        pdb_file_name = os.path.basename(pdb_path)
         upload_to_s3(event_csv_filename, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
         os.remove(event_csv_filename)

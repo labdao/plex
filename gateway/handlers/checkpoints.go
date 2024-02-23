@@ -56,6 +56,10 @@ func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 		for _, item := range result.Contents {
 			trimmedKey := strings.TrimPrefix(*item.Key, "checkpoints/"+jobUUID+"/")
 
+			if !strings.HasSuffix(trimmedKey, ".pdb") {
+				continue
+			}
+
 			req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 				Bucket: aws.String("app-checkpoint-bucket"),
 				Key:    item.Key,
@@ -96,7 +100,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 	var plotData []models.ScatterPlotData
 	err := svc.ListObjectsV2Pages(listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		for _, object := range page.Contents {
-			if strings.HasSuffix(*object.Key, "event.csv") {
+			if strings.HasSuffix(*object.Key, "summary.csv") {
 				keyParts := strings.Split(*object.Key, "/")
 				checkpointIndex := "0" // Default value in case parsing fails"
 				for _, part := range keyParts {
@@ -122,8 +126,8 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 				}
 
 				for _, record := range records[1:] {
-					factor1, _ := strconv.ParseFloat(record[2], 64)
-					factor2, _ := strconv.ParseFloat(record[3], 64)
+					plddt, _ := strconv.ParseFloat(record[2], 64)
+					i_pae, _ := strconv.ParseFloat(record[3], 64)
 					pdbFileName := record[6]
 					pdbPath := "checkpoints/" + jobUUID + "/checkpoint_" + checkpointIndex + "/" + pdbFileName
 					req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
@@ -134,7 +138,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					if err != nil {
 						return false
 					}
-					plotData = append(plotData, models.ScatterPlotData{Factor1: factor1, Factor2: factor2, PdbFilePath: presignedURL})
+					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, ProposedStructure: pdbFileName, PdbFilePath: presignedURL})
 				}
 			}
 		}

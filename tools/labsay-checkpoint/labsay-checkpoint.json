@@ -1,11 +1,11 @@
 {
     "class": "",
-    "name": "labsay checkpoint test v0.1",
-    "description": "simple hello world that checkpoint upload to s3 is working",
+    "name": "labsay checkpoint v0.5",
+    "description": "A simple hello world checkpoint feature test - this will desmonstrate a simulation of checkpoint creation with the checkpoint pdb files you upload",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "docker.io/supraja968/labsay-checkpoint-test@sha256:cf46925023fe2616998e1bc8e7b8acc18434ea39fb4ac4b78ddb6b68546129c0",
+    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:ac203597f85185d3607b64b560a80b87e1a7068396a85fa9fbd2562ddd657186",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,
@@ -21,7 +21,7 @@
             "max": "",
             "example": "",
             "grouping": "File Params",
-            "position": "1",
+            "position": "101",
             "required": true
         },
         "string_example": {
@@ -34,7 +34,7 @@
             "max": "",
             "example": "",
             "grouping": "String Params",
-            "position": "2",
+            "position": "201",
             "required": true
         },
         "number_example": {
@@ -47,7 +47,46 @@
             "max": "",
             "example": "",
             "grouping": "Number Params",
-            "position": "3",
+            "position": "301",
+            "required": true
+        },
+        "pdb_checkpoint_0": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "401",
+            "required": true
+        },
+        "pdb_checkpoint_1": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "402",
+            "required": true
+        },
+        "pdb_checkpoint_2": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "403",
             "required": true
         }
     },

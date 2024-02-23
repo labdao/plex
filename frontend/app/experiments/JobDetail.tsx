@@ -24,14 +24,20 @@ interface JobDetailProps {
   jobID: number;
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}
+
 interface CheckpointData {
   cycle: number;
   proposal: number;
-  factor1: number;
-  factor2: number;
+  plddt: number;
+  i_pae: number;
   dim1: number;
   dim2: number;
-  PdbFilePath: string;
+  pdbFilePath: string;
 }
 
 export interface JobDetail {
@@ -54,7 +60,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
   const [moleculeUrl, setMoleculeUrl] = useState('');
-  const [activeTab, setActiveTab] = useState('parameters');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
 
   interface File {
@@ -131,26 +137,71 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 
   const handlePointClick = (data: CheckpointData) => {
     console.log('Clicked point data:', data);
-    setMoleculeUrl(data.PdbFilePath);
-    console.log("set molecule url:", data.PdbFilePath);
+    setMoleculeUrl(data.pdbFilePath);
+    console.log("set molecule url:", data.pdbFilePath);
     // Switch to the visualize tab
     console.log(activeTab);
     setActiveTab('visualize');
-
     console.log(activeTab);
+  };
+
+  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload; 
+      const keysToShow = Object.keys(data).filter(key => key !== 'pdbFilePath');
+  
+      return (
+        <div className="bg-white p-3 border rounded shadow-lg">
+          {keysToShow.map((key) => (
+            <p key={key}>
+              {key}: {data[key]}
+            </p>
+          ))}
+        </div>
+      );
+    }
+  
+    return null;
   };
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container ">
-          <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
+      <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <TabsTrigger value="visualize">Visualize</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
-        <TabsTrigger value="checkpoints">Checkpoints</TabsTrigger>
-        <TabsTrigger value="visualize">Visualize</TabsTrigger>
       </TabsList>
-            <TabsContent value="parameters" className="px-6 pt-0">
+      <TabsContent value="dashboard">
+        <div style={{ display: 'flex', alignItems: 'center', marginTop: '15px', justifyContent: 'space-around' }}> 
+        <div>
+          <div className="font-heading" style={{ marginLeft: '70px', textAlign: 'center' }}>Metrics Space</div>
+          <ScatterChart width={730} height={250} margin={{ top: 20, right: 20, bottom: 20, left: 20}}>
+            <CartesianGrid />
+            <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: 'plddt', position: 'insideBottom', offset: -15, dx: 0 }}/>
+            <YAxis type="number" dataKey="i_pae" name="i_pae" label={{ value: 'i_pae', angle: -90, position: 'insideLeft', dx: 0, dy: 15 }}/>
+            {/* <Tooltip cursor={{ strokeDasharray: '3 3' }} /> */}
+            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+            <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
+          </ScatterChart>
+          </div>
+          <div style={{ maxWidth: '300px', fontSize: '0.75rem', color: 'grey', textAlign: 'left' }}>
+            <p><b>plddt:</b> larger value indicates higher confidence in the predicted local structure</p>
+            <p><b>i_pae:</b> larger value indicates higher confidence in the predicted interface residue distance</p>
+            <p style = {{fontSize: '0.80rem', color: 'black'}}>Click on a datapoint to visualize</p>
+          </div>
+        </div>
+        <CheckpointsList checkpoints={checkpoints} />
+      </TabsContent>
+      <TabsContent value="visualize">
+        <MolstarComponent 
+          moleculeUrl={moleculeUrl}
+          customDataFormat="pdb" 
+        />
+      </TabsContent>
+      <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
             <span className="text-muted-foreground/50">{key.replaceAll("_", " ")}</span>
@@ -169,24 +220,8 @@ export default function JobDetail({ jobID }: JobDetailProps) {
           <LogViewer jobID={job.BacalhauJobID} />
         </div>
       </TabsContent>
-      <TabsContent value="checkpoints">
-        <ScatterChart width={400} height={400} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-          <CartesianGrid />
-          <XAxis type="number" dataKey="factor1" name="plddt" />
-          <YAxis type="number" dataKey="factor2" name="i_pae" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-          <Scatter name="Checkpoints" data={plotData} fill="#8884d8" onClick={handlePointClick} />
-        </ScatterChart>
-        <CheckpointsList checkpoints={checkpoints} />
-      </TabsContent>
-      <TabsContent value="visualize">
-        <MolstarComponent 
-          moleculeUrl={moleculeUrl}
-          customDataFormat="pdb" 
-        />
-      </TabsContent>
     </Tabs>
-      );
+  );
 }
 
 function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: string, url: string }> }) {
@@ -207,7 +242,7 @@ function CheckpointsList({ checkpoints }: { checkpoints: Array<{ fileName: strin
           </div>
         ))
       ) : (
-        <p>No checkpoint files found.</p>
+        <p>Checkpoints will start appearing soon... Please check back later</p>
       )}
     </div>
   );

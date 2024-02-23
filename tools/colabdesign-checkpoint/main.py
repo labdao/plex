@@ -147,13 +147,13 @@ def create_and_upload_checkpoints(df_results, result_csv_path):
         new_df = pd.DataFrame({
             'cycle': design,
             'proposal': n,
-            'factor1': plddt_for_checkpoint,
-            'factor2': i_pae_for_checkpoint,
+            'plddt': plddt_for_checkpoint,
+            'i_pae': i_pae_for_checkpoint,
             'dim1': row['rmsd'],
             'dim2': row['affinity'],
             'pdbFileName': pdb_file_name
         }, index=[0])
-        event_csv_filename = f"checkpoint_{index}_event.csv"
+        event_csv_filename = f"checkpoint_{index}_summary.csv"
         event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
         new_df.to_csv(event_csv_filepath, index= False)
 
