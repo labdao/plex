@@ -12,10 +12,11 @@ docker run -it --gpus=all \
 -e PLEX_JOB_INPUTS="$PLEX_JOB_INPUTS" \
 -e TRANSFORMERS_CACHE=/transformers_cache \
 -v "$HOST_CACHE_DIR":/transformers_cache \
--v "$HOST_CACHE_DIR":/app/cache \
 -v "/home/convexity-research/$USER_NAME/lab-exchange/tools/generator/":/inputs \
 -v "/home/convexity-research/$USER_NAME/lab-exchange/tools/generator/outputs/":/app/outputs \
 $CONTAINER_NAME:latest
+
+# -v "$HOST_CACHE_DIR":/app/cache \
 
 # # Run the Docker container
 # mkdir -p "$HOST_CACHE_DIR"

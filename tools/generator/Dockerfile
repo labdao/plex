@@ -76,6 +76,9 @@ ENV DGLBACKEND="pytorch"
 # download weights for colabfold
 RUN python -m colabfold.download
 
+# # Move /cache/colabfold to /app/cache and remove the original folder
+# RUN mv /cache/colabfold /app/cache && rm -rf /cache/colabfold
+
 # Cleanup
 RUN apt-get clean autoclean \
     && apt-get autoremove -y \
