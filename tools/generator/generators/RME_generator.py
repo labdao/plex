@@ -146,8 +146,6 @@ class RMEGenerator(BaseGenerator):
 
         if 'X' in permissibility_vector or '*' in permissibility_vector: # check if there is any diffusion to be done
 
-            print('sequence before diffusion', sequence)
-
             logging.info(f"diffusing...")
 
             # logging.info(f"permissibility vector, {permissibility_vector}")
@@ -176,38 +174,92 @@ class RMEGenerator(BaseGenerator):
             else:
                 logging.info(f"#Error running inference script")
                 logging.info(result.stderr)
-                    
+
             logging.info(f"Running MPNN")
 
-            # Activate the conda environment 'mlfold'
-            subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
+            # Create 'pdb_for_MPNN' directory if it doesn't exist
+            output_dir = generator_directory
+            os.makedirs(output_dir, exist_ok=True)
+            chains_to_design = "A"
+
+            positions_of_Xs = [str(index + 1) for index, char in enumerate(squeeze_seq(permissibility_vector)) if char == 'X']
+            design_only_positions = " ".join(positions_of_Xs)
+
+            # Define paths
+            path_for_parsed_chains = os.path.join(output_dir, "parsed_pdbs.jsonl")
+            path_for_assigned_chains = os.path.join(output_dir, "assigned_pdbs.jsonl")
+            path_for_fixed_positions = os.path.join(output_dir, "fixed_pdbs.jsonl")
+
+            folder_with_pdbs = output_dir
+            # Parse multiple chains
+            subprocess.run([
+                'python', 'ProteinMPNN/helper_scripts/parse_multiple_chains.py',
+                '--input_path', folder_with_pdbs,
+                '--output_path', path_for_parsed_chains
+            ], capture_output=True, text=True)
+
+            # Assign fixed chains
+            subprocess.run([
+                'python', 'ProteinMPNN/helper_scripts/assign_fixed_chains.py',
+                '--input_path', path_for_parsed_chains,
+                '--output_path', path_for_assigned_chains,
+                '--chain_list', chains_to_design
+            ], capture_output=True, text=True)
+
+            # Make fixed positions dict
+            subprocess.run([
+                'python', 'ProteinMPNN/helper_scripts/make_fixed_positions_dict.py',
+                '--input_path', path_for_parsed_chains,
+                '--output_path', path_for_fixed_positions,
+                '--chain_list', chains_to_design,
+                '--position_list', design_only_positions,
+                '--specify_non_fixed'
+            ], capture_output=True, text=True)
+
+            # Run protein MPNN
+            subprocess.run([
+                'python', 'ProteinMPNN/protein_mpnn_run.py',
+                '--jsonl_path', path_for_parsed_chains,
+                '--chain_id_jsonl', path_for_assigned_chains,
+                '--fixed_positions_jsonl', path_for_fixed_positions,
+                '--out_folder', output_dir,
+                '--num_seq_per_target', '2',
+                '--sampling_temp', '0.1',
+                '--seed', '37',
+                '--batch_size', '1'
+            ], capture_output=True, text=True)
+                    
+            # logging.info(f"Running MPNN")
+
+            # # Activate the conda environment 'mlfold'
+            # subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
 
 
-            # Loop over all PDB files starting with 'design_cycle_{evo_cycle}_motifscaffolding'
-            for pdb_file in os.listdir(generator_directory):
-                if pdb_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
-                    path_to_PDB = os.path.join(generator_directory, pdb_file)
-                    output_dir = generator_directory
-                    chains_to_design = 'A'
+            # # Loop over all PDB files starting with 'design_cycle_{evo_cycle}_motifscaffolding'
+            # for pdb_file in os.listdir(generator_directory):
+            #     if pdb_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
+            #         path_to_PDB = os.path.join(generator_directory, pdb_file)
+            #         output_dir = generator_directory
+            #         chains_to_design = 'A'
 
-                    # Create the output directory if it doesn't exist
-                    os.makedirs(output_dir, exist_ok=True)
+            #         # Create the output directory if it doesn't exist
+            #         os.makedirs(output_dir, exist_ok=True)
 
-                    logging.info(f"pdb path, {path_to_PDB}")
+            #         logging.info(f"pdb path, {path_to_PDB}")
 
-                    command = [
-                        'python', 'ProteinMPNN/protein_mpnn_run.py',
-                        '--pdb_path', path_to_PDB,
-                        '--pdb_path_chains', chains_to_design,
-                        '--out_folder', output_dir,
-                        '--num_seq_per_target', str(num_seqs),
-                        '--sampling_temp', '0.1',
-                        '--seed', '37',
-                        '--batch_size', '1'
-                    ]
+            #         command = [
+            #             'python', 'ProteinMPNN/protein_mpnn_run.py',
+            #             '--pdb_path', path_to_PDB,
+            #             '--pdb_path_chains', chains_to_design,
+            #             '--out_folder', output_dir,
+            #             '--num_seq_per_target', str(num_seqs),
+            #             '--sampling_temp', '0.1',
+            #             '--seed', '37',
+            #             '--batch_size', '1'
+            #         ]
 
-                    # Run the command
-                    subprocess.run(command, capture_output=True, text=True)
+            #         # Run the command
+            #         subprocess.run(command, capture_output=True, text=True)
 
             # Initialize variables to keep track of the highest score and its associated sequence across all fasta files
             highest_overall_score = None
@@ -251,7 +303,7 @@ class RMEGenerator(BaseGenerator):
         else:
             modified_seq = sequence
 
-        modified_seq = list(modified_seq) # insert the new deletions - TD: remind yourself why this is necessary!
+        modified_seq = list(modified_seq) # insert the new deletions
         for i, char in enumerate(permissibility_vector):
             if char=='-':
                 if modified_seq[i]!='-':
@@ -267,6 +319,7 @@ class RMEGenerator(BaseGenerator):
         while Delta_pseudoLL > 0.:
 
             runner = sequence_transformer.ESM2Runner()
+            print('')
             logging.info(f"iteration number {iter_num}")
             iter_num += 1
             modified_seq = ''.join(modified_seq)
@@ -283,9 +336,7 @@ class RMEGenerator(BaseGenerator):
             reverse_index_map = self._create_reverse_index_map(squeeze_seq(modified_seq), modified_seq)
             max_index_seq = reverse_index_map.get(max_index[1])
 
-
-            # LAGVSERTIDPKQNFYMHWC
-            amino_acid_code = ''.join(runner.amino_acids)
+            amino_acid_code = ''.join(runner.amino_acids) # LAGVSERTIDPKQNFYMHWC
             modified_seq = list(modified_seq)
             if modified_seq[max_index_seq] != '-':
                 modified_seq[max_index_seq] = amino_acid_code[max_index[0]] 

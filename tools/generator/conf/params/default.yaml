@@ -5,12 +5,12 @@ basic_settings:
   temperature: 0.05
   max_levenshtein_step_size: 1
   alphabet: 'LAGVSERTIDPKQNFYMHWC'
-  scorers: 'colabfold,prodigy'
+  scorers: 'colabfold,prodigy,ESM2'
   scoring_metrics: 'pseudolikelihood'
   scoring_weights: '0.7,0.2,0.1'
   selector: 'closed-door'
-  generator_scorers: 'RFdiff+ProteinMPNN/colabfold,prodigy'
-  generator: 'RFdiff+ProteinMPNN'
+  generator_scorers: 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2'
+  generator: 'RFdiff+ProteinMPNN+ESM2'
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A
   binder_chain: B
