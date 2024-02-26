@@ -352,7 +352,6 @@ func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error
 	var tags []models.Tag
 	if err := db.Where("name IN ?", tagNames).Find(&tags).Error; err != nil {
 		log.Printf("Error finding tags: %v\n", err)
-		// return fmt.Errorf("error finding tags: %v", err)
 		return fmt.Errorf("error finding tags: %v", err)
 	}
 
