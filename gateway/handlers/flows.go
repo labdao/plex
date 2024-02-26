@@ -216,10 +216,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				}
 				for _, cid := range cidsToAdd {
 					var dataFile models.DataFile
-					result := db.First(&dataFile, "cid = ? and wallet_address = ? ", cid, user.WalletAddress)
+					result := db.First(&dataFile, "cid = ?", cid)
+					// result := db.First(&dataFile, "cid = ? and wallet_address = ? ", cid, user.WalletAddress)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							http.Error(w, fmt.Sprintf("DataFile with CID %v and WalletAddress %v not found", cid, user.WalletAddress), http.StatusInternalServerError)
+							// http.Error(w, fmt.Sprintf("DataFile with CID %v and WalletAddress %v not found", cid, user.WalletAddress), http.StatusInternalServerError)
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
 							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
