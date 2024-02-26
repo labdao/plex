@@ -320,10 +320,11 @@ func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, output
 				fmt.Println("Saving generated DataFile to DB with CID:", fileEntry["CID"])
 
 				dataFile = models.DataFile{
-					CID:       fileEntry["CID"],
-					Filename:  fileName,
-					Tags:      []models.Tag{generatedTag, experimentTag, extensionTag},
-					Timestamp: time.Now(),
+					CID:           fileEntry["CID"],
+					WalletAddress: job.WalletAddress,
+					Filename:      fileName,
+					Tags:          []models.Tag{generatedTag, experimentTag, extensionTag},
+					Timestamp:     time.Now(),
 				}
 
 				if err := db.Create(&dataFile).Error; err != nil {
