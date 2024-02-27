@@ -8,10 +8,10 @@ import subprocess
 from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
 import random
+import sys
+import logging
 
 from omegaconf import DictConfig, OmegaConf
-
-import logging
 
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module or even to sequence-transformer
 
@@ -247,10 +247,6 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
 def replace_invalid_characters(seed, alphabet):
     return ''.join(['X' if c not in alphabet and c not in ['*', 'x'] else c for c in seed])
 
-import subprocess
-import sys
-import logging
-
 def check_gpu_availability():
     logging.basicConfig(level=logging.INFO)
     
@@ -275,17 +271,10 @@ def check_gpu_availability():
     except RuntimeError as e:
         logging.info(str(e))
         sys.exit(1)
-    
-    # # Check for JAX GPU
-    # try:
-    #     from jax.lib import xla_bridge
-    #     if xla_bridge.get_backend().platform != 'gpu':
-    #         raise RuntimeError("JAX cannot find a GPU. Ending job.")
-    # except ImportError:
-    #     logging.info("JAX is not installed.")
-    #     sys.exit(1)
-    # except RuntimeError as e:
-    #     logging.info(str(e))
-    #     sys.exit(1)
-    
-    # logging.info("GPU is detected by nvidia-smi, PyTorch, and JAX.")
+
+def check_string_against_alphabet(input_string, alphabet='LAGVSERTIDPKQNFYMHWC'):
+    for char in input_string:
+        if char not in alphabet:
+            logging.info(f"Warning: not enough input information given to predict an initial binder sequence. Please try to provide the amino acid identity for more of the residues.")
+            sys.exit(1)
+
