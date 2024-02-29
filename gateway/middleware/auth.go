@@ -240,3 +240,22 @@ func AuthMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
 		}
 	}
 }
+
+func AdminCheckMiddleware(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			user, ok := r.Context().Value(UserContextKey).(*models.User)
+			if !ok {
+				http.Error(w, "User context not found", http.StatusUnauthorized)
+				return
+			}
+
+			if !user.Admin {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			next(w, r)
+		}
+	}
+}
