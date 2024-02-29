@@ -1,5 +1,6 @@
 {
     "sequence_input": "XXXXXXXXXXXXXXX ; MKLKQVADKLEE",
     "number_of_binders": 1,
-    "init_permissibility_vec": ""
+    "init_permissibility_vec": "",
+    "hotspots": ""
 }

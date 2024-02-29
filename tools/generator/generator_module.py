@@ -19,6 +19,7 @@ class GenerationArgs:
         self.max_levenshtein_step_size = cfg.params.basic_settings.max_levenshtein_step_size
         self.num_designs = cfg.params.RFdiffusion_settings.inference.num_designs
         self.num_seqs = cfg.params.pMPNN_settings.num_seqs
+        self.hotspots = cfg.params.RFdiffusion_settings.hotspots
 
 class Generator:
     def __init__(self, cfg, outputs_directory):
