@@ -77,10 +77,12 @@ def load_initial_data(cfg, outputs_directory):
     contig_in_convexity_notation = ''
     if all(char in cfg.params.basic_settings.alphabet for char in seed):        
         if cfg.params.basic_settings.init_permissibility_vec == "":
-            contig_in_convexity_notation = seed
+            contig_in_convexity_notation = sequences[-1]['seed']
         else:
             logging.info(f"converting to convexity notation")
             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+
+        # OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", "[]", merge=False)
 
     else:
         contig = f"x1:{len(seed)}"
@@ -122,11 +124,6 @@ def my_app(cfg: DictConfig) -> None:
 
     start_time = time.time()
 
-    generator = Generator(cfg, outputs_directory)
-    scorer = Scorer(cfg, outputs_directory)
-    selector = SequenceSelector(cfg)
-    sampler = Sampler(cfg, outputs_directory, generator, selector, scorer, cfg.params.basic_settings.evolve, cfg.params.basic_settings.n_samples)
-
     df, cfg = load_initial_data(cfg, outputs_directory)
 
     seed_row = df[(df['t']==0) & (df['acceptance_flag'] == True)]
@@ -134,6 +131,12 @@ def my_app(cfg: DictConfig) -> None:
     permissibility_seed = seed_row['permissibility_modified_seq'].values[0]
     logging.info(f"target sequence {cfg.params.basic_settings.target_seq}")
     logging.info(f"initial seed sequence {seed}")
+
+    generator = Generator(cfg, outputs_directory)
+    scorer = Scorer(cfg, outputs_directory)
+    selector = SequenceSelector(cfg)
+    sampler = Sampler(cfg, outputs_directory, generator, selector, scorer, cfg.params.basic_settings.evolve, cfg.params.basic_settings.n_samples)
+
 
     for t in range(cfg.params.basic_settings.number_of_binders):
 

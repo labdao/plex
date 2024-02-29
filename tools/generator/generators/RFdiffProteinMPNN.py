@@ -87,7 +87,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
         generator_name = args.generator_name
         target = args.target
         num_designs = args.num_designs
-        hotspots =args.hotspots 
+        hotspots = args.hotspots 
 
         generator_directory = os.path.join(outputs_directory, generator_name)
         if not os.path.exists(generator_directory):
@@ -103,6 +103,26 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
             # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
             env = os.environ.copy()
             env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
+
+            # if hotspots=="[]":
+            #     command = [
+            #         'python', 'RFdiffusion/scripts/run_inference.py',
+            #         f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',
+            #         'inference.model_directory_path=RFdiffusion/models',
+            #         f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
+            #         f'inference.num_designs={num_designs}',
+            #         f'contigmap.contigs={[contig]}'
+            #     ]
+            # else:
+            #     command = [
+            #         'python', 'RFdiffusion/scripts/run_inference.py',
+            #         f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',
+            #         'inference.model_directory_path=RFdiffusion/models',
+            #         f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
+            #         f'inference.num_designs={num_designs}',
+            #         f'contigmap.contigs={[contig]}',
+            #         f'ppi.hotspot_res={hotspots}'
+            #     ]
 
             command = [
                 'python', 'RFdiffusion/scripts/run_inference.py',
