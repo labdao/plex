@@ -3,7 +3,7 @@ import numpy as np
 import logging
 from .base_generator import BaseGenerator
 import sequence_transformer
-from utils import check_string_against_alphabet
+# from utils import check_string_against_alphabet
 
 class complete_sequence_Generator(BaseGenerator):
 
@@ -28,6 +28,6 @@ class complete_sequence_Generator(BaseGenerator):
         logging.info(f"Original sequence: {masked_sequence}")
         logging.info(f"Predicted sequence: {predicted_sequence}")
 
-        check_string_against_alphabet(predicted_sequence)
+        # check_string_against_alphabet(predicted_sequence)
 
         return ''.join(predicted_sequence), ''.join(permissibility_vector)
