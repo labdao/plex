@@ -60,6 +60,21 @@
       "grouping": "_Advanced inputs",
       "position": "202",
       "required": false
+    },
+    "hotspots": {
+      "type": "string",
+      "description": "Hotspot residues on the target sequence indicating binding sites.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "A30, A35, A36",
+      "grouping": "_Advanced inputs",
+      "position": "203",
+      "required": false
     }
   },
   "outputs": {
