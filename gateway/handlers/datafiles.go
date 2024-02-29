@@ -103,7 +103,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
 			}
-			// utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+
 			return
 		}
 
@@ -139,21 +139,17 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		cid := vars["cid"]
 		if cid == "" {
 			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
-			// id := vars["id"]
-			// if id == "" {
-			// 	utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var dataFile models.DataFile
-		// result := db.Preload("Tags").Where("id = ?", id).First(&dataFile)
 		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		if dataFile.WalletAddress != user.WalletAddress {
+		if !dataFile.Public && dataFile.WalletAddress != user.WalletAddress {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -192,7 +188,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.DataFile{})
 
-		query = query.Where("wallet_address = ?", user.WalletAddress)
+		query = query.Where("wallet_address = ? OR public = true", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
@@ -274,7 +270,7 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if dataFile.WalletAddress != user.WalletAddress {
+		if !dataFile.Public && dataFile.WalletAddress != user.WalletAddress {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -335,15 +331,10 @@ func checkIfGenerated(dataFile models.DataFile) bool {
 	return false
 }
 
-//	func AddTagsToDataFile(db *gorm.DB, dataFileID string, tagNames []string) error {
-//		log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileID)
 func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
 	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
 
 	var dataFile models.DataFile
-	// if err := db.Preload("Tags").Where("cid = ?", dataFileID).First(&dataFile).Error; err != nil {
-	// 	log.Printf("Error finding DataFile with CID %s: %v\n", dataFileID, err)
-	// 	return fmt.Errorf("data file not found: %v", err)
 	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
 		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
 		return fmt.Errorf("data file not found: %v", err)
@@ -369,13 +360,10 @@ func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error
 
 	log.Println("Saving DataFile with new tags to DB")
 	if err := db.Save(&dataFile).Error; err != nil {
-		// log.Printf("Error saving DataFile with CID %s: %v\n", dataFileID, err)
-		// return fmt.Errorf("error saving datafile: %v", err)
 		log.Printf("error saving DataFile with CID %s: %v\n", dataFileCID, err)
 		return fmt.Errorf("error saving datafile: %v", err)
 	}
 
-	// log.Println("DataFile with CID", dataFileID, "successfully updated with new tags")
 	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
 
 	return nil
