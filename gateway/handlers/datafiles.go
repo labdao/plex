@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -45,33 +46,21 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		token, err := utils.ExtractAuthHeader(r)
-		if err != nil {
-			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
 			return
 		}
 
-		var walletAddress string
-		if middleware.IsJWT(token) {
-			claims, err := middleware.ValidateJWT(token, db)
-			if err != nil {
-				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
-				return
-			}
-			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
-			if err != nil {
-				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-		} else {
-			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
-			if err != nil {
-				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-		}
+		walletAddress := user.WalletAddress
 
 		filename := r.FormValue("filename")
+		publicValue := r.FormValue("public")
+
+		isPublic, err := strconv.ParseBool(publicValue)
+		if err != nil {
+			isPublic = false
+		}
 
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
 
@@ -93,6 +82,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			WalletAddress: walletAddress,
 			Filename:      filename,
 			Timestamp:     time.Now(),
+			Public:        isPublic,
 		}
 
 		result := db.Create(&dataFile)
@@ -301,6 +291,56 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 
 		if _, err := io.Copy(w, file); err != nil {
 			utils.SendJSONError(w, "Error sending file", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func UpdateDataFileHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
+			return
+		}
+
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var dataFile models.DataFile
+		result := db.Where("cid = ? AND public = false", cid).First(&dataFile)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				utils.SendJSONError(w, "Data file not found or already public", http.StatusNotFound)
+			} else {
+				utils.SendJSONError(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		dataFile.Public = true
+		if err := db.Save(&dataFile).Error; err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error updating datafile: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(dataFile); err != nil {
+			utils.SendJSONError(w, "Error encoding datafile to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
