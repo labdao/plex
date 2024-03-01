@@ -24,20 +24,27 @@ func createProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.Handle
 	}
 }
 
+func createAdminProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.HandlerFunc {
+	return func(handler http.HandlerFunc) http.HandlerFunc {
+		return middleware.AdminCheckMiddleware(db)(handler)
+	}
+}
+
 func NewServer(db *gorm.DB) *mux.Router {
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
 	protected := createProtectedRouteHandler(db)
+	adminProtected := createAdminProtectedRouteHandler(db)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
 	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 
-	router.HandleFunc("/tools", protected(handlers.AddToolHandler(db))).Methods("POST")
+	router.HandleFunc("/tools", protected(adminProtected(handlers.AddToolHandler(db)))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
-	router.HandleFunc("/tools/{cid}", protected(handlers.UpdateToolHandler(db))).Methods("PUT")
+	router.HandleFunc("/tools/{cid}", protected(adminProtected(handlers.UpdateToolHandler(db)))).Methods("PUT")
 
 	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db))).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
