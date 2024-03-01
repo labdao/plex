@@ -11,6 +11,7 @@ INSERT INTO user_datafiles (wallet_address, c_id, created_at)
 SELECT wallet_address, cid, COALESCE(timestamp, CURRENT_TIMESTAMP)
 FROM data_files;
 
+-- below steps will be done as a separate migration after we test and make sure the above information has been copied over correctly
 -- ALTER TABLE data_files
 -- DROP COLUMN wallet_address,
 -- DROP COLUMN timestamp;

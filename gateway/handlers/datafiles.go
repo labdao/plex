@@ -85,16 +85,37 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			Public:        isPublic,
 		}
 
-		result := db.Create(&dataFile)
-		if result.Error != nil {
-			log.Println("error saving to DB")
-			if utils.IsDuplicateKeyError(result.Error) {
-				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
+		userDataFile := models.UserDatafile{
+			WalletAddress: walletAddress,
+			CID:           cid,
+			CreatedAt:     time.Now(),
+		}
+
+		var existingDataFile models.DataFile
+		if err := db.Where("cid = ?", cid).First(&existingDataFile).Error; err == nil {
+			var existingUserDataFile models.UserDatafile
+			if err := db.Where("wallet_address = ? AND c_id = ?", walletAddress, cid).First(&existingUserDataFile).Error; err == nil {
+				utils.SendJSONError(w, "A user data file with the same CID already exists", http.StatusConflict)
+				return
 			} else {
+				result := db.Create(&userDataFile)
+				if result.Error != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error saving user datafile: %v", result.Error), http.StatusInternalServerError)
+					return
+				}
+			}
+		} else {
+			result := db.Create(&dataFile)
+			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
 
-			return
+			result = db.Create(&userDataFile)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error saving user datafile: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		var uploadedTag models.Tag
@@ -139,8 +160,10 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if !dataFile.Public && dataFile.WalletAddress != user.WalletAddress {
-			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		var userDataFile models.UserDatafile
+		err := db.Where("wallet_address = ? AND c_id = ?", user.WalletAddress, cid).First(&userDataFile).Error
+		if err != nil && !dataFile.Public {
+			utils.SendJSONError(w, "Unauthorized access or data file not found", http.StatusUnauthorized)
 			return
 		}
 
@@ -176,15 +199,15 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		offset := (page - 1) * pageSize
 
-		query := db.Model(&models.DataFile{})
-
-		query = query.Where("wallet_address = ? OR public = true", user.WalletAddress)
+		query := db.Model(&models.DataFile{}).
+			Joins("LEFT JOIN user_datafiles ON user_datafiles.c_id = data_files.cid").
+			Where("user_datafiles.wallet_address = ? OR data_files.public = true", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("cid = ?", cid)
+			query = query.Where("data_files.cid = ?", cid)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("filename LIKE ?", "%"+filename+"%")
+			query = query.Where("data_files.filename LIKE ?", "%"+filename+"%")
 		}
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
@@ -192,7 +215,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("timestamp <= ?", parsedTime)
+			query = query.Where("user_datafiles.timestamp <= ?", parsedTime)
 		}
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
@@ -200,13 +223,13 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("timestamp >= ?", parsedTime)
+			query = query.Where("user_datafiles.timestamp >= ?", parsedTime)
 		}
 
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "timestamp desc"
+		defaultSort := "data_files.timestamp desc"
 		sortParam := r.URL.Query().Get("sort")
 		if sortParam != "" {
 			defaultSort = sortParam
@@ -260,7 +283,9 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if !dataFile.Public && dataFile.WalletAddress != user.WalletAddress {
+		var userDataFile models.UserDatafile
+		err := db.Where("wallet_address = ? AND c_id = ?", user.WalletAddress, cid).First(&userDataFile).Error
+		if err != nil && !dataFile.Public {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
