@@ -34,6 +34,7 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
   const walletAddress = user?.wallet?.address;
 
   const [file, setFile] = useState<File | null>(null);
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files && e.target.files[0];
@@ -45,6 +46,10 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
   const handleSuccess = () => {
     setOpen(false);
     //TODO: Update the list
+  };
+
+  const handlePublicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsPublic(e.target.checked);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -59,7 +64,7 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
     const metadata = { walletAddress };
 
     try {
-      await dispatch(saveDataFileAsync({ file, metadata, handleSuccess }));
+      await dispatch(saveDataFileAsync({ file, metadata, isPublic, handleSuccess }));
       dispatch(endFileUploadDataSlice());
     } catch (error) {
       dispatch(setError("Error uploading file"));
@@ -76,6 +81,21 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input type="file" onChange={handleFileChange} />
+              {file && (
+                <label>
+                  <input 
+                    type="checkbox" 
+                    checked={isPublic}
+                    onChange={handlePublicChange} 
+                  />
+                  <span className="ml-2 font-bold">
+                    Mark Public.
+                  </span>
+                  <span className="ml-1 text-sm text-gray-600">
+                    Once a datafile is public, this cannot be undone.
+                  </span>
+                </label>
+              )}
               <Button type="submit">{isLoading ? "Submitting..." : "Submit"}</Button>
               {errorMessage && <Alert variant="destructive">{errorMessage}</Alert>}
             </form>
