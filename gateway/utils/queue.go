@@ -336,10 +336,20 @@ func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, output
 				return err
 			}
 		}
+		var user models.User
+		if err := db.Where("wallet_address = ?", job.WalletAddress).First(&user).Error; err != nil {
+			fmt.Printf("Error finding user with wallet address %v\n: ", job.WalletAddress)
+			return err
+		}
 		// Then add the DataFile to the Job.OutputFiles
 		fmt.Println("Adding DataFile to Job.Outputs with CID:", dataFile.CID)
 		job.OutputFiles = append(job.OutputFiles, dataFile)
 		fmt.Println("Updated Job.Outputs:", job.OutputFiles)
+		if err := db.Model(&user).Association("UserDatafiles").Append(&dataFile); err != nil {
+			fmt.Printf("Error associating DataFile with User's UserDatafiles: %v\n", err)
+			return err
+		}
+		fmt.Println("Updated User.UserDatafiles")
 	}
 	// Update job in the database with new OutputFiles
 	if err := db.Save(&job).Error; err != nil {
