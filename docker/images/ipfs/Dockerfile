@@ -1,4 +1,33 @@
 ARG IPFS_VERSION=0.18.0
+FROM golang:1.19.1-buster AS builder
+
+ARG IPFS_VERSION=0.18.0
+ARG IPFS_DS_S3_PLUGIN_VERSION=latest
+ARG IPFS_HEALTHCHECK_PLUGIN_VERSION=latest
+
+WORKDIR /
+
+# Kubo build process
+# See details: https://github.com/ipfs/go-ds-s3
+ENV GO111MODULE on
+ENV GOPROXY direct
+
+# We clone Kubo source code
+RUN git clone --depth 1 -b v${IPFS_VERSION} https://github.com/ipfs/kubo
+ENV SRC_DIR /kubo
+
+# Move to kubo folder
+WORKDIR $SRC_DIR
+
+# Install the plugin and build ipfs
+RUN go get github.com/ceramicnetwork/go-ipfs-healthcheck/plugin@${IPFS_HEALTHCHECK_PLUGIN_VERSION}
+RUN echo "\nhealthcheck github.com/ceramicnetwork/go-ipfs-healthcheck/plugin 0" >> plugin/loader/preload_list
+RUN go get github.com/3box/go-ds-s3/plugin@${IPFS_DS_S3_PLUGIN_VERSION}
+RUN echo "\ns3ds github.com/3box/go-ds-s3/plugin 0" >> plugin/loader/preload_list
+RUN make build
+RUN go mod tidy
+RUN CGO_ENABLED=0 make build
+RUN make install
 
 # IPFS container with all the utilities
 FROM ipfs/kubo:v${IPFS_VERSION} AS ipfs-with-utils
@@ -16,42 +45,13 @@ COPY container-init.d container-init.d
 RUN chown ipfs: /container-init.d/*.sh
 RUN chown ipfs: /data/ipfs
 
-# Copy custom IPFS binary with s3ds and healthcheck plugin
-COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
-
 USER ipfs
 
-FROM scratch
+# Final IPFS container with custom IPFS binary and utils
+FROM ipfs-with-utils
+ENV SRC_DIR /kubo
 
-COPY --from=ipfs-with-utils / /
+# We copy the new binaries we built in the 'builder' stage (--from=builder)
+COPY --from=builder $SRC_DIR/cmd/ipfs/ipfs /usr/local/bin/ipfs
 
-# Swarm TCP; should be exposed to the public
-EXPOSE 4001
-# Swarm UDP; should be exposed to the public
-EXPOSE 4001/udp
-# Daemon API; must not be exposed publicly but to client services under you control
-EXPOSE 5001
-# Web Gateway; can be exposed publicly with a proxy, e.g. as https://ipfs.example.org
-EXPOSE 8080
-# Swarm Websockets; must be exposed publicly when the node is listening using the websocket transport (/ipX/.../tcp/8081/ws).
-EXPOSE 8081
-
-ENV IPFS_PATH /data/ipfs
-
-ENV IPFS_PROFILE "server"
-
-# The default logging level
-ENV IPFS_LOGGING ""
-
-# This just makes sure that:
-# 1. There's an fs-repo, and initializes one if there isn't.
-# 2. The API and Gateway are accessible from outside the container.
-ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/start_ipfs"]
-
-# Healthcheck for the container
-# QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn is the CID of empty folder
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD ipfs dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn || exit 1
-
-# Execute the daemon subcommand by default
-CMD ["daemon", "--migrate=true", "--agent-version-suffix=docker"]
+USER ipfs

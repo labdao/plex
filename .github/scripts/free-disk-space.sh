@@ -33,6 +33,7 @@ dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
 df -h
 
 echo "Removing large packages"
+sudo apt-get remove -y 'humanity-icon-theme'
 sudo apt-get remove -y '^dotnet-.*'
 sudo apt-get remove -y 'php.*'
 sudo apt-get remove -y '^mongodb-.*'
