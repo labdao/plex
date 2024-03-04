@@ -1,5 +1,6 @@
 import { useLogin } from "@privy-io/react-auth";
 import { usePrivy } from "@privy-io/react-auth";
+import { Slot } from "@radix-ui/react-slot";
 import React from "react";
 import { useDispatch } from "react-redux";
 
@@ -11,6 +12,7 @@ import { saveUserAsync } from "@/lib/redux/slices/userSlice/thunks";
 const PrivyLoginButton = (props: ButtonProps) => {
   const dispatch: AppDispatch = useDispatch();
   const { ready, authenticated } = usePrivy();
+  const Comp = props.asChild ? Slot : Button;
 
   //This component must remain mounted wherever you use it for the callback to fire correctly
   const { login } = useLogin({
@@ -21,14 +23,14 @@ const PrivyLoginButton = (props: ButtonProps) => {
         return;
       }
 
-      if (wasAlreadyAuthenticated) {
-        console.log("User was already authenticated");
-      } else if (isNewUser) {
+      if (isNewUser) {
         console.log("New user");
-        dispatch(saveUserAsync({ walletAddress }));
-      } else if (user) {
+      } else if (wasAlreadyAuthenticated) {
+        console.log("User was already authenticated");
+      } else {
         console.log("User authenticated");
       }
+      dispatch(saveUserAsync({ walletAddress }));
     },
     onError: (error) => {
       console.log("onError callback triggered", error);
@@ -43,11 +45,7 @@ const PrivyLoginButton = (props: ButtonProps) => {
     }
   };
 
-  return ready && !authenticated ? (
-    <Button onClick={handleLogin} {...props}>
-      Log In
-    </Button>
-  ) : null;
+  return ready && !authenticated ? <Comp onClick={handleLogin} {...props} /> : null;
 };
 
 export default PrivyLoginButton;

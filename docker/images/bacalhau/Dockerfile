@@ -3,7 +3,7 @@
 FROM golang:1.20 as build
 
 # Release tag. Used to build the binary and tag the version.
-ARG BACALHAU_VERSION=v1.1.2
+ARG BACALHAU_VERSION=v1.2.0
 ARG TAG
 
 RUN apt-get update && apt-get -y --no-install-recommends install nodejs npm

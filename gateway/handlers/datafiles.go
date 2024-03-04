@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -43,7 +45,32 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		walletAddress := r.FormValue("walletAddress")
+		token, err := utils.ExtractAuthHeader(r)
+		if err != nil {
+			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		var walletAddress string
+		if middleware.IsJWT(token) {
+			claims, err := middleware.ValidateJWT(token, db)
+			if err != nil {
+				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
+				return
+			}
+			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		} else {
+			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
+			if err != nil {
+				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+		}
+
 		filename := r.FormValue("filename")
 
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
@@ -76,6 +103,7 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
 			}
+			// utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
@@ -101,17 +129,32 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		vars := mux.Vars(r)
 		cid := vars["cid"]
 		if cid == "" {
 			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			// id := vars["id"]
+			// if id == "" {
+			// 	utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var dataFile models.DataFile
+		// result := db.Preload("Tags").Where("id = ?", id).First(&dataFile)
 		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -130,6 +173,12 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		var page, pageSize int = 1, 50
 
 		if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
@@ -143,11 +192,10 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.DataFile{})
 
+		query = query.Where("wallet_address = ?", user.WalletAddress)
+
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
-		}
-		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
-			query = query.Where("wallet_address = ?", walletAddress)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
 			query = query.Where("filename LIKE ?", "%"+filename+"%")
@@ -214,9 +262,20 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		var dataFile models.DataFile
 		if err := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile).Error; err != nil {
 			utils.SendJSONError(w, "Data file not found", http.StatusNotFound)
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -276,19 +335,24 @@ func checkIfGenerated(dataFile models.DataFile) bool {
 	return false
 }
 
+//	func AddTagsToDataFile(db *gorm.DB, dataFileID string, tagNames []string) error {
+//		log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileID)
 func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
 	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
 
 	var dataFile models.DataFile
+	// if err := db.Preload("Tags").Where("cid = ?", dataFileID).First(&dataFile).Error; err != nil {
+	// 	log.Printf("Error finding DataFile with CID %s: %v\n", dataFileID, err)
+	// 	return fmt.Errorf("data file not found: %v", err)
 	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
 		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
-		return fmt.Errorf("Data file not found: %v", err)
+		return fmt.Errorf("data file not found: %v", err)
 	}
 
 	var tags []models.Tag
 	if err := db.Where("name IN ?", tagNames).Find(&tags).Error; err != nil {
 		log.Printf("Error finding tags: %v\n", err)
-		return fmt.Errorf("Error finding tags: %v", err)
+		return fmt.Errorf("error finding tags: %v", err)
 	}
 
 	existingTagMap := make(map[string]bool)
@@ -305,10 +369,14 @@ func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error
 
 	log.Println("Saving DataFile with new tags to DB")
 	if err := db.Save(&dataFile).Error; err != nil {
-		log.Printf("Error saving DataFile with CID %s: %v\n", dataFileCID, err)
-		return fmt.Errorf("Error saving datafile: %v", err)
+		// log.Printf("Error saving DataFile with CID %s: %v\n", dataFileID, err)
+		// return fmt.Errorf("error saving datafile: %v", err)
+		log.Printf("error saving DataFile with CID %s: %v\n", dataFileCID, err)
+		return fmt.Errorf("error saving datafile: %v", err)
 	}
 
+	// log.Println("DataFile with CID", dataFileID, "successfully updated with new tags")
 	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
+
 	return nil
 }

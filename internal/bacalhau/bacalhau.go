@@ -42,7 +42,7 @@ func GetBacalhauClient() (*client.APIClient, error) {
 	return bacalhauClient, err
 }
 
-func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string) (job *model.Job, err error) {
+func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, jobUUID string) (job *model.Job, err error) {
 	fmt.Println("CreatebacalhauJob")
 	fmt.Println(inputs)
 	job, err = model.NewJobWithSaneProductionDefaults()
@@ -174,9 +174,15 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	}
 
 	jsonString := string(jsonBytes)
-	envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString)
+	// envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s JOB_UUID=%s", jsonString, jobUUID)
+	envVars := []string{
+		fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString),
+		fmt.Sprintf("JOB_UUID=%s", jobUUID),
+		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
+		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
+	}
 
-	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVar).Build()
+	job.Spec.EngineSpec = model.NewDockerEngineBuilder(container).WithEnvironmentVariables(envVars...).Build()
 
 	job.Spec.Outputs = []model.StorageSpec{{Name: "outputs", StorageSource: model.StorageSourceIPFS, Path: "/outputs"}}
 	log.Println("returning job")
@@ -230,7 +236,26 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 }
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
-	capacityErrorMsg := "not enough capacity"
+	capacityErrorMessages := []string{"not enough capacity", "not enough nodes", "does not have capacity"}
+	falseCapacityMessages := []string{"Could not inspect image", "node does not support the available image platforms"}
+	if len(job.State.Executions) > 0 {
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		for _, errorMsg := range falseCapacityMessages {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+				return false
+			}
+		}
+		for _, errorMsg := range capacityErrorMessages {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func JobFailedWithBidRejectedError(job *model.JobWithInfo) bool {
+	capacityErrorMsg := "bid rejected"
 	if len(job.State.Executions) > 0 {
 		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
 		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
@@ -253,6 +278,17 @@ func JobCompleted(job *model.JobWithInfo) bool {
 
 func JobFailed(job *model.JobWithInfo) bool {
 	return job.State.State == model.JobStateError
+}
+
+func JobCancelled(job *model.JobWithInfo) bool {
+	return job.State.State == model.JobStateCancelled
+}
+
+func JobBidAccepted(job *model.JobWithInfo) bool {
+	if len(job.State.Executions) > 0 {
+		return job.State.Executions[0].State == model.ExecutionStateBidAccepted
+	}
+	return false
 }
 
 func GetBacalhauJobEvents(jobId string) ([]model.JobHistory, error) {

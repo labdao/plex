@@ -12,7 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
@@ -66,10 +69,9 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var walletAddress string
-		err = json.Unmarshal(requestData["walletAddress"], &walletAddress)
-		if err != nil || walletAddress == "" {
-			http.Error(w, "Invalid or missing walletAddress", http.StatusBadRequest)
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
 			return
 		}
 
@@ -141,7 +143,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 		flow := models.Flow{
 			CID:           ioListCid,
-			WalletAddress: walletAddress,
+			WalletAddress: user.WalletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
 		}
@@ -166,13 +168,16 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				queue = models.QueueTypeGPU
 			}
+			jobUUID := uuid.New().String()
+
 			job := models.Job{
 				ToolID:        ioItem.Tool.IPFS,
 				FlowID:        flow.ID,
-				WalletAddress: walletAddress,
+				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-        CreatedAt:     time.Now(),
+				CreatedAt:     time.Now(),
+				JobUUID:       jobUUID,
 			}
 			result := db.Create(&job)
 			if result.Error != nil {
@@ -212,8 +217,10 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				for _, cid := range cidsToAdd {
 					var dataFile models.DataFile
 					result := db.First(&dataFile, "cid = ?", cid)
+					// result := db.First(&dataFile, "cid = ? and wallet_address = ? ", cid, user.WalletAddress)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							// http.Error(w, fmt.Sprintf("DataFile with CID %v and WalletAddress %v not found", cid, user.WalletAddress), http.StatusInternalServerError)
 							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
@@ -245,6 +252,12 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
 		params := mux.Vars(r)
 		flowID, err := strconv.Atoi(params["flowID"])
 		if err != nil {
@@ -253,9 +266,9 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var flow models.Flow
-		if result := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID); result.Error != nil {
+		if result := db.Preload("Jobs.Tool").First(&flow, "id = ? AND wallet_address = ?", flowID, user.WalletAddress); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
+				http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
 			} else {
 				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
 			}
@@ -277,7 +290,13 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		query := db.Model(&models.Flow{})
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
+		query := db.Model(&models.Flow{}).Where("wallet_address = ?", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)

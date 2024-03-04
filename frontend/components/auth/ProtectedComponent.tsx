@@ -31,14 +31,14 @@ const ProtectedComponent = ({ children, method = "overlay", message }: Protected
   if (!authenticated && method !== "redirect")
     return (
       <div className="relative">
-        <div className="sticky z-50 top-4 inset-x-6 inset-y-12">
-          <Card>
+        <div className="sticky z-40 -mt-2 border-t top-[-1px] inset-x-6 inset-y-12">
+          <Card className="rounded-t-none">
             <CardContent className="flex items-center justify-between gap-4">
               <span className="font-mono font-bold tracking-wide uppercase">
                 <LockIcon size={16} absoluteStrokeWidth className="inline-block mr-2" />
                 {message}
               </span>
-              <PrivyLoginButton />
+              <PrivyLoginButton>Log In</PrivyLoginButton>
             </CardContent>
           </Card>
         </div>

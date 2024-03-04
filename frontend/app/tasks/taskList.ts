@@ -6,23 +6,26 @@ export const tasks = [
     name: "Protein Binder Design",
     slug: "protein-binder-design",
     available: true,
-    default_tool: {
-      CID: "QmYmKL9fCzxoEQAEvCtLZHXXwjJWdn7bbRE9afTXV5cB3v",
-    },
   },
+  // {
+  //   // set to true for testing story LAB-1166
+  //   name: "Protein Folding",
+  //   slug: "protein-folding",
+  //   available: true,
+  // },
+  // {
+  //   name: "Protein Docking",
+  //   slug: "protein-docking",
+  //   available: false,
+  // },
+  // {
+  //   name: "Small Molecule Docking",
+  //   slug: "small-molecule-docking",
+  //   available: false,
+  // },
   {
-    name: "Protein Folding",
-    slug: "protein-folding",
-    available: false,
-  },
-  {
-    name: "Protein Docking",
-    slug: "protein-docking",
-    available: false,
-  },
-  {
-    name: "Small Molecule Docking",
-    slug: "small-molecule-docking",
-    available: false,
+    name: "Community Models",
+    slug: "community-models",
+    available: true,
   },
 ];

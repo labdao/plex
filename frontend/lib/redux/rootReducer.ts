@@ -1,14 +1,18 @@
 /* Instruments */
 import {
+  apiKeyAddSlice,
+  apiKeyListSlice,
   dataFileAddSlice,
   dataFileListSlice,
   flowAddSlice,
   flowDetailSlice,
   flowListSlice,
   jobDetailSlice,
+  stripeCheckoutSlice,
   toolAddSlice,
   toolDetailSlice,
   toolListSlice,
+  transactionsSummarySlice,
   userSlice,
 } from "./slices";
 
@@ -23,4 +27,8 @@ export const reducer = {
   flowList: flowListSlice.reducer,
   flowDetail: flowDetailSlice.reducer,
   jobDetail: jobDetailSlice.reducer,
+  apiKeyAdd: apiKeyAddSlice.reducer,
+  apiKeyList: apiKeyListSlice.reducer,
+  stripeCheckout: stripeCheckoutSlice.reducer,
+  transactionsSummary: transactionsSummarySlice.reducer,
 };

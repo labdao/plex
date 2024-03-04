@@ -1,19 +1,31 @@
-import backendUrl from "lib/backendUrl";
+import { getAccessToken } from "@privy-io/react-auth"
+import backendUrl from "lib/backendUrl"
 
 export const saveDataFileToServer = async (
     file: File,
     metadata: { [key: string]: any }
   ): Promise<{ filename: string, cid: string }> => {
-    const formData = new FormData();
-    formData.append('file', file, file.name);
+    const formData = new FormData()
+    formData.append('file', file, file.name)
     formData.append('filename', file.name)
 
     for (const key in metadata) {
-      formData.append(key, metadata[key]);
+      formData.append(key, metadata[key])
+    }
+
+    let authToken
+    try {
+      authToken = await getAccessToken();
+    } catch (error) {
+      console.log("Failed to get access token: ", error)
+      throw new Error("Authentication failed")
     }
 
     const response = await fetch(`${backendUrl()}/datafiles`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      },
       body: formData,
     })
 
@@ -31,6 +43,6 @@ export const saveDataFileToServer = async (
 
     const result = await response.json()
     console.log('result', result)
-    return result;
+    return result
   }
   

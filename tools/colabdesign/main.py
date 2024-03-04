@@ -438,7 +438,7 @@ def prodigy_run(csv_path, pdb_path):
                     # Handle the case where prodigy did not produce output
         except subprocess.CalledProcessError:
             # print(f"Prodigy command failed for {r['path']}")
-            print(f"Prodigy command failed for {file_path}")
+            print(f"Warning: Prodigy command failed for {file_path}. This is not an error per se and most likely due to the binder not being closely positioned against the target.")
 
     # export results
     df.to_csv(f"{csv_path}", index=None)

@@ -4,8 +4,9 @@ import { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import localFont from "next/font/local";
 
-import Footer from "@/components/global/Footer";
-import Header from "@/components/global/Header";
+import Nav from "@/components/global/Nav";
+import { ViewportWarning } from "@/components/shared/ViewportWarning";
+import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -92,11 +93,12 @@ export default function RootLayout(props: React.PropsWithChildren) {
         )}
       >
         <Providers>
-          <div className="flex flex-col w-full min-h-screen bg-gray-100">
-            <Header />
+          <div className="flex w-full bg-gray-50">
+            <ViewportWarning />
+            <Nav />
             <div className="grow">{props.children}</div>
-            <Footer />
           </div>
+          <Toaster richColors />
         </Providers>
       </body>
     </html>
@@ -104,7 +106,7 @@ export default function RootLayout(props: React.PropsWithChildren) {
 }
 
 export const metadata: Metadata = {
-  title: "Lab Exchange",
+  title: "Lab.Bio",
   icons: [
     {
       rel: "shortcut icon",

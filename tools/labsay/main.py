@@ -23,7 +23,7 @@ def get_plex_job_inputs():
 import time
 
 
-def display_logo():
+def display_logo(speedup=False):
     logo = """
                                         @
                                  @@@@@@@@@@@@@@@
@@ -62,7 +62,11 @@ def display_logo():
 
     for char in logo:
         print(char, end="", flush=True)
-        time.sleep(0.05)
+        sleep_time = 0.05
+        if speedup:
+            time.sleep(sleep_time * 0.1)
+        else:
+            time.sleep(sleep_time)
 
 
 def main():
@@ -96,7 +100,7 @@ def main():
             f"Product of number_example and length of string_example: {product}\n"
         )
 
-        display_logo()
+        display_logo(job_inputs["speedup"])
         print("job finished")
         print("results are saved in result.txt")
         print("\U0001F331")

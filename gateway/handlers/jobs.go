@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/bacalhau"
@@ -25,6 +26,12 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			http.Error(w, "User context not found", http.StatusUnauthorized)
+			return
+		}
+
 		params := mux.Vars(r)
 		jobID, err := strconv.Atoi(params["jobID"])
 		if err != nil {
@@ -32,9 +39,9 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var job models.Job
-		if result := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").First(&job, "id = ?", jobID); result.Error != nil {
+		if result := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").Where("wallet_address = ?", user.WalletAddress).First(&job, "id = ?", jobID); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Job not found", http.StatusNotFound)
+				http.Error(w, "Job not found or not authorized", http.StatusNotFound)
 			} else {
 				http.Error(w, fmt.Sprintf("Error fetching Job: %v", result.Error), http.StatusInternalServerError)
 			}

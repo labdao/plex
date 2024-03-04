@@ -1,10 +1,12 @@
 "use client";
 
+import { getAccessToken } from "@privy-io/react-auth";
 import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import React, { useEffect, useState } from "react";
 
 import { DataTable } from "@/components/ui/data-table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function ListToolFiles() {
   interface Tool {
@@ -19,7 +21,7 @@ export default function ListToolFiles() {
     } else {
       return "";
     }
-  }
+  };
 
   const columns: ColumnDef<Tool>[] = [
     {
@@ -42,34 +44,40 @@ export default function ListToolFiles() {
       header: "User",
       cell: ({ row }) => {
         return shortenAddressOrCid(row.getValue("WalletAddress"));
-      }
+      },
     },
   ];
 
   const [tools, setTools] = useState<Tool[]>([]);
 
-  const [sorting, setSorting] = useState([{ id: "Name", desc: false }])
-
   useEffect(() => {
-    fetch(`${backendUrl()}/tools`)
-      .then((response) => {
+    const fetchData = async () => {
+      try {
+        const authToken = await getAccessToken();
+        const response = await fetch(`${backendUrl()}/tools`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
         if (!response.ok) {
           throw new Error(`HTTP error ${response.status}`);
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log("Fetched tools:", data);
+
+        const data = await response.json();
         setTools(data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching tools:", error);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <DataTable columns={columns} data={tools} sorting={sorting}/>
-    </div>
+    <ScrollArea className="w-full bg-white grow">
+      <DataTable columns={columns} data={tools} /> <ScrollBar orientation="horizontal" />
+      <ScrollBar orientation="vertical" />
+    </ScrollArea>
   );
 }

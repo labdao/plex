@@ -32,7 +32,8 @@ func DonotTestCreateBacalhauJob(t *testing.T) {
 	gpu := true
 	network := true
 	annotations := []string{"labdaolocal"}
-	job, err := CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations)
+	jobUUID := "1234"
+	job, err := CreateBacalhauJob(inputs, container, selector, maxTime, memory, cpu, gpu, network, annotations, jobUUID)
 	if err != nil {
 		t.Fatalf(fmt.Sprint(err))
 	}

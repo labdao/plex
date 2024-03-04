@@ -1,0 +1,157 @@
+{
+  "name": "colabdesign gateway checkpoint v0.3",
+  "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
+  "author": "sokrypton",
+  "github": "https://github.com/sokrypton/ColabDesign",
+  "paper": "https://www.nature.com/articles/s41586-023-06415-8",
+  "task": "protein design",
+  "taskCategory": "protein-binder-design",
+  "baseCommand": [
+  ],
+  "arguments": [
+  ],
+  "dockerPull": "quay.io/labdao/colabdesign-checkpoint@sha256:05e8d9bf21e8c74245727834c34a66cabba057a746a5a45feb274315cd9b1397",
+  "gpuBool": true,
+  "memoryGB": 12,
+  "cpu": 3,
+  "networkBool": true,
+  "inputs": {
+    "binder_length": {
+      "type": "number",
+      "description": "The length of the protein binder that is being designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "50",
+      "min": "1",
+      "max": "1000",
+      "example": "50",
+      "grouping": "binder",
+      "position": "201",
+      "required": true
+    },
+    "hotspot": {
+      "type": "string",
+      "description": "The residues that should be in contact with the binder.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "A30,A33,A34",
+      "grouping": "target",
+      "position": "105",
+      "required": false
+    },
+    "number_of_binders": {
+      "type": "number",
+      "description": "The number of protein binders to be designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "2",
+      "min": "1",
+      "max": "128",
+      "example": "2",
+      "grouping": "binder",
+      "position": "202",
+      "required": true
+    },
+    "target_chain": {
+      "type": "string",
+      "description": "The chain of the target protein to design against.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "A",
+      "min": "",
+      "max": "",
+      "example": "A",
+      "grouping": "target",
+      "position": "102",
+      "required": true
+    },
+    "target_end_residue": {
+      "type": "number",
+      "description": "The end residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "1",
+      "min": "1",
+      "max": "",
+      "example": "300",
+      "grouping": "target",
+      "position": "104",
+      "required": true
+    },
+    "target_protein": {
+      "type": "file",
+      "description": "The target protein to design against.",
+      "array": false,
+      "glob": [
+        "*.pdb"
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "my_target_protein.pdb",
+      "grouping": "target",
+      "position": "101",
+      "required": true
+    },
+    "target_start_residue": {
+      "type": "number",
+      "description": "The start residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "1",
+      "min": "1",
+      "max": "",
+      "example": "1",
+      "grouping": "target",
+      "position": "103",
+      "required": true
+    },
+    "contigs_override": {
+      "type": "string",
+      "default": "",
+      "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
+      "example": "A1-283:B1-6/1/B8-20/22/B43-47",
+      "grouping": "_advanced",
+      "position": "301",
+      "required": false
+    }
+  },
+  "outputs": {
+    "all_outputs": {
+      "type": "Array",
+      "item": "File",
+      "glob": [
+        "*.zip"
+      ]
+    },
+    "best_design": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*_best.pdb"
+      ]
+    },
+    "scores": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*_scores.csv"
+      ]
+    }
+  }
+}

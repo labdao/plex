@@ -1,7 +1,8 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { DownloadIcon, Loader2Icon, User } from "lucide-react";
+import { Code2Icon, CreditCardIcon, DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,9 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import PrivyLoginButton from "../auth/PrivyLoginButton";
+import StripeCheckoutButton from "../payment/StripeCheckoutButton";
+import TransactionSummaryInfo from "../payment/TransactionSummaryInfo";
+import { NavButton } from "./NavItem";
 
 export default function UserMenu() {
   const { ready, authenticated, user, exportWallet, logout } = usePrivy();
@@ -34,49 +38,67 @@ export default function UserMenu() {
     await logout();
   };
 
-  if (!ready) return <Loader2Icon className="opacity-50 animate-spin" />;
+  if (!ready)
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+        <Loader2Icon className="w-4 opacity-50 animate-spin" /> Authenticating...
+      </div>
+    );
 
   return (
     <>
-      <PrivyLoginButton variant="ghost" />
+      <PrivyLoginButton asChild>
+        <span>
+          <NavButton icon={<UserCircleIcon />} title="Log In" />
+        </span>
+      </PrivyLoginButton>
       {authenticated && (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button size="icon" variant="ghost">
-              <User />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent collisionPadding={10}>
-            {user?.email?.address && (
-              <>
-                <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-              </>
-            )}
+        <>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <NavButton icon={<UserCircleIcon />} hasDropdown title={user?.email?.address || walletAddress} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent collisionPadding={10} side="right" align="start">
+              {user?.email?.address && (
+                <>
+                  <DropdownMenuLabel>{user?.email?.address}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
 
-            {walletAddress && (
-              <>
-                <DropdownMenuLabel className="truncate w-72">
-                  Wallet: <em className="font-mono font-normal">{walletAddress}</em>
-                </DropdownMenuLabel>
+              {walletAddress && (
+                <>
+                  <DropdownMenuLabel className="truncate w-72">
+                    Wallet: <em className="font-mono font-normal">{walletAddress}</em>
+                  </DropdownMenuLabel>
 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger className="w-full">
-                      <DropdownMenuItem disabled={!hasEmbeddedWallet} onClick={handleExportWallet}>
-                        <DownloadIcon size={20} className="mr-1" />
-                        Export Wallet
-                      </DropdownMenuItem>
-                    </TooltipTrigger>
-                    {!hasEmbeddedWallet && <TooltipContent>Export wallet only available for embedded wallets.</TooltipContent>}
-                  </Tooltip>
-                </TooltipProvider>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="w-full">
+                        <DropdownMenuItem disabled={!hasEmbeddedWallet} onClick={handleExportWallet}>
+                          <DownloadIcon size={20} className="mr-1" />
+                          Export Wallet
+                        </DropdownMenuItem>
+                      </TooltipTrigger>
+                      {!hasEmbeddedWallet && <TooltipContent>Export wallet only available for embedded wallets.</TooltipContent>}
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+
+              <DropdownMenuItem asChild>
+                <Link href="/api">
+                  <Code2Icon size={20} className="mr-1" />
+                  API Keys
+                </Link>
+              </DropdownMenuItem>
+              <TransactionSummaryInfo className="mt-2" />
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <NavButton icon={<LogOutIcon />} title="Log Out" onClick={handleLogout} />
+        </>
       )}
     </>
   );

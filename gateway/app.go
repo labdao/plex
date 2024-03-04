@@ -11,6 +11,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
 	"github.com/labdao/plex/gateway/utils"
@@ -39,6 +40,15 @@ func ServeWebApp() {
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DB")
 
+	privyAppId := os.Getenv("NEXT_PUBLIC_PRIVY_APP_ID")
+	publicKey := os.Getenv("PRIVY_PUBLIC_KEY")
+
+	privyVerificationKey := fmt.Sprintf(`-----BEGIN PUBLIC KEY-----
+%s
+-----END PUBLIC KEY-----`, publicKey)
+
+	middleware.SetupConfig(privyAppId, privyVerificationKey)
+
 	// DSN for gorm.Open
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s", host, user, password, dbname)
 
@@ -66,7 +76,7 @@ func ServeWebApp() {
 	}
 
 	// Migrate the schema
-	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}, &models.Tag{}); err != nil {
+	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}, &models.Tag{}, &models.Transaction{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 
@@ -75,6 +85,7 @@ func ServeWebApp() {
 		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000", "https://editor.swagger.io", "https://editor-next.swagger.io"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PATCH"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
 	})
 
 	mux := server.NewServer(db)

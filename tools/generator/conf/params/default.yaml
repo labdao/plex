@@ -1,0 +1,31 @@
+basic_settings:
+  sequence_input: 'MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE'
+  number_of_binders: 1
+  init_permissibility_vec: ''
+  temperature: 0.05
+  max_levenshtein_step_size: 1
+  alphabet: 'LAGVSERTIDPKQNFYMHWC'
+  scorers: 'colabfold,prodigy,ESM2'
+  scoring_metrics: 'pseudolikelihood'
+  scoring_weights: '0.7,0.2,0.1'
+  selector: 'closed-door'
+  generator_scorers: 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2'
+  generator: 'RFdiff+ProteinMPNN+ESM2'
+  target_template_complex: '/app/protein_complex.pdb'
+  target_chain: A
+  binder_chain: B
+  target_seq: 'QVQLQESGGGL'
+  target_pdb: 'target_structure.pdb'
+  binder_template_sequence: 'binder_template_seq.fasta'
+  evolve: False
+  n_samples: 1
+RFdiffusion_settings:
+  inference:
+    num_designs: 2
+pMPNN_settings:
+  num_seqs: 2
+  rm_aa: C
+  mpnn_sampling_temp: 0.1
+  use_solubleMPNN: "true"
+  initial_guess: "true"
+  chains_to_design: A
