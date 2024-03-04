@@ -77,9 +77,9 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
           )}
         />
       ))}
-      <Button type="button" variant="secondary" size="sm" className="w-full mt-2" onClick={() => append({ value: input.default })}>
+      {/* <Button type="button" variant="secondary" size="sm" className="w-full mt-2" onClick={() => append({ value: input.default })}>
         <PlusIcon />
-      </Button>
+      </Button> */}
     </div>
   );
 }
