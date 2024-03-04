@@ -76,7 +76,7 @@ export default function ListDataFiles() {
             <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">
               <CopyToClipboard string={cid}>
                 <span className="cursor-pointer">
-                  cid: <TruncatedString value={cid} />
+                  file id: <TruncatedString value={cid} />
                 </span>
               </CopyToClipboard>
             </div>
@@ -102,7 +102,7 @@ export default function ListDataFiles() {
     },
     {
       accessorKey: "CID",
-      header: "CID",
+      header: "File ID",
       cell: ({ row }) => {
         const cid: string = row.getValue("CID");
         return <TruncatedString value={row.getValue("CID")} />;

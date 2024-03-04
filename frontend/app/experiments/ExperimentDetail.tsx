@@ -74,7 +74,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                 </div>
                 <div className="opacity-50">
                   <CopyToClipboard string={flow.CID}>
-                    cid: <TruncatedString value={flow.CID} />
+                    experiment id: <TruncatedString value={flow.CID} />
                   </CopyToClipboard>
                 </div>
               </div>
