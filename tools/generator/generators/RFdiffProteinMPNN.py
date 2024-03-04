@@ -104,26 +104,6 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
             env = os.environ.copy()
             env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
 
-            # if hotspots=="[]":
-            #     command = [
-            #         'python', 'RFdiffusion/scripts/run_inference.py',
-            #         f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',
-            #         'inference.model_directory_path=RFdiffusion/models',
-            #         f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
-            #         f'inference.num_designs={num_designs}',
-            #         f'contigmap.contigs={[contig]}'
-            #     ]
-            # else:
-            #     command = [
-            #         'python', 'RFdiffusion/scripts/run_inference.py',
-            #         f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',
-            #         'inference.model_directory_path=RFdiffusion/models',
-            #         f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
-            #         f'inference.num_designs={num_designs}',
-            #         f'contigmap.contigs={[contig]}',
-            #         f'ppi.hotspot_res={hotspots}'
-            #     ]
-
             command = [
                 'python', 'RFdiffusion/scripts/run_inference.py',
                 f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',

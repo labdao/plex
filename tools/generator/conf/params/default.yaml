@@ -19,6 +19,7 @@ basic_settings:
   binder_template_sequence: 'binder_template_seq.fasta'
   evolve: False
   n_samples: 1
+  high_fidelity: False
 RFdiffusion_settings:
   hotspots: ''
   inference:

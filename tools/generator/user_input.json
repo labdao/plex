@@ -1,6 +1,9 @@
 {
-    "sequence_input": "XXXSIQYCGxxxSI ; YCGSIRSVFLGVFAVMLIF",
-    "number_of_binders": 1,
+    "sequence_input": "XXXXXXXXT ; YCGSIRSVFLGVFAVMLIF",
+    "number_of_binders": 2,
     "init_permissibility_vec": "",
-    "hotspots": "A1,A2,A3"
+    "hotspots": "A17,A18",
+    "target_pdb": "",
+    "target_chain": "",
+    "high_fidelity": true
 }

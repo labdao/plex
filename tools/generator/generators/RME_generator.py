@@ -6,7 +6,6 @@ from utils import squeeze_seq
 import sequence_transformer
 import numpy as np
 from utils import squeeze_seq
-from utils import check_gpu_availability
 
 from .base_generator import BaseGenerator
 
@@ -127,6 +126,157 @@ class RMEGenerator(BaseGenerator):
 
         return np.mean(sequence_likelihood_vector)
 
+    # def generate(self, args):
+
+    #     evo_cycle = args.evo_cycle
+    #     sequence = args.sequence
+    #     permissibility_vector = args.permissibility_vector
+    #     df = args.df
+    #     outputs_directory = args.outputs_directory
+    #     generator_name = args.generator_name
+    #     target = args.target
+    #     num_designs = args.num_designs
+    #     num_seqs =args.num_seqs 
+
+    #     generator_directory = os.path.join(outputs_directory, generator_name)
+    #     if not os.path.exists(generator_directory):
+    #         os.makedirs(generator_directory, exist_ok=True)
+    #     logging.info(f"Running {generator_name}")
+
+    #     if 'X' in permissibility_vector or '*' in permissibility_vector: # check if there is any diffusion to be done
+
+    #         logging.info(f"diffusing...")
+
+    #         # logging.info(f"permissibility vector, {permissibility_vector}")
+    #         contig = self._generate_contig(squeeze_seq(permissibility_vector), target, starting_target_residue=None, end_target_residue=None)
+    #         # logging.info(f"diffusion contig, {contig}")
+
+    #         # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
+    #         env = os.environ.copy()
+    #         env['PYTHONPATH'] = "/app/RFdiffusion:" + env.get('PYTHONPATH', '')
+
+    #         command = [
+    #             'python', 'RFdiffusion/scripts/run_inference.py',
+    #             f'inference.output_prefix={os.path.join(generator_directory, f"design_cycle_{evo_cycle}_motifscaffolding")}',
+    #             'inference.model_directory_path=RFdiffusion/models',
+    #             f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
+    #             f'inference.num_designs={num_designs}',
+    #             f'contigmap.contigs={[contig]}'
+    #         ]
+
+    #         result = subprocess.run(command, capture_output=True, text=True, env=env)
+
+    #         # Check if the command was successful
+    #         if result.returncode == 0:
+    #             logging.info(f"#Inference script ran successfully")
+    #             logging.info(result.stdout)
+    #         else:
+    #             logging.info(f"#Error running inference script")
+    #             logging.info(result.stderr)
+
+    #         logging.info(f"Running MPNN")
+
+    #         # Create 'pdb_for_MPNN' directory if it doesn't exist
+    #         output_dir = generator_directory
+    #         os.makedirs(output_dir, exist_ok=True)
+    #         chains_to_design = "A"
+
+    #         positions_of_Xs = [str(index + 1) for index, char in enumerate(squeeze_seq(permissibility_vector)) if char == 'X']
+    #         design_only_positions = " ".join(positions_of_Xs)
+
+    #         # Define paths
+    #         path_for_parsed_chains = os.path.join(output_dir, "parsed_pdbs.jsonl")
+    #         path_for_assigned_chains = os.path.join(output_dir, "assigned_pdbs.jsonl")
+    #         path_for_fixed_positions = os.path.join(output_dir, "fixed_pdbs.jsonl")
+
+    #         folder_with_pdbs = output_dir
+    #         # Parse multiple chains
+    #         subprocess.run([
+    #             'python', 'ProteinMPNN/helper_scripts/parse_multiple_chains.py',
+    #             '--input_path', folder_with_pdbs,
+    #             '--output_path', path_for_parsed_chains
+    #         ], capture_output=True, text=True)
+
+    #         # Assign fixed chains
+    #         subprocess.run([
+    #             'python', 'ProteinMPNN/helper_scripts/assign_fixed_chains.py',
+    #             '--input_path', path_for_parsed_chains,
+    #             '--output_path', path_for_assigned_chains,
+    #             '--chain_list', chains_to_design
+    #         ], capture_output=True, text=True)
+
+    #         # Make fixed positions dict
+    #         subprocess.run([
+    #             'python', 'ProteinMPNN/helper_scripts/make_fixed_positions_dict.py',
+    #             '--input_path', path_for_parsed_chains,
+    #             '--output_path', path_for_fixed_positions,
+    #             '--chain_list', chains_to_design,
+    #             '--position_list', design_only_positions,
+    #             '--specify_non_fixed'
+    #         ], capture_output=True, text=True)
+
+    #         # Run protein MPNN
+    #         subprocess.run([
+    #             'python', 'ProteinMPNN/protein_mpnn_run.py',
+    #             '--jsonl_path', path_for_parsed_chains,
+    #             '--chain_id_jsonl', path_for_assigned_chains,
+    #             '--fixed_positions_jsonl', path_for_fixed_positions,
+    #             '--out_folder', output_dir,
+    #             '--num_seq_per_target', '2',
+    #             '--sampling_temp', '0.1',
+    #             '--seed', '37',
+    #             '--batch_size', '1'
+    #         ], capture_output=True, text=True)
+
+    #         # Initialize variables to keep track of the highest score and its associated sequence across all fasta files
+    #         highest_overall_score = None
+    #         highest_overall_score_sequence = None
+
+    #         # Define the directory where fasta files are located
+    #         fasta_directory = os.path.join(generator_directory, "seqs")
+
+    #         # Loop over all fasta files in the fasta_directory
+    #         for fasta_file in os.listdir(fasta_directory):
+    #             if fasta_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and fasta_file.endswith(".fa"):
+    #                 fasta_file_path = os.path.join(fasta_directory, fasta_file)
+                            
+    #                 # Read the contents of the fasta file
+    #                 with open(fasta_file_path, 'r') as file:
+    #                     lines = file.readlines()
+
+    #                 start_line = 3
+    #                 # Iterate over the lines in the fasta file, starting from start_line
+    #                 for i in range(start_line, len(lines), 2):
+    #                     header = lines[i - 1]
+    #                     sequence = lines[i].strip()
+                                
+    #                     # Extract the score from the header
+    #                     match = re.search(r'score=(\d+\.\d+)', header)
+    #                     if match:
+    #                         score = float(match.group(1))
+    #                         # If this is the first score or a higher score than the current highest, update the highest score and sequence
+    #                         if highest_overall_score is None or score > highest_overall_score:
+    #                             highest_overall_score = score
+    #                             highest_overall_score_sequence = sequence
+
+    #         # Check if a highest scoring sequence was found across all fasta files
+    #         if highest_overall_score_sequence:
+    #             logging.info(f"Highest ProteinMPNN-scoring sequence: {highest_overall_score_sequence}")
+                    
+    #         # insert the deletions back into the sequence:
+    #         modified_seq = highest_overall_score_sequence
+    #         modified_seq = self._reinsert_deletions(modified_seq, permissibility_vector)
+
+    #     else:
+    #         modified_seq = sequence
+
+    #     modified_seq = list(modified_seq) # insert the new deletions
+    #     for i, char in enumerate(permissibility_vector):
+    #         if char=='-':
+    #             if modified_seq[i]!='-':
+    #                 logging.info(f"deleting residue")
+    #                 modified_seq[i] = '-'
+
     def generate(self, args):
 
         evo_cycle = args.evo_cycle
@@ -137,7 +287,7 @@ class RMEGenerator(BaseGenerator):
         generator_name = args.generator_name
         target = args.target
         num_designs = args.num_designs
-        num_seqs =args.num_seqs 
+        hotspots = args.hotspots 
 
         generator_directory = os.path.join(outputs_directory, generator_name)
         if not os.path.exists(generator_directory):
@@ -148,9 +298,7 @@ class RMEGenerator(BaseGenerator):
 
             logging.info(f"diffusing...")
 
-            # logging.info(f"permissibility vector, {permissibility_vector}")
             contig = self._generate_contig(squeeze_seq(permissibility_vector), target, starting_target_residue=None, end_target_residue=None)
-            # logging.info(f"diffusion contig, {contig}")
 
             # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
             env = os.environ.copy()
@@ -162,7 +310,8 @@ class RMEGenerator(BaseGenerator):
                 'inference.model_directory_path=RFdiffusion/models',
                 f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
                 f'inference.num_designs={num_designs}',
-                f'contigmap.contigs={[contig]}'
+                f'contigmap.contigs={[contig]}',
+                f'ppi.hotspot_res={hotspots}'
             ]
 
             result = subprocess.run(command, capture_output=True, text=True, env=env)
@@ -174,13 +323,14 @@ class RMEGenerator(BaseGenerator):
             else:
                 logging.info(f"#Error running inference script")
                 logging.info(result.stderr)
-
+                    
             logging.info(f"Running MPNN")
 
             # Create 'pdb_for_MPNN' directory if it doesn't exist
             output_dir = generator_directory
             os.makedirs(output_dir, exist_ok=True)
             chains_to_design = "A"
+
 
             positions_of_Xs = [str(index + 1) for index, char in enumerate(squeeze_seq(permissibility_vector)) if char == 'X']
             design_only_positions = " ".join(positions_of_Xs)
@@ -228,38 +378,6 @@ class RMEGenerator(BaseGenerator):
                 '--seed', '37',
                 '--batch_size', '1'
             ], capture_output=True, text=True)
-                    
-            # logging.info(f"Running MPNN")
-
-            # # Activate the conda environment 'mlfold'
-            # subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
-
-
-            # # Loop over all PDB files starting with 'design_cycle_{evo_cycle}_motifscaffolding'
-            # for pdb_file in os.listdir(generator_directory):
-            #     if pdb_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
-            #         path_to_PDB = os.path.join(generator_directory, pdb_file)
-            #         output_dir = generator_directory
-            #         chains_to_design = 'A'
-
-            #         # Create the output directory if it doesn't exist
-            #         os.makedirs(output_dir, exist_ok=True)
-
-            #         logging.info(f"pdb path, {path_to_PDB}")
-
-            #         command = [
-            #             'python', 'ProteinMPNN/protein_mpnn_run.py',
-            #             '--pdb_path', path_to_PDB,
-            #             '--pdb_path_chains', chains_to_design,
-            #             '--out_folder', output_dir,
-            #             '--num_seq_per_target', str(num_seqs),
-            #             '--sampling_temp', '0.1',
-            #             '--seed', '37',
-            #             '--batch_size', '1'
-            #         ]
-
-            #         # Run the command
-            #         subprocess.run(command, capture_output=True, text=True)
 
             # Initialize variables to keep track of the highest score and its associated sequence across all fasta files
             highest_overall_score = None
@@ -282,7 +400,7 @@ class RMEGenerator(BaseGenerator):
                     for i in range(start_line, len(lines), 2):
                         header = lines[i - 1]
                         sequence = lines[i].strip()
-                                
+                                        
                         # Extract the score from the header
                         match = re.search(r'score=(\d+\.\d+)', header)
                         if match:
@@ -308,7 +426,7 @@ class RMEGenerator(BaseGenerator):
             if char=='-':
                 if modified_seq[i]!='-':
                     logging.info(f"deleting residue")
-                    modified_seq[i] = '-'
+                    modified_seq[i] = '-'   
         
         logging.info(f"Running ESM2")
         runner = sequence_transformer.ESM2Runner()

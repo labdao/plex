@@ -10,7 +10,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/generator@sha256:fb2d5382cbb8bb4dd7da810e7c337e05cadfc1daf9e1b4c6d4d06aa2e1875075",
+  "dockerPull": "quay.io/labdao/generator@sha256:d26c324ad0ac8c1d1801a13228e01ec1ed17b466d888ec87c01f86171051b394",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,

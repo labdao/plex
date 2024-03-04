@@ -226,6 +226,7 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
 
+    ## move this to internal logic
     # if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
     #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
     #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
@@ -245,6 +246,10 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     hotspots = user_inputs["hotspots"]
     user_inputs["hotspots"] = '[' + hotspots.replace(' ', '') + ']'
     OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", user_inputs["hotspots"], merge=False)
+
+    OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.high_fidelity", user_inputs["high_fidelity"], merge=False)
     
     return cfg
 
