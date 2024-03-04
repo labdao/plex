@@ -6,15 +6,15 @@ import { setCidDataSlice, setDataFileError,setFilenameDataSlice } from './dataSl
 interface DataFilePayload {
   file: File,
   metadata: { [key: string]: any }
+  isPublic: boolean,
   handleSuccess: () => void
 }
 
 export const saveDataFileAsync = createAppAsyncThunk(
   'dataFile/saveDataFile',
-  async ({ file, metadata, handleSuccess }: DataFilePayload, { dispatch }) => {
+  async ({ file, metadata, isPublic, handleSuccess }: DataFilePayload, { dispatch }) => {
     try {
-      const response = await saveDataFileToServer(file, metadata);
-      console.log("Response:", response)
+      const response = await saveDataFileToServer(file, metadata, isPublic);
       if (response.cid) {
         handleSuccess()
       } else {
