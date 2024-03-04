@@ -85,22 +85,26 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			Public:        isPublic,
 		}
 
-		userDataFile := models.UserDatafile{
-			WalletAddress: walletAddress,
-			CID:           cid,
-			CreatedAt:     time.Now(),
-		}
-
 		var existingDataFile models.DataFile
 		if err := db.Where("cid = ?", cid).First(&existingDataFile).Error; err == nil {
-			var existingUserDataFile models.UserDatafile
-			if err := db.Where("wallet_address = ? AND c_id = ?", walletAddress, cid).First(&existingUserDataFile).Error; err == nil {
+			var userHasDataFile bool
+			var count int64
+			db.Model(&dataFile).Joins("JOIN user_datafiles ON user_datafiles.c_id = data_files.cid").
+				Where("user_datafiles.wallet_address = ? AND data_files.cid = ?", user.WalletAddress, cid).First(&dataFile).Count(&count)
+			userHasDataFile = count > 0
+			if userHasDataFile {
 				utils.SendJSONError(w, "A user data file with the same CID already exists", http.StatusConflict)
 				return
 			} else {
-				result := db.Create(&userDataFile)
-				if result.Error != nil {
-					utils.SendJSONError(w, fmt.Sprintf("Error saving user datafile: %v", result.Error), http.StatusInternalServerError)
+				if err := db.Model(&user).Association("UserDatafiles").Append(&existingDataFile); err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error associating datafile with user: %v", err), http.StatusInternalServerError)
+					return
+				}
+			}
+			if isPublic && !existingDataFile.Public {
+				existingDataFile.Public = true
+				if err := db.Save(&existingDataFile).Error; err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error updating datafile public status: %v", err), http.StatusInternalServerError)
 					return
 				}
 			}
@@ -111,9 +115,8 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			result = db.Create(&userDataFile)
-			if result.Error != nil {
-				utils.SendJSONError(w, fmt.Sprintf("Error saving user datafile: %v", result.Error), http.StatusInternalServerError)
+			if err := db.Model(&user).Association("UserDatafiles").Append(&dataFile); err != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error associating datafile with user: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -160,9 +163,11 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var userDataFile models.UserDatafile
-		err := db.Where("wallet_address = ? AND c_id = ?", user.WalletAddress, cid).First(&userDataFile).Error
-		if err != nil && !dataFile.Public {
+		var userAssociatedWithFile bool
+		db.Model(&user).Association("UserDatafiles").Find(&dataFile, models.DataFile{CID: cid})
+		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
+
+		if !userAssociatedWithFile && !dataFile.Public {
 			utils.SendJSONError(w, "Unauthorized access or data file not found", http.StatusUnauthorized)
 			return
 		}
@@ -200,8 +205,8 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.DataFile{}).
-			Joins("LEFT JOIN user_datafiles ON user_datafiles.c_id = data_files.cid").
-			Where("user_datafiles.wallet_address = ? OR data_files.public = true", user.WalletAddress)
+			Joins("LEFT JOIN user_datafiles ON user_datafiles.data_file_c_id = data_files.cid AND user_datafiles.wallet_address = ?", user.WalletAddress).
+			Where("data_files.public = true OR (data_files.public = false AND user_datafiles.wallet_address = ?)", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("data_files.cid = ?", cid)
@@ -283,9 +288,11 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var userDataFile models.UserDatafile
-		err := db.Where("wallet_address = ? AND c_id = ?", user.WalletAddress, cid).First(&userDataFile).Error
-		if err != nil && !dataFile.Public {
+		var userAssociatedWithFile bool
+		db.Model(&user).Association("UserDatafiles").Find(&dataFile, models.DataFile{CID: cid})
+		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
+
+		if !userAssociatedWithFile && !dataFile.Public {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

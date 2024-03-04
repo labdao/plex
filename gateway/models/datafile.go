@@ -13,4 +13,5 @@ type DataFile struct {
 	OutputFiles   []Job     `gorm:"many2many:job_output_files;foreignKey:CID;joinForeignKey:data_file_c_id;inverseJoinForeignKey:job_id"`
 	Tags          []Tag     `gorm:"many2many:datafile_tags;foreignKey:CID;joinForeignKey:data_file_c_id;inverseJoinForeignKey:tag_name"`
 	Public        bool      `gorm:"type:boolean;not null;default:false"`
+	UserDatafiles []User    `gorm:"many2many:user_datafiles;foreignKey:CID;joinForeignKey:c_id;inverseJoinForeignKey:wallet_address"`
 }
