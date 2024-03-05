@@ -3,11 +3,13 @@ import backendUrl from "lib/backendUrl"
 
 export const saveDataFileToServer = async (
     file: File,
-    metadata: { [key: string]: any }
+    metadata: { [key: string]: any },
+    isPublic: boolean
   ): Promise<{ filename: string, cid: string }> => {
     const formData = new FormData()
     formData.append('file', file, file.name)
     formData.append('filename', file.name)
+    formData.append('public', (isPublic ?? false).toString())
 
     for (const key in metadata) {
       formData.append(key, metadata[key])

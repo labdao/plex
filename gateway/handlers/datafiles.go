@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -45,33 +46,21 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		token, err := utils.ExtractAuthHeader(r)
-		if err != nil {
-			utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
 			return
 		}
 
-		var walletAddress string
-		if middleware.IsJWT(token) {
-			claims, err := middleware.ValidateJWT(token, db)
-			if err != nil {
-				utils.SendJSONError(w, "Invalid JWT", http.StatusUnauthorized)
-				return
-			}
-			walletAddress, err = middleware.GetWalletAddressFromJWTClaims(claims, db)
-			if err != nil {
-				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-		} else {
-			walletAddress, err = middleware.GetWalletAddressFromAPIKey(token, db)
-			if err != nil {
-				utils.SendJSONError(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-		}
+		walletAddress := user.WalletAddress
 
 		filename := r.FormValue("filename")
+		publicValue := r.FormValue("public")
+
+		isPublic, err := strconv.ParseBool(publicValue)
+		if err != nil {
+			isPublic = false
+		}
 
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
 
@@ -93,18 +82,43 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			WalletAddress: walletAddress,
 			Filename:      filename,
 			Timestamp:     time.Now(),
+			Public:        isPublic,
 		}
 
-		result := db.Create(&dataFile)
-		if result.Error != nil {
-			log.Println("error saving to DB")
-			if utils.IsDuplicateKeyError(result.Error) {
-				utils.SendJSONError(w, "A data file with the same CID already exists", http.StatusConflict)
+		var existingDataFile models.DataFile
+		if err := db.Where("cid = ?", cid).First(&existingDataFile).Error; err == nil {
+			var userHasDataFile bool
+			var count int64
+			db.Model(&dataFile).Joins("JOIN user_datafiles ON user_datafiles.c_id = data_files.cid").
+				Where("user_datafiles.wallet_address = ? AND data_files.cid = ?", user.WalletAddress, cid).First(&dataFile).Count(&count)
+			userHasDataFile = count > 0
+			if userHasDataFile {
+				utils.SendJSONError(w, "A user data file with the same CID already exists", http.StatusConflict)
+				return
 			} else {
-				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+				if err := db.Model(&user).Association("UserDatafiles").Append(&existingDataFile); err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error associating datafile with user: %v", err), http.StatusInternalServerError)
+					return
+				}
 			}
-			// utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
-			return
+			if isPublic && !existingDataFile.Public {
+				existingDataFile.Public = true
+				if err := db.Save(&existingDataFile).Error; err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error updating datafile public status: %v", err), http.StatusInternalServerError)
+					return
+				}
+			}
+		} else {
+			result := db.Create(&dataFile)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error saving datafile: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			if err := db.Model(&user).Association("UserDatafiles").Append(&dataFile); err != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error associating datafile with user: %v", err), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		var uploadedTag models.Tag
@@ -139,22 +153,22 @@ func GetDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		cid := vars["cid"]
 		if cid == "" {
 			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
-			// id := vars["id"]
-			// if id == "" {
-			// 	utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var dataFile models.DataFile
-		// result := db.Preload("Tags").Where("id = ?", id).First(&dataFile)
 		result := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		if dataFile.WalletAddress != user.WalletAddress {
-			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		var userAssociatedWithFile bool
+		db.Model(&user).Association("UserDatafiles").Find(&dataFile, models.DataFile{CID: cid})
+		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
+
+		if !userAssociatedWithFile && !dataFile.Public {
+			utils.SendJSONError(w, "Unauthorized access or data file not found", http.StatusUnauthorized)
 			return
 		}
 
@@ -190,15 +204,15 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 
 		offset := (page - 1) * pageSize
 
-		query := db.Model(&models.DataFile{})
-
-		query = query.Where("wallet_address = ?", user.WalletAddress)
+		query := db.Model(&models.DataFile{}).
+			Joins("LEFT JOIN user_datafiles ON user_datafiles.data_file_c_id = data_files.cid AND user_datafiles.wallet_address = ?", user.WalletAddress).
+			Where("data_files.public = true OR (data_files.public = false AND user_datafiles.wallet_address = ?)", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("cid = ?", cid)
+			query = query.Where("data_files.cid = ?", cid)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("filename LIKE ?", "%"+filename+"%")
+			query = query.Where("data_files.filename LIKE ?", "%"+filename+"%")
 		}
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
@@ -206,7 +220,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("timestamp <= ?", parsedTime)
+			query = query.Where("user_datafiles.timestamp <= ?", parsedTime)
 		}
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
@@ -214,13 +228,13 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("timestamp >= ?", parsedTime)
+			query = query.Where("user_datafiles.timestamp >= ?", parsedTime)
 		}
 
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "timestamp desc"
+		defaultSort := "data_files.timestamp desc"
 		sortParam := r.URL.Query().Get("sort")
 		if sortParam != "" {
 			defaultSort = sortParam
@@ -274,7 +288,11 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if dataFile.WalletAddress != user.WalletAddress {
+		var userAssociatedWithFile bool
+		db.Model(&user).Association("UserDatafiles").Find(&dataFile, models.DataFile{CID: cid})
+		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
+
+		if !userAssociatedWithFile && !dataFile.Public {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -310,6 +328,56 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+func UpdateDataFileHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
+			return
+		}
+
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
+		vars := mux.Vars(r)
+		cid := vars["cid"]
+		if cid == "" {
+			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+			return
+		}
+
+		var dataFile models.DataFile
+		result := db.Where("cid = ? AND public = false", cid).First(&dataFile)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				utils.SendJSONError(w, "Data file not found or already public", http.StatusNotFound)
+			} else {
+				utils.SendJSONError(w, fmt.Sprintf("Error fetching datafile: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if dataFile.WalletAddress != user.WalletAddress {
+			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		dataFile.Public = true
+		if err := db.Save(&dataFile).Error; err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error updating datafile: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(dataFile); err != nil {
+			utils.SendJSONError(w, "Error encoding datafile to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 func determineIPFSPath(cid string, dataFile models.DataFile) string {
 	isGenerated := checkIfGenerated(dataFile)
 	if dataFile.WalletAddress != "" || isGenerated {
@@ -335,15 +403,10 @@ func checkIfGenerated(dataFile models.DataFile) bool {
 	return false
 }
 
-//	func AddTagsToDataFile(db *gorm.DB, dataFileID string, tagNames []string) error {
-//		log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileID)
 func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error {
 	log.Println("Starting AddTagsToDataFile for DataFile with CID:", dataFileCID)
 
 	var dataFile models.DataFile
-	// if err := db.Preload("Tags").Where("cid = ?", dataFileID).First(&dataFile).Error; err != nil {
-	// 	log.Printf("Error finding DataFile with CID %s: %v\n", dataFileID, err)
-	// 	return fmt.Errorf("data file not found: %v", err)
 	if err := db.Preload("Tags").Where("cid = ?", dataFileCID).First(&dataFile).Error; err != nil {
 		log.Printf("Error finding DataFile with CID %s: %v\n", dataFileCID, err)
 		return fmt.Errorf("data file not found: %v", err)
@@ -369,13 +432,10 @@ func AddTagsToDataFile(db *gorm.DB, dataFileCID string, tagNames []string) error
 
 	log.Println("Saving DataFile with new tags to DB")
 	if err := db.Save(&dataFile).Error; err != nil {
-		// log.Printf("Error saving DataFile with CID %s: %v\n", dataFileID, err)
-		// return fmt.Errorf("error saving datafile: %v", err)
 		log.Printf("error saving DataFile with CID %s: %v\n", dataFileCID, err)
 		return fmt.Errorf("error saving datafile: %v", err)
 	}
 
-	// log.Println("DataFile with CID", dataFileID, "successfully updated with new tags")
 	log.Println("DataFile with CID", dataFileCID, "successfully updated with new tags")
 
 	return nil
