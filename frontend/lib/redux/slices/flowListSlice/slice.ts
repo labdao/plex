@@ -5,6 +5,7 @@ export interface Flow {
   CID: string
   WalletAddress: string
   Name: string
+  StartTime: string
 }
 
 interface FlowListSliceState {

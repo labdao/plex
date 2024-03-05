@@ -6,7 +6,7 @@ import backendUrl from "lib/backendUrl";
 import { DownloadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { CartesianGrid, Scatter, ScatterChart, Tooltip,XAxis, YAxis } from 'recharts';
 
 import MolstarComponent from "@/components/Molstar";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
