@@ -67,7 +67,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
               </div>
               <div className="py-4 pl-5 space-y-1 text-xs">
                 <div className="opacity-70">
-                  started by <TruncatedString value={flow.WalletAddress} trimLength={4} />{" "}
+                  Started by <TruncatedString value={flow.WalletAddress} trimLength={4} />{" "}
                   <span className="text-muted-foreground" suppressHydrationWarning>
                     {dayjs().to(dayjs(flow.StartTime))}
                   </span>
@@ -111,7 +111,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                   <Card className="my-2 shadow-sm">
                     <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                       <div className="flex items-center gap-2">
-                        <div className="w-28">
+                        <div className="w-30">
                           <div>condition {index + 1}</div>
                           <div className="flex gap-1 text-xs text-muted-foreground/70">
                             Job ID: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
