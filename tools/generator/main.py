@@ -141,7 +141,7 @@ def load_initial_data_and_determine_logic(cfg, outputs_directory):
         if cfg.params.basic_settings.high_fidelity:
             OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
         else:
-            OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold,omegafold_with_alignment', merge=False)
+            OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold', merge=False)
     
     elif all(char in cfg.params.basic_settings.alphabet for char in sequences[-1]['seed']): # completely determined sequence
         logging.info(f"running algorithm for completely determined sequence")
