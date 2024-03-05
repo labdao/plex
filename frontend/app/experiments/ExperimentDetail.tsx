@@ -114,7 +114,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                         <div className="w-28">
                           <div>condition {index + 1}</div>
                           <div className="flex gap-1 text-xs text-muted-foreground/70">
-                            id: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
+                            jobid: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
                           </div>
                         </div>
                         <Badge status={status} variant="outline">
