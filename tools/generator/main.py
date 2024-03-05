@@ -26,7 +26,6 @@ def get_plex_job_inputs():
     if json_str is None:
         raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
 
-    # Convert the JSON string to a Python dictionary
     try:
         data = json.loads(json_str)
         return data
@@ -49,59 +48,10 @@ def apply_initial_permissibility_vector(seed, permissibility_seed, cfg):
 
     return mod_sequence
 
-# def load_initial_data(cfg, outputs_directory):
-#     sequence_input = cfg.params.basic_settings.sequence_input
-#     binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
-#     binder = binder.upper()
-#     target = target.upper()
-
-#     binder = replace_invalid_characters(binder, cfg.params.basic_settings.alphabet)
-
-#     sequences = [{
-#         't': 0,
-#         'sample_number': 0,
-#         'seed': binder,
-#         'permissibility_seed': '',
-#         '(levenshtein-distance, mask)': 'none',
-#         'modified_seq': '',
-#         'permissibility_modified_seq': '',
-#         'acceptance_flag': True  # manual selection of starting sequence
-#     }]
-
-#     if 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']:  # sequence completion
-#         seed = sequences[-1]['seed']
-#         generator = Generator(cfg, outputs_directory)
-#         seed, _, _ = generator.run(0, 1, seed, '', '', None)
-#         del generator
-
-#     contig_in_convexity_notation = ''
-#     if all(char in cfg.params.basic_settings.alphabet for char in seed):        
-#         if cfg.params.basic_settings.init_permissibility_vec == "":
-#             contig_in_convexity_notation = sequences[-1]['seed']
-#         else:
-#             logging.info(f"converting to convexity notation")
-#             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
-
-#         # OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", "[]", merge=False)
-
-#     else:
-#         contig = f"x1:{len(seed)}"
-#         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
-#         contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
-
-#     sequences[-1]['seed'] = seed
-
-#     logging.info(f"contig_in_convexity_notation, {contig_in_convexity_notation}")
-#     sequences[-1]['modified_seq'] += apply_initial_permissibility_vector(sequences[-1]['seed'], contig_in_convexity_notation, cfg)
-#     logging.info(f"modified sequence, {sequences[-1]['modified_seq']}")
-#     sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
-#     sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
-
-#     OmegaConf.update(cfg, "params.basic_settings.target_seq", target, merge=False)
-
-#     return pd.DataFrame(sequences), cfg
-
 def load_initial_data_and_determine_logic(cfg, outputs_directory):
+    
+    # binder = cfg.params.basic_settings.sequence_input.replace(" ", "")
+    # target = cfg.params.basic_settings.target_seq.replace(" ", "")
     sequence_input = cfg.params.basic_settings.sequence_input
     binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
     binder = binder.upper()
@@ -288,38 +238,54 @@ if __name__ == "__main__":
 
 
 
-    # elif 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']:  # partially determined sequence
-    #     seed = sequences[-1]['seed']
-    #     generator = Generator(cfg, outputs_directory)
-    #     seed, _, _ = generator.run(0, 1, seed, '', '', None)
-    #     del generator
+# def load_initial_data(cfg, outputs_directory):
+#     sequence_input = cfg.params.basic_settings.sequence_input
+#     binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
+#     binder = binder.upper()
+#     target = target.upper()
 
-    #     contig_in_convexity_notation = ''
-    #     if all(char in cfg.params.basic_settings.alphabet for char in seed):
-    #         logging.info(f"running algorithm for partially determined sequence")        
-    #         if cfg.params.basic_settings.init_permissibility_vec == "":
-    #             contig_in_convexity_notation = sequences[-1]['seed']
-    #         else:
-    #             logging.info(f"converting to convexity notation")
-    #             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+#     binder = replace_invalid_characters(binder, cfg.params.basic_settings.alphabet)
 
-    #         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-    #         if cfg.params.basic_settings.high_fidelity: # TD: test prediction done by colabfold
-    #             OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-    #         else:
-    #             OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment,prodigy', merge=False)
+#     sequences = [{
+#         't': 0,
+#         'sample_number': 0,
+#         'seed': binder,
+#         'permissibility_seed': '',
+#         '(levenshtein-distance, mask)': 'none',
+#         'modified_seq': '',
+#         'permissibility_modified_seq': '',
+#         'acceptance_flag': True  # manual selection of starting sequence
+#     }]
 
-    #     else:
-    #         logging.info(f"running algorithm for completely undetermined sequence")
+#     if 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']:  # sequence completion
+#         seed = sequences[-1]['seed']
+#         generator = Generator(cfg, outputs_directory)
+#         seed, _, _ = generator.run(0, 1, seed, '', '', None)
+#         del generator
 
-    #         seed = sequences[-1]['seed'].replace('*', 'X')  # replace all '*' characters with 'X' in seed
-    #         contig = f"x1:{len(seed)}"
-    #         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
-    #         contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
-    #         sequences[-1]['seed'] = seed
+#     contig_in_convexity_notation = ''
+#     if all(char in cfg.params.basic_settings.alphabet for char in seed):        
+#         if cfg.params.basic_settings.init_permissibility_vec == "":
+#             contig_in_convexity_notation = sequences[-1]['seed']
+#         else:
+#             logging.info(f"converting to convexity notation")
+#             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
 
-    #         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
-    #         if cfg.params.basic_settings.high_fidelity:
-    #             OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-    #         else: # TD: replace AF2 at time step=1 by docking
-    #             OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold,prodigy', merge=False)
+#         # OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", "[]", merge=False)
+
+#     else:
+#         contig = f"x1:{len(seed)}"
+#         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
+#         contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+
+#     sequences[-1]['seed'] = seed
+
+#     logging.info(f"contig_in_convexity_notation, {contig_in_convexity_notation}")
+#     sequences[-1]['modified_seq'] += apply_initial_permissibility_vector(sequences[-1]['seed'], contig_in_convexity_notation, cfg)
+#     logging.info(f"modified sequence, {sequences[-1]['modified_seq']}")
+#     sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
+#     sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
+
+#     OmegaConf.update(cfg, "params.basic_settings.target_seq", target, merge=False)
+
+#     return pd.DataFrame(sequences), cfg

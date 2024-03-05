@@ -227,19 +227,6 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
 
-    ## move this to internal logic
-    # if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-
-    # elif user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
-
-    # if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/omegafold_with_alignment+prodigy':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment,prodigy', merge=False)
-
     OmegaConf.update(cfg, "params.basic_settings.number_of_binders", user_inputs["number_of_binders"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
@@ -248,9 +235,10 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
     user_inputs["hotspots"] = '[' + hotspots.replace(' ', '') + ']'
     OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", user_inputs["hotspots"], merge=False)
 
-    OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.high_fidelity", user_inputs["high_fidelity"], merge=False)
+
+    # OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
     
     return cfg
 

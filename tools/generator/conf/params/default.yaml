@@ -1,6 +1,6 @@
 basic_settings:
   sequence_input: 'MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE'
-  number_of_binders: 1
+  number_of_binders: 3
   init_permissibility_vec: ''
   temperature: 0.05
   max_levenshtein_step_size: 1
