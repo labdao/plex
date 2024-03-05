@@ -131,7 +131,7 @@ def load_initial_data_and_determine_logic(cfg, outputs_directory):
     if all(char in ['X', '*'] for char in sequences[-1]['seed']): # completely undetermined binder sequence
         logging.info(f"running algorithm for completely undetermined sequence")
 
-        seed = sequences[-1]['seed'].replace('*', 'X')  # replace all '*' characters with 'X' in seed
+        seed = sequences[-1]['seed'].replace('*', 'X')
         contig = f"x1:{len(seed)}"
         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
         contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
@@ -140,18 +140,24 @@ def load_initial_data_and_determine_logic(cfg, outputs_directory):
         OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
         if cfg.params.basic_settings.high_fidelity:
             OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-        else:
-            OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold', merge=False)
+        else: # TD: replace AF2 at time step=1 by docking
+            OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold,prodigy', merge=False)
     
-    elif all(char in cfg.params.basic_settings.alphabet for char in sequences[-1]['seed']): # completely determined sequence
+    elif all(char in cfg.params.basic_settings.alphabet for char in sequences[-1]['seed']): # completely determined input sequence
         logging.info(f"running algorithm for completely determined sequence")
-        
-        OmegaConf.update(cfg, "params.basic_settings.generator", '[]', merge=False)
-        if cfg.params.basic_settings.high_fidelity:
-            OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-        else:
-            OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
 
+        seed = sequences[-1]['seed']
+        contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+        
+        if cfg.params.basic_settings.init_permissibility_vec=='':
+            OmegaConf.update(cfg, "params.basic_settings.generator", '[]', merge=False)
+        elif cfg.params.basic_settings.init_permissibility_vec!='':
+            OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
+            
+        if cfg.params.basic_settings.high_fidelity: # TD: testing
+            OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
+        # else: # TD: implement
+        #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
 
     elif 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']:  # partially determined sequence
         seed = sequences[-1]['seed']
@@ -169,21 +175,34 @@ def load_initial_data_and_determine_logic(cfg, outputs_directory):
                 contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
 
             OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-            if cfg.params.basic_settings.high_fidelity:
+            if cfg.params.basic_settings.high_fidelity: # TD: test prediction done by colabfold
                 OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
             else:
-                OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
+                OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment,prodigy', merge=False)
 
         else:
             logging.info(f"running algorithm for completely undetermined sequence")
+
+            seed = sequences[-1]['seed'].replace('*', 'X')  # replace all '*' characters with 'X' in seed
             contig = f"x1:{len(seed)}"
             OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+            sequences[-1]['seed'] = seed
+
             OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
             if cfg.params.basic_settings.high_fidelity:
                 OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-            else:
-                OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
+            else: # TD: replace AF2 at time step=1 by docking
+                OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_initial_fold,prodigy', merge=False)
+
+            # contig = f"x1:{len(seed)}"
+            # OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
+            # contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+            # OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
+            # if cfg.params.basic_settings.high_fidelity:
+            #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
+            # else:
+            #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
 
         sequences[-1]['seed'] = seed
 
