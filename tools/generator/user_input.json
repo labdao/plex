@@ -1,8 +1,8 @@
 {
-    "sequence_input": "FLGVSIRSVIF ; YCGSIRSVFLGVFAVMLIF",
+    "sequence_input": "IRSVFXXVFAV ; YCGSIRSVFLGVFAVMLIF",
     "number_of_binders": 2,
     "init_permissibility_vec": "",
-    "hotspots": "A17,A18",
+    "hotspots": "",
     "target_pdb": "",
     "target_chain": "",
     "high_fidelity": true
