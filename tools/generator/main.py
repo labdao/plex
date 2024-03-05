@@ -186,14 +186,12 @@ def my_app(cfg: DictConfig) -> None:
 
     cfg = user_input_parsing(cfg, user_inputs)
 
-    logging.info(f"{OmegaConf.to_yaml(cfg)}")
-    logging.info(f"Working directory : {os.getcwd()}")
-
-    logging.info(f"inputs directory: {cfg.inputs.directory}")
+    # logging.info(f"{OmegaConf.to_yaml(cfg)}")
+    # logging.info(f"Working directory : {os.getcwd()}")
+    # logging.info(f"inputs directory: {cfg.inputs.directory}")
 
     start_time = time.time()
 
-    # df, cfg = load_initial_data(cfg, outputs_directory)
     df, cfg = load_initial_data_and_determine_logic(cfg, outputs_directory)
 
 
@@ -201,7 +199,7 @@ def my_app(cfg: DictConfig) -> None:
     seed = seed_row['modified_seq'].values[0]
     permissibility_seed = seed_row['permissibility_modified_seq'].values[0]
     logging.info(f"target sequence {cfg.params.basic_settings.target_seq}")
-    logging.info(f"initial seed sequence {seed}")
+    logging.info(f"initial seed sequence {seed}\n")
 
     generator = Generator(cfg, outputs_directory)
     scorer = Scorer(cfg, outputs_directory)
@@ -210,22 +208,20 @@ def my_app(cfg: DictConfig) -> None:
 
 
     for t in range(cfg.params.basic_settings.number_of_binders):
-
+        
         logging.info(f"starting evolution step, {t+1}")
         logging.info(f"seed sequence, {seed}")
 
         mod_seq, modified_permissibility_seq, df = sampler.run(t+1, seed, permissibility_seed, df)
 
         logging.info(f"modified sequence, {mod_seq}")
-        logging.info(f"modified permissibility vector, {modified_permissibility_seq}")
+        logging.info(f"modified permissibility vector, {modified_permissibility_seq}\n")
 
         df.to_csv(f"{outputs_directory}/summary.csv", index=False)
 
         if cfg.params.basic_settings.evolve:
             seed = mod_seq
             permissibility_seed = modified_permissibility_seq
-
-        print('\n')
 
     end_time = time.time()
     duration = end_time - start_time
@@ -235,57 +231,3 @@ def my_app(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     my_app()
-
-
-
-# def load_initial_data(cfg, outputs_directory):
-#     sequence_input = cfg.params.basic_settings.sequence_input
-#     binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
-#     binder = binder.upper()
-#     target = target.upper()
-
-#     binder = replace_invalid_characters(binder, cfg.params.basic_settings.alphabet)
-
-#     sequences = [{
-#         't': 0,
-#         'sample_number': 0,
-#         'seed': binder,
-#         'permissibility_seed': '',
-#         '(levenshtein-distance, mask)': 'none',
-#         'modified_seq': '',
-#         'permissibility_modified_seq': '',
-#         'acceptance_flag': True  # manual selection of starting sequence
-#     }]
-
-#     if 'X' in sequences[-1]['seed'] or '*' in sequences[-1]['seed']:  # sequence completion
-#         seed = sequences[-1]['seed']
-#         generator = Generator(cfg, outputs_directory)
-#         seed, _, _ = generator.run(0, 1, seed, '', '', None)
-#         del generator
-
-#     contig_in_convexity_notation = ''
-#     if all(char in cfg.params.basic_settings.alphabet for char in seed):        
-#         if cfg.params.basic_settings.init_permissibility_vec == "":
-#             contig_in_convexity_notation = sequences[-1]['seed']
-#         else:
-#             logging.info(f"converting to convexity notation")
-#             contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
-
-#         # OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", "[]", merge=False)
-
-#     else:
-#         contig = f"x1:{len(seed)}"
-#         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", contig, merge=False)
-#         contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
-
-#     sequences[-1]['seed'] = seed
-
-#     logging.info(f"contig_in_convexity_notation, {contig_in_convexity_notation}")
-#     sequences[-1]['modified_seq'] += apply_initial_permissibility_vector(sequences[-1]['seed'], contig_in_convexity_notation, cfg)
-#     logging.info(f"modified sequence, {sequences[-1]['modified_seq']}")
-#     sequences[-1]['permissibility_seed'] += contig_in_convexity_notation
-#     sequences[-1]['permissibility_modified_seq'] += contig_in_convexity_notation
-
-#     OmegaConf.update(cfg, "params.basic_settings.target_seq", target, merge=False)
-
-#     return pd.DataFrame(sequences), cfg
