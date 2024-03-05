@@ -12,9 +12,18 @@ interface ModelInfoProps {
 
 export default function ModelInfo({ tool }: ModelInfoProps) {
   const { description, github, paper } = tool.ToolJson;
+
+  const renderDescriptionParagraphs = (description: string) => {
+    return description.split("\n").map((paragraph, index) => (
+      <p key={index} className="mt-4">
+        {paragraph}
+      </p>
+    ));
+  };
+
   return (
     <>
-      <p className="mt-4">{description}</p>
+      {renderDescriptionParagraphs(description)}
       <div className="flex gap-2 mt-4 ">
         {github && (
           <Button asChild variant="outline" size="xs">
