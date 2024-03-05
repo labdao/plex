@@ -191,6 +191,7 @@ def read_second_line_of_fasta(file_path):
     return None
 
 def slash_to_convexity_notation(sequence, slash_contig):
+
     # Find the maximum index required
     max_index = 0
     parts = slash_contig.split('/')

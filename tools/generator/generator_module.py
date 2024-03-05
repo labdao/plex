@@ -4,6 +4,9 @@ from utils import squeeze_seq
 from generators.RFdiffProteinMPNN import RFdiffusionProteinMPNNGenerator
 from generators.complete_sequence import complete_sequence_Generator
 from generators.RME_generator import RMEGenerator
+from generators.trivial_generator import trivial_Generator
+
+import logging
 
 class GenerationArgs:
     def __init__(self, evo_cycle, sequence, permissibility_vector, df, cfg, outputs_directory, generator_name):
@@ -35,6 +38,8 @@ class Generator:
             return RMEGenerator()
         elif generator_name == 'complete_sequence':
             return complete_sequence_Generator()
+        elif generator_name == '':
+            return trivial_Generator()
         # ... add other generators to this list  ...
         else:
             raise ValueError(f"Unknown generator: {generator_name}")
@@ -46,6 +51,7 @@ class Generator:
             generator_name = 'complete_sequence'
         args = GenerationArgs(t, seed, permissibility_vector, df, self.cfg, self.outputs_directory, generator_name)
         generator = self._get_generator(generator_name)
+        
         modified_seq, permissibility_vector = generator.generate(args)
 
         new_row = {
@@ -58,6 +64,7 @@ class Generator:
             'permissibility_modified_seq': ''.join(permissibility_vector),
             'acceptance_flag': False
         }
+        
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
         return modified_seq, permissibility_vector, df

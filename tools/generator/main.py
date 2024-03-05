@@ -8,7 +8,7 @@ from omegaconf import DictConfig, OmegaConf
 from utils import slash_to_convexity_notation
 from utils import user_input_parsing
 from utils import replace_invalid_characters
-
+from utils import squeeze_seq
 import json
 
 import logging
@@ -147,14 +147,17 @@ def load_initial_data_and_determine_logic(cfg, outputs_directory):
         logging.info(f"running algorithm for completely determined sequence")
 
         seed = sequences[-1]['seed']
-        contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
+        if cfg.params.basic_settings.init_permissibility_vec=='':
+            contig_in_convexity_notation = squeeze_seq(seed)
+        else:
+            contig_in_convexity_notation = slash_to_convexity_notation(seed, cfg.params.basic_settings.init_permissibility_vec)
         
         if cfg.params.basic_settings.init_permissibility_vec=='':
-            OmegaConf.update(cfg, "params.basic_settings.generator", '[]', merge=False)
+            OmegaConf.update(cfg, "params.basic_settings.generator", '', merge=False) # select the trivial generator
         elif cfg.params.basic_settings.init_permissibility_vec!='':
             OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-            
-        if cfg.params.basic_settings.high_fidelity: # TD: testing
+
+        if cfg.params.basic_settings.high_fidelity:
             OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
         # else: # TD: implement
         #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold+diffdock,prodigy', merge=False)
