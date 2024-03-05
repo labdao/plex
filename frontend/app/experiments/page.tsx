@@ -44,7 +44,7 @@ export default function ListExperiments() {
     },
     {
       accessorKey: "CID",
-      header: "CID",
+      header: "Experiment ID",
       cell: ({ row }) => {
         return <TruncatedString value={row.getValue("CID")} />;
       },
