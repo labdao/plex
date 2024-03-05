@@ -76,7 +76,7 @@ export default function ListDataFiles() {
             <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">
               <CopyToClipboard string={cid}>
                 <span className="cursor-pointer">
-                  file id: <TruncatedString value={cid} />
+                  File ID: <TruncatedString value={cid} />
                 </span>
               </CopyToClipboard>
             </div>

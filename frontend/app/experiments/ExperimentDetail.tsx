@@ -74,7 +74,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                 </div>
                 <div className="opacity-50">
                   <CopyToClipboard string={flow.CID}>
-                    experiment id: <TruncatedString value={flow.CID} />
+                    Experiment ID: <TruncatedString value={flow.CID} />
                   </CopyToClipboard>
                 </div>
               </div>
@@ -114,7 +114,7 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                         <div className="w-28">
                           <div>condition {index + 1}</div>
                           <div className="flex gap-1 text-xs text-muted-foreground/70">
-                            jobid: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
+                            Job ID: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
                           </div>
                         </div>
                         <Badge status={status} variant="outline">
