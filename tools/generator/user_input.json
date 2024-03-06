@@ -1,5 +1,5 @@
 {
-    "sequence_input": "IRSVFXXVFAV ; IRSVFIRIASVFAV",
+    "sequence_input": "v * 11 x*4 ; IRSVFIRIASVFAV",
     "number_of_binders": 2,
     "init_permissibility_vec": "",
     "hotspots": "",
