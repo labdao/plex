@@ -27,7 +27,7 @@ export default function PrivyProviderWrapper({
                     appearance: {
                         theme: "dark",
                         accentColor: "#6bdaad",
-                        logo: "https://raw.githubusercontent.com/labdao/lab-exchange/main/LabDAO_Logo_Teal.png",
+                        logo: "https://raw.githubusercontent.com/labdao/plex/main/LabBio_whitetext_transparent.png",
                     }
                 }}
             >
