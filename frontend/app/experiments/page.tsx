@@ -76,13 +76,11 @@ export default function ListExperiments() {
         items={[{ name: "Experiments", href: "/experiments" }]}
         actions={
           <div>
-            <TasksMenu
-              trigger={
-                <Button size="sm">
-                  <PlusIcon /> Run Experiment
-                </Button>
-              }
-            />
+            <Link href="/tasks/protein-binder-design" passHref>
+              <Button size="sm">
+                <PlusIcon /> Run Experiment
+              </Button>
+            </Link>
           </div>
         }
       />
