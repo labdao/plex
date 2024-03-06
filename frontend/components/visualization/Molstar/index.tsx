@@ -24,7 +24,7 @@ interface MolstarProps {
   className?: string;
 }
 
-const MolstarViz = ({ url, showControls, isExpanded, className }: MolstarProps) => {
+const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => {
   const parent = createRef<HTMLDivElement>();
 
   // In debug mode of react's strict mode, this code will
@@ -74,4 +74,4 @@ const MolstarViz = ({ url, showControls, isExpanded, className }: MolstarProps) 
   return <div ref={parent} style={{ position: "relative" }} className={className || ""} />;
 };
 
-export default MolstarViz;
+export default Molstar;
