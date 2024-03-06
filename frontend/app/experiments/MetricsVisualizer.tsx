@@ -121,10 +121,15 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
                   </Tooltip>
                 </TooltipProvider>
                 <ResponsiveContainer width="100%" aspect={4 / 3}>
-                  <ScatterChart margin={{ right: 10 }}>
+                  <ScatterChart margin={{ right: 10, bottom: 20 }}>
                     <CartesianGrid />
-                    <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: "plddt", position: "insideBottom", offset: -15, dx: 0 }} />
-                    <YAxis type="number" dataKey="i_pae" name="i_pae" label={{ value: "i_pae", angle: -90, position: "insideLeft", dx: 0, dy: 15 }} />
+                    <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: "plddt", position: "insideBottom", offset: -10, dx: 0 }} />
+                    <YAxis
+                      type="number"
+                      dataKey="i_pae"
+                      name="i_pae"
+                      label={{ value: "i_pae", angle: -90, position: "insideLeft", dx: 15, dy: 15 }}
+                    />
                     {/* <Tooltip cursor={{ strokeDasharray: '3 3' }} /> */}
                     <RechartsTooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
                     <Scatter name="Checkpoints" data={plotData} fill="hsl(var(--accent))" onClick={handlePointClick}>
