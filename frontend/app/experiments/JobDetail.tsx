@@ -1,21 +1,14 @@
 "use client";
 
 import { getAccessToken } from "@privy-io/react-auth";
-import { ColumnDef } from "@tanstack/react-table";
 import backendUrl from "lib/backendUrl";
 import { DownloadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CartesianGrid, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MolstarComponent from "@/components/visualization/Molstar";
 import { DataFile } from "@/lib/redux";
 
 import LogViewer from "./LogViewer";
@@ -23,22 +16,6 @@ import MetricsVisualizer from "./MetricsVisualizer";
 
 interface JobDetailProps {
   jobID: number;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: any[];
-  label?: string;
-}
-
-interface CheckpointData {
-  cycle: number;
-  proposal: number;
-  plddt: number;
-  i_pae: number;
-  dim1: number;
-  dim2: number;
-  pdbFilePath: string;
 }
 
 export interface JobDetail {
