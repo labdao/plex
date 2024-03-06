@@ -32,10 +32,10 @@ export default function Nav() {
         </NavContent>
         <NavContent>
           <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
-          <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="My Experiments" />
+          <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="Experiments" />
           <NavLink href="/data" icon={<FolderIcon />}>
             <>
-              My Files&nbsp;<span className="opacity-70">(beta)</span>
+              Files
             </>
           </NavLink>
           <TasksMenu
