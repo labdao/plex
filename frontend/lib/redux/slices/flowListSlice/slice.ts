@@ -8,11 +8,24 @@ export interface Flow {
   StartTime: string
 }
 
+export interface CategorizedFlows {
+  today: Flow[];
+  last7Days: Flow[];
+  last30Days: Flow[];
+  older: Flow[];
+}
+
 interface FlowListSliceState {
   flows: Flow[]
   loading: boolean
   error: string | null
   success: boolean
+  categorizedFlows: {
+    today: Flow[];
+    last7Days: Flow[];
+    last30Days: Flow[];
+    older: Flow[];
+  }
 }
 
 const initialState: FlowListSliceState = {
@@ -20,6 +33,12 @@ const initialState: FlowListSliceState = {
   loading: false,
   error: null,
   success: false,
+  categorizedFlows: {
+    today: [],
+    last7Days: [],
+    last30Days: [],
+    older: []
+  }
 }
 
 export const flowListSlice = createSlice({
@@ -37,7 +56,10 @@ export const flowListSlice = createSlice({
     },
     setFlowListSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload
-    }
+    },
+    setCategorizedFlows: (state, action: PayloadAction<CategorizedFlows>) => {
+      state.categorizedFlows = action.payload
+    },
   }
 })
 
@@ -45,7 +67,8 @@ export const {
   setFlowList,
   setFlowListLoading,
   setFlowListError,
-  setFlowListSuccess
+  setFlowListSuccess,
+  setCategorizedFlows,
 } = flowListSlice.actions
 
 export default flowListSlice.reducer
