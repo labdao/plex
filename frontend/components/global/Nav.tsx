@@ -35,10 +35,7 @@ export default function Nav() {
         <NavContent>
           <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
           <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="Experiments" />
-          <TasksMenu
-            trigger={<NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />}
-            dropdownMenuContentProps={{ side: "right", align: "start" }}
-          />
+          <NavLink href="/tasks/protein-binder-design" icon={<SproutIcon />} title="Run Experiment" />
           <NavLink href="/data" icon={<FolderIcon />}>
             <>
               Files
