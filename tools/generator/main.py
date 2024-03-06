@@ -7,8 +7,8 @@ from omegaconf import DictConfig, OmegaConf
 
 from utils import slash_to_convexity_notation
 from utils import user_input_parsing
-from utils import replace_invalid_characters
 from utils import squeeze_seq
+from utils import expand_and_clean_sequence
 import json
 
 import logging
@@ -47,30 +47,6 @@ def apply_initial_permissibility_vector(seed, permissibility_seed, cfg):
     mod_sequence = ''.join(mod_sequence)
 
     return mod_sequence
-
-def expand_and_clean_sequence(input_sequence, alphabet):
-    import re
-
-    # Remove all spaces
-    sequence = input_sequence.replace(" ", "").upper()
-
-    # Convert to uppercase and replace invalid characters with 'X'
-    valid_chars = set(alphabet.upper() + 'X*') | set('0123456789')
-    sequence = ''.join(char if char.upper() in valid_chars else 'X' for char in sequence)
-
-    # Find all occurrences of character followed by '*' and a number
-    pattern = re.compile(r'([A-Z])(\*\d+)')
-    
-    # Function to replace the pattern with the character repeated
-    def replacer(match):
-        char = match.group(1)
-        count = int(match.group(2)[1:])  # Extract the number and convert to int
-        return char * count
-
-    # Replace all occurrences using the replacer function
-    expanded_sequence = pattern.sub(replacer, sequence)
-
-    return expanded_sequence.upper()
 
 def load_initial_data_and_determine_logic(cfg, outputs_directory):
     

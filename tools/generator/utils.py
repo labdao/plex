@@ -276,3 +276,27 @@ def check_string_against_alphabet(input_string, alphabet='LAGVSERTIDPKQNFYMHWC')
             logging.info(f"Warning: not enough input information given to predict an initial binder sequence. Please try to provide the amino acid identity for more of the residues.")
             sys.exit(1)
 
+def expand_and_clean_sequence(input_sequence, alphabet):
+    import re
+
+    # Remove all spaces
+    sequence = input_sequence.replace(" ", "").upper()
+
+    # Convert to uppercase and replace invalid characters with 'X'
+    valid_chars = set(alphabet.upper() + 'X*') | set('0123456789')
+    sequence = ''.join(char if char.upper() in valid_chars else 'X' for char in sequence)
+
+    # Find all occurrences of character followed by '*' and a number
+    pattern = re.compile(r'([A-Z])(\*\d+)')
+    
+    # Function to replace the pattern with the character repeated
+    def replacer(match):
+        char = match.group(1)
+        count = int(match.group(2)[1:])  # Extract the number and convert to int
+        return char * count
+
+    # Replace all occurrences using the replacer function
+    expanded_sequence = pattern.sub(replacer, sequence)
+
+    return expanded_sequence.upper()
+
