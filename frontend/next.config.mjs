@@ -6,7 +6,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/tasks",
+        destination: "/tasks/protein-binder-design",
         permanent: true,
       },
     ];
