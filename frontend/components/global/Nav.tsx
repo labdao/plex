@@ -24,7 +24,8 @@ export default function Nav() {
   const { user } = usePrivy();
   const dispatch = useDispatch<AppDispatch>();
   const categorizedFlows = useSelector(selectCategorizedFlows);
-  const loading = useSelector(selectFlowListLoading);
+  const flows = useSelector(selectFlowList);
+  // const loading = useSelector(selectFlowListLoading);
   const walletAddress = user?.wallet?.address;
 
   useEffect(() => {
@@ -37,16 +38,15 @@ export default function Nav() {
 
   return (
     <nav className="sticky top-0 z-50 flex flex-col justify-between w-48 h-screen border-r shadow-lg border-border/50 shrink-0 bg-background">
-      <Link
-        href="/"
-        className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-14 font-heading whitespace-nowrap"
-      >
-        <Logo className="w-auto h-6 text-primary" />
-        Lab.Bio
-      </Link>
-      <div className="p-3 font-mono text-xs font-bold text-muted-foreground opacity-70 sticky top-0 bg-background">
-        My Experiments
-      </div>
+      <ScrollArea>
+        <Link
+          href="/"
+          className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-14 font-heading whitespace-nowrap"
+        >
+          <Logo className="w-auto h-6 text-primary" />
+          Lab.Bio
+        </Link>
+      </ScrollArea>
       <ScrollArea className="flex-grow">
         <div className="flex flex-col overflow-auto">
           <NavContent>
@@ -61,12 +61,7 @@ export default function Nav() {
                       {category === 'last30Days' && 'Previous 30 Days'}
                       {category === 'older' && 'Older'}
                     </div>
-                    {flowsInCategory.map((flow) => (
-                      // <NavLink 
-                      //   key={flow.ID} 
-                      //   href={`/experiments/${flow.ID}`} 
-                      //   title={flow.Name} 
-                      // />
+                    {flowsInCategory.map((flow: Flow) => (
                       <Link key={flow.ID} href={`/experiments/${flow.ID}`} legacyBehavior>
                         <a className="w-full flex items-center text-sm px-3 py-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground">
                           {flow.Name}
@@ -81,25 +76,20 @@ export default function Nav() {
           </NavContent>
         </div>
       </ScrollArea>
-      <NavContent>
-        <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
-        <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="My Experiments" />
-        <NavLink href="/data" icon={<FolderIcon />}>
-          <>
-            My Files&nbsp;<span className="opacity-70">(beta)</span>
-          </>
-        </NavLink>
-        <TasksMenu
-          trigger={<NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />}
-          dropdownMenuContentProps={{ side: "right", align: "start" }}
-        />
-        <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
-      </NavContent>
       <div>
         <NavContent>
           <NavLink href="https://github.com/labdao" target="_blank" icon={<GithubIcon />} title="GitHub" />
         </NavContent>
         <NavContent>
+          <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
+          <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="Experiments" />
+          <NavLink href="/tasks/protein-binder-design" icon={<SproutIcon />} title="Run Experiment" />
+          <NavLink href="/data" icon={<FolderIcon />}>
+            <>
+              Files
+            </>
+          </NavLink>
+          <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
           <UserMenu />
         </NavContent>
       </div>

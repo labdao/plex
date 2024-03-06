@@ -7,8 +7,13 @@ const nextConfig = {
       {
         source: "/",
         destination: "/tasks/protein-binder-design",
-        permanent: true,
+        permanent: false,
       },
+      {
+        source: "/tasks",
+        destination: "/tasks/protein-binder-design",
+        permanent: false,
+      }
     ];
   },
 };

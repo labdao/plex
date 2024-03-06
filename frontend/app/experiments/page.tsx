@@ -44,7 +44,7 @@ export default function ListExperiments() {
     },
     {
       accessorKey: "CID",
-      header: "CID",
+      header: "Experiment ID",
       cell: ({ row }) => {
         return <TruncatedString value={row.getValue("CID")} />;
       },
@@ -73,16 +73,14 @@ export default function ListExperiments() {
   return (
     <div className="relative flex flex-col h-screen grow">
       <Breadcrumbs
-        items={[{ name: "My Experiments", href: "/experiments" }]}
+        items={[{ name: "Experiments", href: "/experiments" }]}
         actions={
           <div>
-            <TasksMenu
-              trigger={
-                <Button size="sm">
-                  <PlusIcon /> Run Experiment
-                </Button>
-              }
-            />
+            <Link href="/tasks/protein-binder-design" passHref>
+              <Button size="sm">
+                <PlusIcon /> Run Experiment
+              </Button>
+            </Link>
           </div>
         }
       />
