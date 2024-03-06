@@ -73,7 +73,7 @@ export default function ListExperiments() {
   return (
     <div className="relative flex flex-col h-screen grow">
       <Breadcrumbs
-        items={[{ name: "My Experiments", href: "/experiments" }]}
+        items={[{ name: "Experiments", href: "/experiments" }]}
         actions={
           <div>
             <TasksMenu
