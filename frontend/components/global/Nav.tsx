@@ -38,15 +38,18 @@ export default function Nav() {
 
   return (
     <nav className="sticky top-0 z-50 flex flex-col justify-between w-48 h-screen border-r shadow-lg border-border/50 shrink-0 bg-background">
-      <ScrollArea>
-        <Link
-          href="/"
-          className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-14 font-heading whitespace-nowrap"
-        >
-          <Logo className="w-auto h-6 text-primary" />
-          Lab.Bio
-        </Link>
-      </ScrollArea>
+      <Link
+        href="/"
+        className="flex items-center gap-2 p-2 text-lg font-bold uppercase border-b border-border/50 h-20 font-heading whitespace-nowrap"
+      >
+        <Logo className="w-auto h-6 text-primary" />
+        Lab.Bio
+      </Link>
+      <div className="sticky top-14 bg-background border-b border-border/50 z-10">
+        <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">
+          Experiments
+        </div>
+      </div>
       <ScrollArea className="flex-grow">
         <div className="flex flex-col overflow-auto">
           <NavContent>
@@ -77,9 +80,9 @@ export default function Nav() {
         </div>
       </ScrollArea>
       <div>
-        <NavContent>
+        {/* <NavContent>
           <NavLink href="https://github.com/labdao" target="_blank" icon={<GithubIcon />} title="GitHub" />
-        </NavContent>
+        </NavContent> */}
         <NavContent>
           <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
           <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="Experiments" />
