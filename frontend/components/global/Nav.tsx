@@ -27,29 +27,21 @@ export default function Nav() {
           <Logo className="w-auto h-6 text-primary" />
           Lab.Bio
         </Link>
-        <NavContent>
-          <NavLink href="/tasks" icon={<BoxIcon />} title="Tasks" />
-        </NavContent>
-        <NavContent>
-          <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
-          <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="My Experiments" />
-          <NavLink href="/data" icon={<FolderIcon />}>
-            <>
-              My Files&nbsp;<span className="opacity-70">(beta)</span>
-            </>
-          </NavLink>
-          <TasksMenu
-            trigger={<NavButton icon={<SproutIcon />} title="Run Experiment" hasDropdown />}
-            dropdownMenuContentProps={{ side: "right", align: "start" }}
-          />
-          <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
-        </NavContent>
       </ScrollArea>
       <div>
         <NavContent>
           <NavLink href="https://github.com/labdao" target="_blank" icon={<GithubIcon />} title="GitHub" />
         </NavContent>
         <NavContent>
+          <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
+          <NavLink href="/experiments" icon={<FlaskRoundIcon />} title="Experiments" />
+          <NavLink href="/tasks/protein-binder-design" icon={<SproutIcon />} title="Run Experiment" />
+          <NavLink href="/data" icon={<FolderIcon />}>
+            <>
+              Files
+            </>
+          </NavLink>
+          <AddDataFileForm trigger={<NavButton icon={<UploadIcon />} title="Upload Files" />} />
           <UserMenu />
         </NavContent>
       </div>

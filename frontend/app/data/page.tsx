@@ -154,7 +154,7 @@ export default function ListDataFiles() {
   return (
     <div className="relative flex flex-col h-screen max-w-full grow">
       <Breadcrumbs
-        items={[{ name: "My Files", href: "/data" }]}
+        items={[{ name: "Files", href: "/data" }]}
         actions={
           <AddDataFileForm
             trigger={

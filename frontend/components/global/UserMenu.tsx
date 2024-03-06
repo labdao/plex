@@ -5,6 +5,7 @@ import { Code2Icon, CreditCardIcon, DownloadIcon, Loader2Icon, LogOutIcon, User,
 import Link from "next/link";
 import React from "react";
 
+import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -68,10 +69,10 @@ export default function UserMenu() {
 
               {walletAddress && (
                 <>
-                  <DropdownMenuLabel className="truncate w-72">
-                    Wallet: <em className="font-mono font-normal">{walletAddress}</em>
+                  <DropdownMenuLabel className="truncate w-72 flex items-center">
+                    Wallet: <em className="font-mono font-normal ml-1 truncate flex-grow">{walletAddress}</em>
+                    <CopyToClipboard string={walletAddress} />
                   </DropdownMenuLabel>
-
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="w-full">
