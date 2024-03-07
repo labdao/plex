@@ -1,0 +1,26 @@
+$default-background: #ffffff;
+$font-color: #000000;
+$hover-font-color: #000000;
+$entity-current-font-color: #0343ba;
+$msp-btn-remove-background: #de0a28;
+$msp-btn-remove-hover-font-color: #de0a28;
+$msp-btn-commit-on-font-color: #0343ba;
+$entity-badge-font-color: #000000;
+
+// used in LOG
+$log-message: #0cca5d;
+$log-info: #5e3673;
+$log-warning: #fcc937;
+$log-error: #fd354b;
+
+$logo-background: rgba(0, 0, 0, 0.75);
+
+@function color-lower-contrast($color, $amount) {
+  @return darken($color, $amount);
+}
+
+@function color-increase-contrast($color, $amount) {
+  @return lighten($color, $amount);
+}
+
+@import "molstar/lib/mol-plugin-ui/skin/base/base.scss";

@@ -6,18 +6,18 @@ import React, { useEffect, useState } from "react";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-const LogViewer = ({ jobID }: { jobID: string }) => {
+const LogViewer = ({ bacalhauJobID }: { bacalhauJobID: string }) => {
   const [logs, setLogs] = useState("");
 
   useEffect(() => {
-    if (jobID) {
-      setLogs(`Connecting to stream with Bacalhau Job Id ${jobID}`);
+    if (bacalhauJobID) {
+      setLogs(`Connecting to stream with Bacalhau Job Id ${bacalhauJobID}`);
 
       let formattedBackendUrl = backendUrl().replace("http://", "").replace("https://", "");
       let wsProtocol = backendUrl().startsWith("https://") ? "wss" : "ws";
 
       console.log(formattedBackendUrl);
-      const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${jobID}/logs`);
+      const ws = new WebSocket(`${wsProtocol}://${formattedBackendUrl}/jobs/${bacalhauJobID}/logs`);
 
       ws.onopen = () => {
         console.log("connected");
@@ -39,7 +39,7 @@ const LogViewer = ({ jobID }: { jobID: string }) => {
     } else {
       setLogs(`Logs will stream after job is sent to the Bacalhau network`);
     }
-  }, [jobID]);
+  }, [bacalhauJobID]);
 
   return (
     <div className="relative">
