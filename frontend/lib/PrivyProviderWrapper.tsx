@@ -28,6 +28,9 @@ export default function PrivyProviderWrapper({
                         theme: "dark",
                         accentColor: "#6bdaad",
                         logo: "https://raw.githubusercontent.com/labdao/plex/main/LabBio_whitetext_transparent.png",
+                    },
+                    legal: {
+                        termsAndConditionsUrl: "https://docs.google.com/document/d/12-GU8FcXEIvnWlPO6WVjgE0Xyo6kXacL/edit?usp=sharing&ouid=114685327806757138792&rtpof=true&sd=true",
                     }
                 }}
             >
