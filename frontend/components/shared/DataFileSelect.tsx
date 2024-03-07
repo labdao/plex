@@ -40,7 +40,6 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
   useEffect(() => {
     setLoading(true);
     setError(null);
-
     const cidPattern = /^[a-zA-Z0-9]{46}$/;
 
     let filenameFilter = globPatterns?.map((pattern) => pattern.replace("*", "%")).join("|") || "%";
@@ -61,7 +60,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
         setError(fetchError.message);
         setLoading(false);
       });
-  }, [dispatch, currentPage, globPatterns, searchTerm]);
+  }, [dispatch, currentPage, globPatterns, searchTerm, open]);
 
   const getDataFileValue = (dataFile: DataFile): string => `${dataFile.CID}/${dataFile.Filename}`;
 
@@ -69,9 +68,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button className="justify-between w-full p-6 text-base" variant="input" role="combobox" aria-expanded={open}>
-          <span className={cn(!value && "text-muted-foreground")}>
-            {value ? dataFiles.find((dataFile) => getDataFileValue(dataFile) === value)?.Filename : `Select ${label} file...`}
-          </span>
+          <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/")?.[1] : `Select ${label} file...`}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 " style={{ width: `var(--radix-popover-trigger-width)` }}>
