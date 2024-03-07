@@ -151,7 +151,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         </div>
         {activeCheckpointUrl && <Molstar url={activeCheckpointUrl} />}
       </div>
-      <div>
+      {/* <div>
         {checkpoints?.map((checkpoint: CheckpointData, index) => (
           <div
             key={index}
@@ -169,7 +169,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
             </Button>
           </div>
         ))}
-      </div>
+      </div> */}
     </>
   );
 }
