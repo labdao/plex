@@ -239,14 +239,15 @@ func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 	capacityErrorMessages := []string{"not enough capacity", "not enough nodes", "does not have capacity"}
 	falseCapacityMessages := []string{"Could not inspect image", "node does not support the available image platforms"}
 	if len(job.State.Executions) > 0 {
-		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
+		lastExecutionIndex := len(job.State.Executions) - 1
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[lastExecutionIndex].Status)
 		for _, errorMsg := range falseCapacityMessages {
-			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[lastExecutionIndex].Status, errorMsg) {
 				return false
 			}
 		}
 		for _, errorMsg := range capacityErrorMessages {
-			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, errorMsg) {
+			if job.State.State == model.JobStateError && strings.Contains(job.State.Executions[lastExecutionIndex].Status, errorMsg) {
 				return true
 			}
 		}
@@ -257,8 +258,9 @@ func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 func JobFailedWithBidRejectedError(job *model.JobWithInfo) bool {
 	capacityErrorMsg := "bid rejected"
 	if len(job.State.Executions) > 0 {
-		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[0].Status)
-		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[0].Status, capacityErrorMsg)
+		lastExecutionIndex := len(job.State.Executions) - 1
+		fmt.Printf("Checking for capacity error, got error: %v\n", job.State.Executions[lastExecutionIndex].Status)
+		return job.State.State == model.JobStateError && strings.Contains(job.State.Executions[lastExecutionIndex].Status, capacityErrorMsg)
 	}
 	return false
 }
@@ -266,7 +268,8 @@ func JobFailedWithBidRejectedError(job *model.JobWithInfo) bool {
 func JobIsRunning(job *model.JobWithInfo) bool {
 	// the backend counts a Job as running once it is accepted by Bacalhau
 	if len(job.State.Executions) > 0 {
-		return job.State.State == model.JobStateInProgress || job.State.Executions[0].State == model.ExecutionStateBidAccepted
+		lastExecutionIndex := len(job.State.Executions) - 1
+		return job.State.State == model.JobStateInProgress || job.State.Executions[lastExecutionIndex].State == model.ExecutionStateBidAccepted
 	} else {
 		return job.State.State == model.JobStateInProgress
 	}
@@ -286,7 +289,8 @@ func JobCancelled(job *model.JobWithInfo) bool {
 
 func JobBidAccepted(job *model.JobWithInfo) bool {
 	if len(job.State.Executions) > 0 {
-		return job.State.Executions[0].State == model.ExecutionStateBidAccepted
+		lastExecutionIndex := len(job.State.Executions) - 1
+		return job.State.Executions[lastExecutionIndex].State == model.ExecutionStateBidAccepted
 	}
 	return false
 }
