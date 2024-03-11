@@ -39,7 +39,13 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var job models.Job
-		if result := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").Where("wallet_address = ?", user.WalletAddress).First(&job, "id = ?", jobID); result.Error != nil {
+		query := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").Where("id = ?", jobID)
+
+		if !user.Admin {
+			query = query.Where("wallet_address = ?", user.WalletAddress)
+		}
+
+		if result := query.First(&job); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Job not found or not authorized", http.StatusNotFound)
 			} else {
