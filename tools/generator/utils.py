@@ -229,6 +229,7 @@ def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
 
     OmegaConf.update(cfg, "params.basic_settings.number_of_binders", user_inputs["number_of_binders"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_seq"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
 
     hotspots = user_inputs["hotspots"]

@@ -50,14 +50,13 @@ def apply_initial_permissibility_vector(seed, permissibility_seed, cfg):
 
 def load_initial_data_and_determine_logic(cfg, outputs_directory):
     
-    # binder = cfg.params.basic_settings.sequence_input.replace(" ", "")
-    # target = cfg.params.basic_settings.target_seq.replace(" ", "")
-    sequence_input = cfg.params.basic_settings.sequence_input
-    binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
+    binder = cfg.params.basic_settings.sequence_input.replace(" ", "")
+    target = cfg.params.basic_settings.target_seq.replace(" ", "")
+    # sequence_input = cfg.params.basic_settings.sequence_input
+    # binder, target = [s.replace(" ", "") for s in sequence_input.split(';')]
     target = target.upper()
     binder = expand_and_clean_sequence(binder, cfg.params.basic_settings.alphabet)
 
-    # binder = replace_invalid_characters(binder, cfg.params.basic_settings.alphabet)
     if len(binder) > 300:
         binder = binder[:300]
         OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", cfg.params.basic_settings.init_permissibility_vec[:300], merge=False)
@@ -186,14 +185,13 @@ def my_app(cfg: DictConfig) -> None:
 
     cfg = user_input_parsing(cfg, user_inputs)
 
-    # logging.info(f"{OmegaConf.to_yaml(cfg)}")
-    # logging.info(f"Working directory : {os.getcwd()}")
-    # logging.info(f"inputs directory: {cfg.inputs.directory}")
-
     start_time = time.time()
 
     df, cfg = load_initial_data_and_determine_logic(cfg, outputs_directory)
 
+    logging.info(f"{OmegaConf.to_yaml(cfg)}")
+    # logging.info(f"Working directory : {os.getcwd()}")
+    # logging.info(f"inputs directory: {cfg.inputs.directory}")
 
     seed_row = df[(df['t']==0) & (df['acceptance_flag'] == True)]
     seed = seed_row['modified_seq'].values[0]

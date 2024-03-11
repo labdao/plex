@@ -1,5 +1,5 @@
 basic_settings:
-  sequence_input: 'MKLKQVADKLEEXXXXXHNANELARVAKLLGER ; MKLKQVADKLEE'
+  sequence_input: 'MKLKQVADKLEEXXXXXHNANELARVAKLLGER'
   number_of_binders: 3
   init_permissibility_vec: ''
   temperature: 0.05
@@ -14,7 +14,7 @@ basic_settings:
   target_template_complex: '/app/protein_complex.pdb'
   target_chain: A
   binder_chain: B
-  target_seq: 'QVQLQESGGGL'
+  target_seq: 'MKLKQVADKLEEHNANELARVAKLLGER'
   target_pdb: 'target_structure.pdb'
   binder_template_sequence: 'binder_template_seq.fasta'
   evolve: False

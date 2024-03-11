@@ -1,9 +1,8 @@
 {
-    "sequence_input": "v * 11 x*4 ; IRSVFIRIASVFAV",
+    "sequence_input": "MKKAVINGEQIRSISDLHQTLKKELALPEYYGENLDALWDALTGWxxxxLVLEWRQFEQSKQLTENGAESVLQVFREAKAEGADITIILS",
+    "target_seq": "MGSSHHHHHHSQAPIEGRAQVINTFDGVADYLQTYHKLPDNYITKSEAQALGWVASKGNLCDVAPGKSIGGDIFSNREGKLPGKSGRTWREADINYTCGFRNSDRILYSSDWLIYKTTDHYQTFTKIR",
     "number_of_binders": 2,
     "init_permissibility_vec": "",
     "hotspots": "",
-    "target_pdb": "",
-    "target_chain": "",
     "high_fidelity": false
 }
