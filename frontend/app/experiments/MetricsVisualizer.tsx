@@ -8,6 +8,7 @@ import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Toolti
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
+import { ToolDetail } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { JobDetail } from "./JobDetail";
@@ -88,6 +89,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
 
     return null;
   };
+
   if (!checkpoints?.length && !loading) {
     return (
       <div className="p-4 text-center text-muted-foreground">
@@ -151,25 +153,6 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         </div>
         {activeCheckpointUrl && <Molstar url={activeCheckpointUrl} />}
       </div>
-      {/* <div>
-        {checkpoints?.map((checkpoint: CheckpointData, index) => (
-          <div
-            key={index}
-            className={cn(
-              checkpoint.url === activeCheckpointUrl && "bg-primary/10",
-              "flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none"
-            )}
-            onClick={() => setActiveCheckpointUrl(checkpoint?.url)}
-          >
-            <div className="truncate">{checkpoint.fileName}</div>
-            <Button size="icon" variant="outline" asChild>
-              <a href={checkpoint.url} download target="_blank" rel="noopener noreferrer">
-                <DownloadIcon />
-              </a>
-            </Button>
-          </div>
-        ))}
-      </div> */}
     </>
   );
 }

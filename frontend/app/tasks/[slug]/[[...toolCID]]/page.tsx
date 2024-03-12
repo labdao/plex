@@ -279,14 +279,19 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                     </Card>
                     {tool.ToolJson?.guide && (
                       <Card>
-                        <CardHeader>
-                          <CardTitle className="uppercase">Guide</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="mt-2 space-y-2 text-sm text-muted-foreground">
-                            {renderDescriptionParagraphs(tool.ToolJson.guide)}
-                          </div>
-                        </CardContent>
+                        <Collapsible defaultOpen={true}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase font-heading">
+                            <CardTitle className="uppercase">Guide</CardTitle>
+                            <ChevronsUpDownIcon />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <CardContent>
+                              <div className="mt-2 space-y-2 text-sm text-muted-foreground">
+                                {renderDescriptionParagraphs(tool.ToolJson.guide)}
+                              </div>
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Collapsible>
                       </Card>
                     )}
                     {!toolDetailLoading && (

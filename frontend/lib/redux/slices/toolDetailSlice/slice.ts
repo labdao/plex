@@ -5,7 +5,17 @@ export interface ToolDetail {
   WalletAddress: string;
   Name: string;
   DefaultTool: boolean;
-  ToolJson: { inputs: {}; outputs: {}; name: string; author: string; description: string; github: string; paper: string; guide: string };
+  ToolJson: { 
+    inputs: {}; 
+    outputs: {}; 
+    name: string; 
+    author: string; 
+    description: string; 
+    github: string; 
+    paper: string; 
+    guide: string; 
+    checkpointCompatible: boolean;
+  };
 }
 
 export interface ToolDetailSliceState {
@@ -30,6 +40,7 @@ const initialState: ToolDetailSliceState = {
       github: "",
       paper: "",
       guide: "",
+      checkpointCompatible: false,
     },
   },
   loading: true,

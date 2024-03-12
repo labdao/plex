@@ -20,7 +20,23 @@ interface FlowAddSliceState {
 const initialState: FlowAddSliceState = {
   ID: null,
   name: "",
-  tool: { CID: "", WalletAddress: "", Name: "", DefaultTool: false, ToolJson: { inputs: {}, outputs: {}, name: "", author: "", description: "", github: "", paper: "", guide: "" } },
+  tool: { 
+    CID: "", 
+    WalletAddress: "", 
+    Name: "", 
+    DefaultTool: false, 
+    ToolJson: { 
+      inputs: {}, 
+      outputs: {}, 
+      name: "", 
+      author: "", 
+      description: "", 
+      github: "", 
+      paper: "", 
+      guide: "", 
+      checkpointCompatible: false,
+    } 
+  },
   kwargs: {},
   cid: "",
   loading: false,
