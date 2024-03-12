@@ -9,6 +9,7 @@ from utils import slash_to_convexity_notation
 from utils import user_input_parsing
 from utils import squeeze_seq
 from utils import expand_and_clean_sequence
+from utils import upload_to_s3, create_and_upload_checkpoints
 import json
 
 import logging
@@ -221,6 +222,8 @@ def my_app(cfg: DictConfig) -> None:
             seed = mod_seq
             permissibility_seed = modified_permissibility_seq
 
+        create_and_upload_checkpoints(df,outputs_directory, t-1)
+
     end_time = time.time()
     duration = end_time - start_time
 
@@ -228,4 +231,14 @@ def my_app(cfg: DictConfig) -> None:
     logging.info(f"executed in {duration:.2f} seconds.")
 
 if __name__ == "__main__":
+    print("""
+    _   _        ___  ___                ___  ___       _   _ _            _____             
+    | \ | |       |  \/  |                |  \/  |      | \ | (_)          |  __ \            
+    |  \| | ___   | .  . | ___  _ __ ___  | .  . |_ __  |  \| |_  ___ ___  | |  \/_   _ _   _ 
+    | . ` |/ _ \  | |\/| |/ _ \| '__/ _ \ | |\/| | '__| | . ` | |/ __/ _ \ | | __| | | | | | |
+    | |\  | (_) | | |  | | (_) | | |  __/ | |  | | |    | |\  | | (_|  __/ | |_\ \ |_| | |_| |
+    \_| \_/\___/  \_|  |_/\___/|_|  \___| \_|  |_/_|    \_| \_/_|\___\___|  \____/\__,_|\__, |
+                                                                                        __/ |
+                                                                                        |___/ 
+    """) 
     my_app()

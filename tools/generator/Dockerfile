@@ -111,6 +111,7 @@ RUN pip install git+https://github.com/HeliXonProtein/OmegaFold.git
 # downloading weights
 RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt
 
+RUN pip3 install --no-cache-dir boto3 --upgrade
 COPY . /app
 
 ENV PYTHONUNBUFFERED=1

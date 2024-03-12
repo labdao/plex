@@ -10,6 +10,7 @@ from Bio.SeqUtils import seq1
 import random
 import sys
 import logging
+import boto3
 
 from omegaconf import DictConfig, OmegaConf
 
@@ -301,3 +302,47 @@ def expand_and_clean_sequence(input_sequence, alphabet):
 
     return expanded_sequence.upper()
 
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Successfully uploaded {file_name} to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
+        raise e
+
+def create_and_upload_checkpoints(df_results, result_csv_path, index):
+    checkpoint_csv_path = os.path.dirname(result_csv_path)
+    # Get the last row of the DataFrame
+    row = df_results.iloc[-1]
+    pdb_path = row['absolute pdb path']
+    pdb_file_name = os.path.basename(pdb_path)
+
+    new_df = pd.DataFrame({
+        'cycle': row['t'],
+        'proposal': row['sample_number'],
+        'plddt': row['mean plddt'],
+        'i_pae': row['i_pae'],
+        'dim1': row['max pae'],
+        'dim2': row['affinity'],
+        'pdbFileName': pdb_file_name
+    }, index=[0])
+
+    new_df.fillna(0, inplace=True)
+
+    event_csv_filename = f"checkpoint_{index}_summary.csv"
+    event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
+    new_df.to_csv(event_csv_filepath, index=False)
+
+    bucket_name = "app-checkpoint-bucket"
+    job_uuid = os.getenv("JOB_UUID")
+    object_name = f"checkpoints/{job_uuid}/checkpoint_{index}"
+    upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
+    upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+    os.remove(event_csv_filepath)
+    print(f"Checkpoint {index} event CSV and PDB uploaded.")
+
+    return
