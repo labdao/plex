@@ -5,7 +5,7 @@ export interface ToolDetail {
   WalletAddress: string;
   Name: string;
   DefaultTool: boolean;
-  ToolJson: { inputs: {}; outputs: {}; name: string; author: string; description: string; github: string; paper: string };
+  ToolJson: { inputs: {}; outputs: {}; name: string; author: string; description: string; github: string; paper: string; guide: string };
 }
 
 export interface ToolDetailSliceState {
@@ -29,6 +29,7 @@ const initialState: ToolDetailSliceState = {
       description: "",
       github: "",
       paper: "",
+      guide: "",
     },
   },
   loading: true,
