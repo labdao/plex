@@ -1,5 +1,6 @@
 "use client";
 
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 import { usePrivy } from "@privy-io/react-auth";
 import AddDataFileForm from "app/data/AddDataFileForm";
 import TasksMenu from "app/tasks/TasksMenu";
@@ -81,9 +82,6 @@ export default function Nav() {
         </div>
       </ScrollArea>
       <div>
-        {/* <NavContent>
-          <NavLink href="https://github.com/labdao" target="_blank" icon={<GithubIcon />} title="GitHub" />
-        </NavContent> */}
         <NavContent>
           <div className="flex items-center gap-3 px-3 py-1 text-xs text-muted-foreground/50 ">
             <svg xmlns="http://www.w3.org/2000/svg" width={15} height={16} fill="none">
@@ -95,6 +93,11 @@ export default function Nav() {
             </svg>
             Powered by <br /> Convexity Labs
           </div>
+        </NavContent>
+        <NavContent>
+          <NavLink href="http://discord.gg/labdao" target="_blank" icon={<SiDiscord size={18} />}>
+            Community
+          </NavLink>
         </NavContent>
         <NavContent>
           <div className="p-2 font-mono text-xs font-bold text-muted-foreground opacity-70">Personal</div>
