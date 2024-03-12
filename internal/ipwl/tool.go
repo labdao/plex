@@ -34,6 +34,7 @@ type ToolOutput struct {
 type Tool struct {
 	Name         string                `json:"name"`
 	Description  string                `json:"description"`
+	Guide        string                `json:"guide"`
 	Author       string                `json:"author"`
 	GitHub       string                `json:"github"`
 	Paper        string                `json:"paper"`
