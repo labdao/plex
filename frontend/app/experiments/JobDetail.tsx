@@ -37,7 +37,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [job, setJob] = useState({} as JobDetail);
   const [tool, setTool] = useState({} as ToolDetail);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("metrics");
+  const [activeTab, setActiveTab] = useState("");
 
   interface File {
     CID: string;
@@ -99,14 +99,22 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     }
   }, [jobID, job.State]);
 
+  useEffect(() => {
+    if (tool?.ToolJson?.checkpointCompatible) {
+      setActiveTab("metrics");
+    } else {
+      setActiveTab("logs");
+    }
+  }, [tool]);
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
         {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>}
+        <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
-        <TabsTrigger value="logs">Logs</TabsTrigger>
       </TabsList>
       {tool?.ToolJson?.checkpointCompatible && (
         <TabsContent value="metrics">
