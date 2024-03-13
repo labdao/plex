@@ -8,10 +8,11 @@ import subprocess
 from Bio.PDB import PDBParser
 from Bio.SeqUtils import seq1
 import random
+import sys
+import logging
+import boto3
 
 from omegaconf import DictConfig, OmegaConf
-
-import logging
 
 def compute_log_likelihood(sequence, LLmatrix): # TD: move into the scorer module or even to sequence-transformer
 
@@ -191,6 +192,7 @@ def read_second_line_of_fasta(file_path):
     return None
 
 def slash_to_convexity_notation(sequence, slash_contig):
+
     # Find the maximum index required
     max_index = 0
     parts = slash_contig.split('/')
@@ -226,30 +228,24 @@ def slash_to_convexity_notation(sequence, slash_contig):
 
 def user_input_parsing(cfg: DictConfig, user_inputs: dict) -> DictConfig:
 
-    # if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/colabfold+prodigy':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy', merge=False)
-
-    # elif user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN+ESM2/colabfold+prodigy+ESM2':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN+ESM2', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'colabfold,prodigy,ESM2', merge=False)
-
-    # if user_inputs["generator_scorers"] == 'RFdiff+ProteinMPNN/omegafold_with_alignment+prodigy':
-    #     OmegaConf.update(cfg, "params.basic_settings.generator", 'RFdiff+ProteinMPNN', merge=False)
-    #     OmegaConf.update(cfg, "params.basic_settings.scorers", 'omegafold_with_alignment,prodigy', merge=False)
-
     OmegaConf.update(cfg, "params.basic_settings.number_of_binders", user_inputs["number_of_binders"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["sequence_input"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.sequence_input", user_inputs["binder_protein_sequence"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.target_seq", user_inputs["target_protein_sequence"], merge=False)
     OmegaConf.update(cfg, "params.basic_settings.init_permissibility_vec", user_inputs["init_permissibility_vec"], merge=False)
+
+    hotspots = user_inputs["hotspots"]
+    user_inputs["hotspots"] = '[' + hotspots.replace(' ', '') + ']'
+    OmegaConf.update(cfg, "params.RFdiffusion_settings.hotspots", user_inputs["hotspots"], merge=False)
+
+    OmegaConf.update(cfg, "params.basic_settings.high_fidelity", user_inputs["high_fidelity"], merge=False)
+
+    # OmegaConf.update(cfg, "params.basic_settings.target_pdb", user_inputs["target_pdb"], merge=False)
+    # OmegaConf.update(cfg, "params.basic_settings.target_chain", user_inputs["target_chain"], merge=False)
     
     return cfg
 
 def replace_invalid_characters(seed, alphabet):
     return ''.join(['X' if c not in alphabet and c not in ['*', 'x'] else c for c in seed])
-
-import subprocess
-import sys
-import logging
 
 def check_gpu_availability():
     logging.basicConfig(level=logging.INFO)
@@ -275,17 +271,78 @@ def check_gpu_availability():
     except RuntimeError as e:
         logging.info(str(e))
         sys.exit(1)
+
+def check_string_against_alphabet(input_string, alphabet='LAGVSERTIDPKQNFYMHWC'):
+    for char in input_string:
+        if char not in alphabet:
+            logging.info(f"Warning: not enough input information given to predict an initial binder sequence. Please try to provide the amino acid identity for more of the residues.")
+            sys.exit(1)
+
+def expand_and_clean_sequence(input_sequence, alphabet):
+    import re
+
+    # Remove all spaces
+    sequence = input_sequence.replace(" ", "").upper()
+
+    # Convert to uppercase and replace invalid characters with 'X'
+    valid_chars = set(alphabet.upper() + 'X*') | set('0123456789')
+    sequence = ''.join(char if char.upper() in valid_chars else 'X' for char in sequence)
+
+    # Find all occurrences of character followed by '*' and a number
+    pattern = re.compile(r'([A-Z])(\*\d+)')
     
-    # # Check for JAX GPU
-    # try:
-    #     from jax.lib import xla_bridge
-    #     if xla_bridge.get_backend().platform != 'gpu':
-    #         raise RuntimeError("JAX cannot find a GPU. Ending job.")
-    # except ImportError:
-    #     logging.info("JAX is not installed.")
-    #     sys.exit(1)
-    # except RuntimeError as e:
-    #     logging.info(str(e))
-    #     sys.exit(1)
-    
-    # logging.info("GPU is detected by nvidia-smi, PyTorch, and JAX.")
+    # Function to replace the pattern with the character repeated
+    def replacer(match):
+        char = match.group(1)
+        count = int(match.group(2)[1:])  # Extract the number and convert to int
+        return char * count
+
+    # Replace all occurrences using the replacer function
+    expanded_sequence = pattern.sub(replacer, sequence)
+
+    return expanded_sequence.upper()
+
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Successfully uploaded {file_name} to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
+        raise e
+
+def create_and_upload_checkpoints(df_results, result_csv_path, index):
+    checkpoint_csv_path = os.path.dirname(result_csv_path)
+    # Get the last row of the DataFrame
+    row = df_results.iloc[-1]
+    pdb_path = row['absolute pdb path']
+    pdb_file_name = os.path.basename(pdb_path)
+
+    new_df = pd.DataFrame({
+        'cycle': row['t'],
+        'proposal': row['sample_number'],
+        'plddt': row['mean plddt'],
+        'i_pae': row['i_pae'],
+        'dim1': row['max pae'],
+        'dim2': row['affinity'],
+        'pdbFileName': pdb_file_name
+    }, index=[0])
+
+    new_df.fillna(0, inplace=True)
+
+    event_csv_filename = f"checkpoint_{index}_summary.csv"
+    event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
+    new_df.to_csv(event_csv_filepath, index=False)
+
+    bucket_name = "app-checkpoint-bucket"
+    job_uuid = os.getenv("JOB_UUID")
+    object_name = f"checkpoints/{job_uuid}/checkpoint_{index}"
+    upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
+    upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+    os.remove(event_csv_filepath)
+    print(f"Checkpoint {index} event CSV and PDB uploaded.")
+
+    return
