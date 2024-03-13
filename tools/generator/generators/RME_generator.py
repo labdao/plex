@@ -6,7 +6,6 @@ from utils import squeeze_seq
 import sequence_transformer
 import numpy as np
 from utils import squeeze_seq
-from utils import check_gpu_availability
 
 from .base_generator import BaseGenerator
 
@@ -137,7 +136,7 @@ class RMEGenerator(BaseGenerator):
         generator_name = args.generator_name
         target = args.target
         num_designs = args.num_designs
-        num_seqs =args.num_seqs 
+        hotspots = args.hotspots 
 
         generator_directory = os.path.join(outputs_directory, generator_name)
         if not os.path.exists(generator_directory):
@@ -148,9 +147,7 @@ class RMEGenerator(BaseGenerator):
 
             logging.info(f"diffusing...")
 
-            # logging.info(f"permissibility vector, {permissibility_vector}")
             contig = self._generate_contig(squeeze_seq(permissibility_vector), target, starting_target_residue=None, end_target_residue=None)
-            # logging.info(f"diffusion contig, {contig}")
 
             # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
             env = os.environ.copy()
@@ -162,7 +159,8 @@ class RMEGenerator(BaseGenerator):
                 'inference.model_directory_path=RFdiffusion/models',
                 f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
                 f'inference.num_designs={num_designs}',
-                f'contigmap.contigs={[contig]}'
+                f'contigmap.contigs={[contig]}',
+                f'ppi.hotspot_res={hotspots}'
             ]
 
             result = subprocess.run(command, capture_output=True, text=True, env=env)
@@ -174,13 +172,14 @@ class RMEGenerator(BaseGenerator):
             else:
                 logging.info(f"#Error running inference script")
                 logging.info(result.stderr)
-
+                    
             logging.info(f"Running MPNN")
 
             # Create 'pdb_for_MPNN' directory if it doesn't exist
             output_dir = generator_directory
             os.makedirs(output_dir, exist_ok=True)
             chains_to_design = "A"
+
 
             positions_of_Xs = [str(index + 1) for index, char in enumerate(squeeze_seq(permissibility_vector)) if char == 'X']
             design_only_positions = " ".join(positions_of_Xs)
@@ -228,38 +227,6 @@ class RMEGenerator(BaseGenerator):
                 '--seed', '37',
                 '--batch_size', '1'
             ], capture_output=True, text=True)
-                    
-            # logging.info(f"Running MPNN")
-
-            # # Activate the conda environment 'mlfold'
-            # subprocess.run(['conda', 'activate', 'mlfold'], shell=True) # TD: I think this can be removed - check this.
-
-
-            # # Loop over all PDB files starting with 'design_cycle_{evo_cycle}_motifscaffolding'
-            # for pdb_file in os.listdir(generator_directory):
-            #     if pdb_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
-            #         path_to_PDB = os.path.join(generator_directory, pdb_file)
-            #         output_dir = generator_directory
-            #         chains_to_design = 'A'
-
-            #         # Create the output directory if it doesn't exist
-            #         os.makedirs(output_dir, exist_ok=True)
-
-            #         logging.info(f"pdb path, {path_to_PDB}")
-
-            #         command = [
-            #             'python', 'ProteinMPNN/protein_mpnn_run.py',
-            #             '--pdb_path', path_to_PDB,
-            #             '--pdb_path_chains', chains_to_design,
-            #             '--out_folder', output_dir,
-            #             '--num_seq_per_target', str(num_seqs),
-            #             '--sampling_temp', '0.1',
-            #             '--seed', '37',
-            #             '--batch_size', '1'
-            #         ]
-
-            #         # Run the command
-            #         subprocess.run(command, capture_output=True, text=True)
 
             # Initialize variables to keep track of the highest score and its associated sequence across all fasta files
             highest_overall_score = None
@@ -282,7 +249,7 @@ class RMEGenerator(BaseGenerator):
                     for i in range(start_line, len(lines), 2):
                         header = lines[i - 1]
                         sequence = lines[i].strip()
-                                
+                                        
                         # Extract the score from the header
                         match = re.search(r'score=(\d+\.\d+)', header)
                         if match:
@@ -308,14 +275,14 @@ class RMEGenerator(BaseGenerator):
             if char=='-':
                 if modified_seq[i]!='-':
                     logging.info(f"deleting residue")
-                    modified_seq[i] = '-'
+                    modified_seq[i] = '-'   
         
         logging.info(f"Running ESM2")
         runner = sequence_transformer.ESM2Runner()
 
         current_pseudoLL = self._sequence_pseudoLL(squeeze_seq(modified_seq), runner, None)
         iter_num = 0
-        Delta_pseudoLL = 1000 # hack!
+        Delta_pseudoLL = 1000 # hack
         while Delta_pseudoLL > 0.:
 
             runner = sequence_transformer.ESM2Runner()
@@ -323,6 +290,7 @@ class RMEGenerator(BaseGenerator):
             logging.info(f"iteration number {iter_num}")
             iter_num += 1
             modified_seq = ''.join(modified_seq)
+            logging.info(f"modified sequence {modified_seq}")
 
             LLmatrix_sequence = runner.token_masked_marginal_log_likelihood_matrix(squeeze_seq(modified_seq))
 
@@ -336,7 +304,7 @@ class RMEGenerator(BaseGenerator):
             reverse_index_map = self._create_reverse_index_map(squeeze_seq(modified_seq), modified_seq)
             max_index_seq = reverse_index_map.get(max_index[1])
 
-            amino_acid_code = ''.join(runner.amino_acids) # LAGVSERTIDPKQNFYMHWC
+            amino_acid_code = ''.join(runner.amino_acids)
             modified_seq = list(modified_seq)
             if modified_seq[max_index_seq] != '-':
                 modified_seq[max_index_seq] = amino_acid_code[max_index[0]] 
