@@ -7,7 +7,7 @@ docker build --rm -t $CONTAINER_NAME .
 
 # Run the Docker container
 mkdir -p "$HOST_CACHE_DIR"
-docker run -it --gpus=all \
+docker run --rm --gpus=all \
 -e PLEX_JOB_INPUTS="$PLEX_JOB_INPUTS" \
 -e TRANSFORMERS_CACHE=/transformers_cache \
 -v "$HOST_CACHE_DIR":/transformers_cache \
