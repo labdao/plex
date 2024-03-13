@@ -34,16 +34,16 @@ RUN mamba config --set auto_update_conda false && \
 
 # Install transformers, PyTorch and other requirements
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # # Additional installations
 # RUN pip install hydra-core omegaconf pandas biopython pyyaml
 
 # RUN git clone https://github.com/sokrypton/RFdiffusion.git
 RUN git clone https://github.com/RosettaCommons/RFdiffusion.git
-RUN pip -q install jedi omegaconf hydra-core icecream pyrsistent
-RUN pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html
-RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install .
+RUN pip -q install --no-cache-dir jedi omegaconf hydra-core icecream pyrsistent
+RUN pip install --no-cache-dir dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html
+RUN cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install --no-cache-dir .
 # RUN cd RFdiffusion/env/SE3Transformer; pip -q install -r requirements.txt; pip -q install .
 RUN wget -qnc https://files.ipd.uw.edu/krypton/ananas
 RUN chmod +x ananas
@@ -63,7 +63,7 @@ RUN set -ex; \
 
 # Install prodigy
 RUN git clone -q https://github.com/haddocking/prodigy && \
-     pip install -q prodigy/
+     pip install -q --no-cache-dir prodigy/
 
 # Set environment variables
 ENV PATH /usr/local/envs/colabfold/bin:$PATH
@@ -98,7 +98,7 @@ RUN mkdir /app/ProteinMPNN && git clone https://github.com/dauparas/ProteinMPNN 
 #ENV PATH /opt/conda/envs/base/bin:$PATH
 #RUN python -c "from transformers import AutoTokenizer, EsmForMaskedLM; model_name='facebook/esm2_t33_650M_UR50D'; AutoTokenizer.from_pretrained(model_name); EsmForMaskedLM.from_pretrained(model_name)"
 RUN /bin/bash -c "source activate base && \
-                pip install transformers && \
+                pip install --no-cache-dir transformers && \
                 python -c \"from transformers import AutoTokenizer, EsmForMaskedLM; model_name='facebook/esm2_t33_650M_UR50D'; AutoTokenizer.from_pretrained(model_name); EsmForMaskedLM.from_pretrained(model_name)\""
 
 
@@ -106,7 +106,7 @@ RUN /bin/bash -c "source activate base && \
 RUN apt-get update && apt-get install -y git nano
 RUN git clone https://github.com/HeliXonProtein/OmegaFold
 RUN cd OmegaFold && python setup.py install
-RUN pip install git+https://github.com/HeliXonProtein/OmegaFold.git
+RUN pip install --no-cache-dir git+https://github.com/HeliXonProtein/OmegaFold.git
 
 # downloading weights
 RUN mkdir -p /root/.cache/omegafold_ckpt && wget https://helixon.s3.amazonaws.com/release1.pt -O /root/.cache/omegafold_ckpt/model.pt
