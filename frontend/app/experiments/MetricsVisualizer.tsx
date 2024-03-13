@@ -147,9 +147,12 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
                     />
                     {/* <Tooltip cursor={{ strokeDasharray: '3 3' }} /> */}
                     <RechartsTooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
-                    <ReferenceLine x={80} stroke="black" strokeDasharray="3 3" /> // plddt cutoff line
-                    <ReferenceLine y={-10} stroke="black" strokeDasharray="3 3" /> // -i_pae lower cutoff line
-                    <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} /> // Color the top right quadrant
+                    {/* plddt cutoff line */}
+                    <ReferenceLine x={80} stroke="black" strokeDasharray="3 3" />
+                    {/* -i_pae lower cutoff line */}
+                    <ReferenceLine y={-10} stroke="black" strokeDasharray="3 3" />
+                    {/* Color the top right quadrant */}
+                    <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} />
                     <Scatter name="Checkpoints" data={plotData} fill="#000000" onClick={handlePointClick}>
                       {plotData?.map((entry: CheckpointChartData, index) => (
                         <Cell
@@ -169,25 +172,6 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         </div>
         {activeCheckpointUrl && <Molstar url={activeCheckpointUrl} />}
       </div>
-      {/* <div>
-        {checkpoints?.map((checkpoint: CheckpointData, index) => (
-          <div
-            key={index}
-            className={cn(
-              checkpoint.url === activeCheckpointUrl && "bg-primary/10",
-              "flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none"
-            )}
-            onClick={() => setActiveCheckpointUrl(checkpoint?.url)}
-          >
-            <div className="truncate">{checkpoint.fileName}</div>
-            <Button size="icon" variant="outline" asChild>
-              <a href={checkpoint.url} download target="_blank" rel="noopener noreferrer">
-                <DownloadIcon />
-              </a>
-            </Button>
-          </div>
-        ))}
-      </div> */}
     </>
   );
 }
