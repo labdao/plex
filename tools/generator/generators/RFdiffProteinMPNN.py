@@ -87,7 +87,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
         generator_name = args.generator_name
         target = args.target
         num_designs = args.num_designs
-        num_seqs =args.num_seqs 
+        hotspots = args.hotspots 
 
         generator_directory = os.path.join(outputs_directory, generator_name)
         if not os.path.exists(generator_directory):
@@ -98,9 +98,7 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
 
             logging.info(f"diffusing...")
 
-            # logging.info(f"permissibility vector, {permissibility_vector}")
             contig = self._generate_contig(squeeze_seq(permissibility_vector), target, starting_target_residue=None, end_target_residue=None)
-            # logging.info(f"diffusion contig, {contig}")
 
             # Set up the environment for the subprocess - required so that RFdiffussion can find its proper packages
             env = os.environ.copy()
@@ -112,7 +110,8 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
                 'inference.model_directory_path=RFdiffusion/models',
                 f'inference.input_pdb={df["absolute pdb path"].iloc[0]}',
                 f'inference.num_designs={num_designs}',
-                f'contigmap.contigs={[contig]}'
+                f'contigmap.contigs={[contig]}',
+                f'ppi.hotspot_res={hotspots}'
             ]
 
             result = subprocess.run(command, capture_output=True, text=True, env=env)
@@ -230,109 +229,3 @@ class RFdiffusionProteinMPNNGenerator(BaseGenerator):
                     modified_seq[i] = '-'        
 
         return ''.join(modified_seq), ''.join(args.permissibility_vector)
-
-
-### OLD CODE ###
-            # # Loop over all PDB files starting with 'design_cycle_{evo_cycle}_motifscaffolding'
-            # for pdb_file in os.listdir(generator_directory):
-            #     if pdb_file.startswith(f"design_cycle_{evo_cycle}_motifscaffolding") and pdb_file.endswith(".pdb"):
-
-            #         # output_dir = generator_directory
-            #         # chains_to_design = "A"
-
-            #         path_to_PDB = os.path.join(generator_directory, pdb_file)
-            #         shutil.move(path_to_PDB, os.path.join(pdb_for_MPNN_dir, os.path.basename(path_to_PDB)))
-
-            #         # Create the output directory if it doesn't exist
-            #         os.makedirs(output_dir, exist_ok=True)
-            #         seqs_dir = os.path.join(output_dir, 'seqs')
-            #         os.makedirs(seqs_dir, exist_ok=True)
-
-            #         logging.info(f"pdb path, {path_to_PDB}")
-
-            #         # command = [
-            #         #     'python', 'ProteinMPNN/protein_mpnn_run.py',
-            #         #     '--pdb_path', path_to_PDB,
-            #         #     '--pdb_path_chains', chains_to_design,
-            #         #     '--out_folder', output_dir,
-            #         #     '--num_seq_per_target', str(num_seqs),
-            #         #     '--sampling_temp', '0.1',
-            #         #     '--seed', '37',
-            #         #     '--batch_size', '1'
-            #         # ]
-
-            #         # # Run the command
-            #         # subprocess.run(command, capture_output=True, text=True)
-
-            #         # Example usage
-            #         # folder_with_pdbs = "../inputs/PDB_complexes/pdbs/"
-            #         # output_dir = "../outputs/example_4_non_fixed_outputs"
-            #         # chains_to_design = "A C"
-            #         # Find the positions of 'X' in the input string
-            #         positions_of_Xs = [str(index + 1) for index, char in enumerate(squeeze_seq(permissibility_vector)) if char == 'X']
-
-            #         # Join the positions with spaces to form the design_only_positions string
-            #         design_only_positions = " ".join(positions_of_Xs)
-            #         # design_only_positions = "4 5 6 11 12"
-
-            #         print(design_only_positions)
-            #         # design_only_positions = "1 2 3 4 5 6 7 8 9 10, 3 4 5 6 7 8"
-
-            #         # folder_with_pdbs = path_to_PDB
-            #         # print("path to pdb", path_to_PDB)
-            #         os.makedirs(output_dir, exist_ok=True)
-
-            #         # Define paths
-            #         path_for_parsed_chains = os.path.join(output_dir, "seqs/parsed_pdbs.jsonl")
-            #         path_for_assigned_chains = os.path.join(output_dir, "seqs/assigned_pdbs.jsonl")
-            #         path_for_fixed_positions = os.path.join(output_dir, "seqs/fixed_pdbs.jsonl")
-
-            #         folder_with_pdbs = os.path.abspath("pdb_for_MPNN")
-            #         # Parse multiple chains
-            #         subprocess.run([
-            #             'python', 'ProteinMPNN/helper_scripts/parse_multiple_chains.py',
-            #             '--input_path', folder_with_pdbs,
-            #             '--output_path', path_for_parsed_chains
-            #         ])
-
-            #         # Assign fixed chains
-            #         subprocess.run([
-            #             'python', 'ProteinMPNN/helper_scripts/assign_fixed_chains.py',
-            #             '--input_path', path_for_parsed_chains,
-            #             '--output_path', path_for_assigned_chains,
-            #             '--chain_list', chains_to_design
-            #         ])
-
-            #         # Make fixed positions dict
-            #         subprocess.run([
-            #             'python', 'ProteinMPNN/helper_scripts/make_fixed_positions_dict.py',
-            #             '--input_path', path_for_parsed_chains,
-            #             '--output_path', path_for_fixed_positions,
-            #             '--chain_list', chains_to_design,
-            #             '--position_list', design_only_positions,
-            #             '--specify_non_fixed'
-            #         ])
-
-            #         # Run protein MPNN
-            #         subprocess.run([
-            #             'python', 'ProteinMPNN/protein_mpnn_run.py',
-            #             '--jsonl_path', path_for_parsed_chains,
-            #             '--chain_id_jsonl', path_for_assigned_chains,
-            #             '--fixed_positions_jsonl', path_for_fixed_positions,
-            #             '--out_folder', output_dir,
-            #             '--num_seq_per_target', '2',
-            #             '--sampling_temp', '0.1',
-            #             '--seed', '37',
-            #             '--batch_size', '1'
-            #         ])
-
-            #         # To remove all content from the 'pdb_for_MPNN' directory
-            #         for filename in os.listdir(pdb_for_MPNN_dir):
-            #             file_path = os.path.join(pdb_for_MPNN_dir, filename)
-            #             try:
-            #                 if os.path.isfile(file_path) or os.path.islink(file_path):
-            #                     os.unlink(file_path)
-            #                 elif os.path.isdir(file_path):
-            #                     shutil.rmtree(file_path)
-            #             except Exception as e:
-            #                 print(f'Failed to delete {file_path}. Reason: {e}')
