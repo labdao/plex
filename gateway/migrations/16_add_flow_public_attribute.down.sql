@@ -1,0 +1,2 @@
+ALTER TBLE flows
+DROP COLUMN public;
