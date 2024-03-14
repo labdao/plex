@@ -185,6 +185,40 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
       // Handle error, maybe show message to user
     }
   }
+
+  const renderDescriptionParagraphs = (text: string) => {
+    const paragraphs = text.split('\n');
+    const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
+  
+    if (hasNumberedSteps) {
+      const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
+      const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
+  
+      return (
+        <>
+          {nonStepParagraphs.map((paragraph, index) => (
+            <p key={index} className="mt-2">
+              {paragraph}
+            </p>
+          ))}
+          <ol className="list-decimal list-inside mt-2">
+            {steps.map((step, index) => (
+              <li key={index} className="mt-1">
+                {step.replace(/^\d+\. /, '')}
+              </li>
+            ))}
+          </ol>
+        </>
+      );
+    } else {
+      return paragraphs.map((paragraph, index) => (
+        <p key={index} className="mt-2">
+          {paragraph}
+        </p>
+      ));
+    }
+  };  
+
   return (
     <>
       <Breadcrumbs
@@ -211,7 +245,6 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                       <CardHeader>
                         <CardTitle className="uppercase">Model</CardTitle>
                       </CardHeader>
-
                       <CardContent>
                         <FormField
                           control={form.control}
@@ -242,9 +275,25 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                             </FormItem>
                           )}
                         />
-                        <ModelInfo tool={tool} />
                       </CardContent>
                     </Card>
+                    {tool.ToolJson?.guide && (
+                      <Card>
+                        <Collapsible defaultOpen={true}>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-6 text-left uppercase font-heading">
+                            <CardTitle className="uppercase">Guide</CardTitle>
+                            <ChevronsUpDownIcon />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <CardContent>
+                              <div className="mt-2 space-y-2 text-sm text-muted-foreground">
+                                {renderDescriptionParagraphs(tool.ToolJson.guide)}
+                              </div>
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </Card>
+                    )}
                     {!toolDetailLoading && (
                       <>
                         {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
@@ -255,7 +304,6 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                               </CardHeader>
                               <CardContent className="space-y-4">
                                 {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
-                                  // @ts-ignore
                                   const input = groupedInputs?.standard?.[groupKey]?.[key];
                                   return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
                                 })}
@@ -263,7 +311,6 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                             </Card>
                           );
                         })}
-
                         {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
                           return (
                             <Card key={groupKey}>
@@ -275,7 +322,6 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                                 <CollapsibleContent>
                                   <CardContent className="pt-0 space-y-4">
                                     {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
-                                      // @ts-ignore
                                       const input = groupedInputs?.collapsible?.[groupKey]?.[key];
                                       return <DynamicArrayField key={key} inputKey={key} form={form} input={input} />;
                                     })}
@@ -291,7 +337,13 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                 </Form>
               </div>
               <div>
-                <TaskSummary sortedInputs={sortedInputs} form={form} outputs={tool?.ToolJson?.outputs} />
+                <TaskSummary
+                  sortedInputs={sortedInputs}
+                  form={form}
+                  outputs={tool?.ToolJson?.outputs}
+                  // description={tool.ToolJson?.description}
+                  tool={tool}
+                />
               </div>
             </div>
           </ProtectedComponent>

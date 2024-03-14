@@ -8,6 +8,7 @@ import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Toolti
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
+import { ToolDetail } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { JobDetail } from "./JobDetail";
@@ -96,6 +97,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
 
     return null;
   };
+
   if (!checkpoints?.length && !loading) {
     return (
       <div className="p-4 text-center text-muted-foreground">
