@@ -20,7 +20,7 @@ ARG PRIVY_PUBLIC_KEY
 # For bacalhau cli
 FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau
 
-FROM busybox:1.31.1-glibc
+FROM public.ecr.aws/docker/library/busybox:1.32.0-glibc
 
 COPY --from=builder /go/bin/plex /plex
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
