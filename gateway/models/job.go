@@ -41,4 +41,5 @@ type Job struct {
 	CompletedAt   time.Time      `gorm:""`
 	Annotations   string         `gorm:"type:varchar(255)"`
 	JobUUID       string         `gorm:"type:uuid"`
+	Public        bool           `gorm:"type:boolean;not null;default:false"`
 }
