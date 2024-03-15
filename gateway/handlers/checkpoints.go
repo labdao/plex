@@ -138,7 +138,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					if err != nil {
 						return false
 					}
-					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, ProposedStructure: pdbFileName, PdbFilePath: presignedURL})
+					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, StructureFile: pdbFileName, PdbFilePath: presignedURL})
 				}
 			}
 		}

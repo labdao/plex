@@ -11,20 +11,45 @@ interface ModelInfoProps {
 }
 
 export default function ModelInfo({ tool }: ModelInfoProps) {
-  const { description, github, paper } = tool.ToolJson;
+  const { description, github, paper, guide } = tool.ToolJson;
 
-  const renderDescriptionParagraphs = (description: string) => {
-    return description.split("\n").map((paragraph, index) => (
-      <p key={index} className="mt-4">
-        {paragraph}
-      </p>
-    ));
+  const renderDescriptionParagraphs = (text: string) => {
+    const paragraphs = text.split('\n');
+    const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
+  
+    if (hasNumberedSteps) {
+      const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
+      const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
+  
+      return (
+        <>
+          {nonStepParagraphs.map((paragraph, index) => (
+            <p key={index} className="mt-2 text-sm text-muted-foreground">
+              {paragraph}
+            </p>
+          ))}
+          <ol className="list-decimal list-inside mt-2">
+            {steps.map((step, index) => (
+              <li key={index} className="mt-2 text-sm text-muted-foreground">
+                {step.replace(/^\d+\. /, '')}
+              </li>
+            ))}
+          </ol>
+        </>
+      );
+    } else {
+      return paragraphs.map((paragraph, index) => (
+        <p key={index} className="mt-2 text-sm text-muted-foreground">
+          {paragraph}
+        </p>
+      ));
+    }
   };
 
   return (
     <>
       {renderDescriptionParagraphs(description)}
-      <div className="flex gap-2 mt-4 ">
+      <div className="flex gap-2 mt-4">
         {github && (
           <Button asChild variant="outline" size="xs">
             <a href={github} target="_blank">
