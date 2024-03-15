@@ -268,16 +268,17 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		var flow models.Flow
 		query := db.Preload("Jobs.Tool").Where("id = ?", flowID)
 
-		if !user.Admin {
-			query = query.Where("wallet_address = ?", user.WalletAddress)
-		}
-
 		if result := query.First(&flow); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
+				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
 				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
 			}
+			return
+		}
+
+		if !flow.Public && flow.WalletAddress != user.WalletAddress && !user.Admin {
+			http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
 			return
 		}
 
