@@ -100,14 +100,14 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   }, [jobID, job.State]);
 
   useEffect(() => {
-    if (activeTab === ""){
+    if (activeTab === "" && tool?.ToolJson){
       if (tool?.ToolJson?.checkpointCompatible) {
         setActiveTab("metrics");
       } else {
         setActiveTab("logs");
       }
     }
-  }, [tool]);
+  }, [tool, activeTab]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
