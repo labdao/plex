@@ -1,6 +1,15 @@
 #!/bin/bash
 set -eoux pipefail
 
+# Exit early if node hasn't been up long enough
+uptime_seconds=$(awk '{print $1}' /proc/uptime | cut -d '.' -f1)
+threshold=$((30 * 60)) # 30 minutes
+
+if [ "${uptime_seconds}" -lt "${threshold}" ]; then
+    echo "System has been up for less than ${threshold}. Exiting the script..."
+    exit
+fi
+
 terminate() {
   echo "Terminating instance" | tee -a /var/log/instance-terminator.log
   aws autoscaling terminate-instance-in-auto-scaling-group \
