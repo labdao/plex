@@ -100,10 +100,12 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   }, [jobID, job.State]);
 
   useEffect(() => {
-    if (tool?.ToolJson?.checkpointCompatible) {
-      setActiveTab("metrics");
-    } else {
-      setActiveTab("logs");
+    if (activeTab === ""){
+      if (tool?.ToolJson?.checkpointCompatible) {
+        setActiveTab("metrics");
+      } else {
+        setActiveTab("logs");
+      }
     }
   }, [tool]);
 
