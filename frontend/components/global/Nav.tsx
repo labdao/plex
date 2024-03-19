@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ExperimentStatus } from "@/app/experiments/ExperimentStatus";
 import { NavButton } from "@/components/global/NavItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppDispatch, Flow, flowListThunk, selectCategorizedFlows, selectFlowList, selectFlowListLoading } from "@/lib/redux";
+import { AppDispatch, Flow, flowListThunk, selectCategorizedFlows, selectFlowList, selectFlowListLoading, selectUserIsAdmin } from "@/lib/redux";
 
 import Logo from "./Logo";
 import { NavLink } from "./NavItem";
@@ -28,6 +28,7 @@ export default function Nav() {
   const flows = useSelector(selectFlowList);
   // const loading = useSelector(selectFlowListLoading);
   const walletAddress = user?.wallet?.address;
+  const isAdmin = useSelector(selectUserIsAdmin);
 
   useEffect(() => {
     console.log("walletAddress", walletAddress);
@@ -42,6 +43,7 @@ export default function Nav() {
       <Link href="/" className="flex items-center h-12 gap-2 p-2 text-lg font-bold uppercase font-heading whitespace-nowrap">
         <Logo className="w-auto h-6 text-primary" />
         Lab.Bio
+        {isAdmin && <sup className="text-xs text-primary">Admin</sup>}
       </Link>
       <NavContent>
         <NavLink
