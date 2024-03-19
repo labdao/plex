@@ -1,0 +1,155 @@
+---
+
+version: "3.7"
+
+services:
+  dbbackend:
+    image: "postgres:15.4"
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    environment:
+      POSTGRES_PASSWORD: labdao
+      POSTGRES_USER: labdao
+      POSTGRES_DB: backend
+    ports:
+      - 5432:5432
+    volumes:
+      - dbdata-backend:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres  || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: .
+      cache_from:
+        - quay.io/labdao/backend:latest
+    ports:
+      - 8080:8080
+    environment:
+      POSTGRES_PASSWORD: labdao
+      POSTGRES_USER: labdao
+      POSTGRES_DB: backend
+      POSTGRES_HOST: dbbackend
+      IPFS_API_HOST: ipfs
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      MAX_QUEUE_TIME_SECONDS: ${MAX_QUEUE_TIME_SECONDS:-259200} # default 72 hours
+      MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET_KEY: ${STRIPE_WEBHOOK_SECRET_KEY}
+      STRIPE_PRODUCT_SLUG: ${STRIPE_PRODUCT_SLUG:-price_1OlwVPE7xzGf7nZbaccQCnHv}
+      NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
+      PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY : ${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      dbbackend:
+        condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  default-tool-setup:
+    image: "alpine"
+    command: >
+      sh -exc "
+      apk add --no-cache curl jq &&
+      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/colabdesign/colabdesign-gateway.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
+      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/labsay/labsay.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
+      sleep infinity"
+    volumes:
+      - ./:/opt/plex:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/frontend:latest
+      args:
+        NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
+        NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT: ${NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT:-http://localhost:8888/ipfs/}
+    environment:
+      NODE_ENV: 'production'
+    ports:
+      - 3000:3000
+
+  dbreceptor:
+    image: "postgres:15.4"
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    environment:
+      POSTGRES_PASSWORD: labdao
+      POSTGRES_USER: labdao
+      POSTGRES_DB: receptor
+    volumes:
+      - dbdata-receptor:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres  || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  receptor:
+    build:
+      context: ./receptor
+      dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/receptor:latest
+    x-develop:
+      watch:
+        - action: rebuild
+          path: ./receptor
+    environment:
+      PGHOST: dbreceptor
+      PGUSER: labdao
+      PGPASSWORD: labdao
+      PGDATABASE: receptor
+      PGSSLMODE: disable
+    depends_on:
+      dbreceptor:
+        condition: service_healthy
+
+  ipfs:
+    hostname: ipfs
+    # If building from Mac, comment out build and uncomment image
+    build:
+      context: ./docker/images/ipfs
+      dockerfile: ./Dockerfile
+      cache_from:
+        - quay.io/labdao/ipfs:latest
+    # image: "ipfs/kubo:v0.18.0"
+    volumes:
+      - ipfs:/data/ipfs
+    environment:
+      IPFS_LOGGING: "info"
+      IPFS_GATEWAY_PORT: "8888"
+      IPFS_DEBUG: "false"
+    ports:
+      - 4001:4001
+      - 5001:5001
+      - 8888:8888
+
+  labray:
+    hostname: labray
+    build:
+      context: ./apps/labray
+      dockerfile: ./Dockerfile
+    # environment:
+    ports:
+      - 8000:8000
+      - 8265:8265
+
+volumes:
+  dbdata-backend:
+  dbdata-receptor:
+  ipfs:
