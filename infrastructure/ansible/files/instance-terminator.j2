@@ -12,6 +12,15 @@ fi
 
 terminate() {
   echo "Terminating instance" | tee -a /var/log/instance-terminator.log
+
+  # Remove from instance protection before terminating the instance
+  aws autoscaling set-instance-protection \
+    --region "{{ ansible_ec2_placement_region }}" \
+    --instance-id "{{ ansible_ec2_instance_id }}" \
+    --auto-scaling-group-name "{{ ansible_ec2_tags_instance_aws_autoscaling_groupName }}" \
+    --no-protected-from-scale-in | tee -a /var/log/instance-terminator.log
+
+  # Terminate the instance and also reduce desired-capacity
   aws autoscaling terminate-instance-in-auto-scaling-group \
     --region "{{ ansible_ec2_placement_region }}" \
     --instance-id "{{ ansible_ec2_instance_id }}" \
