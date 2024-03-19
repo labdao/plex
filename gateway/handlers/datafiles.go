@@ -62,6 +62,13 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			isPublic = false
 		}
 
+		// Silently ignore public flag if user is not an admin
+		// We still allow them to upload, it will just be private
+		// Data files can be made public later by making experiment results public
+		if !user.Admin {
+			isPublic = false
+		}
+
 		log.Printf("Received file upload request for file: %s, walletAddress: %s \n", filename, walletAddress)
 
 		tempFile, err := utils.CreateAndWriteTempFile(file, filename)
