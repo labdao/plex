@@ -2,9 +2,9 @@
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Share2 } from "lucide-react";
+import { Dna, Share2 } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
@@ -15,7 +15,8 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectFlowUpdateError, selectFlowUpdateLoading, selectFlowUpdateSuccess, selectUserWalletAddress } from "@/lib/redux";
+import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
 import { aggregateJobStatus, ExperimentStatus } from "./ExperimentStatus";
 import JobDetail from "./JobDetail";
@@ -29,6 +30,24 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
   const error = useSelector(selectFlowDetailError);
 
   const status = aggregateJobStatus(flow.Jobs);
+
+  const [isDelaying, setIsDelaying] = useState(false);
+  const updateLoading = useSelector(selectFlowUpdateLoading);
+  const updateError = useSelector(selectFlowUpdateError);
+  const updateSuccess = useSelector(selectFlowUpdateSuccess);
+
+  const userWalletAddress = useSelector(selectUserWalletAddress);
+
+  const handlePublish = () => {
+    setIsDelaying(true);
+    dispatch(flowUpdateThunk({ flowId: experimentID }));
+
+    setTimeout(() => {
+      setIsDelaying(false);
+    }, 2000);
+  };
+
+  const isButtonDisabled = updateLoading || isDelaying;
 
   useEffect(() => {
     if (experimentID) {
@@ -59,9 +78,35 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
           <Card>
             <CardContent className="pb-0">
               {error && <Alert variant="destructive">{error}</Alert>}
-              <div className="flex text-xl">
-                <ExperimentStatus jobs={flow.Jobs} className="mr-2 mt-2.5" />
-                <span className="font-heading">{flow.Name}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex text-xl">
+                  <ExperimentStatus jobs={flow.Jobs} className="mr-2 mt-2.5" />
+                  <span className="font-heading">{flow.Name}</span>
+                </div>
+                <div className="flex justify-end space-x-2 mt-4">
+                  {userWalletAddress === flow.WalletAddress && (
+                    <Button 
+                      variant="outline" 
+                      className="text-sm" 
+                      onClick={handlePublish} 
+                      disabled={updateLoading}
+                    >
+                      {updateLoading || isDelaying ? (
+                        <>
+                          <Dna className="animate-spin w-4 h-4 ml-2" />
+                          <span>Publishing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Dna className="w-4 h-4 mr-2" /> Publish
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button variant="secondary" className="text-sm">
+                    <Share2 className="w-4 h-4 mr-2" /> Share
+                  </Button>
+                </div>
               </div>
               <div className="py-4 pl-5 space-y-1 text-xs">
                 <div className="opacity-70">
