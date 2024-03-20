@@ -316,6 +316,7 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
+		query = query.Order("start_time DESC")
 
 		var flows []models.Flow
 		if result := query.Preload("Jobs").Find(&flows); result.Error != nil {
