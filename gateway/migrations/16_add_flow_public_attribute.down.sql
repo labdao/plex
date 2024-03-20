@@ -1,0 +1,2 @@
+ALTER TABLE flows
+DROP COLUMN public;

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenIcon, FileJsonIcon, GithubIcon } from "lucide-react";
+import { BookOpenIcon, FileJsonIcon, FileLineChart, GithubIcon } from "lucide-react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,13 @@ export default function ModelInfo({ tool }: ModelInfoProps) {
   return (
     <>
       {renderDescriptionParagraphs(description)}
+      <div className="flex gap-2 mt-4">
+        <Button asChild variant="outline" size="xs">
+          <a href={process.env.NEXT_PUBLIC_DEMO_URL} target="_blank">
+            <FileLineChart />Example Result
+          </a>
+        </Button>
+      </div>
       <div className="flex gap-2 mt-4">
         {github && (
           <Button asChild variant="outline" size="xs">
