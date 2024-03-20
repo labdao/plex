@@ -2,7 +2,7 @@
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Dna, Share2 } from "lucide-react";
+import { BadgeCheck, Dna, Share2 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,9 +15,10 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectFlowUpdateError, selectFlowUpdateLoading, selectFlowUpdateSuccess, selectUserWalletAddress } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectFlowUpdateError, selectFlowUpdateLoading, selectFlowUpdateSuccess, selectUserWalletAddress, setFlowDetailPublic } from "@/lib/redux";
 import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
+import ExperimentShare from "./ExperimentShare";
 import { aggregateJobStatus, ExperimentStatus } from "./ExperimentStatus";
 import JobDetail from "./JobDetail";
 
@@ -40,8 +41,13 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
 
   const handlePublish = () => {
     setIsDelaying(true);
-    dispatch(flowUpdateThunk({ flowId: experimentID }));
-
+    dispatch(flowUpdateThunk({ flowId: experimentID }))
+      .then(() => {
+        setTimeout(() => {
+          dispatch(setFlowDetailPublic(true));
+          setIsDelaying(false);
+        }, 2000);
+      })
     setTimeout(() => {
       setIsDelaying(false);
     }, 2000);
@@ -89,12 +95,16 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                       variant="outline" 
                       className="text-sm" 
                       onClick={handlePublish} 
-                      disabled={updateLoading}
+                      disabled={updateLoading || flow.Public}
                     >
                       {updateLoading || isDelaying ? (
                         <>
                           <Dna className="animate-spin w-4 h-4 ml-2" />
                           <span>Publishing...</span>
+                        </>
+                      ) : flow.Public? (
+                        <>
+                          <BadgeCheck className="w-4 h-4 mr-2" /> Published
                         </>
                       ) : (
                         <>
@@ -103,9 +113,12 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                       )}
                     </Button>
                   )}
-                  <Button variant="secondary" className="text-sm">
-                    <Share2 className="w-4 h-4 mr-2" /> Share
-                  </Button>
+                  {flow.Public && (
+                    // <Button variant="outline" className="text-sm">
+                    //   <Share2 className="w-4 h-4 mr-2" /> Share
+                    // </Button>
+                    <ExperimentShare experimentID={experimentID} />
+                  )}
                 </div>
               </div>
               <div className="py-4 pl-5 space-y-1 text-xs">
