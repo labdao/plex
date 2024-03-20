@@ -146,6 +146,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			WalletAddress: user.WalletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
+			Public:        false,
 		}
 
 		log.Println("Creating Flow entry")
@@ -178,6 +179,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Queue:         queue,
 				CreatedAt:     time.Now(),
 				JobUUID:       jobUUID,
+				Public:        false,
 			}
 			result := db.Create(&job)
 			if result.Error != nil {

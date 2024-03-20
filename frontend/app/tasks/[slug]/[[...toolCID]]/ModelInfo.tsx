@@ -51,7 +51,7 @@ export default function ModelInfo({ tool }: ModelInfoProps) {
       {renderDescriptionParagraphs(description)}
       <div className="flex gap-2 mt-4">
         <Button asChild variant="outline" size="xs">
-          <a href="/experiments/1" target="_blank">
+          <a href={process.env.NEXT_PUBLIC_DEMO_URL} target="_blank">
             <FileLineChart />Example Result
           </a>
         </Button>

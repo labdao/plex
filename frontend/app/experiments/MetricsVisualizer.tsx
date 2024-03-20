@@ -106,7 +106,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
           No checkpoints found yet. While waiting, check out a completed, public experiment.
         </p>
         <p>
-          <a href='/experiments/1' className="font-bold hover:underline" target="_blank" rel="noopenner noreferrer">Results</a>
+          <a href={process.env.NEXT_PUBLIC_DEMO_URL} className="font-bold hover:underline" target="_blank" rel="noopenner noreferrer">Results</a>
         </p>
       </div>
     );
