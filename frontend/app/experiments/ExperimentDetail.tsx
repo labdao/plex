@@ -3,7 +3,7 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
@@ -14,10 +14,11 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, ToolDetail } from "@/lib/redux";
 
 import { aggregateJobStatus, ExperimentStatus } from "./ExperimentStatus";
 import JobDetail from "./JobDetail";
+import MetricsVisualizer from "./MetricsVisualizer";
 
 dayjs.extend(relativeTime);
 
@@ -97,7 +98,8 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
               </div>
             </CardContent>
           </Card>
-
+          {/* add if checkpoint compatible later!! */}
+              <MetricsVisualizer flow={flow} />
           <Accordion {...(flow?.Jobs?.length > 1 ? { type: "multiple" } : { type: "single", defaultValue: "0", collapsible: true })}>
             {flow.Jobs?.map((job, index) => {
               const validStates = ["queued", "running", "failed", "completed"];

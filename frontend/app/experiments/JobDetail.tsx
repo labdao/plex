@@ -118,11 +118,6 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
       </TabsList>
-      {tool?.ToolJson?.checkpointCompatible && (
-        <TabsContent value="metrics">
-          <MetricsVisualizer job={job} />
-        </TabsContent>
-      )}
       <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">

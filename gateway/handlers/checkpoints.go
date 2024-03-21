@@ -19,17 +19,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
+// listflowcheckpointshandler similar to the job one but deals with the flow level.
+func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		jobID := vars["jobID"]
+		flowID := vars["flowID"]
 
-		var job models.Job
-		if err := db.First(&job, "id = ?", jobID).Error; err != nil {
-			http.Error(w, "Job not found", http.StatusNotFound)
+		var flow models.Flow
+		if err := db.First(&flow, "id = ?", flowID).Error; err != nil {
+			http.Error(w, "Flow not found", http.StatusNotFound)
 			return
 		}
-		jobUUID := job.JobUUID
+		flowUUID := flow.FlowUUID
 
 		sess, err := session.NewSession(&aws.Config{
 			Region: aws.String("us-east-1"),
@@ -43,7 +44,7 @@ func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 
 		input := &s3.ListObjectsV2Input{
 			Bucket: aws.String("app-checkpoint-bucket"),
-			Prefix: aws.String("checkpoints/" + jobUUID + "/"),
+			Prefix: aws.String("checkpoints/" + flowUUID + "/"),
 		}
 
 		result, err := svc.ListObjectsV2(input)
@@ -54,7 +55,7 @@ func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 
 		var files []map[string]string
 		for _, item := range result.Contents {
-			trimmedKey := strings.TrimPrefix(*item.Key, "checkpoints/"+jobUUID+"/")
+			trimmedKey := strings.TrimPrefix(*item.Key, "checkpoints/"+flowUUID+"/")
 
 			if !strings.HasSuffix(trimmedKey, ".pdb") {
 				continue
@@ -86,7 +87,94 @@ func ListCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
+func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		jobID := vars["jobID"]
+
+		var job models.Job
+		if err := db.First(&job, "id = ?", jobID).Error; err != nil {
+			http.Error(w, "Job not found", http.StatusNotFound)
+			return
+		}
+		jobUUID := job.JobUUID
+		flowUUID := job.Flow.FlowUUID
+
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String("us-east-1"),
+		})
+		if err != nil {
+			http.Error(w, "Failed to create AWS session", http.StatusInternalServerError)
+			return
+		}
+
+		svc := s3.New(sess)
+
+		input := &s3.ListObjectsV2Input{
+			Bucket: aws.String("app-checkpoint-bucket"),
+			Prefix: aws.String("checkpoints/" + flowUUID + "/" + jobUUID + "/"),
+		}
+
+		result, err := svc.ListObjectsV2(input)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var files []map[string]string
+		for _, item := range result.Contents {
+			trimmedKey := strings.TrimPrefix(*item.Key, "checkpoints/"+flowUUID+"/"+jobUUID+"/")
+
+			if !strings.HasSuffix(trimmedKey, ".pdb") {
+				continue
+			}
+
+			req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+				Bucket: aws.String("app-checkpoint-bucket"),
+				Key:    item.Key,
+			})
+			urlStr, err := req.Presign(15 * time.Minute)
+			if err != nil {
+				http.Error(w, "Failed to sign request", http.StatusInternalServerError)
+				return
+			}
+
+			files = append(files, map[string]string{
+				"fileName": trimmedKey,
+				"url":      urlStr,
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(files); err != nil {
+			http.Error(w, "Failed to encode checkpoints", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// AggregateCheckpointData function aggregates the checkpoint data for a given flow. this could be a for loop that calls aggregateJobCheckpointData for each job in the flow. this function is on the flow level. this function is only passed the flowUUID and not the jobUUID. with that flowuuid, first find all jobs under it. then use each job to call aggregateJobCheckpointData. use getflowhandler to get all the jobs under the flow. then use the jobUUID to call aggregateJobCheckpointData. then return the aggregated data.
+func AggregateCheckpointData(flowUUID string, db *gorm.DB) ([]models.ScatterPlotData, error) {
+	var jobs []models.Job
+	if err := db.Where("flow_uuid = ?", flowUUID).Find(&jobs).Error; err != nil {
+		return nil, err
+	}
+
+	var allPlotData []models.ScatterPlotData
+	for _, job := range jobs {
+		plotData, err := AggregateJobCheckpointData(flowUUID, job.JobUUID)
+		if err != nil {
+			return nil, err
+		}
+		allPlotData = append(allPlotData, plotData...)
+	}
+
+	return allPlotData, nil
+}
+
+func AggregateJobCheckpointData(flowUUID string, jobUUID string) ([]models.ScatterPlotData, error) {
 	sess, _ := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})
@@ -94,7 +182,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 
 	listInput := &s3.ListObjectsV2Input{
 		Bucket: aws.String("app-checkpoint-bucket"),
-		Prefix: aws.String("checkpoints/" + jobUUID + "/"),
+		Prefix: aws.String("checkpoints/" + flowUUID + "/" + jobUUID + "/"),
 	}
 
 	var plotData []models.ScatterPlotData
@@ -129,7 +217,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 					plddt, _ := strconv.ParseFloat(record[2], 64)
 					i_pae, _ := strconv.ParseFloat(record[3], 64)
 					pdbFileName := record[6]
-					pdbPath := "checkpoints/" + jobUUID + "/checkpoint_" + checkpointIndex + "/" + pdbFileName
+					pdbPath := "checkpoints/" + flowUUID + "/" + jobUUID + "/checkpoint_" + checkpointIndex + "/" + pdbFileName
 					req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 						Bucket: aws.String("app-checkpoint-bucket"),
 						Key:    aws.String(pdbPath),
@@ -152,7 +240,7 @@ func AggregateCheckpointData(jobUUID string) ([]models.ScatterPlotData, error) {
 	return plotData, nil
 }
 
-func GetCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
+func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		jobID := vars["jobID"]
@@ -163,7 +251,29 @@ func GetCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		plotData, err := AggregateCheckpointData(job.JobUUID)
+		plotData, err := AggregateJobCheckpointData(job.Flow.FlowUUID, job.JobUUID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(plotData)
+	}
+}
+
+func GetFlowCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		flowID := vars["flowID"]
+
+		var flow models.Flow
+		if err := db.First(&flow, "id = ?", flowID).Error; err != nil {
+			http.Error(w, "Flow not found", http.StatusNotFound)
+			return
+		}
+
+		plotData, err := AggregateCheckpointData(flow.FlowUUID, db)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

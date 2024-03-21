@@ -141,11 +141,14 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		flowUUID := uuid.New().String()
+
 		flow := models.Flow{
 			CID:           ioListCid,
 			WalletAddress: user.WalletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
+			FlowUUID:      flowUUID,
 		}
 
 		log.Println("Creating Flow entry")
