@@ -6,6 +6,7 @@ export interface Flow {
   WalletAddress: string
   Name: string
   StartTime: string
+  Public: boolean
 }
 
 export interface CategorizedFlows {

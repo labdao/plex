@@ -11,4 +11,5 @@ type Flow struct {
 	StartTime     time.Time `gorm:""`
 	EndTime       time.Time `gorm:""`
 	FlowUUID      string    `gorm:"type:uuid"`
+	Public        bool      `gorm:"type:boolean;not null;default:false"`
 }

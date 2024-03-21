@@ -2,7 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import {
   endFileUploadDataSlice,
+  fetchUserDataAsync,
   saveDataFileAsync,
   selectDataFileError,
   selectDataFileIsLoading,
+  selectUserIsAdmin,
   setError,
   startFileUploadDataSlice,
   useDispatch,
@@ -32,6 +34,7 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
   const errorMessage = useSelector(selectDataFileError);
   const isLoading = useSelector(selectDataFileIsLoading);
   const walletAddress = user?.wallet?.address;
+  const isAdmin = useSelector(selectUserIsAdmin);
 
   const [file, setFile] = useState<File | null>(null);
   const [isPublic, setIsPublic] = useState(false);
@@ -72,6 +75,10 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
     }
   };
 
+  useEffect(() => {
+    dispatch(fetchUserDataAsync());
+  }, [dispatch]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -81,7 +88,7 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <Input type="file" onChange={handleFileChange} />
-              {file && (
+              {isAdmin && file && (
                 <label>
                   <input 
                     type="checkbox" 

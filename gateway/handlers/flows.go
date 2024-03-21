@@ -149,6 +149,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			Name:          name,
 			StartTime:     time.Now(),
 			FlowUUID:      flowUUID,
+			Public:        false,
 		}
 
 		log.Println("Creating Flow entry")
@@ -181,6 +182,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Queue:         queue,
 				CreatedAt:     time.Now(),
 				JobUUID:       jobUUID,
+				Public:        false,
 			}
 			result := db.Create(&job)
 			if result.Error != nil {
@@ -271,16 +273,17 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		var flow models.Flow
 		query := db.Preload("Jobs.Tool").Where("id = ?", flowID)
 
-		if !user.Admin {
-			query = query.Where("wallet_address = ?", user.WalletAddress)
-		}
-
 		if result := query.First(&flow); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
+				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
 				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
 			}
+			return
+		}
+
+		if !flow.Public && flow.WalletAddress != user.WalletAddress && !user.Admin {
+			http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
 			return
 		}
 
@@ -331,6 +334,84 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flows); err != nil {
 			http.Error(w, "Error encoding Flows to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
+			return
+		}
+
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+
+		params := mux.Vars(r)
+		flowID, err := strconv.Atoi(params["flowID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			return
+		}
+
+		var flow models.Flow
+		if result := db.Where("id = ?", flowID).First(&flow); result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				http.Error(w, "Flow not found", http.StatusNotFound)
+			} else {
+				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if flow.WalletAddress != user.WalletAddress {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if flow.Public {
+			http.Error(w, "Flow is already public", http.StatusBadRequest)
+			return
+		}
+
+		flow.Public = true
+
+		if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		var jobs []models.Job
+		if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		for _, job := range jobs {
+			if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(flow); err != nil {
+			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
 			return
 		}
 	}

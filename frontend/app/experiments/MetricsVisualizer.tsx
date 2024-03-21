@@ -105,7 +105,12 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     return (
       <div className="p-4 text-center text-muted-foreground">
         <CircleDotDashedIcon size={32} className={cn(flowStatus === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
-        <p>No checkpoints found yet. If this model has checkpoints, they&apos;ll appear here as they are reached.</p>
+        <p>
+          No checkpoints found yet. While waiting, check out a completed, public experiment.
+        </p>
+        <p>
+          <a href={process.env.NEXT_PUBLIC_DEMO_URL} className="font-bold hover:underline" target="_blank" rel="noopenner noreferrer">Results</a>
+        </p>
       </div>
     );
   }

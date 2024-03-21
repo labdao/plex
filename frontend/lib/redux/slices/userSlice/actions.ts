@@ -39,3 +39,37 @@ export const saveUserDataToServer = async (walletAddress: string): Promise<{ wal
   console.log('result', result)
   return result;
 }
+
+export const fetchUserData = async (): Promise<{ walletAddress: string; did: string; isAdmin: boolean }> => {
+  let authToken;
+  try {
+    authToken = await getAccessToken()
+  } catch (error) {
+    console.log('Failed to get access token: ', error)
+    throw new Error('Authentication failed')
+  }
+
+  const response = await fetch(`${backendUrl()}/user`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${authToken}`,
+      'Content-Type': 'application/json'
+    },
+  });
+
+  if (!response.ok) {
+    let errorMsg = 'An error occurred'
+    try {
+      const errorResult = await response.json()
+      errorMsg = errorResult.message || errorMsg
+    } catch (e) {
+      // Parsing JSON failed, retain the default error message.
+    }
+    console.log('errorMsg', errorMsg)
+    throw new Error(errorMsg)
+  }
+
+  const result = await response.json();
+  console.log('result', result);
+  return result;
+}
