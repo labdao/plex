@@ -48,21 +48,6 @@
       "position": "105",
       "required": false
     },
-    "number_of_binders": {
-      "type": "number",
-      "description": "The number of protein binders to be designed",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "1",
-      "max": "128",
-      "example": "2",
-      "grouping": "binder",
-      "position": "202",
-      "required": true
-    },
     "target_chain": {
       "type": "string",
       "description": "The chain of the target protein to design against.",
