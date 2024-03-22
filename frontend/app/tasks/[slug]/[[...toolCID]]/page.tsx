@@ -1,7 +1,7 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrivy } from "@privy-io/react-auth";
-import { ChevronsUpDownIcon, CogIcon, HelpCircleIcon, Settings2Icon } from "lucide-react";
+import { ChevronsUpDownIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
@@ -9,17 +9,15 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
 
-import { JobStatusIcon } from "@/app/experiments/ExperimentStatus";
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LabelDescription } from "@/components/ui/label";
 import {
   AppDispatch,
   resetToolDetail,
@@ -37,6 +35,7 @@ import { tasks } from "../../taskList";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import ModelInfo from "./ModelInfo";
+import TaskGuide from "./TaskGuide";
 import { TaskSummary } from "./TaskSummary";
 
 type JsonValueArray = Array<{ value: any }>; // Define the type for the array of value objects
@@ -188,39 +187,6 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
     }
   }
 
-  const renderDescriptionParagraphs = (text: string) => {
-    const paragraphs = text.split("\n");
-    const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
-
-    if (hasNumberedSteps) {
-      const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
-      const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
-
-      return (
-        <>
-          {nonStepParagraphs.map((paragraph, index) => (
-            <p key={index} className="mt-2">
-              {paragraph}
-            </p>
-          ))}
-          <ol className="mt-2 ml-5 list-decimal list-outside">
-            {steps.map((step, index) => (
-              <li key={index} className="pb-4 mt-1 mb-4 border-b border-muted last:border-0 last:m-0 last:p-0 marker:text-foreground">
-                {step.replace(/^\d+\. /, "")}
-              </li>
-            ))}
-          </ol>
-        </>
-      );
-    } else {
-      return paragraphs.map((paragraph, index) => (
-        <p key={index} className="mt-2">
-          {paragraph}
-        </p>
-      ));
-    }
-  };
-
   return (
     <>
       <Breadcrumbs
@@ -240,14 +206,14 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
         )}
         <>
           <ProtectedComponent method="hide" message="Log in to run an experiment">
-            <div className="grid min-h-screen grid-cols-1 p-4 lg:pr-0 lg:grid-cols-3">
-              <div className="col-span-2 space-y-3">
-                <Form {...form}>
-                  <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+            <Form {...form}>
+              <form id="task-form" onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+                <div className="flex flex-col-reverse min-h-screen lg:flex-row">
+                  <div className="p-2 space-y-3 shrink-0 grow basis-2/3">
                     <Card className="mb-2">
                       <CardContent>
                         <div className="flex items-center gap-1">
-                          <div className="block w-3 h-3 border rounded-full" />
+                          <div className="block w-3 h-3 border border-gray-300 rounded-full" />
                           <FormField
                             control={form.control}
                             name="name"
@@ -262,29 +228,14 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                           />
                         </div>
                       </CardContent>
-                      <CardContent className="border-t pl-9 bg-muted/30 border-border/50">
-                        <FormField
-                          control={form.control}
-                          name="tool"
-                          key={tool?.CID}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <ToolSelect onChange={field.onChange} taskSlug={params.slug} defaultValue={tool?.CID} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
                     </Card>
-                    <Card>
-                      {!toolDetailLoading && (
-                        <>
+                    {!toolDetailLoading && (
+                      <>
+                        <Card>
                           {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
                             return (
                               <CardContent key={groupKey} className="border-t first:border-0">
-                                <div className="uppercase text-bold font-heading">{groupKey}</div>
+                                <div className="uppercase font-heading">{groupKey}</div>
                                 <div className="space-y-4">
                                   {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
                                     const input = groupedInputs?.standard?.[groupKey]?.[key];
@@ -294,27 +245,13 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                               </CardContent>
                             );
                           })}
-                          {tool.ToolJson?.guide && (
-                            <div className="p-2 mx-4 mb-4 rounded-lg bg-yellow-50">
-                              <Collapsible defaultOpen={true}>
-                                <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 py-2 text-left uppercase text-bold font-heading">
-                                  <HelpCircleIcon /> <span className="mr-auto">How to Write Prompts</span>
-                                  <ChevronsUpDownIcon />
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                  <div className="pt-0">
-                                    <div className="space-y-2 text-muted-foreground">{renderDescriptionParagraphs(tool.ToolJson.guide)}</div>
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
-                            </div>
-                          )}
+                          {tool.ToolJson?.guide && <TaskGuide tool={tool} />}
 
                           {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
                             return (
                               <CardContent key={groupKey} className="border-t">
                                 <Collapsible>
-                                  <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 text-left uppercase text-bold font-heading">
+                                  <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 text-left uppercase font-heading">
                                     {groupKey.replace("_", "")}
                                     <ChevronsUpDownIcon />
                                   </CollapsibleTrigger>
@@ -330,17 +267,33 @@ export default function TaskDetail({ params }: { params: { slug: string; toolCID
                               </CardContent>
                             );
                           })}
-                        </>
-                      )}
-                      <TaskSummary sortedInputs={sortedInputs} form={form} tool={tool} />
-                    </Card>
-                  </form>
-                </Form>
-              </div>
-              <div>
-                <ModelInfo tool={tool} />
-              </div>
-            </div>
+                          <TaskSummary sortedInputs={sortedInputs} form={form} tool={tool} />
+                        </Card>
+                      </>
+                    )}
+                  </div>
+                  <ModelInfo
+                    tool={tool}
+                    initialOpen={true}
+                    selectComponent={
+                      <FormField
+                        control={form.control}
+                        name="tool"
+                        key={tool?.CID}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <ToolSelect onChange={field.onChange} taskSlug={params.slug} defaultValue={tool?.CID} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    }
+                  />
+                </div>
+              </form>
+            </Form>
           </ProtectedComponent>
         </>
       </div>

@@ -32,7 +32,7 @@ export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps
 
   return (
     <Select onValueChange={handleSelectionChange} defaultValue={defaultValue}>
-      <SelectTrigger>
+      <SelectTrigger className="font-mono text-sm font-bold uppercase rounded-full border-primary hover:bg-primary/10">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent>
@@ -40,7 +40,7 @@ export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps
           {tools.map((tool, index) => {
             return (
               <SelectItem key={index} value={tool?.CID}>
-                {tool?.ToolJson?.author || "unknown"}/{tool.Name}
+                {tool.Name}
               </SelectItem>
             );
           })}
