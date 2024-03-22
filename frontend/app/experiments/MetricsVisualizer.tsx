@@ -90,7 +90,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         <div className="max-w-xs p-3 text-xs bg-white border rounded shadow-md">
           {keysToShow.map((key) => (
             <p className="flex gap-1" key={key}>
-              <span>{key}: </span>
+              <span>{key === 'i_pae' ? '-i_pae' : key}: </span>
               <strong className="max-w-full truncate">{formattedData[key]}</strong>
             </p>
           ))}
