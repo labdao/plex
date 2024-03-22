@@ -159,8 +159,9 @@ def create_and_upload_checkpoints(df_results, result_csv_path):
 
         bucket_name = "app-checkpoint-bucket"
         job_uuid = os.getenv("JOB_UUID")
+        flow_uuid = os.getenv("FLOW_UUID")
         time.sleep(2)
-        object_name = f"checkpoints/{job_uuid}/checkpoint_{index}"
+        object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
         os.remove(event_csv_filepath)
