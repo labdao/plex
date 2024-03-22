@@ -93,7 +93,7 @@ func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Flow").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}
@@ -157,13 +157,13 @@ func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 
 // AggregateCheckpointData function aggregates the checkpoint data for a given flow. this could be a for loop that calls aggregateJobCheckpointData for each job in the flow. this function is on the flow level. this function is only passed the flowUUID and not the jobUUID. with that flowuuid, first find all jobs under it. then use each job to call aggregateJobCheckpointData. use getflowhandler to get all the jobs under the flow. then use the jobUUID to call aggregateJobCheckpointData. then return the aggregated data.
 func AggregateCheckpointData(flowUUID string, db *gorm.DB) ([]models.ScatterPlotData, error) {
-	var jobs []models.Job
-	if err := db.Where("flow_uuid = ?", flowUUID).Find(&jobs).Error; err != nil {
+	var flows []models.Flow
+	if err := db.Where("flow_uuid = ?", flowUUID).Preload("Jobs").Find(&flows).Error; err != nil {
 		return nil, err
 	}
 
 	var allPlotData []models.ScatterPlotData
-	for _, job := range jobs {
+	for _, job := range flows[0].Jobs {
 		plotData, err := AggregateJobCheckpointData(flowUUID, job.JobUUID)
 		if err != nil {
 			return nil, err
@@ -226,7 +226,7 @@ func AggregateJobCheckpointData(flowUUID string, jobUUID string) ([]models.Scatt
 					if err != nil {
 						return false
 					}
-					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, StructureFile: pdbFileName, PdbFilePath: presignedURL})
+					plotData = append(plotData, models.ScatterPlotData{Plddt: plddt, IPae: i_pae, Checkpoint: checkpointIndex, StructureFile: pdbFileName, PdbFilePath: presignedURL, JobUUID: jobUUID})
 				}
 			}
 		}
@@ -246,7 +246,7 @@ func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Flow").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}

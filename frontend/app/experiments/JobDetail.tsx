@@ -112,7 +112,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
-        {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>}
+        {/* {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>} */}
         <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>

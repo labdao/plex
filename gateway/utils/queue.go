@@ -101,6 +101,10 @@ func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
 	return db.Preload("Tool").First(&job, id).Error
 }
 
+func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
+	return db.Preload("Tool").Preload("Flow").First(&job, id).Error
+}
+
 func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
 	var job models.Job
 	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
@@ -121,7 +125,7 @@ func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
 func processJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing job %v\n", jobID)
 	var job models.Job
-	err := fetchJobWithToolData(&job, jobID, db)
+	err := fetchJobWithToolAndFlowData(&job, jobID, db)
 	if err != nil {
 		return err
 	}
@@ -135,7 +139,7 @@ func processJob(jobID uint, db *gorm.DB) error {
 	for {
 		// we refresh the Job data from the database on every loop to make sure the state is accurate
 		var job models.Job
-		err := fetchJobWithToolData(&job, jobID, db)
+		err := fetchJobWithToolAndFlowData(&job, jobID, db)
 		if err != nil {
 			return err
 		}
@@ -196,7 +200,7 @@ func processJob(jobID uint, db *gorm.DB) error {
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
 	var job models.Job
-	err := fetchJobWithToolData(&job, jobID, db)
+	err := fetchJobWithToolAndFlowData(&job, jobID, db)
 	if err != nil {
 		return err
 	}
