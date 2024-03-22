@@ -5,15 +5,21 @@ export interface ToolDetail {
   WalletAddress: string;
   Name: string;
   DefaultTool: boolean;
-  ToolJson: { 
-    inputs: {}; 
-    outputs: {}; 
-    name: string; 
-    author: string; 
-    description: string; 
-    github: string; 
-    paper: string; 
-    guide: string; 
+  ToolJson: {
+    inputs: {};
+    outputs: {
+      [key: string]: {
+        glob: string[];
+        item: string;
+        type: string;
+      };
+    } | null;
+    name: string;
+    author: string;
+    description: string;
+    github: string;
+    paper: string;
+    guide: string;
     checkpointCompatible: boolean;
   };
 }
@@ -30,7 +36,7 @@ const initialState: ToolDetailSliceState = {
     CID: "",
     WalletAddress: "",
     Name: "",
-    DefaultTool: false, 
+    DefaultTool: false,
     ToolJson: {
       inputs: {},
       outputs: {},
@@ -64,7 +70,9 @@ export const toolDetailSlice = createSlice({
     setToolDetailSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
-    resetToolDetail: () => { return initialState; },
+    resetToolDetail: () => {
+      return initialState;
+    },
   },
 });
 

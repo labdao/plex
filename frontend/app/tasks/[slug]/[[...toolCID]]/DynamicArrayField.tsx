@@ -28,7 +28,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
   const hasError = form.formState.errors?.[inputKey];
 
   return (
-    <div className={cn("p-4 space-y-4 border rounded-lg", hasError && "border-destructive")}>
+    <div className="space-y-0">
       {fields.map((field, index) => (
         <FormField
           key={field.id}

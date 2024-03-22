@@ -15,7 +15,18 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectFlowUpdateError, selectFlowUpdateLoading, selectFlowUpdateSuccess, selectUserWalletAddress, setFlowDetailPublic } from "@/lib/redux";
+import {
+  AppDispatch,
+  flowDetailThunk,
+  selectFlowDetail,
+  selectFlowDetailError,
+  selectFlowDetailLoading,
+  selectFlowUpdateError,
+  selectFlowUpdateLoading,
+  selectFlowUpdateSuccess,
+  selectUserWalletAddress,
+  setFlowDetailPublic,
+} from "@/lib/redux";
 import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
 import ExperimentShare from "./ExperimentShare";
@@ -41,13 +52,12 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
 
   const handlePublish = () => {
     setIsDelaying(true);
-    dispatch(flowUpdateThunk({ flowId: experimentID }))
-      .then(() => {
-        setTimeout(() => {
-          dispatch(setFlowDetailPublic(true));
-          setIsDelaying(false);
-        }, 2000);
-      })
+    dispatch(flowUpdateThunk({ flowId: experimentID })).then(() => {
+      setTimeout(() => {
+        dispatch(setFlowDetailPublic(true));
+        setIsDelaying(false);
+      }, 2000);
+    });
     setTimeout(() => {
       setIsDelaying(false);
     }, 2000);
@@ -89,20 +99,15 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                   <ExperimentStatus jobs={flow.Jobs} className="mr-2 mt-2.5" />
                   <span className="font-heading">{flow.Name}</span>
                 </div>
-                <div className="flex justify-end space-x-2 mt-4">
+                <div className="flex justify-end space-x-2 ">
                   {userWalletAddress === flow.WalletAddress && (
-                    <Button 
-                      variant="outline" 
-                      className="text-sm" 
-                      onClick={handlePublish} 
-                      disabled={updateLoading || flow.Public}
-                    >
+                    <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || flow.Public}>
                       {updateLoading || isDelaying ? (
                         <>
-                          <Dna className="animate-spin w-4 h-4 ml-2" />
+                          <Dna className="w-4 h-4 ml-2 animate-spin" />
                           <span>Publishing...</span>
                         </>
-                      ) : flow.Public? (
+                      ) : flow.Public ? (
                         <>
                           <BadgeCheck className="w-4 h-4 mr-2" /> Published
                         </>
