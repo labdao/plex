@@ -1,4 +1,4 @@
-# Lab Exchange 🧫×🧬→💊
+# Lab Exchange 🧬×💊→🧫
 ⚡ **Run highly reproducible computational biology applications on top of a decentralised compute and storage network.** ⚡
 
 <p align="left">
