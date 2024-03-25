@@ -8,6 +8,8 @@ OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
+FLOW_UUID="test-flow_uuid_$(date +%y%m%d)"
+JOB_UUID="test-job_uuid_$(date +%y%m%d_%H%M%S)"
 # Run the Docker container
 # docker run --gpus=all -v $PWD/testdata/pdc_upar_1_target.pdb:/inputs/target_protein/pdc_upar_1_target.pdb \
 # -v $PWD/testdata/VTNCparams1.yaml:/app/conf/params/VTNCparams1.yaml \
@@ -16,7 +18,8 @@ echo "Output directory is $OUTPUT_DIR"
 docker run --gpus=all \
 -e PLEX_JOB_INPUTS='{"binder_length":10,"hotspot":"","number_of_binders":1,"target_chain":"B","target_start_residue":50,"target_end_residue":100,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
 --env-file ~/aws.env \
--e JOB_UUID='1234' \
+-e FLOW_UUID="$FLOW_UUID" \
+-e JOB_UUID="$JOB_UUID" \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs colabdesign-noninteractive
 

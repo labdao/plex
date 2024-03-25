@@ -32,6 +32,7 @@ import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 import ExperimentShare from "./ExperimentShare";
 import { aggregateJobStatus, ExperimentStatus } from "./ExperimentStatus";
 import JobDetail from "./JobDetail";
+import MetricsVisualizer from "./MetricsVisualizer";
 
 dayjs.extend(relativeTime);
 
@@ -161,7 +162,8 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
               </div>
             </CardContent>
           </Card>
-
+          {/* add if checkpoint compatible later!! */}
+              <MetricsVisualizer flow={flow} />
           <Accordion {...(flow?.Jobs?.length > 1 ? { type: "multiple" } : { type: "single", defaultValue: "0", collapsible: true })}>
             {flow.Jobs?.map((job, index) => {
               const validStates = ["queued", "running", "failed", "completed"];

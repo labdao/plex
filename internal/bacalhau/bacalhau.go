@@ -42,7 +42,7 @@ func GetBacalhauClient() (*client.APIClient, error) {
 	return bacalhauClient, err
 }
 
-func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, jobUUID string) (job *model.Job, err error) {
+func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, flowUUID string, jobUUID string) (job *model.Job, err error) {
 	fmt.Println("CreatebacalhauJob")
 	fmt.Println(inputs)
 	job, err = model.NewJobWithSaneProductionDefaults()
@@ -174,10 +174,10 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 	}
 
 	jsonString := string(jsonBytes)
-	// envVar := fmt.Sprintf("PLEX_JOB_INPUTS=%s JOB_UUID=%s", jsonString, jobUUID)
 	envVars := []string{
 		fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString),
 		fmt.Sprintf("JOB_UUID=%s", jobUUID),
+		fmt.Sprintf("FLOW_UUID=%s", flowUUID),
 		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
 		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
 	}

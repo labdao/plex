@@ -55,8 +55,11 @@ def main():
     job_inputs = get_plex_job_inputs()
     print("Job Inputs:", job_inputs)
     job_uuid = os.getenv("JOB_UUID")
+    flow_uuid = os.getenv("FLOW_UUID")
     if not job_uuid:
         raise ValueError("JOB_UUID environment variable is missing.")
+    if not flow_uuid:
+        raise ValueError("FLOW_UUID environment variable is missing.")
 
     os.makedirs("/outputs", exist_ok=True)
     
@@ -65,7 +68,7 @@ def main():
     # Simulate checkpoint creation and upload to S3
     for checkpoint in range(0, 3): 
         time.sleep(10)
-        object_name = f"checkpoints/{job_uuid}/checkpoint_{checkpoint}"
+        object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{checkpoint}"
         event_csv_filename, pdb_path = create_event_csv(checkpoint, job_inputs)
         pdb_file_name = os.path.basename(pdb_path)
         upload_to_s3(event_csv_filename, bucket_name, f"{object_name}/{event_csv_filename}")
