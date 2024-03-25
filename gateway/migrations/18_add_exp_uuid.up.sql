@@ -1,0 +1,2 @@
+ALTER TABLE flows
+ADD COLUMN flow_uuid UUID;

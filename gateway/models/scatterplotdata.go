@@ -6,4 +6,5 @@ type ScatterPlotData struct {
 	Checkpoint    string  `json:"checkpoint"`
 	StructureFile string  `json:"structureFile"`
 	PdbFilePath   string  `json:"pdbFilePath"`
+	JobUUID       string  `json:"jobUUID"`
 }

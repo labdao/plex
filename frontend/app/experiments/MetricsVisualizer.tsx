@@ -8,10 +8,11 @@ import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Toolti
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
-import { ToolDetail } from "@/lib/redux";
+import { FlowDetail, ToolDetail } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { JobDetail } from "./JobDetail";
+import { aggregateJobStatus } from "./ExperimentStatus";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -34,21 +35,23 @@ interface CheckpointData {
   url: string;
 }
 
-export default function MetricsVisualizer({ job }: { job: JobDetail }) {
+export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
   const [activeCheckpointUrl, setActiveCheckpointUrl] = useState("");
 
+  const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
+
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${job.ID}`);
+        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
         const checkpointData = await checkpointResponse.json();
         setCheckpoints(checkpointData);
 
-        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${job.ID}/get-data`);
+        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
         if (activeCheckpointUrl === "") {
@@ -60,11 +63,11 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         setLoading(false);
       }
     };
-    if (job.ID) {
+    if (flow.ID) {
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job]);
+  }, [flow]);
 
   const handlePointClick = (entry: CheckpointChartData) => {
     setActiveCheckpointUrl(entry.pdbFilePath);
@@ -87,7 +90,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         <div className="max-w-xs p-3 text-xs bg-white border rounded shadow-md">
           {keysToShow.map((key) => (
             <p className="flex gap-1" key={key}>
-              <span>{key}: </span>
+              <span>{key === 'i_pae' ? '-i_pae' : key}: </span>
               <strong className="max-w-full truncate">{formattedData[key]}</strong>
             </p>
           ))}
@@ -101,7 +104,7 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
   if (!checkpoints?.length && !loading) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        <CircleDotDashedIcon size={32} className={cn(job.State === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
+        <CircleDotDashedIcon size={32} className={cn(flowStatus === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
         <p>
           No checkpoints found yet. While waiting, check out a completed, public experiment.
         </p>

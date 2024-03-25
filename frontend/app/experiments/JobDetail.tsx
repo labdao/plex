@@ -112,17 +112,12 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
-        {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>}
+        {/* {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>} */}
         <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
       </TabsList>
-      {tool?.ToolJson?.checkpointCompatible && (
-        <TabsContent value="metrics">
-          <MetricsVisualizer job={job} />
-        </TabsContent>
-      )}
       <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
