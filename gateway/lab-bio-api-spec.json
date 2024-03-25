@@ -1060,35 +1060,29 @@
           "type": "object",
           "properties": {
             "cid": {
-              "type": "string"
+              "type": "string",
+              "format": "varchar(255)",
+              "description": "The content identifier of the data file, serving as the primary key."
             },
             "walletAddress": {
-              "type": "string"
+              "type": "string",
+              "format": "varchar(42)",
+              "description": "The wallet address associated with the data file."
             },
             "filename": {
-              "type": "string"
-            },
-            "jobInputs": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/Job"
-              }
-            },
-            "jobOutputs": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/Job"
-              }
-            },
-            "tags": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/Tag"
-              }
+              "type": "string",
+              "format": "varchar(255)",
+              "description": "The name of the data file."
             },
             "timestamp": {
               "type": "string",
-              "format": "date-time"
+              "format": "date-time",
+              "description": "The timestamp associated with the data file."
+            },
+            "public": {
+              "type": "boolean",
+              "default": false,
+              "description": "Indicates whether the data file is publicly accessible."
             }
           }
         },
