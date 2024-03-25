@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { ToolDetail } from "@/lib/redux";
 
-interface TaskSummaryProps {
+interface ExperimentSummaryProps {
   form: UseFormReturn<any>;
   sortedInputs: any;
   tool: ToolDetail;
@@ -20,7 +20,7 @@ type VariantSummaryItem = {
   variantCount: number;
 };
 
-export function TaskSummary({ sortedInputs, form, showVariants }: TaskSummaryProps) {
+export function ExperimentSummary({ sortedInputs, form, showVariants }: ExperimentSummaryProps) {
   const watchAllFields = form.watch();
 
   let variantSummaryInfo = { items: [] as VariantSummaryItem[], total: 1 };

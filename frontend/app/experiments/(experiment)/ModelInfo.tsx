@@ -2,17 +2,26 @@
 
 import { BookOpenIcon, FileJsonIcon, FileLineChart, GithubIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
+import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ToolDetail } from "@/lib/redux";
+import { AppDispatch, ToolDetail, toolDetailThunk } from "@/lib/redux";
 import { cn } from "@/lib/utils";
+
+import TaskGuide from "./ModelGuide";
 
 interface ModelInfoProps {
   tool: ToolDetail;
-  selectComponent?: React.ReactNode;
-  initialOpen?: boolean;
+  task?: {
+    slug: string;
+    name: string;
+    available: boolean;
+  };
+  showSelect?: boolean;
+  defaultOpen?: boolean;
 }
 
 type OutputSummaryItem = {
@@ -22,42 +31,46 @@ type OutputSummaryItem = {
   multiple: boolean;
 };
 
-export default function ModelInfo({ tool, initialOpen, selectComponent }: ModelInfoProps) {
-  const [open, setOpen] = useState(initialOpen);
+const renderDescriptionParagraphs = (text: string) => {
+  const paragraphs = text.split("\n");
+  const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
 
+  if (hasNumberedSteps) {
+    const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
+    const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
+
+    return (
+      <>
+        {nonStepParagraphs.map((paragraph, index) => (
+          <p key={index} className="mt-2">
+            {paragraph}
+          </p>
+        ))}
+        <ol className="mt-2 list-decimal list-inside">
+          {steps.map((step, index) => (
+            <li key={index} className="mt-2">
+              {step.replace(/^\d+\. /, "")}
+            </li>
+          ))}
+        </ol>
+      </>
+    );
+  } else {
+    return paragraphs.map((paragraph, index) => (
+      <p key={index} className="mt-2">
+        {paragraph}
+      </p>
+    ));
+  }
+};
+
+export default function ModelInfo({ tool, task, defaultOpen, showSelect }: ModelInfoProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const dispatch = useDispatch<AppDispatch>();
   const { description, github, paper, outputs } = tool.ToolJson;
 
-  const renderDescriptionParagraphs = (text: string) => {
-    const paragraphs = text.split("\n");
-    const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
-
-    if (hasNumberedSteps) {
-      const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
-      const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
-
-      return (
-        <>
-          {nonStepParagraphs.map((paragraph, index) => (
-            <p key={index} className="mt-2">
-              {paragraph}
-            </p>
-          ))}
-          <ol className="mt-2 list-decimal list-inside">
-            {steps.map((step, index) => (
-              <li key={index} className="mt-2">
-                {step.replace(/^\d+\. /, "")}
-              </li>
-            ))}
-          </ol>
-        </>
-      );
-    } else {
-      return paragraphs.map((paragraph, index) => (
-        <p key={index} className="mt-2">
-          {paragraph}
-        </p>
-      ));
-    }
+  const handleToolChange = (value: any) => {
+    dispatch(toolDetailThunk(value));
   };
 
   let outputSummaryInfo = { items: [] as OutputSummaryItem[] };
@@ -84,7 +97,9 @@ export default function ModelInfo({ tool, initialOpen, selectComponent }: ModelI
       </div>
       <div className={cn("transition-opacity opacity-0 min-w-[26vw]", open && "opacity-1")}>
         <CardContent className="pt-0">
-          {selectComponent || (
+          {showSelect ? (
+            <ToolSelect onChange={handleToolChange} taskSlug={task?.slug} />
+          ) : (
             <div className="text-xl font-heading">
               {tool.ToolJson?.author || "unknown"}/{tool.ToolJson?.name}
             </div>
@@ -121,7 +136,7 @@ export default function ModelInfo({ tool, initialOpen, selectComponent }: ModelI
             )}
           </div>
         </CardContent>
-        {outputs && (
+        {/*outputs && (
           <CardContent className="border-t">
             <div className="mb-2 uppercase font-heading">Expected Output</div>
             <div className="space-y-2 lowercase">
@@ -133,7 +148,8 @@ export default function ModelInfo({ tool, initialOpen, selectComponent }: ModelI
               ))}
             </div>
           </CardContent>
-        )}
+              )*/}
+        {tool.ToolJson?.guide && <TaskGuide tool={tool} />}
       </div>
     </Card>
   );

@@ -62,7 +62,7 @@ export function generateSchema(inputs: InputType) {
 
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, tool: ToolDetail) {
   return {
-    name: `${task.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
+    name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
     tool: tool?.CID,
     ...inputsToDefaultValues(inputs),
   };

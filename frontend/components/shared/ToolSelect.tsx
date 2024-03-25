@@ -4,17 +4,17 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AppDispatch, selectToolList, selectToolListError, toolListThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolList, selectToolListError, toolDetailThunk, toolListThunk } from "@/lib/redux";
 
 interface ToolSelectProps {
   onChange: (value: string) => void;
   taskSlug?: string;
-  defaultValue?: string;
 }
 
-export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps) {
+export function ToolSelect({ onChange, taskSlug }: ToolSelectProps) {
   const dispatch = useDispatch<AppDispatch>();
 
+  const tool = useSelector(selectToolDetail);
   const tools = useSelector(selectToolList);
   const toolListError = useSelector(selectToolListError);
 
@@ -26,12 +26,21 @@ export function ToolSelect({ onChange, taskSlug, defaultValue }: ToolSelectProps
     }
   }, [dispatch, taskSlug]);
 
+  useEffect(() => {
+    const defaultTool = tools.find((tool) => tool.DefaultTool === true);
+    const defaultToolCID = defaultTool?.CID;
+
+    if (defaultToolCID) {
+      dispatch(toolDetailThunk(defaultToolCID));
+    }
+  }, [dispatch, tools]);
+
   const handleSelectionChange = (value: string) => {
     onChange(value);
   };
 
   return (
-    <Select onValueChange={handleSelectionChange} defaultValue={defaultValue}>
+    <Select onValueChange={handleSelectionChange} value={tool?.CID}>
       <SelectTrigger className="font-mono text-sm font-bold uppercase rounded-full border-primary hover:bg-primary/10">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>

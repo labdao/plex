@@ -21,6 +21,7 @@ export interface ToolDetail {
     paper: string;
     guide: string;
     checkpointCompatible: boolean;
+    taskCategory?: string;
   };
 }
 

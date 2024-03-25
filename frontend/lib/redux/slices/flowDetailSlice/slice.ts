@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { Tool } from "../toolListSlice/slice";
+import { ToolDetail } from "@/lib/redux";
 
 export interface Job {
   ID: number;
   BacalhauJobID: string;
   State: string;
   Error: string;
-  Tool: Tool;
+  Tool: ToolDetail;
   FlowId: string;
 }
 
@@ -54,10 +54,14 @@ export const flowDetailSlice = createSlice({
     },
     setFlowDetailPublic: (state, action: PayloadAction<boolean>) => {
       state.flow.Public = action.payload;
-    }
+    },
+    resetFlowDetail: () => {
+      return initialState;
+    },
   },
 });
 
-export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailPublic, setFlowDetailSuccess } = flowDetailSlice.actions;
+export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailPublic, setFlowDetailSuccess, resetFlowDetail } =
+  flowDetailSlice.actions;
 
 export default flowDetailSlice.reducer;

@@ -36,11 +36,11 @@ const renderDescriptionParagraphs = (text: string) => {
   }
 };
 
-interface TaskGuideProps {
+interface ModelGuideProps {
   tool: ToolDetail;
 }
 
-export default function TaskGuide({ tool }: TaskGuideProps) {
+export default function ModelGuide({ tool }: ModelGuideProps) {
   return (
     <div className="px-4 py-2 mx-4 mb-4 rounded-lg bg-yellow-50">
       <Collapsible defaultOpen={true}>

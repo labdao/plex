@@ -10,6 +10,7 @@ import { renderReact18 } from "molstar/lib/mol-plugin-ui/react18";
 import { DefaultPluginUISpec, PluginUISpec } from "molstar/lib/mol-plugin-ui/spec";
 import { ColorNames } from "molstar/lib/mol-util/color/names";
 import { createRef, useEffect } from "react";
+import { Color } from "molstar/lib/mol-util/color";
 
 declare global {
   interface Window {
@@ -54,7 +55,7 @@ const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => 
 
         const renderer = window.molstar.canvas3d!.props.renderer;
         PluginCommands.Canvas3D.SetSettings(window.molstar, {
-          settings: { renderer: { ...renderer, backgroundColor: ColorNames.white } },
+          settings: { renderer: { ...renderer, backgroundColor: 0xf9fafb as Color } },
         });
 
         const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });

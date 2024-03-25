@@ -10,7 +10,7 @@ import Link from "next/link";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { ExperimentStatus } from "@/app/experiments/ExperimentStatus";
+import { ExperimentStatus } from "@/app/experiments/(experiment)/ExperimentStatus";
 import { NavButton } from "@/components/global/NavItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AppDispatch, Flow, flowListThunk, selectCategorizedFlows, selectFlowList, selectFlowListLoading, selectUserIsAdmin } from "@/lib/redux";

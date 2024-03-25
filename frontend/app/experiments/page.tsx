@@ -18,7 +18,7 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { AppDispatch, Flow, flowListThunk, selectFlowList, selectFlowListLoading } from "@/lib/redux";
 
-import { ExperimentStatus } from "./ExperimentStatus";
+import { ExperimentStatus } from "./(experiment)/ExperimentStatus";
 
 export default function ListExperiments() {
   const { user } = usePrivy();
