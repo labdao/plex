@@ -976,7 +976,38 @@
           "type": "object",
           "properties": {
             "walletAddress": {
-              "type": "string"
+              "type": "string",
+              "format": "varchar(42)",
+              "description": "The user's wallet address, serving as the primary key."
+            },
+            "did": {
+              "type": "string",
+              "format": "varchar(255)",
+              "description": "The user's decentralized identifier."
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time",
+              "description": "The timestamp indicating when the user was created."
+            },
+            "apiKeys": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIKey"
+              },
+              "description": "The list of API keys associated with the user."
+            },
+            "admin": {
+              "type": "boolean",
+              "default": false,
+              "description": "Indicates whether the user has admin privileges."
+            },
+            "userDatafiles": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/DataFile"
+              },
+              "description": "The list of data files associated with the user."
             }
           }
         },
