@@ -10,6 +10,8 @@
     "networkBool": false,
     "memoryGB": 4,
     "cpu": 0.8,
+    "taskCategory": "community-models",
+    "checkpointCompatible": false,
     "inputs": {
         "file_example": {
             "type": "file",

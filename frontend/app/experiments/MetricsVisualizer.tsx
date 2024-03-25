@@ -3,14 +3,16 @@
 import backendUrl from "lib/backendUrl";
 import { CircleDotDashedIcon, DownloadIcon, HelpCircleIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Cell, ResponsiveContainer, Scatter, ScatterChart, Tooltip as RechartsTooltip, XAxis, YAxis, ReferenceLine, ReferenceArea } from "recharts";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
+import { FlowDetail, ToolDetail } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { JobDetail } from "./JobDetail";
+import { aggregateJobStatus } from "./ExperimentStatus";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -33,21 +35,23 @@ interface CheckpointData {
   url: string;
 }
 
-export default function MetricsVisualizer({ job }: { job: JobDetail }) {
+export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
   const [activeCheckpointUrl, setActiveCheckpointUrl] = useState("");
 
+  const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
+
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${job.ID}`);
+        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
         const checkpointData = await checkpointResponse.json();
         setCheckpoints(checkpointData);
 
-        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${job.ID}/get-data`);
+        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
         if (activeCheckpointUrl === "") {
@@ -59,11 +63,11 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         setLoading(false);
       }
     };
-    if (job.ID) {
+    if (flow.ID) {
       fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job]);
+  }, [flow]);
 
   const handlePointClick = (entry: CheckpointChartData) => {
     setActiveCheckpointUrl(entry.pdbFilePath);
@@ -72,14 +76,22 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
   const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      const keysToShow = Object.keys(data).filter((key) => key !== "pdbFilePath");
+      const formattedData = { ...data };
+
+      if (formattedData.plddt !== undefined) {
+        formattedData.plddt = formattedData.plddt.toFixed(2);
+      }
+      if (formattedData.i_pae !== undefined) {
+        formattedData.i_pae = (-formattedData.i_pae).toFixed(2);
+      }
+      const keysToShow = Object.keys(data).filter((key) => key !== "pdbFilePath" && key !== "checkpoint");
 
       return (
         <div className="max-w-xs p-3 text-xs bg-white border rounded shadow-md">
           {keysToShow.map((key) => (
             <p className="flex gap-1" key={key}>
-              <span>{key}: </span>
-              <strong className="max-w-full truncate">{data[key]}</strong>
+              <span>{key === 'i_pae' ? '-i_pae' : key}: </span>
+              <strong className="max-w-full truncate">{formattedData[key]}</strong>
             </p>
           ))}
         </div>
@@ -88,11 +100,17 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
 
     return null;
   };
+
   if (!checkpoints?.length && !loading) {
     return (
       <div className="p-4 text-center text-muted-foreground">
-        <CircleDotDashedIcon size={32} className={cn(job.State === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
-        <p>No checkpoints found yet. If this model has checkpoints, they&apos;ll appear here as they are reached.</p>
+        <CircleDotDashedIcon size={32} className={cn(flowStatus === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
+        <p>
+          No checkpoints found yet. While waiting, check out a completed, public experiment.
+        </p>
+        <p>
+          <a href={process.env.NEXT_PUBLIC_DEMO_URL} className="font-bold hover:underline" target="_blank" rel="noopenner noreferrer">Results</a>
+        </p>
       </div>
     );
   }
@@ -112,32 +130,45 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs text-xs" side="bottom">
                       <p>
-                        <strong>plddt:</strong> larger value indicates higher confidence in the predicted local structure
+                        <strong>Stability Score:</strong> larger value indicates higher confidence in the predicted local structure
                       </p>
                       <p>
-                        <strong>i_pae:</strong> larger value indicates higher confidence in the predicted interface residue distance
+                        <strong>Affinity Score:</strong> larger value indicates higher confidence in the predicted interface residue distance
                       </p>
+                      <p><strong>Note:</strong> designs which lie within the green square are likely high quality</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
                 <ResponsiveContainer width="100%" aspect={4 / 3}>
                   <ScatterChart margin={{ right: 10, bottom: 20 }}>
                     <CartesianGrid />
-                    <XAxis type="number" dataKey="plddt" name="plddt" label={{ value: "plddt", position: "insideBottom", offset: -10, dx: 0 }} />
+                    <XAxis 
+                      type="number" 
+                      dataKey="plddt" 
+                      name="Stability Score (plddt)" 
+                      domain={[0, 100]}
+                      label={{ value: "Stability Score (plddt)", position: "insideBottom", offset: -10, dx: 0 }} />
                     <YAxis
                       type="number"
-                      dataKey="i_pae"
-                      name="i_pae"
-                      label={{ value: "i_pae", angle: -90, position: "insideLeft", dx: 15, dy: 15 }}
+                      dataKey={(data) => -data.i_pae} // Invert i_pae values
+                      name="Affinity Score (-i_pae)"
+                      domain={[-40, 0]}
+                      label={{ value: "Affinity Score (-i_pae)", angle: -90, position: "insideLeft", dx: 10, dy: 65 }}
                     />
                     {/* <Tooltip cursor={{ strokeDasharray: '3 3' }} /> */}
                     <RechartsTooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
-                    <Scatter name="Checkpoints" data={plotData} fill="hsl(var(--accent))" onClick={handlePointClick}>
+                    {/* plddt cutoff line */}
+                    <ReferenceLine x={80} stroke="black" strokeDasharray="3 3" />
+                    {/* -i_pae lower cutoff line */}
+                    <ReferenceLine y={-10} stroke="black" strokeDasharray="3 3" />
+                    {/* Color the top right quadrant */}
+                    <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} />
+                    <Scatter name="Checkpoints" data={plotData} fill="#000000" onClick={handlePointClick}>
                       {plotData?.map((entry: CheckpointChartData, index) => (
                         <Cell
                           key={`cell-${index}`}
                           strokeWidth={entry.pdbFilePath === activeCheckpointUrl ? 8 : 0}
-                          stroke="hsl(var(--primary))"
+                          stroke="#6BDBAD"
                           strokeOpacity={0.3}
                           paintOrder={"stroke"}
                         />
@@ -151,25 +182,6 @@ export default function MetricsVisualizer({ job }: { job: JobDetail }) {
         </div>
         {activeCheckpointUrl && <Molstar url={activeCheckpointUrl} />}
       </div>
-      {/* <div>
-        {checkpoints?.map((checkpoint: CheckpointData, index) => (
-          <div
-            key={index}
-            className={cn(
-              checkpoint.url === activeCheckpointUrl && "bg-primary/10",
-              "flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none"
-            )}
-            onClick={() => setActiveCheckpointUrl(checkpoint?.url)}
-          >
-            <div className="truncate">{checkpoint.fileName}</div>
-            <Button size="icon" variant="outline" asChild>
-              <a href={checkpoint.url} download target="_blank" rel="noopener noreferrer">
-                <DownloadIcon />
-              </a>
-            </Button>
-          </div>
-        ))}
-      </div> */}
     </>
   );
 }

@@ -1,0 +1,2 @@
+ALTER TABLE jobs
+DROP COLUMN public;

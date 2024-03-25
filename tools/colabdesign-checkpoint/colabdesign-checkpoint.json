@@ -1,16 +1,18 @@
 {
-  "name": "colabdesign gateway checkpoint v0.3",
+  "name": "colabdesign v0.8",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
+  "guide": "Follow these steps to use the tool effectively:\n\n1. Select a .pdb file containing the structure of the target you would like to design a binder against.\n2. Enter the length of the binder you want to design (total number of residues) and the number of binders to design. These two steps are already enough to prompt the tool and you are ready to submit your experimental run. In case you wish to give additional constraints for the designs, here are additional inputs you can give:\n3. Define hotspot residues on the target as the binding sites, stating the chain followed by the number of the residue. You can specify multiple hotspots at once.\n4. Crop the target structure by specifying start and end residues on the target chain, or selecting a different target chain from the pdb file altogether (chain A is the default).\n5. Define a contig that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",
   "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
   "paper": "https://www.nature.com/articles/s41586-023-06415-8",
   "task": "protein design",
   "taskCategory": "protein-binder-design",
+  "checkpointCompatible": true,
   "baseCommand": [
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign-checkpoint@sha256:05e8d9bf21e8c74245727834c34a66cabba057a746a5a45feb274315cd9b1397",
+  "dockerPull": "quay.io/labdao/colabdesign-checkpoint@sha256:5b7572b58f6c74d9d2ce4198af114770335704456fa6a3f25808a318229c11dd",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
@@ -45,21 +47,6 @@
       "grouping": "target",
       "position": "105",
       "required": false
-    },
-    "number_of_binders": {
-      "type": "number",
-      "description": "The number of protein binders to be designed",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "2",
-      "min": "1",
-      "max": "128",
-      "example": "2",
-      "grouping": "binder",
-      "position": "202",
-      "required": true
     },
     "target_chain": {
       "type": "string",

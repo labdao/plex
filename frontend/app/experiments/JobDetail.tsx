@@ -9,7 +9,7 @@ import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile } from "@/lib/redux";
+import { DataFile, ToolDetail } from "@/lib/redux";
 
 import LogViewer from "./LogViewer";
 import MetricsVisualizer from "./MetricsVisualizer";
@@ -30,12 +30,14 @@ export interface JobDetail {
   InputFiles: DataFile[];
   OutputFiles: DataFile[];
   Status: string;
+  Tool: ToolDetail;
 }
 
 export default function JobDetail({ jobID }: JobDetailProps) {
   const [job, setJob] = useState({} as JobDetail);
+  const [tool, setTool] = useState({} as ToolDetail);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("metrics");
+  const [activeTab, setActiveTab] = useState("");
 
   interface File {
     CID: string;
@@ -66,6 +68,20 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         const data = await response.json();
         console.log("Fetched job:", data);
         setJob(data);
+
+        const toolResponse = await fetch(`${backendUrl()}/tools/${data.ToolID}`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+
+        if (!toolResponse.ok) {
+          throw new Error(`HTTP error ${toolResponse.status}`);
+        }
+
+        const toolData = await toolResponse.json();
+        console.log("Fetched tool:", toolData);
+        setTool(toolData);
       } catch (error) {
         console.error("Error fetching job:", error);
       } finally {
@@ -83,18 +99,25 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     }
   }, [jobID, job.State]);
 
+  useEffect(() => {
+    if (activeTab === "" && tool?.ToolJson){
+      if (tool?.ToolJson?.checkpointCompatible) {
+        setActiveTab("metrics");
+      } else {
+        setActiveTab("logs");
+      }
+    }
+  }, [tool, activeTab]);
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
-        <TabsTrigger value="metrics">Metrics</TabsTrigger>
+        {/* {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>} */}
+        <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="parameters">Parameters</TabsTrigger>
         <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
-        <TabsTrigger value="logs">Logs</TabsTrigger>
       </TabsList>
-      <TabsContent value="metrics">
-        <MetricsVisualizer job={job} />
-      </TabsContent>
       <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">

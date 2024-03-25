@@ -5,6 +5,7 @@ export * from "./dataFileListSlice";
 export * from "./flowAddSlice";
 export * from "./flowDetailSlice";
 export * from "./flowListSlice";
+export * from "./flowUpdateSlice";
 export * from "./jobDetailSlice";
 export * from "./stripeCheckoutSlice";
 export * from "./toolAddSlice";

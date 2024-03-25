@@ -1,15 +1,18 @@
 {
     "class": "",
-    "name": "labsay checkpoint v0.5",
-    "description": "A simple hello world checkpoint feature test - this will desmonstrate a simulation of checkpoint creation with the checkpoint pdb files you upload",
+    "name": "labsay checkpoint v0.8",
+    "description": "A simple hello world checkpoint feature test - this will demonstrate a simulation of checkpoint creation with the checkpoint pdb files you upload",
+    "guide": "This is a guide on how to use the labsay checkpoint tool.\n\nFollow these steps to use the tool effectively:\n\n1. Select a .txt file that you want to use as input.\n2. Enter a string example that will be appended to the output result file.\n3. Enter a number example that will be multiplied by the length of the string example and added to the output result file.\n4. Upload a series of .pdb files which will be used as checkpoint data. These files will be displayed as checkpoints in the output.",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:ac203597f85185d3607b64b560a80b87e1a7068396a85fa9fbd2562ddd657186",
+    "dockerPull": "quay.io/labdao/labsay-checkpoint@sha256:5a21aaecaf5173a5db209d275b9e2f48064b8c516872c2502eca28943e22b221",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,
     "cpu": 0.8,
+    "taskCategory": "community-models",
+    "checkpointCompatible": true,
     "inputs": {
         "file_example": {
             "type": "file",

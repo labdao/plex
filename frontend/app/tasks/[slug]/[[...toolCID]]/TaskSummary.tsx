@@ -6,8 +6,11 @@ import { UseFormReturn } from "react-hook-form";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ToolDetail } from "@/lib/redux";
+
+import ModelInfo from "./ModelInfo";
 
 interface TaskSummaryProps {
   form: UseFormReturn<any>;
@@ -19,6 +22,7 @@ interface TaskSummaryProps {
       type: string;
     };
   } | null;
+  tool: ToolDetail;
 }
 
 type VariantSummaryItem = {
@@ -33,13 +37,11 @@ type OutputSummaryItem = {
   multiple: boolean;
 };
 
-export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
+export function TaskSummary({ sortedInputs, form, outputs, tool }: TaskSummaryProps) {
   const watchAllFields = form.watch();
 
   let variantSummaryInfo = { items: [] as VariantSummaryItem[], total: 1 };
   for (const [key, input] of sortedInputs) {
-    //If the field is required or has a value, we show it in the summary
-    //We don't show optional fields with no value
     if (watchAllFields?.[key]?.[0]?.value || input?.required) {
       const count = watchAllFields[key]?.length;
       variantSummaryInfo.items.push({
@@ -65,6 +67,10 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
       <Card>
         <TransactionSummaryInfo className="px-6 rounded-b-none" />
         <CardContent>
+          <CardTitle className="mb-4 uppercase">Description</CardTitle>
+          <ModelInfo tool={tool} />
+        </CardContent>
+        <CardContent>
           <div className="mb-4 font-mono text-sm font-bold uppercase">Variant Summary</div>
           <div className="mb-4 space-y-2 lowercase">
             {(variantSummaryInfo?.items || []).map((item: { name: string; variantCount: number }, index: number) => (
@@ -87,7 +93,6 @@ export function TaskSummary({ sortedInputs, form, outputs }: TaskSummaryProps) {
             {variantSummaryInfo?.total > 1 && "s"}
           </Button>
         </CardContent>
-
         {outputs && (
           <>
             <Separator className="my-2" />

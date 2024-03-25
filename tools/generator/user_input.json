@@ -1,5 +1,8 @@
 {
-    "sequence_input": "QVQxxQPGAELVKPGASVKMS ; SLSIQyCGSIRSVFLGVFAVMLIF",
-    "number_of_binders": 1,
-    "init_permissibility_vec": ""
+    "binder_protein_sequence": "MKKAVINGEQIRSISDLHQTLKKELALPEYYGENLDALWDALTGWxxxxLVLEWRQFEQSKQLTENGAESVLQVFREAKAEGADITIILS",
+    "target_protein_sequence": "MGSSHHHHHHSQAPIEGRAQVINTFDGVADYLQTYHKLPDNYITKSEAQALGWVASKGNLCDVAPGKSIGGDIFSNREGKLPGKSGRTWREADINYTCGFRNSDRILYSSDWLIYKTTDHYQTFTKIR",
+    "number_of_binders": 2,
+    "init_permissibility_vec": "",
+    "hotspots": "",
+    "high_fidelity": false
 }

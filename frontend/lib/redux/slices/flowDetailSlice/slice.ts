@@ -19,6 +19,7 @@ export interface FlowDetail {
   WalletAddress: string;
   StartTime: string;
   EndTime: string;
+  Public: boolean;
 }
 
 interface FlowDetailSliceState {
@@ -29,7 +30,7 @@ interface FlowDetailSliceState {
 }
 
 const initialState: FlowDetailSliceState = {
-  flow: { ID: null, CID: "", Jobs: [], Name: "", WalletAddress: "", StartTime: "", EndTime: "" },
+  flow: { ID: null, CID: "", Jobs: [], Name: "", WalletAddress: "", StartTime: "", EndTime: "", Public: false },
   loading: true,
   error: null,
   success: false,
@@ -51,9 +52,12 @@ export const flowDetailSlice = createSlice({
     setFlowDetailSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
+    setFlowDetailPublic: (state, action: PayloadAction<boolean>) => {
+      state.flow.Public = action.payload;
+    }
   },
 });
 
-export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailSuccess } = flowDetailSlice.actions;
+export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailPublic, setFlowDetailSuccess } = flowDetailSlice.actions;
 
 export default flowDetailSlice.reducer;

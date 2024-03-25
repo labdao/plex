@@ -96,3 +96,26 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func GetUserHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusInternalServerError)
+			return
+		}
+
+		response := struct {
+			WalletAddress string `json:"walletAddress"`
+			DID           string `json:"did"`
+			IsAdmin       bool   `json:"isAdmin"`
+		}{
+			WalletAddress: user.WalletAddress,
+			DID:           user.DID,
+			IsAdmin:       user.Admin,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
+}
