@@ -1,20 +1,19 @@
 "use client";
 
 import { BookOpenIcon, FileJsonIcon, FileLineChart, GithubIcon, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { ToolSelect } from "@/components/shared/ToolSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { AppDispatch, ToolDetail, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectToolDetail, selectToolDetailLoading, ToolDetail, toolDetailThunk } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import ModelGuide from "./ModelGuide";
 
 interface ModelInfoProps {
-  tool: ToolDetail;
   task?: {
     slug: string;
     name: string;
@@ -64,10 +63,18 @@ const renderDescriptionParagraphs = (text: string) => {
   }
 };
 
-export default function ModelInfo({ tool, task, defaultOpen, showSelect }: ModelInfoProps) {
-  const [open, setOpen] = useState(defaultOpen);
+export default function ModelInfo({ task, defaultOpen, showSelect }: ModelInfoProps) {
+  const [open, setOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
+  const tool = useSelector(selectToolDetail);
+  const toolDetailLoading = useSelector(selectToolDetailLoading);
   const { description, github, paper, outputs } = tool.ToolJson;
+
+  useEffect(() => {
+    if (!toolDetailLoading) {
+      setOpen(Boolean(defaultOpen));
+    }
+  }, [toolDetailLoading, defaultOpen]);
 
   const handleToolChange = (value: any) => {
     dispatch(toolDetailThunk(value));

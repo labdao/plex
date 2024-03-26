@@ -58,17 +58,6 @@ export function ExperimentSummary({ sortedInputs, form, showVariants }: Experime
           </div>
         </>
       )}
-      <Button type="submit" form="task-form" className="flex-wrap w-full h-auto">
-        Submit{" "}
-        {showVariants ? (
-          <>
-            <Badge className="mx-1 bg-black/10">{variantSummaryInfo?.total || 1}</Badge> Experimental Run
-            {variantSummaryInfo?.total > 1 && "s"}
-          </>
-        ) : (
-          <>Experiment</>
-        )}
-      </Button>
     </div>
   );
 }
