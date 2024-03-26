@@ -19,7 +19,7 @@ declare global {
 }
 
 interface MolstarProps {
-  url: string;
+  url?: string;
   showControls?: boolean;
   isExpanded?: boolean;
   className?: string;

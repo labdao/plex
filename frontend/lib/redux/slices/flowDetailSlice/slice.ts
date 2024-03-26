@@ -1,20 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { ToolDetail } from "@/lib/redux";
-
-export interface Job {
-  ID: number;
-  BacalhauJobID: string;
-  State: string;
-  Error: string;
-  Tool: ToolDetail;
-  FlowId: string;
-}
+import { JobDetail, ToolDetail } from "@/lib/redux";
 
 export interface FlowDetail {
   ID: number | null;
   CID: string;
-  Jobs: Job[];
+  Jobs: JobDetail[];
   Name: string;
   WalletAddress: string;
   StartTime: string;

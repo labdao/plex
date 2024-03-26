@@ -36,7 +36,6 @@ export function transformJson(tool: any, originalJson: any, walletAddress: strin
 
   const kwargs = Object.fromEntries(
     Object.entries(dynamicKeys).map(([key, valueArray]) => {
-      console.log(valueArray);
       // Check if the 'array' property for this key is true
       // @ts-ignore
       if (toolJsonInputs[key] && toolJsonInputs[key]["array"]) {

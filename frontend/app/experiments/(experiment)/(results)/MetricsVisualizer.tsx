@@ -2,7 +2,7 @@
 
 import backendUrl from "lib/backendUrl";
 import { CircleDotDashedIcon, DownloadIcon, HelpCircleIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -16,14 +16,12 @@ import {
   YAxis,
 } from "recharts";
 
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
-import { FlowDetail, ToolDetail } from "@/lib/redux";
-import { cn } from "@/lib/utils";
+import { FlowDetail } from "@/lib/redux";
 
-import { aggregateJobStatus } from "./ExperimentStatus";
-import { JobDetail } from "./JobDetail";
+import { aggregateJobStatus } from "../ExperimentStatus";
+import { ActiveResultContext } from "./ActiveResultContext";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -39,6 +37,7 @@ interface CheckpointChartData {
   dim1: number;
   dim2: number;
   pdbFilePath: string;
+  jobUUID: string;
 }
 
 interface CheckpointData {
@@ -50,7 +49,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
-  const [activeCheckpointUrl, setActiveCheckpointUrl] = useState("");
+  const { activeCheckpointUrl, setActiveCheckpointUrl, activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
 
   const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
 
@@ -65,7 +64,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
-        if (activeCheckpointUrl === "") {
+        if (!activeCheckpointUrl) {
           setActiveCheckpointUrl(checkpointData?.[0]?.url);
         }
       } catch (error) {
@@ -82,6 +81,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
 
   const handlePointClick = (entry: CheckpointChartData) => {
     setActiveCheckpointUrl(entry.pdbFilePath);
+    setActiveJobUUID(entry.jobUUID);
   };
 
   const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
@@ -112,21 +112,16 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     return null;
   };
 
-  //if (!checkpoints?.length && !loading) {
-  //  return (
-  //    <div className="p-4 text-center text-muted-foreground">
-  //      <CircleDotDashedIcon size={32} className={cn(flowStatus === "running" && "animate-spin", "mx-auto my-4")} absoluteStrokeWidth />
-  //      <p>
-  //        No checkpoints found yet. While waiting, check out a completed, public experiment.
-  //      </p>
-  //      <p>
-  //        <a href={process.env.NEXT_PUBLIC_DEMO_URL} className="font-bold hover:underline" target="_blank" rel="noopenner noreferrer">Results</a>
-  //      </p>
-  //    </div>
-  //  );
-  //}
   return (
-    <>
+    <div className="relative">
+      {!checkpoints?.length && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
+          <div>
+            <p>Checkpoints will appear here as they complete.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2">
         <div>
           <div>
@@ -176,7 +171,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                   <ReferenceLine y={-10} stroke="black" strokeDasharray="3 3" />
                   {/* Color the top right quadrant */}
                   <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} />
-                  <Scatter name="Checkpoints" data={plotData} fill="#000000" onClick={handlePointClick}>
+                  <Scatter name="Checkpoints" data={plotData} onClick={handlePointClick}>
                     {plotData?.map((entry: CheckpointChartData, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -184,6 +179,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                         stroke="#6BDBAD"
                         strokeOpacity={0.3}
                         paintOrder={"stroke"}
+                        fill={entry.jobUUID === activeJobUUID ? "#000000" : "#959595"}
                       />
                     ))}
                   </Scatter>
@@ -194,6 +190,6 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         </div>
         <Molstar url={activeCheckpointUrl} />
       </div>
-    </>
+    </div>
   );
 }

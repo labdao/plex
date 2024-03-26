@@ -11,7 +11,7 @@ import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo"
 import { AppDispatch, flowDetailThunk, resetFlowDetail, selectFlowDetail, selectToolDetail } from "@/lib/redux";
 
 import NewExperimentForm from "../../../(forms)/NewExperimentForm";
-import ExperimentResults from "../../../ExperimentResults";
+import ExperimentResults from "../../../(results)/ExperimentResults";
 import ModelInfo from "../../../ModelInfo";
 
 type NewExperimentProps = {

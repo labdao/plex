@@ -3,14 +3,11 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BadgeCheck, Dna, Share2 } from "lucide-react";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
-import { PageLoader } from "@/components/shared/PageLoader";
 import { TruncatedString } from "@/components/shared/TruncatedString";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,9 +27,7 @@ import {
 import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
 import ExperimentShare from "./ExperimentShare";
-import { aggregateJobStatus, ExperimentStatus } from "./ExperimentStatus";
-import JobDetail from "./JobDetail";
-import MetricsVisualizer from "./MetricsVisualizer";
+import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
 
 dayjs.extend(relativeTime);
 
@@ -81,7 +76,7 @@ export default function ExperimentDetail() {
     }
   }, [dispatch, experimentID, status]);
 
-  return (
+  return flow.Name ? (
     <div>
       <>
         <Card>
@@ -145,14 +140,14 @@ export default function ExperimentDetail() {
                 */}
               <div>
                 <strong>Model: </strong>
-                <Button size="xs" variant="outline">
+                <Badge variant="outline" className="text-sm border-primary">
                   {flow.Jobs?.[0]?.Tool?.Name}
-                </Button>
+                </Badge>
               </div>
             </div>
           </CardContent>
         </Card>
       </>
     </div>
-  );
+  ) : null;
 }

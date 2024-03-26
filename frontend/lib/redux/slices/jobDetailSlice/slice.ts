@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { DataFile } from "../dataFileListSlice/slice";
+import { ToolDetail } from "../..";
 
 export interface JobDetail {
   ID: number | null;
@@ -12,6 +13,9 @@ export interface JobDetail {
   InputFiles: DataFile[];
   OutputFiles: DataFile[];
   Status: string;
+  JobUUID: string;
+  Tool: any;
+  Inputs: any;
 }
 
 export interface JobDetailSliceState {
@@ -22,7 +26,20 @@ export interface JobDetailSliceState {
 }
 
 const initialState: JobDetailSliceState = {
-  job: { ID: null, BacalhauJobID: "", State: "", Error: "", ToolID: "", FlowID: "", InputFiles: [], OutputFiles: [], Status: "unknown" },
+  job: {
+    ID: null,
+    BacalhauJobID: "",
+    State: "",
+    Error: "",
+    ToolID: "",
+    FlowID: "",
+    InputFiles: [],
+    OutputFiles: [],
+    Status: "unknown",
+    JobUUID: "",
+    Tool: {},
+    Inputs: {},
+  },
   loading: false,
   error: null,
   success: false,

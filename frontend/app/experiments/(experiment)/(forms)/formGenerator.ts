@@ -43,6 +43,7 @@ const inputsToSchema = (inputs: InputType) => {
   return schema;
 };
 
+// Take the default values indicated on a tool and format them for the form
 const inputsToDefaultValues = (inputs: InputType) => {
   const defaultValues: { [key: string]: { value: string | number }[] } = {};
   for (var key in inputs) {
@@ -50,6 +51,16 @@ const inputsToDefaultValues = (inputs: InputType) => {
     defaultValues[key] = [{ value: input.default }];
   }
   return defaultValues;
+};
+
+// Take the inputs from a flow job and format them for the form
+const inputsToValues = (inputs: InputType) => {
+  const values: { [key: string]: { value: string | number }[] } = {};
+  for (var key in inputs) {
+    const input = inputs[key];
+    values[key] = [{ value: input }];
+  }
+  return values;
 };
 
 export function generateSchema(inputs: InputType) {
@@ -60,10 +71,22 @@ export function generateSchema(inputs: InputType) {
   });
 }
 
+export function generateRerunSchema(inputs: InputType) {
+  return z.object({
+    ...inputsToSchema(inputs),
+  });
+}
+
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, tool: ToolDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
     tool: tool?.CID,
     ...inputsToDefaultValues(inputs),
+  };
+}
+
+export function generateValues(inputs: InputType) {
+  return {
+    ...inputsToValues(inputs),
   };
 }
