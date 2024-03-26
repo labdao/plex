@@ -14,7 +14,7 @@ interface JobsAccordionProps {
 }
 
 export default function JobsAccordion({ flow }: JobsAccordionProps) {
-  const { activeJobUUID, setActiveJobUUID, setActiveCheckpointUrl } = useContext(ActiveResultContext);
+  const { activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
   useEffect(() => {
     if (!activeJobUUID) {
       setActiveJobUUID(flow.Jobs?.[0]?.JobUUID);
@@ -33,9 +33,7 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
               <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                 <div className="flex items-center gap-2">
                   <div className="w-30">
-                    <div>
-                      run {index + 1} {job.JobUUID}
-                    </div>
+                    <div>run {index + 1}</div>
                     <div className="flex gap-1 text-xs text-muted-foreground/70">
                       Job ID: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
                     </div>
