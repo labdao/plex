@@ -14,6 +14,7 @@ import ExperimentDetail from "./ExperimentDetail";
 import ExperimentForm from "./ExperimentForm";
 import ExperimentResults from "./ExperimentResults";
 import ModelInfo from "./ModelInfo";
+
 type LayoutProps = {
   children: ReactNode;
   list: any;
@@ -52,15 +53,19 @@ export default function Layout({ children }: LayoutProps) {
     dispatch(resetFlowDetail());
   }
 
-  if (task?.name) {
-    breadcrumbItems.push({ name: task.name, href: `/experiments/${task.slug}` });
-  }
-
   if (isNew) {
     breadcrumbItems.push({
       name: "New",
       href: "",
     });
+  }
+
+  if (task?.name) {
+    breadcrumbItems.push({ name: task.name, href: `/experiments/new/${task.slug}` });
+  }
+
+  if (flow?.Name) {
+    breadcrumbItems.push({ name: flow.Name, href: "" });
   }
 
   return activeTool ? (

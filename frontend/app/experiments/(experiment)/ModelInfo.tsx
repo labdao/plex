@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { AppDispatch, ToolDetail, toolDetailThunk } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
-import TaskGuide from "./ModelGuide";
+import ModelGuide from "./ModelGuide";
 
 interface ModelInfoProps {
   tool: ToolDetail;
@@ -104,6 +104,7 @@ export default function ModelInfo({ tool, task, defaultOpen, showSelect }: Model
               {tool.ToolJson?.author || "unknown"}/{tool.ToolJson?.name}
             </div>
           )}
+          {tool.ToolJson?.guide && <ModelGuide tool={tool} />}
           <div>{renderDescriptionParagraphs(description)}</div>
           <div className="flex flex-wrap gap-2 mt-4">
             <Button asChild variant="outline" size="xs">
@@ -149,7 +150,6 @@ export default function ModelInfo({ tool, task, defaultOpen, showSelect }: Model
             </div>
           </CardContent>
               )*/}
-        {tool.ToolJson?.guide && <TaskGuide tool={tool} />}
       </div>
     </Card>
   );
