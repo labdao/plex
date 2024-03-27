@@ -416,3 +416,98 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
+
+// Parse the flow ID from the request URL
+// Decode the incoming JSON payload into a Job struct
+// Fetch the flow with the given ID from the database
+// Check if the flow exists; if not, return an error response
+// Append the new Job to the flow's Jobs slice
+// Serialize the updated flow including all jobs to JSON
+// Pin the updated flow JSON to IPFS and get a new CID
+// Update the flow's record in the database with the new CID
+// Submit the new job to Bacalhau (if required at this stage)
+// Respond to the request with the updated flow information or an appropriate error message
+// func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		if r.Method != http.MethodPost {
+// 			utils.SendJSONError(w, "Only POST method is supported", http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+// 		if !ok {
+// 			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+// 			return
+// 		}
+
+// 		params := mux.Vars(r)
+// 		flowID, err := strconv.Atoi(params["flowID"])
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+// 			return
+// 		}
+
+// 		var flow models.Flow
+// 		if result := db.Preload("Jobs").Where("id = ?", flowID).First(&flow); result.Error != nil {
+// 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+// 				http.Error(w, "Flow not found", http.StatusNotFound)
+// 			} else {
+// 				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+// 			}
+// 			return
+// 		}
+
+// 		if flow.WalletAddress != user.WalletAddress {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			return
+// 		}
+
+// 		body, err := ioutil.ReadAll(r.Body)
+// 		if err != nil {
+// 			http.Error(w, "Bad request", http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		var job models.Job
+// 		if err := json.Unmarshal(body, &job); err != nil {
+// 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		job.FlowID = flow.ID
+// 		job.WalletAddress = user.WalletAddress
+// 		job.CreatedAt = time.Now()
+
+//         // Add the new job to the flow
+//         flow.Jobs = append(flow.Jobs, job)
+
+//         // Generate a new CID for the updated flow
+//         flowJSON, err := json.Marshal(flow)
+//         if err != nil {
+//             http.Error(w, fmt.Sprintf("Error encoding Flow to JSON: %v", err), http.StatusInternalServerError)
+//             return
+//         }
+//         cid, err := utils.PinToIPFS(flowJSON)
+//         if err != nil {
+//             http.Error(w, fmt.Sprintf("Error pinning Flow to IPFS: %v", err), http.StatusInternalServerError)
+//             return
+//         }
+
+//         // Save the updated flow to the database
+//         if result := db.Save(&flow); result.Error != nil {
+//             http.Error(w, fmt.Sprintf("Error saving Flow: %v", result.Error), http.StatusInternalServerError)
+//             return
+//         }
+
+// 		if result := db.Create(&job); result.Error != nil {
+// 			http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		w.Header().Set("Content-Type", "application/json")
+// 		if err := json.NewEncoder(w).Encode(job); err != nil {
+// 			http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
+// 			return
+// 		}
+// 	}
+// }

@@ -136,6 +136,8 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
                 </div>
               </div>
             </CardContent>
+            {/* <CardContent */}
+
             <CardContent className="border-t bg-muted/30 border-border/50">
               <div className="pl-5 space-y-2 font-mono text-sm uppercase">
                 <div>
