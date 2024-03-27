@@ -1,8 +1,8 @@
 # Nvidia
-- name: Add Nvidia Keyring
-  become: true
-  ansible.builtin.apt:
-    deb: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.1-1_all.deb
+# - name: Add Nvidia Keyring
+#   become: true
+#   ansible.builtin.apt:
+#     deb: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.1-1_all.deb
 
 - name: Get Nvidia Container Tookit GPG key
   become: true
