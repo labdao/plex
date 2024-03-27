@@ -17,12 +17,12 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
   const { activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
   useEffect(() => {
     if (!activeJobUUID) {
-      setActiveJobUUID(flow.Jobs?.[0]?.JobUUID);
+      setActiveJobUUID(flow.Jobs?.[flow.Jobs?.length - 1]?.JobUUID);
     }
   }, [flow.Jobs]);
 
   return (
-    <Accordion type="single" value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[800px]">
+    <Accordion type="single" defaultValue={activeJobUUID} value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[600px]">
       {flow.Jobs?.map((job, index) => {
         const validStates = ["queued", "running", "failed", "completed"];
         const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";

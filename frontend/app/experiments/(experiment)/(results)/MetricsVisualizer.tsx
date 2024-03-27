@@ -83,7 +83,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   useEffect(() => {
     if (plotData?.length > 0) {
       if (!activeCheckpointUrl) {
-        setActiveCheckpointUrl((plotData?.[0] as CheckpointChartData)?.pdbFilePath);
+        setActiveCheckpointUrl((plotData?.[plotData?.length - 1] as CheckpointChartData)?.pdbFilePath);
       }
     } else {
       setActiveCheckpointUrl(undefined);
@@ -126,7 +126,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   return (
     <div className="relative">
       {!plotData?.length && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
           <div>
             <p>Checkpoints will appear here as they complete.</p>
           </div>
