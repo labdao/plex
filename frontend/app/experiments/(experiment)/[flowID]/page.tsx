@@ -50,18 +50,18 @@ export default function Layout({ params }: ExperimentDetailProps) {
     breadcrumbItems.push({ name: flow.Name, href: "" });
   }
 
-  return (
+  return flowID ? (
     <>
       <Breadcrumbs items={breadcrumbItems} />
       <TransactionSummaryInfo className="px-4 rounded-b-none" />
       <div className="flex flex-col-reverse min-h-screen lg:flex-row">
         <div className="p-2 space-y-3 shrink-0 grow basis-2/3">
           <ExperimentDetail />
-          <RerunExperimentForm key={flow?.CID} />
+          <RerunExperimentForm key={flow.ID} />
           <ExperimentResults />
         </div>
         <ModelInfo task={task} defaultOpen={false} />
       </div>
     </>
-  );
+  ) : null;
 }

@@ -39,7 +39,7 @@ export default function ExperimentDetail() {
   return (
     <div>
       <ActiveResultContextProvider>
-        {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer flow={flow} />}
+        {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer flow={flow} key={flow.ID} />}
         <JobsAccordion flow={flow} />
       </ActiveResultContextProvider>
     </div>

@@ -57,16 +57,15 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
-        const checkpointData = await checkpointResponse.json();
-        setCheckpoints(checkpointData);
+        // Currently unused
+        //const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
+        //const checkpointData = await checkpointResponse.json();
+        //setCheckpoints(checkpointData);
 
         const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
-        if (!activeCheckpointUrl) {
-          setActiveCheckpointUrl(checkpointData?.[0]?.url);
-        }
+        console.log(plotData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -75,9 +74,21 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     };
     if (flow.ID) {
       fetchData();
+    } else {
+      setPlotData([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flow]);
+
+  useEffect(() => {
+    if (plotData?.length > 0) {
+      if (!activeCheckpointUrl) {
+        setActiveCheckpointUrl((plotData?.[0] as CheckpointChartData)?.pdbFilePath);
+      }
+    } else {
+      setActiveCheckpointUrl(undefined);
+    }
+  }, [plotData]);
 
   const handlePointClick = (entry: CheckpointChartData) => {
     setActiveCheckpointUrl(entry.pdbFilePath);
@@ -114,7 +125,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
 
   return (
     <div className="relative">
-      {!checkpoints?.length && (
+      {!plotData?.length && (
         <div className="absolute inset-0 z-10 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
           <div>
             <p>Checkpoints will appear here as they complete.</p>
@@ -172,16 +183,19 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                   {/* Color the top right quadrant */}
                   <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} />
                   <Scatter name="Checkpoints" data={plotData} onClick={handlePointClick}>
-                    {plotData?.map((entry: CheckpointChartData, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        strokeWidth={entry.pdbFilePath === activeCheckpointUrl ? 8 : 0}
-                        stroke="#6BDBAD"
-                        strokeOpacity={0.3}
-                        paintOrder={"stroke"}
-                        fill={entry.jobUUID === activeJobUUID ? "#000000" : "#959595"}
-                      />
-                    ))}
+                    {plotData?.map((entry: CheckpointChartData, index) => {
+                      console.log(entry.pdbFilePath, activeCheckpointUrl);
+                      return (
+                        <Cell
+                          key={`cell-${index}-${activeCheckpointUrl}`}
+                          strokeWidth={entry.pdbFilePath === activeCheckpointUrl ? 8 : 0}
+                          stroke="#6BDBAD"
+                          strokeOpacity={0.3}
+                          paintOrder={"stroke"}
+                          fill={entry.jobUUID === activeJobUUID ? "#000000" : "#959595"}
+                        />
+                      );
+                    })}
                   </Scatter>
                 </ScatterChart>
               </ResponsiveContainer>

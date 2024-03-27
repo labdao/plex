@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/experiments/protein-binder-design",
+        destination: "/experiments/new/protein-binder-design",
         permanent: false,
       },
       {

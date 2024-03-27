@@ -57,15 +57,19 @@ const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => 
         PluginCommands.Canvas3D.SetSettings(window.molstar, {
           settings: { renderer: { ...renderer, backgroundColor: 0xf9fafb as Color } },
         });
-
-        const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });
-        const trajectory = await window.molstar.builders.structure.parseTrajectory(data, "pdb");
-        await window.molstar.builders.structure.hierarchy.applyPreset(trajectory, "default");
+        if (url) {
+          const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });
+          const trajectory = await window.molstar.builders.structure.parseTrajectory(data, "pdb");
+          await window.molstar.builders.structure.hierarchy.applyPreset(trajectory, "default");
+        } else {
+          window.molstar.clear();
+        }
       } catch (error) {
         console.error("Error initializing Molstar:", error);
       }
     }
     init();
+
     return () => {
       window.molstar?.dispose();
       window.molstar = undefined;
