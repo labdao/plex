@@ -65,7 +65,6 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
-        console.log(plotData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -136,7 +135,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
       <div className="grid grid-cols-2">
         <div>
           <div>
-            <div className="p-4 ">
+            <div className="p-4 select-none">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

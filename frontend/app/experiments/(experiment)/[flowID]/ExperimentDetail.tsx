@@ -75,7 +75,11 @@ export default function ExperimentDetail() {
             <div className="flex items-center justify-between">
               <div className="flex grow">
                 <ExperimentStatus jobs={flow.Jobs} className="mr-1 mt-3.5" />
-                <ExperimentRenameForm initialName={flow.Name} inputProps={{ variant: "subtle", className: "text-xl shrink-0 font-heading w-full" }} />
+                <ExperimentRenameForm
+                  initialName={flow.Name}
+                  key={flow.Name}
+                  inputProps={{ variant: "subtle", className: "text-xl shrink-0 font-heading w-full" }}
+                />
               </div>
               <div className="flex justify-end space-x-2 ">
                 {userWalletAddress === flow.WalletAddress && (
