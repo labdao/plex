@@ -33,3 +33,12 @@
 - name: Ensure Nvidia persitence daemon is started
   ansible.builtin.systemd:
     name: nvidia-persistenced
+
+
+- name: Enable debug by uncommenting debug line in nvidia container runtime config
+  ansible.builtin.replace:
+    path: /etc/nvidia-container-runtime/config.toml
+    regexp: '^\s*#*\s*(debug.*)'
+    replace: '\1'
+  notify:
+    - Restart docker
