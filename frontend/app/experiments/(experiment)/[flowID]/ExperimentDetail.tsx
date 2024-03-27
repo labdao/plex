@@ -65,17 +65,6 @@ export default function ExperimentDetail() {
 
   const isButtonDisabled = updateLoading || isDelaying;
 
-  useEffect(() => {
-    if (["running", "queued"].includes(status.status) && experimentID) {
-      const interval = setInterval(() => {
-        console.log("Checking for new results");
-        dispatch(flowDetailThunk(experimentID));
-      }, 15000);
-
-      return () => clearInterval(interval);
-    }
-  }, [dispatch, experimentID, status]);
-
   return flow.Name ? (
     <div>
       <>

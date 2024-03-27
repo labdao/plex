@@ -8,7 +8,6 @@ import { createPluginUI } from "molstar/lib/mol-plugin-ui";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { renderReact18 } from "molstar/lib/mol-plugin-ui/react18";
 import { DefaultPluginUISpec, PluginUISpec } from "molstar/lib/mol-plugin-ui/spec";
-import { ColorNames } from "molstar/lib/mol-util/color/names";
 import { createRef, useEffect } from "react";
 import { Color } from "molstar/lib/mol-util/color";
 
@@ -25,7 +24,7 @@ interface MolstarProps {
   className?: string;
 }
 
-const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => {
+const Molstar = ({ url, isExpanded, showControls, className }: MolstarProps) => {
   const parent = createRef<HTMLDivElement>();
 
   // In debug mode of react's strict mode, this code will
@@ -47,6 +46,7 @@ const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => 
     };
     async function init() {
       try {
+        console.log("Initializing Molstar...");
         window.molstar = await createPluginUI({
           target: parent.current as HTMLDivElement,
           spec: MySpec,
@@ -57,24 +57,40 @@ const Molstar = ({ url, showControls, isExpanded, className }: MolstarProps) => 
         PluginCommands.Canvas3D.SetSettings(window.molstar, {
           settings: { renderer: { ...renderer, backgroundColor: 0xf9fafb as Color } },
         });
-        if (url) {
-          const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });
-          const trajectory = await window.molstar.builders.structure.parseTrajectory(data, "pdb");
-          await window.molstar.builders.structure.hierarchy.applyPreset(trajectory, "default");
-        } else {
-          window.molstar.clear();
-        }
       } catch (error) {
         console.error("Error initializing Molstar:", error);
       }
     }
-    init();
 
+    async function update() {
+      try {
+        console.log("Updating Molstar...");
+        if (window.molstar) {
+          window.molstar.clear();
+          if (url) {
+            const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });
+            const trajectory = await window.molstar.builders.structure.parseTrajectory(data, "pdb");
+            await window.molstar.builders.structure.hierarchy.applyPreset(trajectory, "default");
+          }
+        }
+      } catch (error) {
+        console.error("Error updating Molstar:", error);
+      }
+    }
+    if (!window.molstar) {
+      init();
+      update();
+    } else {
+      update();
+    }
+  }, [url]);
+
+  useEffect(() => {
     return () => {
       window.molstar?.dispose();
       window.molstar = undefined;
     };
-  }, [isExpanded, parent, showControls, url]);
+  }, []);
 
   return <div ref={parent} style={{ position: "relative" }} className={className || ""} />;
 };

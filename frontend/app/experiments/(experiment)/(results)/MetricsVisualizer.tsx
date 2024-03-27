@@ -184,7 +184,6 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                   <ReferenceArea x1={80} y1={-10} strokeOpacity={0.3} fill="#6BDBAD" fillOpacity={0.3} />
                   <Scatter name="Checkpoints" data={plotData} onClick={handlePointClick}>
                     {plotData?.map((entry: CheckpointChartData, index) => {
-                      console.log(entry.pdbFilePath, activeCheckpointUrl);
                       return (
                         <Cell
                           key={`cell-${index}-${activeCheckpointUrl}`}
