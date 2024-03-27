@@ -12,24 +12,24 @@
 - name: Add Nvidia Container Tookit Repository
   become: true
   ansible.builtin.apt_repository:
-    repo: deb https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/$(ARCH) /
+    repo: deb https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /
     state: present
 
-- name: Install required system packages for gpu build
+- name: Install nvidia toolkit
   become: true
   ansible.builtin.apt:
-    pkg:
-      - cuda-drivers
+    pkg: nvidia-container-toolkit
     update_cache: true
-
-- name: Install Nvidia Container Tookit
-  become: true
-  ansible.builtin.apt:
-    pkg:
-      - nvidia-docker2
-  notify:
-    - Restart docker
 
 - name: Ensure Nvidia persitence daemon is started
   ansible.builtin.systemd:
     name: nvidia-persistenced
+
+- name: Enable debug by uncommenting debug line in nvidia container runtime config
+  ansible.builtin.replace:
+    path: /etc/nvidia-container-runtime/config.toml
+    regexp: '^\s*#*\s*(debug.*)'
+    replace: '\1'
+  notify:
+    - Restart docker
+
