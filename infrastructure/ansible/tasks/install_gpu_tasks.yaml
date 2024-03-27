@@ -1,9 +1,21 @@
-# Nvidia
-# - name: Add Nvidia Keyring
-#   become: true
-#   ansible.builtin.apt:
-#     deb: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.1-1_all.deb
+# CUDA Toolkit installation #
+- name: Add Nvidia Keyring
+  become: true
+  ansible.builtin.apt:
+    deb: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu{{ ansible_distribution_version | replace('.', '') }}/x86_64/cuda-keyring_1.1-1_all.deb"
 
+- name: Cuda toolkit install
+  become: true
+  ansible.builtin.apt:
+    pkg: cuda-toolkit
+    update_cache: true
+
+- name: Cuda Driver install
+  become: true
+  ansible.builtin.apt:
+    pkg: cuda-drivers
+
+# Nvidia container toolkit #
 - name: Get Nvidia Container Tookit GPG key
   become: true
   ansible.builtin.apt_key:
@@ -34,4 +46,3 @@
     replace: '\1'
   notify:
     - Restart docker
-
