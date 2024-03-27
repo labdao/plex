@@ -1,13 +1,22 @@
 "use client";
 
 import backendUrl from "lib/backendUrl";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const LogViewer = ({ bacalhauJobID }: { bacalhauJobID: string }) => {
   const [logs, setLogs] = useState("");
+  const scrollContentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (scrollContentRef.current) {
+      scrollContentRef.current.scrollIntoView({
+        behavior: "smooth",
+      });
+    }
+  }, [logs]);
 
   useEffect(() => {
     if (bacalhauJobID) {
@@ -46,6 +55,7 @@ const LogViewer = ({ bacalhauJobID }: { bacalhauJobID: string }) => {
       <CopyToClipboard string={logs} className="absolute z-10 right-6 bg-background" />
       <ScrollArea className="w-full h-56 min-w-0 ">
         <pre className="p-6 font-mono text-xs">{logs}</pre>
+        <div ref={scrollContentRef} />
         <ScrollBar orientation="vertical" />
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
