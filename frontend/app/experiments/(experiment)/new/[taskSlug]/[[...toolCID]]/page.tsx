@@ -10,9 +10,10 @@ import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
 import { AppDispatch, flowDetailThunk, resetFlowDetail, selectFlowDetail, selectToolDetail } from "@/lib/redux";
 
-import NewExperimentForm from "../../../(forms)/NewExperimentForm";
-import ExperimentResults from "../../../(results)/ExperimentResults";
-import ModelInfo from "../../../ModelInfo";
+import NewExperimentForm from "@/app/experiments/(experiment)/(forms)/NewExperimentForm";
+import ExperimentResults from "@/app/experiments/(experiment)/(results)/ExperimentResults";
+import ModelInfo from "@/app/experiments/(experiment)/ModelInfo";
+import PoweredByLogo from "@/components/global/PoweredByLogo";
 
 type NewExperimentProps = {
   params: { taskSlug: string };
@@ -46,14 +47,15 @@ export default function NewExperiment({ params }: NewExperimentProps) {
 
   return (
     <>
-      <Breadcrumbs items={breadcrumbItems} />
       <ProtectedComponent method="hide" message="Log in to run an experiment">
+        <Breadcrumbs items={breadcrumbItems} />
         <div>
           <TransactionSummaryInfo className="px-4 rounded-b-none" />
           <div className="flex flex-col-reverse min-h-screen lg:flex-row">
             <div className="p-2 space-y-3 shrink-0 grow basis-2/3">
               <NewExperimentForm task={task} />
               <ExperimentResults />
+              <PoweredByLogo />
             </div>
             <ModelInfo task={task} defaultOpen showSelect />
           </div>

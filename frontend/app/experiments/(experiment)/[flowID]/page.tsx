@@ -15,6 +15,7 @@ import RerunExperimentForm from "../(forms)/RerunExperimentForm";
 import ExperimentDetail from "./ExperimentDetail";
 import ExperimentResults from "../(results)/ExperimentResults";
 import ModelInfo from "../ModelInfo";
+import PoweredByLogo from "@/components/global/PoweredByLogo";
 
 type ExperimentDetailProps = {
   params: { flowID: string };
@@ -52,16 +53,19 @@ export default function Layout({ params }: ExperimentDetailProps) {
 
   return flowID ? (
     <>
-      <Breadcrumbs items={breadcrumbItems} />
-      <TransactionSummaryInfo className="px-4 rounded-b-none" />
-      <div className="flex flex-col-reverse min-h-screen lg:flex-row">
-        <div className="p-2 space-y-3 shrink-0 grow basis-2/3">
-          <ExperimentDetail />
-          <RerunExperimentForm key={flow.ID} />
-          <ExperimentResults />
+      <ProtectedComponent method="hide" message="Log in to continue">
+        <Breadcrumbs items={breadcrumbItems} />
+        <TransactionSummaryInfo className="px-4 rounded-b-none" />
+        <div className="flex flex-col-reverse min-h-screen lg:flex-row">
+          <div className="p-2 space-y-3 shrink-0 grow basis-2/3">
+            <ExperimentDetail />
+            <RerunExperimentForm key={flow.ID} />
+            <ExperimentResults />
+            <PoweredByLogo />
+          </div>
+          <ModelInfo task={task} defaultOpen={false} />
         </div>
-        <ModelInfo task={task} defaultOpen={false} />
-      </div>
+      </ProtectedComponent>
     </>
   ) : null;
 }

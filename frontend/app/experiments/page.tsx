@@ -72,18 +72,7 @@ export default function ListExperiments() {
 
   return (
     <div className="relative flex flex-col h-screen grow">
-      <Breadcrumbs
-        items={[{ name: "Experiments", href: "/experiments" }]}
-        actions={
-          <div>
-            <Link href="/tasks/protein-binder-design" passHref>
-              <Button size="sm">
-                <PlusIcon /> Run Experiment
-              </Button>
-            </Link>
-          </div>
-        }
-      />
+      <Breadcrumbs items={[{ name: "Experiments", href: "/experiments" }]} />
       <ProtectedComponent method="hide" message="Log in to view your experiments">
         <ScrollArea className="w-full bg-white grow">
           <DataTable columns={columns} data={flows} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />

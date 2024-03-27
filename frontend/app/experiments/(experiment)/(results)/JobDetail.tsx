@@ -134,9 +134,8 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
   );
 }
 
-function InputList({ userInputs, tool }: { userInputs: {}; tool: ToolDetail }) {
+function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; tool: ToolDetail }) {
   const groupedInputs = groupInputs(tool.ToolJson.inputs);
-  console.log(groupedInputs);
   return userInputs ? (
     <>
       {!!groupedInputs?.standard && (

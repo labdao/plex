@@ -28,6 +28,7 @@ import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
 import ExperimentShare from "./ExperimentShare";
 import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
+import { ExperimentRenameForm } from "../(forms)/ExperimentRenameForm";
 
 dayjs.extend(relativeTime);
 
@@ -72,9 +73,9 @@ export default function ExperimentDetail() {
           <CardContent>
             {error && <Alert variant="destructive">{error}</Alert>}
             <div className="flex items-center justify-between">
-              <div className="flex text-xl">
-                <ExperimentStatus jobs={flow.Jobs} className="mr-4 mt-2.5" />
-                <span className="font-heading">{flow.Name}</span>
+              <div className="flex grow">
+                <ExperimentStatus jobs={flow.Jobs} className="mr-1 mt-3.5" />
+                <ExperimentRenameForm initialName={flow.Name} inputProps={{ variant: "subtle", className: "text-xl shrink-0 font-heading w-full" }} />
               </div>
               <div className="flex justify-end space-x-2 ">
                 {userWalletAddress === flow.WalletAddress && (
