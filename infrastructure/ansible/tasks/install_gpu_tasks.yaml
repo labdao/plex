@@ -1,4 +1,5 @@
 # CUDA Toolkit installation #
+# https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network
 - name: Add Nvidia Keyring
   become: true
   ansible.builtin.apt:
@@ -16,6 +17,7 @@
     pkg: cuda-drivers
 
 # Nvidia container toolkit #
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 - name: Get Nvidia Container Tookit GPG key
   become: true
   ansible.builtin.apt_key:
