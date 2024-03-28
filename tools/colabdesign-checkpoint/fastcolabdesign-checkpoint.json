@@ -12,7 +12,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign-checkpoint@sha256:5b7572b58f6c74d9d2ce4198af114770335704456fa6a3f25808a318229c11dd",
+  "dockerPull": "quay.io/labdao/colabdesign-checkpoint@sha256:6fa7cdf6be92a69b9c60a03b3bb0680b1dc092e668d4b30e77dbce0b56e4a2b8",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,

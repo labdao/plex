@@ -8,15 +8,15 @@ All notable changes to this tool will be documented in this file, in the order o
 
 - Same as colabdesign v0.8, but a lightweight version with the ability to input the number of binders
 - This version is available under community models, for internal purpose only
-- The code (main.py) still has the logic for colabdesign v0.8. the change to have number of binders to 240 was changed briefly just to get an image, and then reverted back, so future updates can be made on top of the main model colabdesign v0.8
+- The code (main.py) still has the logic for colabdesign v0.8. The change to have number of binders in the experiment submission page was changed briefly just to get an image, and then reverted back, so future updates can be made on top of the main model colabdesign v0.8
 - Steps to test:
 
 
-    - Add this to PLEX_JOB_INPUTS in test.sh to test fastcolabdesign locally:
+    - Add this to PLEX_JOB_INPUTS in [test.sh](test.sh) to test fastcolabdesign locally:
         ```bash
         "number_of_binders":1
         ```
-    - And in main.py, edit as below:
+    - And in [main.py](main.py), edit as below:
     
         FROM: 
         ```go
@@ -32,7 +32,7 @@ All notable changes to this tool will be documented in this file, in the order o
 
 ## colabdesign v0.8 - 2024-03-25
 
-- Latest colabdesign model with checkpoints
+- Latest colabdesign model with flow level checkpoints
 - Default number of binders set to 240
 - Available under protein-binder-design
 
@@ -41,4 +41,4 @@ All notable changes to this tool will be documented in this file, in the order o
 ## colabdesign v0.7
 
 - This model has job level checkpoints.
-- Archived after checkpoints are changed to flow level. Newer models upload checkpoints with this folder structure: {flowUUID}/{jobUUID}/...
+- Archived after checkpoints are changed to flow level. Newer models upload checkpoints with this folder structure in S3: {flowUUID}/{jobUUID}/...
