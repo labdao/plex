@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { toast } from "sonner";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ export function ExperimentRenameForm({ initialName, inputProps }: { initialName:
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    alert("Renaming experiments is coming soon!");
+    toast.warning("Renaming experiments is coming soon!", { position: "top-center" });
     console.log(values);
   }
 

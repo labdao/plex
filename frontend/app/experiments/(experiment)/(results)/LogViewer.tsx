@@ -8,15 +8,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const LogViewer = ({ bacalhauJobID }: { bacalhauJobID: string }) => {
   const [logs, setLogs] = useState("");
-  const scrollContentRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (scrollContentRef.current) {
-      scrollContentRef.current.scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-  }, [logs]);
 
   useEffect(() => {
     if (bacalhauJobID) {
@@ -51,14 +42,11 @@ const LogViewer = ({ bacalhauJobID }: { bacalhauJobID: string }) => {
   }, [bacalhauJobID]);
 
   return (
-    <div className="relative">
-      <CopyToClipboard string={logs} className="absolute z-10 right-6 bg-background" />
-      <ScrollArea className="w-full h-56 min-w-0 ">
+    <div className="relative -mt-2">
+      <CopyToClipboard string={logs} className="absolute z-10 top-2 right-6 bg-background" />
+      <div className="flex flex-col-reverse w-full h-56 min-w-0 overflow-scroll no-scrollbar">
         <pre className="p-6 font-mono text-xs">{logs}</pre>
-        <div ref={scrollContentRef} />
-        <ScrollBar orientation="vertical" />
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      </div>
     </div>
   );
 };

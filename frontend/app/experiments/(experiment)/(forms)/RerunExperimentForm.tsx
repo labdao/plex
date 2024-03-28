@@ -18,6 +18,7 @@ import ContinuousSwitch from "./ContinuousSwitch";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateRerunSchema, generateValues } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
+import { toast } from "sonner";
 
 export default function RerunExperimentForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -50,7 +51,7 @@ export default function RerunExperimentForm() {
     const transformedPayload = transformJson(tool, values, walletAddress);
 
     console.log("Placeholder for adding run to experiment:", transformedPayload);
-    alert("Functionality coming soon!");
+    toast.warning("Re-running experiments is coming soon!", { position: "top-center" });
   }
 
   return flow && lastJob ? (

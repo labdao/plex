@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { AppDispatch, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -64,8 +64,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
       if (response && response.ID) {
         console.log("Flow created", response);
         console.log(response.ID);
-        // Redirecting to another page, for example, a success page or dashboard
         router.push(`/experiments/${response.ID}`);
+        // Update the navbar list of flows
+        dispatch(flowListThunk(walletAddress));
       } else {
         console.log("Something went wrong", response);
       }
