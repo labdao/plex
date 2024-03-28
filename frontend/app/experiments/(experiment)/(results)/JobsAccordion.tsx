@@ -17,7 +17,7 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
   const { activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
   useEffect(() => {
     if (!activeJobUUID) {
-      setActiveJobUUID(flow.Jobs?.[flow.Jobs?.length - 1]?.JobUUID);
+      setActiveJobUUID(flow.Jobs?.[0]?.JobUUID);
     }
   }, [flow.Jobs]);
 

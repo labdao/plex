@@ -19,6 +19,7 @@ import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
+import { toast } from "sonner";
 
 export default function NewExperimentForm({ task }: { task: any }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -64,9 +65,10 @@ export default function NewExperimentForm({ task }: { task: any }) {
       if (response && response.ID) {
         console.log("Flow created", response);
         console.log(response.ID);
-        router.push(`/experiments/${response.ID}`);
+        router.push(`/experiments/${response.ID}`, { scroll: false });
         // Update the navbar list of flows
         dispatch(flowListThunk(walletAddress));
+        toast.success("Experiment started successfully");
       } else {
         console.log("Something went wrong", response);
       }

@@ -22,6 +22,7 @@ import { FlowDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import { ActiveResultContext } from "./ActiveResultContext";
+import { PageLoader } from "@/components/shared/PageLoader";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -54,7 +55,6 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
 
   useEffect(() => {
-    setLoading(true);
     const fetchData = async () => {
       try {
         // Currently unused
@@ -72,6 +72,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
       }
     };
     if (flow.ID) {
+      setLoading(true);
       fetchData();
     } else {
       setPlotData([]);
@@ -82,7 +83,8 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   useEffect(() => {
     if (plotData?.length > 0) {
       if (!activeCheckpointUrl) {
-        setActiveCheckpointUrl((plotData?.[plotData?.length - 1] as CheckpointChartData)?.pdbFilePath);
+        console.log("Setting default active checkpoint url");
+        setActiveCheckpointUrl((plotData?.[0] as CheckpointChartData)?.pdbFilePath);
       }
     } else {
       setActiveCheckpointUrl(undefined);
@@ -126,9 +128,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     <div className="relative">
       {!plotData?.length && (
         <div className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
-          <div>
-            <p>Checkpoints will appear here as they complete.</p>
-          </div>
+          <div>{loading ? <PageLoader /> : <p>Checkpoints will appear here as they complete.</p>}</div>
         </div>
       )}
 
