@@ -1,7 +1,7 @@
 "use client";
 
 import backendUrl from "lib/backendUrl";
-import { CircleDotDashedIcon, DownloadIcon, HelpCircleIcon } from "lucide-react";
+import { HelpCircleIcon } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import {
   CartesianGrid,
@@ -16,13 +16,13 @@ import {
   YAxis,
 } from "recharts";
 
+import { PageLoader } from "@/components/shared/PageLoader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
 import { FlowDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import { ActiveResultContext } from "./ActiveResultContext";
-import { PageLoader } from "@/components/shared/PageLoader";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -89,6 +89,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     } else {
       setActiveCheckpointUrl(undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plotData]);
 
   const handlePointClick = (entry: CheckpointChartData) => {

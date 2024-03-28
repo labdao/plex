@@ -9,8 +9,8 @@ import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, 
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import { ActiveResultContextProvider } from "./ActiveResultContext";
-import MetricsVisualizer from "./MetricsVisualizer";
 import JobsAccordion from "./JobsAccordion";
+import MetricsVisualizer from "./MetricsVisualizer";
 
 dayjs.extend(relativeTime);
 

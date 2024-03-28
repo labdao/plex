@@ -2,8 +2,8 @@
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { BadgeCheck, Dna, Share2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { BadgeCheck, Dna } from "lucide-react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AppDispatch,
-  flowDetailThunk,
   selectFlowDetail,
   selectFlowDetailError,
   selectFlowDetailLoading,
@@ -26,9 +25,9 @@ import {
 } from "@/lib/redux";
 import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
-import ExperimentShare from "./ExperimentShare";
-import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
 import { ExperimentRenameForm } from "../(forms)/ExperimentRenameForm";
+import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
+import ExperimentShare from "./ExperimentShare";
 
 dayjs.extend(relativeTime);
 

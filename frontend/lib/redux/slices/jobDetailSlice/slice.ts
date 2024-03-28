@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { DataFile } from "../dataFileListSlice/slice";
-import { ToolDetail } from "../..";
 
 export interface JobDetail {
   ID: number | null;

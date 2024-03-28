@@ -1,19 +1,17 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
 import React, { ReactNode, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-
-import { tasks } from "@/app/tasks/taskList";
-import ProtectedComponent from "@/components/auth/ProtectedComponent";
-import { Breadcrumbs } from "@/components/global/Breadcrumbs";
-import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
-import { AppDispatch, flowDetailThunk, resetFlowDetail, selectFlowDetail, selectToolDetail } from "@/lib/redux";
 
 import NewExperimentForm from "@/app/experiments/(experiment)/(forms)/NewExperimentForm";
 import ExperimentResults from "@/app/experiments/(experiment)/(results)/ExperimentResults";
 import ModelInfo from "@/app/experiments/(experiment)/ModelInfo";
+import { tasks } from "@/app/tasks/taskList";
+import ProtectedComponent from "@/components/auth/ProtectedComponent";
+import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import PoweredByLogo from "@/components/global/PoweredByLogo";
+import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
+import { AppDispatch, resetFlowDetail, selectFlowDetail } from "@/lib/redux";
 
 type NewExperimentProps = {
   params: { taskSlug: string };

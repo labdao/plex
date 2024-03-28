@@ -8,14 +8,13 @@ import React, { useEffect, useState } from "react";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Button } from "@/components/ui/button";
+import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataFile, JobDetail, ToolDetail, selectToolDetail, useSelector } from "@/lib/redux";
-import { FormDescription, FormLabel } from "@/components/ui/form";
-import { Label, LabelDescription } from "@/components/ui/label";
 
-import LogViewer from "./LogViewer";
-import { groupInputs } from "../(forms)/formUtils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { groupInputs } from "../(forms)/formUtils";
+import LogViewer from "./LogViewer";
 
 interface JobDetailProps {
   jobID: number | null;

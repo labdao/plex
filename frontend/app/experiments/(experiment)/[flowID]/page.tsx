@@ -1,21 +1,19 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
-import React, { ReactNode, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { tasks } from "@/app/tasks/taskList";
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import PoweredByLogo from "@/components/global/PoweredByLogo";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
-import { AppDispatch, flowDetailThunk, resetFlowDetail, selectFlowDetail, selectToolDetail, setToolDetail, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, selectFlowDetail, selectToolDetail, setToolDetail, toolDetailThunk } from "@/lib/redux";
 
-import ExperimentForm from "../(forms)/NewExperimentForm";
 import RerunExperimentForm from "../(forms)/RerunExperimentForm";
-import ExperimentDetail from "./ExperimentDetail";
 import ExperimentResults from "../(results)/ExperimentResults";
 import ModelInfo from "../ModelInfo";
-import PoweredByLogo from "@/components/global/PoweredByLogo";
+import ExperimentDetail from "./ExperimentDetail";
 
 type ExperimentDetailProps = {
   params: { flowID: string };

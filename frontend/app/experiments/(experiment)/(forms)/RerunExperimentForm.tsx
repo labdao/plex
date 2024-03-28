@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon, RefreshCcwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import * as z from "zod";
@@ -14,11 +14,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form } from "@/components/ui/form";
 import { AppDispatch, selectFlowDetail, selectToolDetail } from "@/lib/redux";
 
+import { toast } from "sonner";
 import ContinuousSwitch from "./ContinuousSwitch";
 import { DynamicArrayField } from "./DynamicArrayField";
-import { generateDefaultValues, generateRerunSchema, generateValues } from "./formGenerator";
+import { generateRerunSchema, generateValues } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
-import { toast } from "sonner";
 
 export default function RerunExperimentForm() {
   const dispatch = useDispatch<AppDispatch>();

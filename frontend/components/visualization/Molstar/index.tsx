@@ -2,15 +2,16 @@
 
 import "./skin.scss";
 
-import { cn } from "@/lib/utils";
+import { PluginCommands } from "molstar/lib/mol-plugin/commands";
+import { PluginConfig } from "molstar/lib/mol-plugin/config";
 import { createPluginUI } from "molstar/lib/mol-plugin-ui";
 import { PluginUIContext } from "molstar/lib/mol-plugin-ui/context";
 import { renderReact18 } from "molstar/lib/mol-plugin-ui/react18";
 import { DefaultPluginUISpec, PluginUISpec } from "molstar/lib/mol-plugin-ui/spec";
-import { PluginCommands } from "molstar/lib/mol-plugin/commands";
-import { PluginConfig } from "molstar/lib/mol-plugin/config";
 import { Color } from "molstar/lib/mol-util/color";
 import { createRef, useEffect } from "react";
+
+import { cn } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -87,6 +88,7 @@ const Molstar = ({ url, isExpanded, showControls, className }: MolstarProps) => 
     } else {
       update();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   useEffect(() => {

@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FlowDetail } from "@/lib/redux";
 
-import JobDetail from "./JobDetail";
 import { ActiveResultContext } from "./ActiveResultContext";
+import JobDetail from "./JobDetail";
 
 interface JobsAccordionProps {
   flow: FlowDetail;
@@ -15,10 +15,12 @@ interface JobsAccordionProps {
 
 export default function JobsAccordion({ flow }: JobsAccordionProps) {
   const { activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
+
   useEffect(() => {
     if (!activeJobUUID) {
       setActiveJobUUID(flow.Jobs?.[0]?.JobUUID);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flow.Jobs]);
 
   return (

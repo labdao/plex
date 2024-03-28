@@ -16,10 +16,10 @@ import { Input } from "@/components/ui/input";
 import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
+import { toast } from "sonner";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
-import { toast } from "sonner";
 
 export default function NewExperimentForm({ task }: { task: any }) {
   const dispatch = useDispatch<AppDispatch>();
