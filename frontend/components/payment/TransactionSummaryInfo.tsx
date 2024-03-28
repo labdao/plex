@@ -33,12 +33,12 @@ const TransactionSummaryInfo = ({ className }: { className?: string }) => {
   const { tokens, balance } = transactionsSummary;
 
   return (
-    <div className={cn("flex flex-wrap justify-between gap-4 p-2 rounded-lg bg-primary/10", className)}>
+    <div className={cn("flex flex-wrap justify-end items-center gap-4 p-2 rounded-lg bg-primary/10", className)}>
       <div className="flex gap-4">
         <InfoItem label="Points" value={tokens} />
         <InfoItem label="Credits" value={balance} />
       </div>
-      <StripeCheckoutButton variant="outline" size="sm">
+      <StripeCheckoutButton variant="outline" size="xs">
         <CreditCardIcon size={20} className="mr-1" />
         Add Credits
       </StripeCheckoutButton>

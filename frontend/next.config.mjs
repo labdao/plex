@@ -10,12 +10,17 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/tasks/protein-binder-design",
+        destination: "/experiments/new/protein-binder-design",
         permanent: false,
       },
       {
-        source: "/tasks",
-        destination: "/tasks/protein-binder-design",
+        source: "/tasks/:path*",
+        destination: "/experiments/new/:path*",
+        permanent: false,
+      },
+      {
+        source: "/experiments/new",
+        destination: "/experiments/new/protein-binder-design",
         permanent: false,
       },
     ];

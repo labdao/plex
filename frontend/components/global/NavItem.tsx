@@ -27,7 +27,7 @@ const NavLink = ({ href, exact, children, title, className = "", icon, ...props 
       href={href}
       {...props}
       className={cn(
-        "w-full flex items-center text-sm px-3 py-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground",
+        "w-full flex rounded-full items-center text-sm px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground",
         isActive && "text-foreground",
         className
       )}
@@ -52,7 +52,7 @@ const NavButton = React.forwardRef<HTMLButtonElement, NavButtonProps>(
     return (
       <Comp
         className={cn(
-          "w-full flex items-center px-3 py-2 text-sm rounded-full text-muted-foreground hover:text-foreground hover:bg-muted",
+          "w-full flex rounded-full items-center px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted",
           "aria-expanded:text-foreground",
           className
         )}

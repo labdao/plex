@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { Code2Icon, CreditCardIcon, DownloadIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
+import { Code2Icon, CreditCardIcon, DownloadIcon, FlaskRoundIcon, FolderIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -69,8 +69,8 @@ export default function UserMenu() {
 
               {walletAddress && (
                 <>
-                  <DropdownMenuLabel className="truncate w-72 flex items-center">
-                    Wallet: <em className="font-mono font-normal ml-1 truncate flex-grow">{walletAddress}</em>
+                  <DropdownMenuLabel className="flex items-center truncate w-72">
+                    Wallet: <em className="flex-grow ml-1 font-mono font-normal truncate">{walletAddress}</em>
                     <CopyToClipboard string={walletAddress} />
                   </DropdownMenuLabel>
                   <TooltipProvider>
@@ -94,11 +94,26 @@ export default function UserMenu() {
                   API Keys
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/experiments">
+                  <FlaskRoundIcon size={20} className="mr-1" />
+                  Experiments
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/data">
+                  <FolderIcon size={20} className="mr-1" />
+                  Files
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOutIcon size={20} className="mr-1" />
+                Log Out
+              </DropdownMenuItem>
+
               <TransactionSummaryInfo className="mt-2" />
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <NavButton icon={<LogOutIcon />} title="Log Out" onClick={handleLogout} />
         </>
       )}
     </>

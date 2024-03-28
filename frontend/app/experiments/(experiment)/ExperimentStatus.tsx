@@ -1,8 +1,8 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Job } from "@/lib/redux";
+import { JobDetail } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
-export function aggregateJobStatus(jobs: Job[]) {
+export function aggregateJobStatus(jobs: JobDetail[]) {
   let status;
   let label;
   const totalJobs = jobs.length;
@@ -22,19 +22,19 @@ export function aggregateJobStatus(jobs: Job[]) {
     label = "Status unknown";
   } else if (totalJobs === completedJobs) {
     status = "completed";
-    label = "All conditions completed successfully";
+    label = "All runs completed successfully";
   } else if (failedJobs === totalJobs || errorJobs === totalJobs) {
     status = "failed";
-    label = "All conditions failed";
+    label = "All runs failed";
   } else if (queuedJobs === totalJobs || newJobs === totalJobs) {
     status = "queued";
-    label = "Waiting for conditions to start";
+    label = "Waiting to start";
   } else if (pendingJobs > 0) {
     status = "running";
-    label = "Conditions running";
+    label = "Running";
   } else if (failedJobs + errorJobs > 0) {
     status = "partial-failure";
-    label = "Some conditions completed successfully";
+    label = "Some runs completed successfully";
   } else {
     status = "unknown";
     label = "Status unknown";
@@ -101,7 +101,7 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
 }
 
 interface ExperimentStatusProps {
-  jobs: Job[];
+  jobs: JobDetail[];
   className?: string;
 }
 

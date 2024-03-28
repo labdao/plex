@@ -11,7 +11,6 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from "@/components/ui/input";
 import { LabelDescription } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 interface DynamicFieldProps {
   form: UseFormReturn<any>;
@@ -28,7 +27,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
   const hasError = form.formState.errors?.[inputKey];
 
   return (
-    <div className={cn("p-4 space-y-4 border rounded-lg", hasError && "border-destructive")}>
+    <div className="relative space-y-0">
       {fields.map((field, index) => (
         <FormField
           key={field.id}
@@ -43,6 +42,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                     {input?.type} {input?.array ? "array" : ""}
                   </LabelDescription>{" "}
                 </span>
+
                 {fields.length > 1 && (
                   <Button className="invisible -mt-2 -mb-1 group-hover:visible" size="icon" variant="ghost" onClick={() => remove(index)}>
                     <Trash2Icon size={18} />
@@ -77,8 +77,8 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
           )}
         />
       ))}
-      <Button type="button" variant="secondary" size="sm" className="w-full mt-2" onClick={() => append({ value: input.default })}>
-        <PlusIcon />
+      <Button type="button" variant="secondary" size="icon" onClick={() => append({ value: input.default })}>
+        <PlusIcon size={24} />
       </Button>
     </div>
   );
