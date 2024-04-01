@@ -1,5 +1,12 @@
 ---
 
+- name: Wait for docker to run
+  ansible.builtin.command: docker pull alpine
+  register: docker_pull
+  retries: 5
+  delay: 3
+  until: docker_pull.rc == 0
+
 - name: Pull commonly used containers
   community.docker.docker_image:
     name: "{{ item }}"
