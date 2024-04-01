@@ -1,7 +1,45 @@
 ARG IPFS_VERSION=0.18.0
 
+# Building IPFS binary
+FROM golang:1.19.1-buster AS builder
+
+ARG IPFS_VERSION=0.18.0
+ARG IPFS_DS_S3_PLUGIN_VERSION=latest
+ARG IPFS_HEALTHCHECK_PLUGIN_VERSION=latest
+
+WORKDIR /
+
+# Kubo build process
+# See details: https://github.com/ipfs/go-ds-s3
+ENV GO111MODULE on
+ENV GOPROXY direct
+
+# We clone Kubo source code
+RUN git clone --depth 1 -b v${IPFS_VERSION} https://github.com/ipfs/kubo
+ENV SRC_DIR /kubo
+
+# Move to kubo folder
+WORKDIR $SRC_DIR
+
+# Install the plugin and build ipfs
+RUN go get github.com/ceramicnetwork/go-ipfs-healthcheck/plugin@${IPFS_HEALTHCHECK_PLUGIN_VERSION}
+RUN echo "\nhealthcheck github.com/ceramicnetwork/go-ipfs-healthcheck/plugin 0" >> plugin/loader/preload_list
+RUN go get github.com/3box/go-ds-s3/plugin@${IPFS_DS_S3_PLUGIN_VERSION}
+RUN echo "\ns3ds github.com/3box/go-ds-s3/plugin 0" >> plugin/loader/preload_list
+RUN make build
+RUN go mod tidy
+RUN CGO_ENABLED=0 make build
+RUN make install
+
 # IPFS container with all the utilities
 FROM ipfs/kubo:v${IPFS_VERSION} AS ipfs-with-utils
+
+# # Copy custom IPFS binary with s3ds and healthcheck plugin
+# COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
+
+# Copy IPFS from locally build IPFS binary from builder
+COPY --from=builder /usr/local/bin/ipfs /usr/local/bin/ipfs
+
 # Copy jq
 COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
 
@@ -15,9 +53,6 @@ COPY container-init.d container-init.d
 # Set ownership
 RUN chown ipfs: /container-init.d/*.sh
 RUN chown ipfs: /data/ipfs
-
-# Copy custom IPFS binary with s3ds and healthcheck plugin
-COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
 
 USER ipfs
 
