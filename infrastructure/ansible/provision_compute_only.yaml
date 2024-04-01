@@ -41,6 +41,10 @@
     - name: Install Docker
       ansible.builtin.include_tasks: tasks/install_docker_tasks.yaml
 
+    # Pull containers
+    - name: Pull common containers
+      ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
+
     # GPU
     - name: Install tools and binaries for GPU support
       ansible.builtin.include_tasks: tasks/install_gpu_tasks.yaml
@@ -59,10 +63,6 @@
     - name: Run Baclahau agent
       ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
       tags: bacalhau
-
-    - name: Pull common containers
-      ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
-
   handlers:
     - name: Reload systemd
       become: true
