@@ -189,7 +189,6 @@ services:
 
   ipfs:
     hostname: ipfs
-    # If building from Mac, comment out build and uncomment image
     build:
       context: ./docker/images/ipfs
       dockerfile: ./Dockerfile
