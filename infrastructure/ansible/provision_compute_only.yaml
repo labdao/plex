@@ -60,8 +60,12 @@
       ansible.builtin.include_tasks: tasks/install_bacalhau_tasks.yaml
       tags: bacalhau
 
+    # Only pull container images when doing packer build
     - name: Pull common containers
       ansible.builtin.include_tasks: tasks/pull_common_containers.yaml
+      tags:
+        - never
+        - packer
 
   handlers:
     - name: Reload systemd
