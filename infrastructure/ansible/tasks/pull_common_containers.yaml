@@ -16,7 +16,6 @@
   loop:
     - "ubuntu"
     - "alpine"
-    - "nvidia/cuda"
     - "docker.io/library/python:3.9-slim"
     - "docker.io/rapidsai/mambaforge-cuda:cuda11.8.0-base-ubuntu22.04-py3.9"
     - "docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime"
