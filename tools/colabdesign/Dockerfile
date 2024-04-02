@@ -7,5 +7,10 @@ COPY conf /app/conf
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
 
+# Add so jax can find cuDnn library
+ENV LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/torch/lib/
+
+WORKDIR /app
+
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
