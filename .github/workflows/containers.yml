@@ -134,10 +134,10 @@ jobs:
       fail-fast: false
       matrix:
         backends: [
-          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'http://bacalhau.stg.labdao.xyz:8080/ipfs/'},
-          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://bacalhau.prod.labdao.xyz:8080/ipfs/'},
-          { env: lbbprod, url: 'https://api.lab.bio', gateway: 'https://ipfs.lab.bio/ipfs/'},
-          { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/'}
+          { env: stg, url: 'https://api.stg.labdao.xyz', gateway: 'https://ipfs.stg.labdao.xyz/ipfs/', frontend-url: 'https://app.stg.labdao.xyz', demo-url: 'https://app.stg.labdao.xyz/experiments/268'},
+          { env: prod, url: 'https://api.prod.labdao.xyz', gateway: 'http://ipfs.prod.labdao.xyz/ipfs/', frontend-url: 'https://app.prod.labdao.xyz', demo-url: 'https://app.prod.labdao.xyz/experiments/3062'},
+          { env: lbbprod, url: 'https://api.lab.bio', gateway: 'https://ipfs.lab.bio/ipfs/', frontend-url: 'https://app.lab.bio', demo-url: 'https://app.lab.bio/experiments/201'},
+          { env: local, url: 'http://localhost:8080', gateway: 'http://localhost:8888/ipfs/', frontend-url: 'http://localhost:3000', demo-url: 'http://localhost:3000/experients/1'}
         ]
     uses: ./.github/workflows/docker.yml
     with:
@@ -147,5 +147,7 @@ jobs:
       build-args: |
         NEXT_PUBLIC_BACKEND_URL=${{ matrix.backends.url }}
         NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=${{ matrix.backends.gateway }}
+        NEXT_PUBLIC_FRONTEND_URL=${{ matrix.backends.frontend-url }}
+        NEXT_PUBLIC_DEMO_URL=${{ matrix.backends.demo-url }}
       deploy-environment: ${{ matrix.backend.env }}
     secrets: inherit
