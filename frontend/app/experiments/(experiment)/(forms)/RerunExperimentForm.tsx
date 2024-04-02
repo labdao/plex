@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, selectFlowDetail, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, flowListThunk, selectFlowDetail, selectToolDetail } from "@/lib/redux";
+import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+
 
 import { toast } from "sonner";
 import ContinuousSwitch from "./ContinuousSwitch";
@@ -50,8 +52,24 @@ export default function RerunExperimentForm() {
     }
     const transformedPayload = transformJson(tool, values, walletAddress);
 
-    console.log("Placeholder for adding run to experiment:", transformedPayload);
-    toast.warning("Re-running experiments is coming soon!", { position: "top-center" });
+    console.log("Submitting Payload:", transformedPayload);
+    // toast.warning("Re-running experiments is coming soon!", { position: "top-center" });
+    try {
+      const response = await addJobToFlow(transformedPayload);
+      if (response && response.ID) {
+        console.log("Flow created", response);
+        console.log(response.ID);
+        router.push(`/experiments/${response.ID}`, { scroll: false });
+        // Update the navbar list of flows
+        dispatch(flowListThunk(walletAddress));
+        toast.success("Experiment started successfully");
+      } else {
+        console.log("Something went wrong", response);
+      }
+    } catch (error) {
+      console.error("Failed to create flow", error);
+      // Handle error, maybe show message to user
+    }
   }
 
   return flow && lastJob ? (
