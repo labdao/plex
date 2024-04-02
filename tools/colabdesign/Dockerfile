@@ -2,7 +2,7 @@ FROM quay.io/convexitylabs/base-images:pytorch-2.1.0-cuda11.8-cudnn8-runtime-457
 
 # Copy in Files
 COPY main.py /app
-COPY conf /app
+COPY conf /app/conf
 
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
