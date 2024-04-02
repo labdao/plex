@@ -67,7 +67,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button className="justify-between w-full p-6 text-base" variant="input" role="combobox" aria-expanded={open}>
+        <Button className="justify-between w-full p-3 text-base" variant="input" role="combobox" aria-expanded={open}>
           <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/")?.[1] : `Select ${label} file...`}</span>
         </Button>
       </PopoverTrigger>

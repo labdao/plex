@@ -18,7 +18,7 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { AppDispatch, Flow, flowListThunk, selectFlowList, selectFlowListLoading } from "@/lib/redux";
 
-import { ExperimentStatus } from "./ExperimentStatus";
+import { ExperimentStatus } from "./(experiment)/ExperimentStatus";
 
 export default function ListExperiments() {
   const { user } = usePrivy();
@@ -72,18 +72,7 @@ export default function ListExperiments() {
 
   return (
     <div className="relative flex flex-col h-screen grow">
-      <Breadcrumbs
-        items={[{ name: "Experiments", href: "/experiments" }]}
-        actions={
-          <div>
-            <Link href="/tasks/protein-binder-design" passHref>
-              <Button size="sm">
-                <PlusIcon /> Run Experiment
-              </Button>
-            </Link>
-          </div>
-        }
-      />
+      <Breadcrumbs items={[{ name: "Experiments", href: "/experiments" }]} />
       <ProtectedComponent method="hide" message="Log in to view your experiments">
         <ScrollArea className="w-full bg-white grow">
           <DataTable columns={columns} data={flows} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />

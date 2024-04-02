@@ -195,3 +195,4 @@ export default function ExperimentDetail({ experimentID }: { experimentID: strin
     </div>
   );
 }
+

@@ -2,42 +2,30 @@
 
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
-import { DownloadIcon } from "lucide-react";
+import { ChevronsUpDownIcon, DownloadIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Button } from "@/components/ui/button";
+import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile, ToolDetail } from "@/lib/redux";
+import { DataFile, JobDetail, ToolDetail, selectToolDetail, useSelector } from "@/lib/redux";
 
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { groupInputs } from "../(forms)/formUtils";
 import LogViewer from "./LogViewer";
-import MetricsVisualizer from "./MetricsVisualizer";
 
 interface JobDetailProps {
-  jobID: number;
-}
-
-export interface JobDetail {
-  ID: number | null;
-  BacalhauJobID: string;
-  JobUUID: string;
-  State: string;
-  Error: string;
-  ToolID: string;
-  FlowID: string;
-  Inputs: {};
-  InputFiles: DataFile[];
-  OutputFiles: DataFile[];
-  Status: string;
-  Tool: ToolDetail;
+  jobID: number | null;
 }
 
 export default function JobDetail({ jobID }: JobDetailProps) {
   const [job, setJob] = useState({} as JobDetail);
-  const [tool, setTool] = useState({} as ToolDetail);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("");
+  const [activeTab, setActiveTab] = useState("raw-files");
+
+  const tool = useSelector(selectToolDetail);
 
   interface File {
     CID: string;
@@ -68,20 +56,6 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         const data = await response.json();
         console.log("Fetched job:", data);
         setJob(data);
-
-        const toolResponse = await fetch(`${backendUrl()}/tools/${data.ToolID}`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        });
-
-        if (!toolResponse.ok) {
-          throw new Error(`HTTP error ${toolResponse.status}`);
-        }
-
-        const toolData = await toolResponse.json();
-        console.log("Fetched tool:", toolData);
-        setTool(toolData);
       } catch (error) {
         console.error("Error fetching job:", error);
       } finally {
@@ -99,25 +73,30 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     }
   }, [jobID, job.State]);
 
-  useEffect(() => {
-    if (activeTab === "" && tool?.ToolJson){
-      if (tool?.ToolJson?.checkpointCompatible) {
-        setActiveTab("metrics");
-      } else {
-        setActiveTab("logs");
-      }
-    }
-  }, [tool, activeTab]);
-
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
       <TabsList className="justify-start w-full px-6 pt-0 rounded-t-none">
-        {/* {tool?.ToolJson?.checkpointCompatible && <TabsTrigger value="metrics">Metrics</TabsTrigger>} */}
+        <TabsTrigger value="raw-files">Raw Files</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
-        <TabsTrigger value="parameters">Parameters</TabsTrigger>
-        <TabsTrigger value="outputs">Outputs</TabsTrigger>
         <TabsTrigger value="inputs">Inputs</TabsTrigger>
+
+        {/*
+        <TabsTrigger value="parameters">Parameters</TabsTrigger>
+        */}
       </TabsList>
+      <TabsContent value="raw-files">
+        <FileList files={job.OutputFiles} />
+      </TabsContent>
+      <TabsContent value="logs">
+        <div className="w-full">
+          <LogViewer bacalhauJobID={job.BacalhauJobID} />
+        </div>
+      </TabsContent>
+      <TabsContent value="inputs">
+        <InputList userInputs={job.Inputs} tool={tool} />
+      </TabsContent>
+
+      {/*
       <TabsContent value="parameters" className="px-6 pt-0">
         {Object.entries(job.Inputs || {}).map(([key, val]) => (
           <div key={key} className="flex justify-between py-1 text-base border-b last:border-none last:mb-3">
@@ -126,18 +105,78 @@ export default function JobDetail({ jobID }: JobDetailProps) {
           </div>
         ))}
       </TabsContent>
-      <TabsContent value="outputs">
-        <FileList files={job.OutputFiles} />
-      </TabsContent>
-      <TabsContent value="inputs">
-        <FileList files={job.InputFiles} />
-      </TabsContent>
-      <TabsContent value="logs">
-        <div className="w-full">
-          <LogViewer bacalhauJobID={job.BacalhauJobID} />
-        </div>
-      </TabsContent>
+        */}
     </Tabs>
+  );
+}
+
+function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKey: string }) {
+  const formattedValue = input?.type === "file" ? value?.replace(/^.*\/(.*)$/, "$1") : value;
+  return (
+    <div className="px-6 py-2 text-xs border-b border-border/50 ">
+      <div>
+        <Label className="flex items-center justify-between gap-2">
+          <span>
+            <span>{inputKey.replaceAll("_", " ")}</span>{" "}
+            <LabelDescription>
+              {input?.type} {input?.array ? "array" : ""}
+            </LabelDescription>{" "}
+          </span>
+        </Label>
+        <div className="pb-2 text-lg break-words">{value ? formattedValue : <span className="text-muted-foreground">None</span>}</div>
+        <div className="text-xs lowercase text-muted-foreground">
+          <LabelDescription>{!input?.required && input?.default === "" ? "(Optional)" : ""}</LabelDescription>
+          {input?.description}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; tool: ToolDetail }) {
+  const groupedInputs = groupInputs(tool.ToolJson.inputs);
+  return userInputs ? (
+    <>
+      {!!groupedInputs?.standard && (
+        <>
+          {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
+            return (
+              <div key={groupKey}>
+                <div>
+                  {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
+                    const input = groupedInputs?.standard?.[groupKey]?.[key];
+                    return <InputInfo key={key} input={input} inputKey={key} value={userInputs?.[key]} />;
+                  })}
+                </div>
+              </div>
+            );
+          })}
+
+          {Object.keys(groupedInputs?.collapsible || {}).map((groupKey) => {
+            return (
+              <div key={groupKey}>
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 p-6 text-left uppercase font-heading">
+                    {groupKey.replace("_", "")}
+                    <ChevronsUpDownIcon />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="pt-0 space-y-4">
+                      {Object.keys(groupedInputs?.collapsible[groupKey] || {}).map((key) => {
+                        const input = groupedInputs?.collapsible?.[groupKey]?.[key];
+                        return <InputInfo key={key} input={input} inputKey={key} value={userInputs?.[key]} />;
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            );
+          })}
+        </>
+      )}
+    </>
+  ) : (
+    <div className="px-6 py-5">No inputs found.</div>
   );
 }
 
