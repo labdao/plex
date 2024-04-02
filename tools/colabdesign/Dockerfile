@@ -14,7 +14,7 @@ RUN pip3 install --no-cache-dir hydra-core --upgrade
 RUN set -ex; \
      pip3 install ipywidgets httplib2 && \
      pip3 install -U numpy && \
-     pip3 install -U 'jax[cuda11_pip]' -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+     pip3 install -U 'jax[cuda11_pip]==0.4.20' -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 WORKDIR /app
 
@@ -25,7 +25,7 @@ RUN pip -q install --no-cache-dir git+https://github.com/googlecolab/colabtools.
 
 # Install ColabDesign
 RUN set -ex; \
-     pip -q install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git && \
+     pip -q install --no-cache-dir git+https://github.com/sokrypton/ColabDesign.git@df730eaddc41e5a4ef775ea0ed607319e14bdc25 && \
      ln -s /opt/conda/lib/python3.10/site-packages/colabdesign colabdesign
 
 # Install ananas
@@ -34,10 +34,12 @@ RUN chmod +x ananas
 
 # Install RFdiffusion
 RUN set -ex; \
-     git clone --depth 1 https://github.com/sokrypton/RFdiffusion.git && \
+     git clone https://github.com/sokrypton/RFdiffusion.git && \
      pip -q install --no-cache-dir jedi omegaconf hydra-core icecream pyrsistent && \
-     pip install --no-cache-dir dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html && \
-     cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install --no-cache-dir .
+     pip install --no-cache-dir dgl==1.0.2+cu118 -f https://data.dgl.ai/wheels/cu118/repo.html && \
+     cd RFdiffusion && \
+     git checkout 987b2c82101b18504483519eea7ad71cd632b7c6 && \
+     cd env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install --no-cache-dir .
 
 # Download params, modules and schedules
 RUN set -ex; \
@@ -53,7 +55,7 @@ RUN set -ex; \
      touch params/done.txt
 
 # Install prodigy
-RUN git clone -q https://github.com/haddocking/prodigy && \
+RUN git clone --depth 1 --branch v2.1.4 https://github.com/haddocking/prodigy && \
      pip install -q prodigy/
 
 # Cleanup
@@ -67,6 +69,8 @@ COPY . /app
 ENV PYTHONUNBUFFERED=1
 ENV HYDRA_FULL_ERROR=1
 
+# Add so jax can find cuDnn library
+ENV LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/torch/lib/
 
 # entrypoint
 ENTRYPOINT ["python", "-u", "main.py"]
