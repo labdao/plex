@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, flowListThunk, selectFlowDetail, selectToolDetail } from "@/lib/redux";
-import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+import { AppDispatch, flowDetailThunk, flowListThunk, selectFlowDetail, selectToolDetail } from "@/lib/redux";
+import { addJobToFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ export default function RerunExperimentForm() {
   const groupedInputs = groupInputs(tool.ToolJson?.inputs);
   const formSchema = generateRerunSchema(tool.ToolJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
+  const flowID = flow?.ID || 0;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,12 +56,12 @@ export default function RerunExperimentForm() {
     console.log("Submitting Payload:", transformedPayload);
     // toast.warning("Re-running experiments is coming soon!", { position: "top-center" });
     try {
-      const response = await addJobToFlow(transformedPayload);
+      const response = await addJobToFlow(flowID, transformedPayload);
+      console.log("Response from addJobToFlow", response);
       if (response && response.ID) {
         console.log("Flow created", response);
         console.log(response.ID);
-        router.push(`/experiments/${response.ID}`, { scroll: false });
-        // Update the navbar list of flows
+        dispatch(flowDetailThunk(response.ID));
         dispatch(flowListThunk(walletAddress));
         toast.success("Experiment started successfully");
       } else {
