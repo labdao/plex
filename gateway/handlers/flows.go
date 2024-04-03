@@ -417,16 +417,6 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// Parse the flow ID from the request URL
-// Decode the incoming JSON payload into a Job struct
-// Fetch the flow with the given ID from the database
-// Check if the flow exists; if not, return an error response
-// Append the new Job to the flow's Jobs slice
-// Serialize the updated flow including all jobs to JSON
-// Pin the updated flow JSON to IPFS and get a new CID
-// Update the flow's record in the database with the new CID
-// Submit the new job to Bacalhau (if required at this stage)
-// Respond to the request with the updated flow information or an appropriate error message
 func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received Post request to add job to a flow")
@@ -589,10 +579,8 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			for _, cid := range cidsToAdd {
 				var dataFile models.DataFile
 				result := db.First(&dataFile, "cid = ?", cid)
-				// result := db.First(&dataFile, "cid = ? and wallet_address = ? ", cid, user.WalletAddress)
 				if result.Error != nil {
 					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						// http.Error(w, fmt.Sprintf("DataFile with CID %v and WalletAddress %v not found", cid, user.WalletAddress), http.StatusInternalServerError)
 						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 						return
 					} else {
@@ -614,47 +602,5 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
 			return
 		}
-
-		// var job models.Job
-		// if err := json.Unmarshal(body, &job); err != nil {
-		// 	http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		// 	return
-		// }
-
-		// job.FlowID = flow.ID
-		// job.WalletAddress = user.WalletAddress
-		// job.CreatedAt = time.Now()
-
-		// // Add the new job to the flow
-		// flow.Jobs = append(flow.Jobs, job)
-
-		// // Generate a new CID for the updated flow
-		// flowJSON, err := json.Marshal(flow)
-		// if err != nil {
-		//     http.Error(w, fmt.Sprintf("Error encoding Flow to JSON: %v", err), http.StatusInternalServerError)
-		//     return
-		// }
-		// cid, err := utils.PinToIPFS(flowJSON)
-		// if err != nil {
-		//     http.Error(w, fmt.Sprintf("Error pinning Flow to IPFS: %v", err), http.StatusInternalServerError)
-		//     return
-		// }
-
-		// // Save the updated flow to the database
-		// if result := db.Save(&flow); result.Error != nil {
-		//     http.Error(w, fmt.Sprintf("Error saving Flow: %v", result.Error), http.StatusInternalServerError)
-		//     return
-		// }
-
-		// if result := db.Create(&job); result.Error != nil {
-		// 	http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-		// 	return
-		// }
-
-		// w.Header().Set("Content-Type", "application/json")
-		// if err := json.NewEncoder(w).Encode(job); err != nil {
-		// 	http.Error(w, "Error encoding Job to JSON", http.StatusInternalServerError)
-		// 	return
-		// }
 	}
 }
