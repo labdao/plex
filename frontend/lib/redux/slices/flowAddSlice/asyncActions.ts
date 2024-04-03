@@ -40,7 +40,7 @@ export const addJobToFlow = async (flowId: number, payload: { name: string, tool
       throw new Error("Authentication failed");
     }
   
-    const requestUrl = `${backendUrl()}/flows/${flowId}/addJob`;
+    const requestUrl = `${backendUrl()}/flows/${flowId}/add-job`;
     const requestOptions = {
       method: 'PUT',
       headers: {
@@ -53,12 +53,12 @@ export const addJobToFlow = async (flowId: number, payload: { name: string, tool
     try {
       const response = await fetch(requestUrl, requestOptions);
       if (!response.ok) {
-        throw new Error(`Failed to update Flow: ${response.statusText}`);
+        throw new Error(`Failed to add job to Flow: ${response.statusText}`);
       }
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Failed to update Flow:', error);
-      throw new Error('Failed to update Flow');
+      console.error('Failed to add job to Flow:', error);
+      throw new Error('Failed to add job to Flow');
     }
   };
