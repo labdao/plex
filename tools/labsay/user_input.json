@@ -1,0 +1,12 @@
+{
+    "binder_protein_sequence": "MKKAVINGEQIRSISDLHQTLKKELALPEYYGENLDALWDALTGWxxxxLVLEWRQFEQSKQLTENGAESVLQVFREAKAEGADITIILS",
+    "target_protein_sequence": "MGSSHHHHHHSQAPIEGRAQVINTFDGVADYLQTYHKLPDNYITKSEAQALGWVASKGNLCDVAPGKSIGGDIFSNREGKLPGKSGRTWREADINYTCGFRNSDRILYSSDWLIYKTTDHYQTFTKIR",
+    "number_of_binders": 3,
+    "init_permissibility_vec": "",
+    "hotspots": "",
+    "high_fidelity": true,
+    "pdb_checkpoint_0": "/inputs/pdb_checkpoints/example.pdb", 
+    "pdb_checkpoint_1": "/inputs/pdb_checkpoints/design_1.pdb", 
+    "pdb_checkpoint_2": "/inputs/pdb_checkpoints/BioCD202b18_aa_7fd4f_unrelaxed_rank_003_alphafold2_multimer_v3_model_2_seed_000.pdb",
+    "speedup": true
+}
