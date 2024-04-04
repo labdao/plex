@@ -1,4 +1,4 @@
-FROM quay.io/convexitylabs/base-images:pytorch-2.1.0-cuda11.8-cudnn8-runtime-f55a656@sha256:285903a49701ce19843917b9bf35e64980654cdaf1c9c165aecf3907bbc35730
+FROM quay.io/convexitylabs/base-images:pytorch-2.1.0-cuda11.8-cudnn8-runtime-3068995@sha256:8f75299825d3dc613d32070ac72b99439751054c06b8af994c00205954b4ee4e
 
 # Copy in Files
 COPY main.py /app
