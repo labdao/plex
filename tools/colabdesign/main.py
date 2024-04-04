@@ -13,6 +13,7 @@ import subprocess
 
 import pandas as pd
 import yaml
+import boto3
 
 print("Starting main.py...")
 
@@ -36,19 +37,33 @@ from colabdesign.shared.plot import plot_pseudo_3D
 def get_plex_job_inputs():
     # Retrieve the environment variable
     json_str = os.getenv("PLEX_JOB_INPUTS")
+    job_uuid = os.getenv("JOB_UUID")
+    flow_uuid = os.getenv("FLOW_UUID")
+    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE")
 
     # Check if the environment variable is set
-    if json_str is None:
-        raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
+    if job_uuid or flow_uuid or json_str is None:
+        raise ValueError("One/more of the mandatory environment variables are missing: PLEX_JOB_INPUTS/JOB_UUID/FLOW_UUID/CHECKPOINT_COMPATIBLE.")
 
     # Convert the JSON string to a Python dictionary
     try:
         data = json.loads(json_str)
-        return data
+        return data, job_uuid, flow_uuid, checkpoint_compatible
     except json.JSONDecodeError:
         # Handle the case where the string is not valid JSON
         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
 
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Successfully uploaded {file_name} to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
+        raise e
 
 def extract_deepest_keys(nested_dict, current_path="", deepest_keys=None):
     if deepest_keys is None:
@@ -79,8 +94,39 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
     return df_results
 
+def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uuid):
+    checkpoint_csv_path = os.path.dirname(result_csv_path)
+    for index, row in df_results.iterrows():
+        plddt_for_checkpoint = row['plddt'] *100
+        i_pae_for_checkpoint = row['i_pae']
+        design = row['design']
+        n = row['n']
+        pdb_file_name = f"design{design}_n{n}.pdb"
+        pdb_path = f"{checkpoint_csv_path}/default/all_pdb/{pdb_file_name}"
+        new_df = pd.DataFrame({
+            'cycle': design,
+            'proposal': n,
+            'plddt': plddt_for_checkpoint,
+            'i_pae': i_pae_for_checkpoint,
+            'dim1': row['rmsd'],
+            'dim2': row['affinity'],
+            'pdbFileName': pdb_file_name
+        }, index=[0])
+        event_csv_filename = f"checkpoint_{index}_summary.csv"
+        event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
+        new_df.to_csv(event_csv_filepath, index= False)
 
-def enricher(multirun_path, cfg):
+        bucket_name = "app-checkpoint-bucket"
+        time.sleep(2)
+        object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
+        upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
+        upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+        os.remove(event_csv_filepath)
+        print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
+
+    return
+
+def enricher(multirun_path, cfg, flow_uuid, job_uuid, checkpoint_compatible):
     # Find the scores file in multirun_path
     results_csv_path = None
     for file_name in os.listdir(f"{multirun_path}/"):
@@ -104,6 +150,12 @@ def enricher(multirun_path, cfg):
     print("enriched results", df_results)
 
     df_results.to_csv(results_csv_path, index=False)
+
+    if(checkpoint_compatible == "True"):
+        print("creating and uploading checkpoints")
+        create_and_upload_checkpoints(df_results, results_csv_path, flow_uuid, job_uuid)
+    else:
+        print("Checkpoints are disabled, moving on to the next step.")
 
 
 def get_files_from_directory(root_dir, extension, max_depth=3):
@@ -402,13 +454,13 @@ def prodigy_run(csv_path, pdb_path):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
-    user_inputs = get_plex_job_inputs()
+    user_inputs, job_uuid, flow_uuid, checkpoint_compatible = get_plex_job_inputs()
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
     OmegaConf.update(cfg, "params.basic_settings.binder_length", user_inputs["binder_length"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.hotspot", user_inputs["hotspot"], merge=False)
-    OmegaConf.update(cfg, "params.basic_settings.num_designs", user_inputs["number_of_binders"], merge=False)
+    OmegaConf.update(cfg, "params.basic_settings.num_designs", 240, merge=False)
     OmegaConf.update(cfg, "params.basic_settings.pdb_chain", user_inputs["target_chain"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.pdb_start_residue", user_inputs["target_start_residue"], merge=False)
     OmegaConf.update(cfg, "params.advanced_settings.pdb_end_residue", user_inputs["target_end_residue"], merge=False)
@@ -569,7 +621,7 @@ def my_app(cfg: DictConfig) -> None:
 
         # enrich and summarise run and results information and write to csv file
         print("running enricher")
-        enricher(outputs_directory, cfg)
+        enricher(outputs_directory, cfg, flow_uuid, job_uuid, checkpoint_compatible)
 
         print("design complete...")
         end_time = time.time()
