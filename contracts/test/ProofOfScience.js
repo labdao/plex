@@ -11,7 +11,6 @@ describe("ProofOfScience", function() {
     ProofOfScience = await ethers.getContractFactory("ProofOfScience");
     [addr1, ...addrs] = await ethers.getSigners();
     proofOfScience = await ProofOfScience.deploy();
-    await proofOfScience.deployed();
   });
 
   describe("Deployment", function() {
@@ -52,6 +51,19 @@ describe("ProofOfScience", function() {
 
     it("Should return correct license name", async function() {
       expect(await proofOfScience.getLicenseName()).to.equal("EXCLUSIVE");
+    });
+  });
+
+  describe("supportsInterface", function() {
+    it("Should support ERC1155 and CantBeEvil interfaces", async function() {
+      expect(await proofOfScience.supportsInterface("0xd9b67a26")).to.equal(true); // ERC1155
+      expect(await proofOfScience.supportsInterface("0x01ffc9a7")).to.equal(true); // CantBeEvil
+    });
+  });
+
+  describe("Token URI", function() {
+    it("Should return an empty string for non-existent token", async function() {
+      expect(await proofOfScience.uri(999)).to.equal("ipfs://");
     });
   });
 });

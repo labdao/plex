@@ -299,6 +299,7 @@ contracts/coverage
 contracts/coverage.json
 contracts/typechain
 contracts/typechain-types
+contracts/ignition/deployments
 
 # Next.js
 .next/
