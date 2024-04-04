@@ -440,25 +440,6 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
 			return
 		}
-
-		var toolCid string //change to toolCid retrieved from existing flow data, not thro reqbody.
-		err = json.Unmarshal(requestData["toolCid"], &toolCid)
-		if err != nil || toolCid == "" {
-			http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
-			return
-		}
-
-		var tool models.Tool
-		result := db.Where("cid = ?", toolCid).First(&tool)
-		if result.Error != nil {
-			if result.Error == gorm.ErrRecordNotFound {
-				http.Error(w, "Tool not found", http.StatusNotFound)
-			} else {
-				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
-			}
-			return
-		}
-
 		params := mux.Vars(r)
 		flowID, err := strconv.Atoi(params["flowID"])
 		if err != nil {
@@ -478,6 +459,26 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 		if flow.WalletAddress != user.WalletAddress {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		//TODO: change to toolCid retrieved from existing flow data, not thro reqbody.
+		var toolId = flow.Jobs[0].ToolID
+
+		// var toolCid string
+		// err = json.Unmarshal(requestData["toolCid"], &toolCid)
+		// if err != nil || toolId == "" {
+		// 	http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
+		// 	return
+		// }
+
+		var tool models.Tool
+		result := db.Where("cid = ?", toolId).First(&tool)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				http.Error(w, "Tool not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+			}
 			return
 		}
 
