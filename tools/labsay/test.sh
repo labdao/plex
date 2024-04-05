@@ -14,7 +14,7 @@ docker run \
 -e PLEX_JOB_INPUTS="$PLEX_JOB_INPUTS" \
 -e FLOW_UUID="$FLOW_UUID" \
 -e JOB_UUID="$JOB_UUID" \
--e CHECKPOINT_COMPATIBLE="True" \
+-e CHECKPOINT_COMPATIBLE="False" \
 --env-file ~/aws.env \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs labsay

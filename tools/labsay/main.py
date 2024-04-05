@@ -10,9 +10,8 @@ def get_plex_job_inputs():
     json_str = os.getenv("PLEX_JOB_INPUTS")
     job_uuid = os.getenv("JOB_UUID")
     flow_uuid = os.getenv("FLOW_UUID")
-    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE")
+    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE", "False")
 
-    print(checkpoint_compatible)
     # Check if the environment variable is set
     if (job_uuid is None) or (flow_uuid is None) or (checkpoint_compatible is None) or (json_str is None):
         raise ValueError("One/more of the mandatory environment variables are missing: PLEX_JOB_INPUTS/JOB_UUID/FLOW_UUID/CHECKPOINT_COMPATIBLE.")
@@ -113,7 +112,7 @@ def main():
 
     os.makedirs("/outputs", exist_ok=True)
     display_logo(job_inputs["speedup"])
-    if(checkpoint_compatible == "True"):
+    if(checkpoint_compatible.lower == "true"):
         bucket_name = "app-checkpoint-bucket"
 
         # Simulate checkpoint creation and upload to S3

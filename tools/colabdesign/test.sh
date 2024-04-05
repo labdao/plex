@@ -20,7 +20,7 @@ docker run --gpus=all \
 --env-file ~/aws.env \
 -e FLOW_UUID="$FLOW_UUID" \
 -e JOB_UUID="$JOB_UUID" \
--e CHECKPOINT_COMPATIBLE="True" \
+-e CHECKPOINT_COMPATIBLE="False" \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs colabdesign
 
