@@ -3,9 +3,16 @@ FROM node:18-alpine AS base
 # Include NEXT_PUBLIC_BACKEND_URL and NEXT_PUBLIC_PRIVY_APP_ID
 ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
 ARG NEXT_PUBLIC_PRIVY_APP_ID
-ARG NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT
+ARG NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT=http://localhost:8888/ipfs/
 ARG NEXT_PUBLIC_FRONTEND_URL
 ARG NEXT_PUBLIC_DEMO_URL
+
+# Running checks to ensure that required parameters are passed in
+RUN [ -z "$NEXT_PUBLIC_BACKEND_URL" ] && echo "NEXT_PUBLIC_BACKEND_URL is required" && exit 1 || true
+RUN [ -z "$NEXT_PUBLIC_PRIVY_APP_ID" ] && echo "NEXT_PUBLIC_PRIVY_APP_ID is required" && exit 1 || true
+RUN [ -z "$NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT" ] && echo "NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT is required" && exit 1 || true
+RUN [ -z "$NEXT_PUBLIC_FRONTEND_URL" ] && echo "NEXT_PUBLIC_FRONTEND_URL is required" && exit 1 || true
+RUN [ -z "$NEXT_PUBLIC_DEMO_URL" ] && echo "NEXT_PUBLIC_DEMO_URL is required" && exit 1 || true
 
 # Install dependencies only when needed
 FROM base AS deps

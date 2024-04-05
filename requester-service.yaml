@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: requester
+  name: requester
+spec:
+  ports:
+    - name: "1234"
+      port: 1234
+      targetPort: 1234
+    - name: "1235"
+      port: 1235
+      targetPort: 1235
+  selector:
+    io.kompose.service: requester

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: dbreceptor
+  name: dbreceptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: dbreceptor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: dbreceptor
+    spec:
+      containers:
+        - args:
+            - postgres
+            - -c
+            - log_statement=all
+            - -c
+            - log_destination=stderr
+          env:
+            - name: POSTGRES_DB
+              value: receptor
+            - name: POSTGRES_PASSWORD
+              value: labdao
+            - name: POSTGRES_USER
+              value: labdao
+          image: postgres:15.4
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready -U postgres  || exit 1
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 10
+          name: dbreceptor
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: dbdata-receptor
+      restartPolicy: Always
+      volumes:
+        - name: dbdata-receptor
+          persistentVolumeClaim:
+            claimName: dbdata-receptor

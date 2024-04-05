@@ -13,13 +13,6 @@ WORKDIR /app/
 # RUN CGO_ENABLED=1 go build -race -o /go/bin/plex
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-ARG BACALHAU_VERSION=1.2.0
-ARG NEXT_PUBLIC_PRIVY_APP_ID
-ARG PRIVY_PUBLIC_KEY
-
-# For bacalhau cli
-FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau
-
 FROM busybox:1.31.1-glibc
 
 COPY --from=builder /go/bin/plex /plex
@@ -36,19 +29,22 @@ COPY --from=builder /lib/*-linux-gnu*/libdl.so.2 /lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
 COPY --from=builder /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
-# COPY bacalhau cli
-COPY --from=bacalhau --chmod=755 /usr/local/bin/bacalhau /usr/local/bin/bacalhau
-
-# This creates config file needed by bacalhau golang client
-RUN /usr/local/bin/bacalhau version
-RUN /usr/local/bin/bacalhau config default > /root/.bacalhau/config.yaml
-
 ENV POSTGRES_PASSWORD=MAKE_UP_SOMETHING_RANDOM
 ENV POSTGRES_USER=labdao
 ENV POSTGRES_DB=labdao
 ENV POSTGRES_HOST=localhost
 ENV FRONTEND_URL=http://localhost:3080
-ENV BACALHAU_API_HOST=127.0.0.1
+ENV IPFS_API_HOST=ipfs
+ENV MAX_QUEUE_TIME_SECONDS=259200 # default 72 hours
+ENV MAX_COMPUTE_TIME_SECONDS=259200 # default 72 hours
+ENV STRIPE_PRODUCT_SLUG=price_1OlwVPE7xzGf7nZbaccQCnHv
+# ENV STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+# ENV STRIPE_WEBHOOK_SECRET_KEY: ${STRIPE_WEBHOOK_SECRET_KEY}
+# ENV NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
+# ENV PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
+# ENV AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+# ENV AWS_SECRET_ACCESS_KEY : ${AWS_SECRET_ACCESS_KEY}
+
 
 EXPOSE 8080
 

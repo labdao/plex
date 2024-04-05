@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: receptor
+  name: receptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: receptor
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: receptor
+    spec:
+      containers:
+        - env:
+            - name: PGDATABASE
+              value: receptor
+            - name: PGHOST
+              value: dbreceptor
+            - name: PGPASSWORD
+              value: labdao
+            - name: PGSSLMODE
+              value: disable
+            - name: PGUSER
+              value: labdao
+          image: receptor
+          name: receptor
+      restartPolicy: Always

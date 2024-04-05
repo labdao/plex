@@ -1,0 +1,20 @@
+apiVersion: skaffold/v4beta10
+kind: Config
+metadata:
+  name: plex
+build:
+  artifacts:
+    - image: frontend
+      context: frontend
+      docker:
+        dockerfile: Dockerfile
+    - image: ipfs
+      context: docker/images/ipfs
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  helm:
+    releases:
+      - name: docker-compose
+        chartPath: k8s
+        version: 0.0.1

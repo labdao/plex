@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: backend
+  template:
+    metadata:
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: backend
+    spec:
+      containers:
+        - env:
+            - name: BACALHAU_API_HOST
+              value: requester
+            - name: FRONTEND_URL
+              value: http://localhost:3000
+            - name: IPFS_API_HOST
+              value: ipfs
+            - name: MAX_COMPUTE_TIME_SECONDS
+              value: "259200"
+            - name: MAX_QUEUE_TIME_SECONDS
+              value: "259200"
+            - name: NEXT_PUBLIC_PRIVY_APP_ID
+              value: clnf5ptkk01h1jn0fzhh4xldt
+            - name: POSTGRES_DB
+              value: backend
+            - name: POSTGRES_HOST
+              value: dbbackend
+            - name: POSTGRES_PASSWORD
+              value: labdao
+            - name: POSTGRES_USER
+              value: labdao
+            - name: PRIVY_PUBLIC_KEY
+            - name: STRIPE_PRODUCT_SLUG
+              value: price_1OlwVPE7xzGf7nZbaccQCnHv
+            - name: STRIPE_SECRET_KEY
+            - name: STRIPE_WEBHOOK_SECRET_KEY
+          image: backend
+          livenessProbe:
+            exec:
+              command:
+                - wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 10
+          name: backend
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
+      restartPolicy: Always

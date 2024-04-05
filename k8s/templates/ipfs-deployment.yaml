@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: ipfs
+  name: ipfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ipfs
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: ipfs
+    spec:
+      containers:
+        - env:
+            - name: IPFS_DEBUG
+              value: "false"
+            - name: IPFS_GATEWAY_PORT
+              value: "8888"
+            - name: IPFS_LOGGING
+              value: info
+          image: ipfs
+          name: ipfs
+          ports:
+            - containerPort: 4001
+              hostPort: 4001
+              protocol: TCP
+            - containerPort: 5001
+              hostPort: 5001
+              protocol: TCP
+            - containerPort: 8888
+              hostPort: 8888
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /data/ipfs
+              name: ipfs
+      hostname: ipfs
+      restartPolicy: Always
+      volumes:
+        - name: ipfs
+          persistentVolumeClaim:
+            claimName: ipfs

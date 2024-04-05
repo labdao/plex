@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: requester-health
+  name: requester-health
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: requester-health
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: requester-health
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - apk add curl && sleep infinity
+          image: alpine
+          livenessProbe:
+            exec:
+              command:
+                - curl -f http://requester:1234/api/v1/healthz
+            failureThreshold: 10
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 10
+          name: requester-health
+      restartPolicy: Always

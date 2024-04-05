@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: frontend
+  template:
+    metadata:
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: frontend
+    spec:
+      containers:
+        - env:
+            - name: NODE_ENV
+              value: production
+          image: frontend
+          name: frontend
+          ports:
+            - containerPort: 3000
+              hostPort: 3000
+              protocol: TCP
+      restartPolicy: Always

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: requester
+  name: requester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: requester
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/plex-default: "true"
+        io.kompose.service: requester
+    spec:
+      containers:
+        - args:
+            - serve
+            - --ipfs-connect
+            - /dns4/ipfs/tcp/5001
+            - --node-type
+            - requester
+            - --private-internal-ipfs=false
+            - --peer
+            - none
+            - --labels
+            - owner=labdao
+            - --job-selection-probe-http
+            - http://receptor:8080/judge
+          env:
+            - name: BACALHAU_ENVIRONMENT
+              value: local
+            - name: LOG_LEVEL
+              value: trace
+          image: ghcr.io/bacalhau-project/bacalhau:v1.2.0
+          name: requester
+          ports:
+            - containerPort: 1234
+              hostPort: 1234
+              protocol: TCP
+            - containerPort: 1235
+              hostPort: 1235
+              protocol: TCP
+      hostname: requester
+      restartPolicy: Always
