@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form } from "@/components/ui/form";
 import { AppDispatch, selectFlowDetail, selectToolDetail } from "@/lib/redux";
 
-import { toast } from "sonner";
 import ContinuousSwitch from "./ContinuousSwitch";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateRerunSchema, generateValues } from "./formGenerator";
@@ -78,9 +78,9 @@ export default function RerunExperimentForm() {
                   return (
                     <CardContent key={groupKey} className="border-t">
                       <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 text-left uppercase font-heading">
-                          {groupKey.replace("_", "")}
+                        <CollapsibleTrigger className="flex items-center w-full gap-2 text-sm text-left lowercase text-muted-foreground font-heading">
                           <ChevronsUpDownIcon />
+                          {groupKey.replace("_", "")}
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="pt-0 space-y-4">

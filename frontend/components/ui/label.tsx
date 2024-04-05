@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const labelVariants = cva("leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", {
   variants: {
     variant: {
-      default: "font-mono block font-bold text-base py-2",
+      default: "font-heading block text-base py-2",
       description: "empty:hidden first:ml-0 mx-1 inline-block text-xs text-muted-foreground font-body font-normal",
     },
   },

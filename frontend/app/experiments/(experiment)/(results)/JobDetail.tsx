@@ -8,11 +8,12 @@ import React, { useEffect, useState } from "react";
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile, JobDetail, ToolDetail, selectToolDetail, useSelector } from "@/lib/redux";
+import { DataFile, JobDetail, selectToolDetail, ToolDetail, useSelector } from "@/lib/redux";
+import { cn } from "@/lib/utils";
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { groupInputs } from "../(forms)/formUtils";
 import LogViewer from "./LogViewer";
 
@@ -111,9 +112,12 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 }
 
 function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKey: string }) {
-  const formattedValue = input?.type === "file" ? value?.replace(/^.*\/(.*)$/, "$1") : value;
+  const fileInfo = input?.type === "file" ? value?.split("/") : [];
+  const fileName = fileInfo?.[1] || "";
+  const fileCID = fileInfo?.[0] || "";
+
   return (
-    <div className="px-6 py-2 text-xs border-b border-border/50 ">
+    <div className="px-6 py-2 border-b border-border/50 ">
       <div>
         <Label className="flex items-center justify-between gap-2">
           <span>
@@ -123,7 +127,23 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
             </LabelDescription>{" "}
           </span>
         </Label>
-        <div className="pb-2 text-lg break-words">{value ? formattedValue : <span className="text-muted-foreground">None</span>}</div>
+        <div className="text-base ">
+          {input?.type === "file" ? (
+            <>
+              {value ? (
+                <FileDownloadLink fileName={fileName} fileCID={fileCID} className="text-accent hover:underline">
+                  {fileName}
+                </FileDownloadLink>
+              ) : (
+                <span className="text-muted-foreground">None</span>
+              )}
+            </>
+          ) : (
+            <CopyToClipboard string={value}>
+              <span className="pb-2 break-words">{value || <span className="text-muted-foreground">None</span>}</span>
+            </CopyToClipboard>
+          )}
+        </div>
         <div className="text-xs lowercase text-muted-foreground">
           <LabelDescription>{!input?.required && input?.default === "" ? "(Optional)" : ""}</LabelDescription>
           {input?.description}
@@ -156,9 +176,9 @@ function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; t
             return (
               <div key={groupKey}>
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 p-6 text-left uppercase font-heading">
-                    {groupKey.replace("_", "")}
+                  <CollapsibleTrigger className="flex items-center w-full gap-2 px-6 py-3 text-sm text-left lowercase text-muted-foreground font-heading">
                     <ChevronsUpDownIcon />
+                    {groupKey.replace("_", "")}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="pt-0 space-y-4">
@@ -180,11 +200,21 @@ function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; t
   );
 }
 
-function FileList({ files }: { files: DataFile[] }) {
-  const handleDownload = async (file: DataFile) => {
+function FileDownloadLink({
+  fileCID,
+  fileName,
+  children,
+  className,
+}: {
+  fileName: string;
+  fileCID: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const handleDownload = async (fileCID: string, fileName: string) => {
     try {
       const authToken = await getAccessToken();
-      const response = await fetch(`${backendUrl()}/datafiles/${file.CID}/download`, {
+      const response = await fetch(`${backendUrl()}/datafiles/${fileCID}/download`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -197,7 +227,7 @@ function FileList({ files }: { files: DataFile[] }) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = file.Filename || "download";
+      a.download = fileName || "download";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -206,16 +236,25 @@ function FileList({ files }: { files: DataFile[] }) {
       console.error(error);
     }
   };
+
+  return (
+    <a target="#" onClick={() => handleDownload(fileCID, fileName)} className={cn("cursor-pointer", className)}>
+      {children}
+    </a>
+  );
+}
+
+function FileList({ files }: { files: DataFile[] }) {
   return (
     <div>
       {!!files?.length ? (
         <>
           {files.map((file: DataFile) => (
-            <div key={file.CID} className="flex items-center justify-between px-6 py-2 text-xs border-b border-border/50 last:border-none">
+            <div key={file.CID} className="flex items-center justify-between px-6 py-2 border-b border-border/50 last:border-none">
               <div>
-                <a target="#" onClick={() => handleDownload(file)} className="text-accent" style={{ cursor: "pointer" }}>
+                <FileDownloadLink fileName={file.Filename} fileCID={file.CID} className="text-accent hover:underline">
                   <TruncatedString value={file.Filename} trimLength={30} />
-                </a>
+                </FileDownloadLink>
                 <div className="opacity-70 text-muted-foreground">
                   <CopyToClipboard string={file.CID}>
                     cid: <TruncatedString value={file.CID} />
@@ -224,9 +263,9 @@ function FileList({ files }: { files: DataFile[] }) {
               </div>
               {/* @TODO: Add Filesize */}
               <Button size="icon" variant="outline" asChild>
-                <a target="#" onClick={() => handleDownload(file)} style={{ cursor: "pointer" }}>
+                <FileDownloadLink fileName={file.Filename} fileCID={file.CID}>
                   <DownloadIcon />
-                </a>
+                </FileDownloadLink>
               </Button>
             </div>
           ))}

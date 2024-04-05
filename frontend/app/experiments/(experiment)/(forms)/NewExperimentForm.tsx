@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
-import { toast } from "sonner";
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
@@ -121,9 +121,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
                   return (
                     <CardContent key={groupKey} className="pt-0 first:pt-2">
                       <Collapsible>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full gap-2 text-left uppercase font-heading">
-                          {groupKey.replace("_", "")}
+                        <CollapsibleTrigger className="flex items-center w-full gap-2 text-sm text-left lowercase text-muted-foreground font-heading">
                           <ChevronsUpDownIcon />
+                          {groupKey.replace("_", "")}
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="pt-0 space-y-4">
