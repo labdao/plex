@@ -6,7 +6,7 @@
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "quay.io/labdao/labsay@sha256:750af65152e44e7c1d79e21dea54bfd567e35c95e7fde1ad3c6e129c7176a59d",
+    "dockerPull": "quay.io/labdao/labsay@sha256:e6f5bd5e1e6a98f4e2a8de3284594ad59a843e40a09e46d9c406d357d80565c4",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,
