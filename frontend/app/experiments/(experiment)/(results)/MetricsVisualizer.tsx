@@ -42,7 +42,7 @@ interface CheckpointChartData {
 }
 
 interface CheckpointData {
-  fileName: string;
+  filename: string;
   url: string;
 }
 

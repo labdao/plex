@@ -26,7 +26,7 @@ interface ModelInfoProps {
 type OutputSummaryItem = {
   name: string;
   fileExtensions: string;
-  fileNames: string;
+  filenames: string;
   multiple: boolean;
 };
 
@@ -85,7 +85,7 @@ export default function ModelInfo({ task, defaultOpen, showSelect }: ModelInfoPr
     outputSummaryInfo.items.push({
       name: key.replaceAll("_", " "),
       fileExtensions: outputs?.[key]?.glob?.map((glob: string) => glob.split(".").pop())?.join(", "),
-      fileNames: outputs?.[key]?.glob?.join(", "),
+      filenames: outputs?.[key]?.glob?.join(", "),
       multiple: outputs?.[key]?.type === "Array",
     });
   }
@@ -150,7 +150,7 @@ export default function ModelInfo({ task, defaultOpen, showSelect }: ModelInfoPr
             <div className="space-y-2 lowercase">
               {(outputSummaryInfo?.items || []).map((item, index) => (
                 <div key={index}>
-                  <div className="text-sm">{item.multiple ? <div>{item.fileExtensions} files</div> : <div>{item.fileNames} file</div>}</div>
+                  <div className="text-sm">{item.multiple ? <div>{item.fileExtensions} files</div> : <div>{item.filenames} file</div>}</div>
                   <div className="mr-3 text-xs text-muted-foreground">{item.name}</div>
                 </div>
               ))}

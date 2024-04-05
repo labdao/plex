@@ -113,7 +113,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 
 function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKey: string }) {
   const fileInfo = input?.type === "file" ? value?.split("/") : [];
-  const fileName = fileInfo?.[1] || "";
+  const filename = fileInfo?.[1] || "";
   const fileCID = fileInfo?.[0] || "";
 
   return (
@@ -131,8 +131,8 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
           {input?.type === "file" ? (
             <>
               {value ? (
-                <FileDownloadLink fileName={fileName} fileCID={fileCID} className="text-accent hover:underline">
-                  {fileName}
+                <FileDownloadLink filename={filename} fileCID={fileCID} className="text-accent hover:underline">
+                  {filename}
                 </FileDownloadLink>
               ) : (
                 <span className="text-muted-foreground">None</span>
@@ -202,16 +202,16 @@ function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; t
 
 function FileDownloadLink({
   fileCID,
-  fileName,
+  filename,
   children,
   className,
 }: {
-  fileName: string;
+  filename: string;
   fileCID: string;
   children: React.ReactNode;
   className?: string;
 }) {
-  const handleDownload = async (fileCID: string, fileName: string) => {
+  const handleDownload = async (fileCID: string, filename: string) => {
     try {
       const authToken = await getAccessToken();
       const response = await fetch(`${backendUrl()}/datafiles/${fileCID}/download`, {
@@ -227,7 +227,7 @@ function FileDownloadLink({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = fileName || "download";
+      a.download = filename || "download";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -238,7 +238,7 @@ function FileDownloadLink({
   };
 
   return (
-    <a target="#" onClick={() => handleDownload(fileCID, fileName)} className={cn("cursor-pointer", className)}>
+    <a target="#" onClick={() => handleDownload(fileCID, filename)} className={cn("cursor-pointer", className)}>
       {children}
     </a>
   );
@@ -252,7 +252,7 @@ function FileList({ files }: { files: DataFile[] }) {
           {files.map((file: DataFile) => (
             <div key={file.CID} className="flex items-center justify-between px-6 py-2 border-b border-border/50 last:border-none">
               <div>
-                <FileDownloadLink fileName={file.Filename} fileCID={file.CID} className="text-accent hover:underline">
+                <FileDownloadLink filename={file.Filename} fileCID={file.CID} className="text-accent hover:underline">
                   <TruncatedString value={file.Filename} trimLength={30} />
                 </FileDownloadLink>
                 <div className="opacity-70 text-muted-foreground">
@@ -263,7 +263,7 @@ function FileList({ files }: { files: DataFile[] }) {
               </div>
               {/* @TODO: Add Filesize */}
               <Button size="icon" variant="outline" asChild>
-                <FileDownloadLink fileName={file.Filename} fileCID={file.CID}>
+                <FileDownloadLink filename={file.Filename} fileCID={file.CID}>
                   <DownloadIcon />
                 </FileDownloadLink>
               </Button>

@@ -106,7 +106,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
               <Card>
                 {Object.keys(groupedInputs?.standard || {}).map((groupKey) => {
                   return (
-                    <CardContent key={groupKey} className="border-t first:border-0">
+                    <CardContent key={groupKey} className="">
                       <div className="space-y-4">
                         {Object.keys(groupedInputs?.standard[groupKey] || {}).map((key) => {
                           const input = groupedInputs?.standard?.[groupKey]?.[key];

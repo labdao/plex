@@ -46,7 +46,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                 )}
                 {fields.length > 1 && (
                   <Button
-                    className="absolute invisible hover:text-destructive hover:bg-destructive-foreground right-1 -bottom-10 group-hover:visible"
+                    className="absolute z-20 invisible hover:text-destructive hover:bg-destructive-foreground -right-4 -bottom-10 group-hover:visible"
                     size="icon"
                     variant="secondary"
                     onClick={() => remove(index)}
