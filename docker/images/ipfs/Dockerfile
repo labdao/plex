@@ -4,8 +4,8 @@ ARG IPFS_VERSION=0.18.0
 FROM golang:1.19.1-buster AS builder
 
 ARG IPFS_VERSION=0.18.0
-ARG IPFS_DS_S3_PLUGIN_VERSION=latest
-ARG IPFS_HEALTHCHECK_PLUGIN_VERSION=latest
+ARG IPFS_DS_S3_PLUGIN_VERSION=0cc3de579103f6fd209c30e43abadf80f1024151
+ARG IPFS_HEALTHCHECK_PLUGIN_VERSION=3aaefbe9799465dcfbb89d6c68d1c4bd876f3361
 
 WORKDIR /
 
@@ -38,7 +38,7 @@ FROM ipfs/kubo:v${IPFS_VERSION} AS ipfs-with-utils
 # COPY --from=ceramicnetwork/go-ipfs-daemon:daaf07a9dbd007a3a6378f34f2a404992ade5e93 /usr/local/bin/ipfs /usr/local/bin/ipfs
 
 # Copy IPFS from locally build IPFS binary from builder
-COPY --from=builder /usr/local/bin/ipfs /usr/local/bin/ipfs
+COPY --from=builder /go/bin/ipfs /usr/local/bin/ipfs
 
 # Copy jq
 COPY --from=ghcr.io/jqlang/jq /jq /usr/local/bin/jq
