@@ -12,6 +12,10 @@ def get_plex_job_inputs():
     flow_uuid = os.getenv("FLOW_UUID")
     checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE", "True")
 
+    print(f"PLEX_JOB_INPUTS: {json_str}")
+    print(f"JOB_UUID: {job_uuid}")
+    print(f"FLOW_UUID: {flow_uuid}")
+    print(f"CHECKPOINT_COMPATIBLE: {checkpoint_compatible}")
     # Check if the environment variable is set
     if (job_uuid is None) or (flow_uuid is None) or (checkpoint_compatible is None) or (json_str is None):
         raise ValueError("One/more of the mandatory environment variables are missing: PLEX_JOB_INPUTS/JOB_UUID/FLOW_UUID/CHECKPOINT_COMPATIBLE.")
