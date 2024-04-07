@@ -155,7 +155,7 @@ def enricher(multirun_path, cfg, flow_uuid, job_uuid, checkpoint_compatible):
 
     df_results.to_csv(results_csv_path, index=False)
 
-    if(checkpoint_compatible.lower == "true"):
+    if(checkpoint_compatible.lower() == "true"):
         print("creating and uploading checkpoints")
         create_and_upload_checkpoints(df_results, results_csv_path, flow_uuid, job_uuid)
     else:
