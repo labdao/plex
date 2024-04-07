@@ -116,7 +116,7 @@ def main():
 
     os.makedirs("/outputs", exist_ok=True)
     display_logo(job_inputs["speedup"])
-    if(checkpoint_compatible.lower == "true"):
+    if(checkpoint_compatible.lower() == "true"):
         bucket_name = "app-checkpoint-bucket"
 
         # Simulate checkpoint creation and upload to S3
