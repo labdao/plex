@@ -39,7 +39,7 @@ def get_plex_job_inputs():
     json_str = os.getenv("PLEX_JOB_INPUTS")
     job_uuid = os.getenv("JOB_UUID")
     flow_uuid = os.getenv("FLOW_UUID")
-    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE", "False")
+    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE", "True")
 
     print(f"PLEX_JOB_INPUTS: {json_str}")
     print(f"JOB_UUID: {job_uuid}")
