@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign v1.0",
+  "name": "colabdesign v1.1",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
   "guide": "Follow these steps to use the tool effectively:\n\n1. Select a .pdb file containing the structure of the target you would like to design a binder against.\n2. Enter the length of the binder you want to design (total number of residues) and the number of binders to design. These two steps are already enough to prompt the tool and you are ready to submit your experimental run. In case you wish to give additional constraints for the designs, here are additional inputs you can give:\n3. Define hotspot residues on the target as the binding sites, stating the chain followed by the number of the residue. You can specify multiple hotspots at once.\n4. Crop the target structure by specifying start and end residues on the target chain, or selecting a different target chain from the pdb file altogether (chain A is the default).\n5. Define a contig that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",
   "author": "sokrypton",
@@ -12,7 +12,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign@sha256:2d58a7d73d0f076080068508beb3cb8f3826f7e719fa8f3f542d1d4a4c71b57b",
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:253bceae4ec647e3d06114dfcc4b72d6b22ccffa07a19d1d25bc621af82dca35",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
