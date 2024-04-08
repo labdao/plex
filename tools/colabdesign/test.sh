@@ -16,11 +16,11 @@ JOB_UUID="test-job_uuid_$(date +%y%m%d_%H%M%S)"
 # -v "$PWD/$OUTPUT_DIR":/outputs colabdesign python -u main.py inputs=container outputs=container params=VTNCparams1
 
 docker run --gpus=all \
--e PLEX_JOB_INPUTS='{"binder_length":10,"hotspot":"","number_of_binders":1,"target_chain":"B","target_start_residue":50,"target_end_residue":100,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
+-e PLEX_JOB_INPUTS='{"binder_length":10,"hotspot":"","number_of_binders":8,"target_chain":"B","target_start_residue":50,"target_end_residue":100,"target_protein":"/inputs/target_protein/pdc_upar_1_target.pdb","contigs_override":"A1-283:11/2/5/11/11"}' \
 --env-file ~/aws.env \
 -e FLOW_UUID="$FLOW_UUID" \
 -e JOB_UUID="$JOB_UUID" \
--e CHECKPOINT_COMPATIBLE="False" \
+-e CHECKPOINT_COMPATIBLE="True" \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs colabdesign
 
