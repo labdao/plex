@@ -2,12 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { ToolDetail } from "@/lib/redux";
 
-export interface Tool {
-  CID: string;
-  WalletAddress: string;
-  Name: string;
-}
-
 interface ToolListSliceState {
   tools: ToolDetail[];
   loading: boolean;
@@ -38,7 +32,9 @@ export const toolListSlice = createSlice({
     setToolListSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
-    resetToolList: () => { return initialState; },
+    resetToolList: () => {
+      return initialState;
+    },
   },
 });
 

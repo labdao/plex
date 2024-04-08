@@ -6,11 +6,11 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const labelVariants = cva("lowercase font-body leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", {
+const labelVariants = cva("leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", {
   variants: {
     variant: {
-      default: "block text-base py-2",
-      description: "empty:hidden first:ml-0 mx-2 inline-block text-xs text-muted-foreground",
+      default: "font-heading block text-base py-2",
+      description: "empty:hidden first:ml-0 mx-1 inline-block text-xs text-muted-foreground font-body font-normal",
     },
   },
   defaultVariants: {

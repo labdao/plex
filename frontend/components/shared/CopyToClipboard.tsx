@@ -20,9 +20,12 @@ export function CopyToClipboard({ string, children, className }: CopyToClipboard
       setCopied(false);
     }, 2000);
   };
+
+  if (!string) return children;
+
   return (
     <div
-      className={cn("relative flex items-center gap-1 cursor-pointer group", className)}
+      className={cn("relative cursor-pointer group", className)}
       onClick={() => {
         copy();
       }}
@@ -31,7 +34,7 @@ export function CopyToClipboard({ string, children, className }: CopyToClipboard
       <TooltipProvider>
         <Tooltip open={copied}>
           <TooltipTrigger asChild>
-            <Button size="icon" variant="ghost" className="p-1 text-muted-foreground">
+            <Button size="icon" variant="ghost" className="inline-block p-1 text-muted-foreground">
               <CopyIcon />
             </Button>
           </TooltipTrigger>
