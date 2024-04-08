@@ -448,7 +448,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var flow models.Flow
-		if result := db.Where("id = ?", flowID).First(&flow); result.Error != nil {
+		if result := db.Preload("Jobs").Where("id = ?", flowID).First(&flow); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				http.Error(w, "Flow not found", http.StatusNotFound)
 			} else {
@@ -508,7 +508,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
+		ioList, err := ipwl.InitializeIo(tool.CID, scatteringMethod, kwargs)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
