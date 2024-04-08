@@ -374,50 +374,38 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var requestData struct {
-			Name   *string `json:"name,omitempty"`
-			Public *bool   `json:"public,omitempty"`
-		}
-
-		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-			http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		if flow.Public {
+			http.Error(w, "Flow is already public", http.StatusBadRequest)
 			return
 		}
 
-		if requestData.Public != nil {
-			if *requestData.Public && flow.Public {
-				http.Error(w, "Flow is already public", http.StatusBadRequest)
+		flow.Public = true
+
+		if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		var jobs []models.Job
+		if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		for _, job := range jobs {
+			if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
-			if !*requestData.Public && !flow.Public {
-				flow.Public = true
-				if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
 
-				var jobs []models.Job
-				if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
 
-				for _, job := range jobs {
-					if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
-						http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
-						return
-					}
-
-					if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
-						http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
-						return
-					}
-
-					if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
-						http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
-						return
-					}
-				}
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
 		}
 
@@ -473,15 +461,8 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		//TODO: change to toolCid retrieved from existing flow data, not thro reqbody.
+		//TODO: think about moving toolID to flow level instead of job level
 		var toolId = flow.Jobs[0].ToolID
-
-		// var toolCid string
-		// err = json.Unmarshal(requestData["toolCid"], &toolCid)
-		// if err != nil || toolId == "" {
-		// 	http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
-		// 	return
-		// }
 
 		var tool models.Tool
 		result := db.Where("cid = ?", toolId).First(&tool)
