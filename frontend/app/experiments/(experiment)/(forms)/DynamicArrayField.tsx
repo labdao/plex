@@ -27,7 +27,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
   const hasError = form.formState.errors?.[inputKey];
 
   return (
-    <div className="relative space-y-0">
+    <div className="relative pb-6 space-y-0 border-b">
       {fields.map((field, index) => (
         <FormField
           key={field.id}
@@ -35,16 +35,22 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
           name={`${inputKey}.${index}.value`}
           render={({ field }) => (
             <FormItem className="group">
-              <FormLabel className="flex items-center justify-between gap-2">
-                <span>
-                  <span>{inputKey.replaceAll("_", " ")}</span>{" "}
-                  <LabelDescription>
-                    {input?.type} {input?.array ? "array" : ""}
-                  </LabelDescription>{" "}
-                </span>
-
+              <FormLabel className="relative flex items-center justify-between gap-2">
+                {index === 0 && (
+                  <span>
+                    <span>{inputKey.replaceAll("_", " ")}</span>{" "}
+                    <LabelDescription>
+                      {input?.type} {input?.array ? "array" : ""}
+                    </LabelDescription>{" "}
+                  </span>
+                )}
                 {fields.length > 1 && (
-                  <Button className="invisible -mt-2 -mb-1 group-hover:visible" size="icon" variant="ghost" onClick={() => remove(index)}>
+                  <Button
+                    className="absolute z-20 invisible hover:text-destructive hover:bg-destructive-foreground -right-4 -bottom-10 group-hover:visible"
+                    size="icon"
+                    variant="secondary"
+                    onClick={() => remove(index)}
+                  >
                     <Trash2Icon size={18} />
                   </Button>
                 )}
@@ -68,16 +74,18 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                   </>
                 </FormControl>
               </div>
-              <FormDescription>
-                <LabelDescription>{!input?.required && input?.default === "" ? "(Optional)" : ""}</LabelDescription>
-                {input?.description}
-              </FormDescription>
+              {index === fields?.length - 1 && (
+                <FormDescription>
+                  <LabelDescription>{!input?.required && input?.default === "" ? "(Optional)" : ""}</LabelDescription>
+                  {input?.description}
+                </FormDescription>
+              )}
               <FormMessage />
             </FormItem>
           )}
         />
       ))}
-      <Button type="button" variant="secondary" size="icon" onClick={() => append({ value: input.default })}>
+      <Button type="button" variant="secondary" size="icon" className="absolute right-0 -bottom-4" onClick={() => append({ value: input.default })}>
         <PlusIcon size={24} />
       </Button>
     </div>
