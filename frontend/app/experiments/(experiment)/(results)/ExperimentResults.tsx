@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectToolDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
-import { ActiveResultContextProvider } from "./ActiveResultContext";
 import JobsAccordion from "./JobsAccordion";
 import MetricsVisualizer from "./MetricsVisualizer";
 
@@ -38,10 +37,8 @@ export default function ExperimentDetail() {
 
   return (
     <div>
-      <ActiveResultContextProvider>
-        {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer flow={flow} key={flow.ID} />}
-        <JobsAccordion flow={flow} />
-      </ActiveResultContextProvider>
+      {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer flow={flow} key={flow.ID} />}
+      <JobsAccordion flow={flow} />
     </div>
   );
 }

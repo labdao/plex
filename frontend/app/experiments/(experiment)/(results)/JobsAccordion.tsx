@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { FlowDetail } from "@/lib/redux";
 
-import { ActiveResultContext } from "./ActiveResultContext";
+import { ExperimentUIContext } from "../ExperimentUIContext";
 import JobDetail from "./JobDetail";
 
 interface JobsAccordionProps {
@@ -14,7 +14,7 @@ interface JobsAccordionProps {
 }
 
 export default function JobsAccordion({ flow }: JobsAccordionProps) {
-  const { activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
+  const { activeJobUUID, setActiveJobUUID } = useContext(ExperimentUIContext);
 
   useEffect(() => {
     if (!activeJobUUID) {
