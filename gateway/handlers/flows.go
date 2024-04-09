@@ -508,56 +508,43 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Initialized IO List")
 
-		log.Println("Creating job entry")
+		for _, ioItem := range ioList {
+			log.Println("Creating job entry")
+			inputsJSON, err := json.Marshal(ioItem.Inputs)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
+				return
+			}
+			var queue models.QueueType
+			if tool.Gpu == 0 {
+				queue = models.QueueTypeCPU
+			} else {
+				queue = models.QueueTypeGPU
+			}
+			jobUUID := uuid.New().String()
 
-		ioItem := ioList[0]
-		inputsJSON, err := json.Marshal(ioItem.Inputs)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
-			return
-		}
-		var queue models.QueueType
-		if tool.Gpu == 0 {
-			queue = models.QueueTypeCPU
-		} else {
-			queue = models.QueueTypeGPU
-		}
-		jobUUID := uuid.New().String()
+			job := models.Job{
+				ToolID:        ioItem.Tool.IPFS,
+				FlowID:        flow.ID,
+				WalletAddress: user.WalletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				Queue:         queue,
+				CreatedAt:     time.Now(),
+				JobUUID:       jobUUID,
+				Public:        false,
+			}
 
-		job := models.Job{
-			ToolID:        ioItem.Tool.IPFS,
-			FlowID:        flow.ID,
-			WalletAddress: user.WalletAddress,
-			Inputs:        datatypes.JSON(inputsJSON),
-			Queue:         queue,
-			CreatedAt:     time.Now(),
-			JobUUID:       jobUUID,
-			Public:        false,
-		}
+			result = db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
 
-		result = db.Create(&job)
-		if result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-			return
-		}
-
-		for _, input := range ioItem.Inputs {
-			var cidsToAdd []string
-			switch v := input.(type) {
-			case string:
-				strInput, ok := input.(string)
-				if !ok {
-					continue
-				}
-				if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
-					split := strings.SplitN(strInput, "/", 2)
-					cid := split[0]
-					cidsToAdd = append(cidsToAdd, cid)
-				}
-			case []interface{}:
-				fmt.Println("found slice, checking each for 'Qm' prefix")
-				for _, elem := range v {
-					strInput, ok := elem.(string)
+			for _, input := range ioItem.Inputs {
+				var cidsToAdd []string
+				switch v := input.(type) {
+				case string:
+					strInput, ok := input.(string)
 					if !ok {
 						continue
 					}
@@ -566,29 +553,42 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 						cid := split[0]
 						cidsToAdd = append(cidsToAdd, cid)
 					}
-				}
-			default:
-				continue
-			}
-			for _, cid := range cidsToAdd {
-				var dataFile models.DataFile
-				result := db.First(&dataFile, "cid = ?", cid)
-				if result.Error != nil {
-					if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-						http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
-						return
-					} else {
-						http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
-						return
+				case []interface{}:
+					fmt.Println("found slice, checking each for 'Qm' prefix")
+					for _, elem := range v {
+						strInput, ok := elem.(string)
+						if !ok {
+							continue
+						}
+						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+							split := strings.SplitN(strInput, "/", 2)
+							cid := split[0]
+							cidsToAdd = append(cidsToAdd, cid)
+						}
 					}
+				default:
+					continue
 				}
-				job.InputFiles = append(job.InputFiles, dataFile)
+				for _, cid := range cidsToAdd {
+					var dataFile models.DataFile
+					result := db.First(&dataFile, "cid = ?", cid)
+					if result.Error != nil {
+						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							return
+						} else {
+							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							return
+						}
+					}
+					job.InputFiles = append(job.InputFiles, dataFile)
+				}
 			}
-		}
-		result = db.Save(&job)
-		if result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
-			return
+			result = db.Save(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
