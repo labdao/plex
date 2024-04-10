@@ -2,7 +2,7 @@
 
 import React, { ReactNode } from "react";
 
-import { ExperimentUIContextProvider } from "@/app/experiments/(experiment)/ExperimentUIContext";
+import { ExperimentUIContextProvider } from "./ExperimentUIContext";
 
 type LayoutProps = {
   children: ReactNode;
