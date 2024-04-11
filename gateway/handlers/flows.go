@@ -414,6 +414,8 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("Updated Flow: %+v", flow)
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {
 			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
