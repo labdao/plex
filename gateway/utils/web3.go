@@ -3,8 +3,12 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 
 	"github.com/labdao/plex/gateway/models"
+	"github.com/labdao/plex/internal/ipfs"
 	"gorm.io/gorm"
 )
 
@@ -77,25 +81,37 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 		return "", fmt.Errorf("failed to marshal metadata: %v", err)
 	}
 
+	log.Printf("Token Metadata: %s", metadataJSON)
+
 	return string(metadataJSON), nil
 }
 
 func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) error {
-    metadataJSON, err := BuildTokenMetadata(db, flow)
-    if err != nil {
-        return fmt.Errorf("failed to build token metadata: %v", err)
-    }
+	metadataJSON, err := BuildTokenMetadata(db, flow)
+	if err != nil {
+		return fmt.Errorf("failed to build token metadata: %v", err)
+	}
 
-    metadataBytes := []byte(metadataJSON)
-    metadataCID, err := cid.NewPrefixV1(cid.Raw, cid.DagCBOR).Sum(metadataBytes)
-    if err != nil {
-        return fmt.Errorf("failed to generate CID: %v", err)
-    }
+	tempFile, err := ioutil.TempFile("", "metadata-*.json")
+	if err != nil {
+		return fmt.Errorf("failed to create temporary file: %v", err)
+	}
+	defer os.Remove(tempFile.Name())
 
-    flow.RecordCID = metadataCID.String()
-    if err := db.Save(flow).Error; err != nil {
-        return fmt.Errorf("failed to update Flow's RecordCID: %v", err)
-    }
+	if _, err := tempFile.WriteString(metadataJSON); err != nil {
+		return fmt.Errorf("failed to write metadata to file: %v", err)
+	}
+	tempFile.Close()
 
-    return nil
+	metadataCID, err := ipfs.PinFile(tempFile.Name())
+	if err != nil {
+		return fmt.Errorf("failed to pin metadata file: %v", err)
+	}
+
+	flow.RecordCID = metadataCID
+	if err := db.Save(flow).Error; err != nil {
+		return fmt.Errorf("failed to update Flow's RecordCID: %v", err)
+	}
+
+	return nil
 }
