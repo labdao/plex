@@ -79,3 +79,23 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 
 	return string(metadataJSON), nil
 }
+
+func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) error {
+    metadataJSON, err := BuildTokenMetadata(db, flow)
+    if err != nil {
+        return fmt.Errorf("failed to build token metadata: %v", err)
+    }
+
+    metadataBytes := []byte(metadataJSON)
+    metadataCID, err := cid.NewPrefixV1(cid.Raw, cid.DagCBOR).Sum(metadataBytes)
+    if err != nil {
+        return fmt.Errorf("failed to generate CID: %v", err)
+    }
+
+    flow.RecordCID = metadataCID.String()
+    if err := db.Save(flow).Error; err != nil {
+        return fmt.Errorf("failed to update Flow's RecordCID: %v", err)
+    }
+
+    return nil
+}

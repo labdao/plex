@@ -409,6 +409,11 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 
+		if err := utils.GenerateAndStoreRecordCID(db, &flow); err != nil {
+			http.Error(w, fmt.Sprintf("Error generating and storing RecordCID: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {
 			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
