@@ -13,7 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, selectFlowDetail, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, flowDetailThunk, flowListThunk, selectFlowDetail, selectToolDetail } from "@/lib/redux";
+import { addJobToFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+
 
 import ContinuousSwitch from "./ContinuousSwitch";
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -35,6 +37,7 @@ export default function RerunExperimentForm() {
   const groupedInputs = groupInputs(tool.ToolJson?.inputs);
   const formSchema = generateRerunSchema(tool.ToolJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
+  const flowID = flow?.ID || 0;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,8 +53,23 @@ export default function RerunExperimentForm() {
     }
     const transformedPayload = transformJson(tool, values, walletAddress);
 
-    console.log("Placeholder for adding run to experiment:", transformedPayload);
-    toast.warning("Re-running experiments is coming soon!", { position: "top-center" });
+    console.log("Submitting Payload:", transformedPayload);
+    try {
+      const response = await addJobToFlow(flowID, transformedPayload);
+      console.log("Response from addJobToFlow", response);
+      if (response && response.ID) {
+        console.log("Flow created", response);
+        console.log(response.ID);
+        dispatch(flowDetailThunk(response.ID));
+        dispatch(flowListThunk(walletAddress));
+        toast.success("Experiment started successfully");
+      } else {
+        console.log("Something went wrong", response);
+      }
+    } catch (error) {
+      console.error("Failed to create flow", error);
+      // Handle error, maybe show message to user
+    }
   }
 
   return flow && lastJob ? (

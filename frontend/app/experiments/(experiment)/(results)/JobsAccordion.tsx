@@ -25,7 +25,7 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
 
   return (
     <Accordion type="single" defaultValue={activeJobUUID} value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[600px]">
-      {flow.Jobs?.map((job, index) => {
+      {[...flow.Jobs]?.sort((a, b) => (a.ID || 0) - (b.ID || 0)).map((job, index) => {
         const validStates = ["queued", "running", "failed", "completed"];
         const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
 

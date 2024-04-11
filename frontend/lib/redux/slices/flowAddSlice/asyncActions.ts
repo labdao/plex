@@ -30,3 +30,35 @@ export const createFlow = async (
     const result = await response.json()
     return result;
 }
+
+export const addJobToFlow = async (flowId: number, payload: { name: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }): Promise<any> => {
+    let authToken;
+    try {
+      authToken = await getAccessToken()
+    } catch (error) {
+      console.log('Failed to get access token: ', error)
+      throw new Error("Authentication failed");
+    }
+  
+    const requestUrl = `${backendUrl()}/flows/${flowId}/add-job`;
+    const requestOptions = {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    };
+  
+    try {
+      const response = await fetch(requestUrl, requestOptions);
+      if (!response.ok) {
+        throw new Error(`Failed to add job to Flow: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Failed to add job to Flow:', error);
+      throw new Error('Failed to add job to Flow');
+    }
+  };
