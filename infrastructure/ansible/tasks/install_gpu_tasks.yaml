@@ -1,9 +1,23 @@
-# Nvidia
+# CUDA Toolkit installation #
+# https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network
 - name: Add Nvidia Keyring
   become: true
   ansible.builtin.apt:
-    deb: https://developer.download.nvidia.com/compute/cuda/repos/{{ nvidia_distribution }}/x86_64/cuda-keyring_1.1-1_all.deb
+    deb: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu{{ ansible_distribution_version | replace('.', '') }}/x86_64/cuda-keyring_1.1-1_all.deb"
 
+- name: Cuda toolkit install
+  become: true
+  ansible.builtin.apt:
+    pkg: cuda-toolkit-12-4
+    update_cache: true
+
+- name: Cuda Driver install
+  become: true
+  ansible.builtin.apt:
+    pkg: cuda-drivers-550
+
+# Nvidia container toolkit #
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 - name: Get Nvidia Container Tookit GPG key
   become: true
   ansible.builtin.apt_key:
@@ -12,24 +26,25 @@
 - name: Add Nvidia Container Tookit Repository
   become: true
   ansible.builtin.apt_repository:
-    repo: deb https://nvidia.github.io/libnvidia-container/stable/ubuntu18.04/$(ARCH) /
+    repo: deb https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /
     state: present
 
-- name: Install required system packages for gpu build
+- name: Install nvidia toolkit
   become: true
   ansible.builtin.apt:
-    pkg:
-      - cuda-drivers
+    pkg: nvidia-container-toolkit=1.14.6-1
     update_cache: true
 
-- name: Install Nvidia Container Tookit
-  become: true
-  ansible.builtin.apt:
-    pkg:
-      - nvidia-docker2
-  notify:
-    - Restart docker
-
 - name: Ensure Nvidia persitence daemon is started
+  become: true
   ansible.builtin.systemd:
     name: nvidia-persistenced
+
+- name: Enable debug by uncommenting debug line in nvidia container runtime config
+  become: true
+  ansible.builtin.replace:
+    path: /etc/nvidia-container-runtime/config.toml
+    regexp: '^\s*#*\s*(debug.*)'
+    replace: '\1'
+  notify:
+    - Restart docker

@@ -12,8 +12,11 @@ import {
   endFileUploadDataSlice,
   fetchUserDataAsync,
   saveDataFileAsync,
+  selectCID,
   selectDataFileError,
   selectDataFileIsLoading,
+  selectDateFileIsUploaded,
+  selectFilename,
   selectUserIsAdmin,
   setError,
   startFileUploadDataSlice,
@@ -23,9 +26,11 @@ import {
 
 interface AddDataFileFormProps {
   trigger: React.ReactNode;
+  onUpload?: (cid: string) => void;
+  accept?: string;
 }
 
-export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
+export default function AddDataFileForm({ trigger, onUpload, accept }: AddDataFileFormProps) {
   const [open, setOpen] = React.useState(false);
   const { user } = usePrivy();
   const dispatch = useDispatch();
@@ -46,9 +51,12 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
     }
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (cid: string) => {
     setOpen(false);
-    //TODO: Update the list
+    if (onUpload) {
+      console.log("handleSuccess", cid);
+      onUpload(cid);
+    }
   };
 
   const handlePublicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,23 +95,17 @@ export default function AddDataFileForm({ trigger }: AddDataFileFormProps) {
           <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input type="file" onChange={handleFileChange} />
+              <Input type="file" accept={accept} onChange={handleFileChange} />
               {isAdmin && file && (
                 <label>
-                  <input 
-                    type="checkbox" 
-                    checked={isPublic}
-                    onChange={handlePublicChange} 
-                  />
-                  <span className="ml-2 font-bold">
-                    Mark Public.
-                  </span>
-                  <span className="ml-1 text-sm text-gray-600">
-                    Once a datafile is public, this cannot be undone.
-                  </span>
+                  <input type="checkbox" checked={isPublic} onChange={handlePublicChange} />
+                  <span className="ml-2 font-bold">Mark Public.</span>
+                  <span className="ml-1 text-sm text-gray-600">Once a datafile is public, this cannot be undone.</span>
                 </label>
               )}
-              <Button type="submit">{isLoading ? "Submitting..." : "Submit"}</Button>
+              <Button type="submit" disabled={!file}>
+                {isLoading ? "Uploading..." : "Upload"}
+              </Button>
               {errorMessage && <Alert variant="destructive">{errorMessage}</Alert>}
             </form>
           </DialogDescription>

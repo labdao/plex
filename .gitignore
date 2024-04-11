@@ -332,3 +332,5 @@ docker/.env.tunnel
 
 #
 tools/*/test-runs/
+
+.vscode/
