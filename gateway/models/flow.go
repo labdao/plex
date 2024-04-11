@@ -12,5 +12,5 @@ type Flow struct {
 	EndTime       time.Time `gorm:""`
 	FlowUUID      string    `gorm:"type:uuid"`
 	Public        bool      `gorm:"type:boolean;not null;default:false"`
-	RecordCID     string    `gorm:"type:varchar(255);"`
+	RecordCID     string    `gorm:"column:record_cid;type:varchar(255);"`
 }
