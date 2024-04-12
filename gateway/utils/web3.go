@@ -21,7 +21,7 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 	metadata := map[string]interface{}{
 		"name":        flow.Name,
 		"description": "Research, Reimagined. All Scientists Welcome.",
-		"image":       "", // Set the appropriate image URL or IPFS hash
+		"image":       "ipfs://QmQZLrUPxh4WMmzpQGhUYRsMwU2BXfmFa3YAFhFKkRgHTZ", // Default image is glitchy LabDAO logo gif
 		"flow":        []map[string]interface{}{},
 	}
 
