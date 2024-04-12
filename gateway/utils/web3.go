@@ -1,16 +1,29 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipfs"
 	"gorm.io/gorm"
 )
+
+var autotaskWebhook = os.Getenv("AUTOTASK_WEBHOOK")
+
+type postData struct {
+	RecipientAddress string `json:"recipientAddress"`
+	Cid              string `json:"cid"`
+}
+
+type Response struct {
+	Status string `json:"status"`
+}
 
 func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 	var jobs []models.Job
@@ -86,32 +99,86 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 	return string(metadataJSON), nil
 }
 
-func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) error {
+func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
 	metadataJSON, err := BuildTokenMetadata(db, flow)
 	if err != nil {
-		return fmt.Errorf("failed to build token metadata: %v", err)
+		return "", fmt.Errorf("failed to build token metadata: %v", err)
 	}
 
 	tempFile, err := ioutil.TempFile("", "metadata-*.json")
 	if err != nil {
-		return fmt.Errorf("failed to create temporary file: %v", err)
+		return "", fmt.Errorf("failed to create temporary file: %v", err)
 	}
 	defer os.Remove(tempFile.Name())
 
 	if _, err := tempFile.WriteString(metadataJSON); err != nil {
-		return fmt.Errorf("failed to write metadata to file: %v", err)
+		return "", fmt.Errorf("failed to write metadata to file: %v", err)
 	}
 	tempFile.Close()
 
 	metadataCID, err := ipfs.PinFile(tempFile.Name())
 	if err != nil {
-		return fmt.Errorf("failed to pin metadata file: %v", err)
+		return "", fmt.Errorf("failed to pin metadata file: %v", err)
 	}
 
 	flow.RecordCID = metadataCID
 	if err := db.Save(flow).Error; err != nil {
-		return fmt.Errorf("failed to update Flow's RecordCID: %v", err)
+		return "", fmt.Errorf("failed to update Flow's RecordCID: %v", err)
 	}
+
+	return metadataCID, nil
+}
+
+func MintNFT(db *gorm.DB, flow *models.Flow, metadataCID string) error {
+	if autotaskWebhook == "" {
+		return fmt.Errorf("AUTOTASK_WEBHOOK must be set")
+	}
+
+	log.Println("Triggering minting process via Defender Autotask...")
+
+	data := postData{
+		RecipientAddress: flow.WalletAddress,
+		Cid:              metadataCID,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("error marshaling JSON data: %v", err)
+	}
+
+	req, err := http.NewRequest("POST", autotaskWebhook, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("error creating HTTP request: %v", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending HTTP request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("error reading response body: %v", err)
+	}
+
+	var result Response
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return fmt.Errorf("error unmarshaling response JSON: %v", err)
+	}
+
+	if result.Status != "success" {
+		return fmt.Errorf("minting process failed: %s", string(body))
+	}
+
+	log.Println("Minting process successful.")
 
 	return nil
 }
