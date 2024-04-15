@@ -190,6 +190,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
+			// Retrieve number of binders from the kwargs (adjust as per actual data structure)
+			var numberOfBinders int
+			binders, ok := kwargs["number_of_binders"]
+			if ok && len(binders) > 0 {
+				numberOfBinders, _ = binders[0].(int) // Ensure proper type assertion and error handling
+			}
+
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
 				switch v := input.(type) {
@@ -241,6 +248,19 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
+
+			// for i := 0; i < numberOfBinders; i++ {
+			// 	subJob := models.SubJob{
+			// 		Job:         job,
+			// 		BinderIndex: i,
+			// 		Status:      "pending",
+			// 		CreatedAt:   time.Time{},
+			// 	}
+			// 	if err := db.Create(&subJob).Error; err != nil {
+			// 		log.Printf("Failed to create sub-job for job %d, binder index %d: %v", job.ID, i, err)
+			// 		continue // Decide how to handle partial failure
+			// 	}
+			// }
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {

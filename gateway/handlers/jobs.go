@@ -39,7 +39,7 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var job models.Job
-		query := db.Preload("OutputFiles.Tags").Preload("InputFiles.Tags").Where("id = ?", jobID)
+		query := db.Preload("SuperJobs").Preload("OutputFiles.Tags").Preload("InputFiles.Tags").Where("id = ?", jobID)
 
 		if result := query.First(&job); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -54,6 +54,13 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Job not found or not authorized", http.StatusNotFound)
 			return
 		}
+
+		// // Check if job has sub-jobs and modify the response accordingly
+		// if len(job.SubJobs) > 0 {
+		// 	log.Println("Handling job with sub-jobs")
+		// } else {
+		// 	log.Println("Handling job without sub-jobs")
+		// }
 
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(job); err != nil {

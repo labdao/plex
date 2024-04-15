@@ -30,8 +30,6 @@ type Job struct {
 	WalletAddress string         `gorm:"type:varchar(255)"`
 	ToolID        string         `gorm:"type:varchar(255);not null;index"`
 	Tool          Tool           `gorm:"foreignKey:ToolID"`
-	FlowID        uint           `gorm:"type:int;not null;index"`
-	Flow          Flow           `gorm:"foreignKey:FlowID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
 	InputFiles    []DataFile     `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
 	OutputFiles   []DataFile     `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
@@ -40,6 +38,6 @@ type Job struct {
 	StartedAt     time.Time      `gorm:""`
 	CompletedAt   time.Time      `gorm:""`
 	Annotations   string         `gorm:"type:varchar(255)"`
-	JobUUID       string         `gorm:"type:uuid"`
+	SuperJob      SuperJob       `gorm:"foreignKey:ID"`
 	Public        bool           `gorm:"type:boolean;not null;default:false"`
 }
