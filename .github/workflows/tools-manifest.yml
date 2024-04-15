@@ -57,28 +57,10 @@ jobs:
           # you would add,
           # mytool_mytool_config_file:
           #   - 'tools/mytool/mytool_config_file.json'
-          generator_generator-gateway:
-            - 'tools/generator/generator-gateway.json'
-          colabdesign-checkpoint_colabdesign-checkpoint:
-            - 'tools/colabdesign-checkpoint/colabdesign-checkpoint.json'
-          labsay-checkpoint_labsay-checkpoint:
-            - 'tools/labsay-checkpoint/labsay-checkpoint.json'
           colabdesign_colabdesign:
             - 'tools/colabdesign/colabdesign.json'
-          colabdesign_colabdesign-gateway:
-            - 'tools/colabdesign/colabdesign-gateway.json'
-          colabdesign-autoprompt_colabdesign-gateway:
-            - 'tools/colabdesign-autoprompt/colabdesign-gateway.json'
-          af2_af2-gateway:
-            - 'tools/af2/af2-gateway.json'
-          aggregater:
-            - 'tools/aggregater/aggregater.json'
-          rf-diffusion_rf-diffusion-gateway:
-            - 'tools/rf-diffusion/rf-diffusion-gateway.json'
-          protein-mpnn_protein-mpnn-gateway:
-            - 'tools/protein-mpnn/protein-mpnn-gateway.json'
-          protein-to-dna-icodon_protein-to-dna-icodon:
-            - 'tools/protein-to-dna-icodon/protein-to-dna-icodon.json'
+          labsay_labsay:
+            - 'tools/labsay/labsay.json'
 
   tools:
     needs: changes-tools
