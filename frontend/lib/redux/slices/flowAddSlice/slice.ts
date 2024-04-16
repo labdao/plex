@@ -35,6 +35,7 @@ const initialState: FlowAddSliceState = {
       paper: "", 
       guide: "", 
       checkpointCompatible: false,
+      maxRunningTime: 2700,
     } 
   },
   kwargs: {},

@@ -73,7 +73,6 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 }
 
 func MonitorRunningJobs(db *gorm.DB) error {
-	maxRunningTime := time.Duration(getEnvAsInt("MAX_RUNNING_TIME_SECONDS", 20)) * time.Second
 	for {
 		var jobs []models.Job
 		if err := fetchRunningJobsWithToolData(&jobs, db); err != nil {
@@ -83,6 +82,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		for _, job := range jobs {
 			var ToolJson ipwl.Tool
 			var checkpointCompatible string
+			var maxRunningTime time.Duration
 			if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
 				return err
 			}
@@ -90,6 +90,11 @@ func MonitorRunningJobs(db *gorm.DB) error {
 				checkpointCompatible = "True"
 			} else {
 				checkpointCompatible = "False"
+			}
+			if ToolJson.MaxRunningTime != 0 {
+				maxRunningTime = time.Duration(ToolJson.MaxRunningTime) * time.Second
+			} else {
+				maxRunningTime = 2700 * time.Second
 			}
 			elapsed := time.Since(job.StartedAt)
 			log.Printf("Job %d running for %v\n", job.ID, elapsed)

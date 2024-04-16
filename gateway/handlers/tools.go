@@ -114,6 +114,13 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			taskCategory = tool.TaskCategory
 		}
 
+		var maxRunningTime int
+		//if maxruntime is not provided, set it to 45 minutes
+		if tool.MaxRunningTime == 0 {
+			maxRunningTime = 2700
+		} else {
+			maxRunningTime = tool.MaxRunningTime
+		}
 		// Start transaction
 		tx := db.Begin()
 
@@ -129,19 +136,20 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		toolEntry := models.Tool{
-			CID:           cid,
-			WalletAddress: walletAddress,
-			Name:          tool.Name,
-			ToolJson:      toolJSON,
-			Container:     tool.DockerPull,
-			Memory:        *tool.MemoryGB,
-			Cpu:           *tool.Cpu,
-			Gpu:           toolGpu,
-			Network:       tool.NetworkBool,
-			Timestamp:     time.Now(),
-			Display:       display,
-			TaskCategory:  taskCategory,
-			DefaultTool:   defaultTool,
+			CID:            cid,
+			WalletAddress:  walletAddress,
+			Name:           tool.Name,
+			ToolJson:       toolJSON,
+			Container:      tool.DockerPull,
+			Memory:         *tool.MemoryGB,
+			Cpu:            *tool.Cpu,
+			Gpu:            toolGpu,
+			Network:        tool.NetworkBool,
+			Timestamp:      time.Now(),
+			Display:        display,
+			TaskCategory:   taskCategory,
+			DefaultTool:    defaultTool,
+			MaxRunningTime: maxRunningTime,
 		}
 
 		result := tx.Create(&toolEntry)

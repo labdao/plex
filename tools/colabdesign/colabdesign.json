@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign v1.1",
+  "name": "colabdesign v1.2",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
   "guide": "Follow these steps to use the tool effectively:\n\n1. Select a .pdb file containing the structure of the target you would like to design a binder against.\n2. Enter the length of the binder you want to design (total number of residues) and the number of binders to design. These two steps are already enough to prompt the tool and you are ready to submit your experimental run. In case you wish to give additional constraints for the designs, here are additional inputs you can give:\n3. Define hotspot residues on the target as the binding sites, stating the chain followed by the number of the residue. You can specify multiple hotspots at once.\n4. Crop the target structure by specifying start and end residues on the target chain, or selecting a different target chain from the pdb file altogether (chain A is the default).\n5. Define a contig that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",
   "author": "sokrypton",
@@ -8,6 +8,7 @@
   "task": "protein design",
   "taskCategory": "protein-binder-design",
   "checkpointCompatible": true,
+  "maxRunTime": 2700,
   "baseCommand": [
   ],
   "arguments": [
@@ -40,10 +41,10 @@
       "glob": [
         ""
       ],
-      "default": "240",
+      "default": "8",
       "min": "1",
-      "max": "240",
-      "example": "240",
+      "max": "8",
+      "example": "8",
       "grouping": "binder",
       "position": "202",
       "required": true
