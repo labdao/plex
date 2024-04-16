@@ -13,52 +13,9 @@ import subprocess
 
 import pandas as pd
 import yaml
+import boto3
 
 print("Starting main.py...")
-
-# setup
-if not os.path.isdir("params"):
-    os.system("apt-get install aria2")
-    os.system("mkdir params")
-    # send param download into background
-    os.system(
-        "(\
-  aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt; \
-  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/f572d396fae9206628714fb2ce00f72e/Complex_beta_ckpt.pt; \
-  aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar; \
-  tar -xf alphafold_params_2022-12-06.tar -C params; \
-  touch params/done.txt) &"
-    )
-
-if not os.path.isdir("RFdiffusion"):
-    print("installing RFdiffusion...")
-    os.system("git clone https://github.com/sokrypton/RFdiffusion.git")
-    os.system("pip -q install jedi omegaconf hydra-core icecream pyrsistent")
-    os.system(
-        "pip install dgl==1.0.2+cu116 -f https://data.dgl.ai/wheels/cu116/repo.html"
-    )
-    os.system(
-        "cd RFdiffusion/env/SE3Transformer; pip -q install --no-cache-dir -r requirements.txt; pip -q install ."
-    )
-    os.system("wget -qnc https://files.ipd.uw.edu/krypton/ananas")
-    os.system("chmod +x ananas")
-
-if not os.path.isdir("colabdesign"):
-    print("installing ColabDesign...")
-    os.system("pip -q install git+https://github.com/sokrypton/ColabDesign.git")
-    os.system("ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign")
-
-if not os.path.isdir("RFdiffusion/models"):
-    print("downloading RFdiffusion params...")
-    os.system("mkdir RFdiffusion/models")
-    models = ["Base_ckpt.pt", "Complex_base_ckpt.pt", "Complex_beta_ckpt.pt"]
-    for m in models:
-        while os.path.isfile(f"{m}.aria2"):
-            time.sleep(5)
-    os.system(f"mv {' '.join(models)} RFdiffusion/models")
-    os.system("unzip schedules.zip; rm schedules.zip")
 
 if "RFdiffusion" not in sys.path:
     os.environ["DGLBACKEND"] = "pytorch"
@@ -80,19 +37,37 @@ from colabdesign.shared.plot import plot_pseudo_3D
 def get_plex_job_inputs():
     # Retrieve the environment variable
     json_str = os.getenv("PLEX_JOB_INPUTS")
+    job_uuid = os.getenv("JOB_UUID")
+    flow_uuid = os.getenv("FLOW_UUID")
+    checkpoint_compatible = os.getenv("CHECKPOINT_COMPATIBLE", "True")
 
+    print(f"PLEX_JOB_INPUTS: {json_str}")
+    print(f"JOB_UUID: {job_uuid}")
+    print(f"FLOW_UUID: {flow_uuid}")
+    print(f"CHECKPOINT_COMPATIBLE: {checkpoint_compatible}")
     # Check if the environment variable is set
-    if json_str is None:
-        raise ValueError("PLEX_JOB_INPUTS environment variable is missing.")
+    if (job_uuid is None) or (flow_uuid is None) or (checkpoint_compatible is None) or (json_str is None):
+        raise ValueError("One/more of the mandatory environment variables are missing: PLEX_JOB_INPUTS/JOB_UUID/FLOW_UUID/CHECKPOINT_COMPATIBLE.")
 
     # Convert the JSON string to a Python dictionary
     try:
         data = json.loads(json_str)
-        return data
+        return data, job_uuid, flow_uuid, checkpoint_compatible
     except json.JSONDecodeError:
         # Handle the case where the string is not valid JSON
         raise ValueError("PLEX_JOB_INPUTS is not a valid JSON string.")
 
+def upload_to_s3(file_name, bucket_name, object_name=None):
+    if object_name is None:
+        object_name = file_name
+
+    s3_client = boto3.client('s3')
+    try:
+        s3_client.upload_file(file_name, bucket_name, object_name)
+        print(f"Successfully uploaded {file_name} to {bucket_name}/{object_name}")
+    except Exception as e:
+        print(f"Failed to upload {file_name} to {bucket_name}/{object_name}: {e}")
+        raise e
 
 def extract_deepest_keys(nested_dict, current_path="", deepest_keys=None):
     if deepest_keys is None:
@@ -123,8 +98,39 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
     return df_results
 
+def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uuid):
+    checkpoint_csv_path = os.path.dirname(result_csv_path)
+    for index, row in df_results.iterrows():
+        plddt_for_checkpoint = row['plddt'] *100
+        i_pae_for_checkpoint = row['i_pae']
+        design = row['design']
+        n = row['n']
+        pdb_file_name = f"design{design}_n{n}.pdb"
+        pdb_path = f"{checkpoint_csv_path}/default/all_pdb/{pdb_file_name}"
+        new_df = pd.DataFrame({
+            'cycle': design,
+            'proposal': n,
+            'plddt': plddt_for_checkpoint,
+            'i_pae': i_pae_for_checkpoint,
+            'dim1': row['rmsd'],
+            'dim2': row['affinity'],
+            'pdbFileName': pdb_file_name
+        }, index=[0])
+        event_csv_filename = f"checkpoint_{index}_summary.csv"
+        event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
+        new_df.to_csv(event_csv_filepath, index= False)
 
-def enricher(multirun_path, cfg):
+        bucket_name = "app-checkpoint-bucket"
+        time.sleep(2)
+        object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
+        upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
+        upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+        os.remove(event_csv_filepath)
+        print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
+
+    return
+
+def enricher(multirun_path, cfg, flow_uuid, job_uuid, checkpoint_compatible):
     # Find the scores file in multirun_path
     results_csv_path = None
     for file_name in os.listdir(f"{multirun_path}/"):
@@ -148,6 +154,12 @@ def enricher(multirun_path, cfg):
     print("enriched results", df_results)
 
     df_results.to_csv(results_csv_path, index=False)
+
+    if(checkpoint_compatible.lower() == "true"):
+        print("creating and uploading checkpoints")
+        create_and_upload_checkpoints(df_results, results_csv_path, flow_uuid, job_uuid)
+    else:
+        print("Checkpoints are disabled, moving on to the next step.")
 
 
 def get_files_from_directory(root_dir, extension, max_depth=3):
@@ -446,7 +458,7 @@ def prodigy_run(csv_path, pdb_path):
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def my_app(cfg: DictConfig) -> None:
-    user_inputs = get_plex_job_inputs()
+    user_inputs, job_uuid, flow_uuid, checkpoint_compatible = get_plex_job_inputs()
     print(f"user inputs from plex: {user_inputs}")
 
     # Override Hydra default params with user supplied params
@@ -575,11 +587,6 @@ def my_app(cfg: DictConfig) -> None:
         mpnn_sampling_temp = cfg.params.expert_settings.ProteinMPNN.mpnn_sampling_temp
         use_solubleMPNN = cfg.params.expert_settings.ProteinMPNN.use_solubleMPNN
 
-        if not os.path.isfile("params/done.txt"):
-            print("downloading AlphaFold params...")
-            while not os.path.isfile("params/done.txt"):
-                time.sleep(5)
-
         contigs_str = ":".join(contigs)
         opts = [
             f"--pdb={outputs_directory}/{path}_0.pdb",
@@ -618,7 +625,7 @@ def my_app(cfg: DictConfig) -> None:
 
         # enrich and summarise run and results information and write to csv file
         print("running enricher")
-        enricher(outputs_directory, cfg)
+        enricher(outputs_directory, cfg, flow_uuid, job_uuid, checkpoint_compatible)
 
         print("design complete...")
         end_time = time.time()
