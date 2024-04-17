@@ -28,6 +28,7 @@ import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 import { ExperimentRenameForm } from "../(forms)/ExperimentRenameForm";
 import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
 import ExperimentShare from "./ExperimentShare";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip";
 
 dayjs.extend(relativeTime);
 
@@ -82,22 +83,43 @@ export default function ExperimentDetail() {
               </div>
               <div className="flex justify-end space-x-2 ">
                 {userWalletAddress === flow.WalletAddress && (
-                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || flow.Public}>
-                    {updateLoading || isDelaying ? (
-                      <>
-                        <Dna className="w-4 h-4 ml-2 animate-spin" />
-                        <span>Publishing...</span>
-                      </>
-                    ) : flow.Public ? (
-                      <>
-                        <BadgeCheck className="w-4 h-4 mr-2" /> Published
-                      </>
-                    ) : (
-                      <>
-                        <Dna className="w-4 h-4 mr-2" /> Publish
-                      </>
-                    )}
-                  </Button>
+                  <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button 
+                          variant="outline" 
+                          className="text-sm" 
+                          onClick={handlePublish} 
+                          disabled={updateLoading || flow.Public || !(status.status === "completed" || status.status === "partial-failure" || status.status === "failed")}
+                        >
+                          {updateLoading || isDelaying ? (
+                            <>
+                              <Dna className="w-4 h-4 ml-2 animate-spin" />
+                              <span>Publishing...</span>
+                            </>
+                          ) : flow.Public ? (
+                            <>
+                              <BadgeCheck className="w-4 h-4 mr-2" /> Published
+                            </>
+                          ) : (
+                            <>
+                              <Dna className="w-4 h-4 mr-2" /> Publish
+                            </>
+                          )}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-xs">
+                        <p className="mb-1 font-mono uppercase">{!(status.status === "completed" || status.status === "partial-failure" || status.status === "failed") ? "You can't publish until your experiments finish. Please try later." : ""}
+                        {flow.Public ? "Experiment has already been published" : ""}
+                        
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 )}
                 {flow.Public && experimentID && (
                   // <Button variant="outline" className="text-sm">
