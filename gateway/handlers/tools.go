@@ -196,9 +196,10 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			TaskCategory *string `json:"taskCategory,omitempty"`
-			Display      *bool   `json:"display,omitempty"`
-			DefaultTool  *bool   `json:"defaultTool,omitempty"`
+			TaskCategory   *string `json:"taskCategory,omitempty"`
+			Display        *bool   `json:"display,omitempty"`
+			DefaultTool    *bool   `json:"defaultTool,omitempty"`
+			MaxRunningTime *int    `json:"maxRunningTime,omitempty"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
@@ -224,6 +225,9 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		if requestData.DefaultTool != nil {
 			updateData["default_tool"] = *requestData.DefaultTool
+		}
+		if requestData.MaxRunningTime != nil {
+			updateData["max_running_time"] = *requestData.MaxRunningTime
 		}
 
 		if len(updateData) == 0 {

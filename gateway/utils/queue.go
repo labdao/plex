@@ -91,8 +91,8 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			} else {
 				checkpointCompatible = "False"
 			}
-			if ToolJson.MaxRunningTime != 0 {
-				maxRunningTime = time.Duration(ToolJson.MaxRunningTime) * time.Second
+			if job.Tool.MaxRunningTime != 0 {
+				maxRunningTime = time.Duration(job.Tool.MaxRunningTime) * time.Second
 			} else {
 				maxRunningTime = 2700 * time.Second
 			}
