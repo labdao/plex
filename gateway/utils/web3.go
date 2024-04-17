@@ -65,25 +65,30 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 			"errMsg":  job.Error,
 		}
 
-		toolPinataHash, err := pinJSONToIPFSEndpoint(json.RawMessage(tool.ToolJson), tool.Name)
+		log.Printf("Pinning tool JSON to IPFS: %s", tool.Name)
+		toolPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(tool.ToolJson), tool.Name)
 		if err != nil {
 			return "", fmt.Errorf("failed to pin tool JSON to Pinata: %v", err)
 		}
+		log.Printf("Pinned tool JSON to public IPFS with CID: %s", toolPinataHash)
 		ioObject["tool"] = map[string]interface{}{
 			"cid": toolPinataHash,
 		}
 
 		for _, inputFile := range inputFiles {
+			log.Printf("Downloading input file: %s", inputFile.Filename)
 			inputTempFilePath, err := ipfs.DownloadFileToTemp(inputFile.CID, inputFile.Filename)
 			if err != nil {
 				return "", fmt.Errorf("failed to download input file: %v", err)
 			}
 			defer os.Remove(inputTempFilePath)
 
-			inputPinataHash, err := pinFileToIPFSEndpoint(inputTempFilePath)
+			log.Printf("Pinning input file to IPFS: %s", inputFile.Filename)
+			inputPinataHash, err := pinFileToPublicIPFS(inputTempFilePath, inputFile.Filename)
 			if err != nil {
 				return "", fmt.Errorf("failed to pin input file to Pinata: %v", err)
 			}
+			log.Printf("Pinned input file to public IPFS with CID: %s", inputPinataHash)
 			ioObject["inputs"] = append(ioObject["inputs"].([]map[string]interface{}), map[string]interface{}{
 				"cid":      inputPinataHash,
 				"filename": inputFile.Filename,
@@ -91,16 +96,19 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 		}
 
 		for _, outputFile := range outputFiles {
+			log.Printf("Downloading output file: %s", outputFile.Filename)
 			outputTempFilePath, err := ipfs.DownloadFileToTemp(outputFile.CID, outputFile.Filename)
 			if err != nil {
 				return "", fmt.Errorf("failed to download output file: %v", err)
 			}
 			defer os.Remove(outputTempFilePath)
 
-			outputPinataHash, err := pinFileToIPFSEndpoint(outputTempFilePath)
+			log.Printf("Pinning output file to IPFS: %s", outputFile.Filename)
+			outputPinataHash, err := pinFileToPublicIPFS(outputTempFilePath, outputFile.Filename)
 			if err != nil {
 				return "", fmt.Errorf("failed to pin output file to Pinata: %v", err)
 			}
+			log.Printf("Pinned output file to public IPFS with CID: %s", outputPinataHash)
 			ioObject["outputs"] = append(ioObject["outputs"].([]map[string]interface{}), map[string]interface{}{
 				"cid":      outputPinataHash,
 				"filename": outputFile.Filename,
@@ -120,7 +128,7 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 	return string(metadataJSON), nil
 }
 
-func pinJSONToIPFSEndpoint(jsonData json.RawMessage, name string) (string, error) {
+func pinJSONToPublicIPFS(jsonData json.RawMessage, name string) (string, error) {
 	url := "https://api.pinata.cloud/pinning/pinJSONToIPFS"
 
 	payload := map[string]interface{}{
@@ -166,7 +174,7 @@ func pinJSONToIPFSEndpoint(jsonData json.RawMessage, name string) (string, error
 	return result.IpfsHash, nil
 }
 
-func pinFileToIPFSEndpoint(filePath string) (string, error) {
+func pinFileToPublicIPFS(filePath, name string) (string, error) {
 	url := "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
 	file, err := os.Open(filePath)
@@ -177,6 +185,7 @@ func pinFileToIPFSEndpoint(filePath string) (string, error) {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+
 	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
 	if err != nil {
 		return "", fmt.Errorf("failed to create form file: %v", err)
@@ -185,6 +194,12 @@ func pinFileToIPFSEndpoint(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to copy file: %v", err)
 	}
+
+	err = writer.WriteField("pinataMetadata", fmt.Sprintf(`{"name":"%s"}`, name))
+	if err != nil {
+		return "", fmt.Errorf("failed to write pinataMetadata field: %v", err)
+	}
+
 	err = writer.Close()
 	if err != nil {
 		return "", fmt.Errorf("failed to close multipart writer: %v", err)
@@ -222,80 +237,29 @@ func pinFileToIPFSEndpoint(filePath string) (string, error) {
 }
 
 func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
+	log.Println("Generating token metadata...")
 	metadataJSON, err := BuildTokenMetadata(db, flow)
 	if err != nil {
 		return "", fmt.Errorf("failed to build token metadata: %v", err)
 	}
+	log.Println("Generated token metadata.")
 
-	metadataCID, err := pinJSONToIPFSEndpoint(json.RawMessage(metadataJSON), flow.Name+"_record_metadata.json")
+	log.Println("Pinning token metadata to IPFS...")
+	metadataCID, err := pinJSONToPublicIPFS(json.RawMessage(metadataJSON), flow.Name+"_record_metadata.json")
 	if err != nil {
 		return "", fmt.Errorf("failed to pin token metadata to Pinata: %v", err)
 	}
+	log.Printf("Pinned token metadata to public IPFS with CID: %s", metadataCID)
 
+	log.Println("Updating Flow's RecordCID...")
 	flow.RecordCID = metadataCID
 	if err := db.Save(flow).Error; err != nil {
 		return "", fmt.Errorf("failed to update Flow's RecordCID: %v", err)
 	}
+	log.Println("Updated Flow's RecordCID.")
 
 	return metadataCID, nil
 }
-
-// func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
-// 	metadataJSON, err := BuildTokenMetadata(db, flow)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to build token metadata: %v", err)
-// 	}
-
-// 	payload := map[string]interface{}{
-// 		"pinataOptions": map[string]int{
-// 			"cidVersion": 0,
-// 		},
-// 		"pinataMetadata": map[string]string{
-// 			"name": flow.Name + "_record_metadata.json",
-// 		},
-// 		"pinataContent": json.RawMessage(metadataJSON),
-// 	}
-
-// 	jsonPayload, err := json.Marshal(payload)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to marshal JSON payload: %v", err)
-// 	}
-
-// 	req, err := http.NewRequest("POST", "https://api.pinata.cloud/pinning/pinJSONToIPFS", bytes.NewBuffer(jsonPayload))
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to create HTTP request: %v", err)
-// 	}
-
-// 	req.Header.Set("Content-Type", "application/json")
-// 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PINATA_API_TOKEN"))
-
-// 	client := &http.Client{}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to send HTTP request: %v", err)
-// 	}
-// 	defer resp.Body.Close()
-
-// 	responseBody, err := ioutil.ReadAll(resp.Body)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to read response body: %v", err)
-// 	}
-
-// 	var pinataResponse struct {
-// 		IpfsHash string `json:"IpfsHash"`
-// 	}
-// 	err = json.Unmarshal(responseBody, &pinataResponse)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
-// 	}
-
-// 	flow.RecordCID = pinataResponse.IpfsHash
-// 	if err := db.Save(flow).Error; err != nil {
-// 		return "", fmt.Errorf("failed to update Flow's RecordCID: %v", err)
-// 	}
-
-// 	return pinataResponse.IpfsHash, nil
-// }
 
 func MintNFT(db *gorm.DB, flow *models.Flow, metadataCID string) error {
 	if autotaskWebhook == "" {
