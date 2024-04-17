@@ -1,21 +1,20 @@
 #!/bin/bash
+PLEX_JOB_INPUTS=$(cat user_input.json)
 
-# Build the Docker image
 docker build -t labsay .
 
-# Create a unique output directory
+FLOW_UUID="test-flow_uuid_$(date +%y%m%d)"
+JOB_UUID="test-job_uuid_$(date +%y%m%d_%H%M%S)"
+
 OUTPUT_DIR="test-runs/outputs_$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$PWD/$OUTPUT_DIR"
 echo "Output directory is $OUTPUT_DIR"
 
 docker run \
--e PLEX_JOB_INPUTS='{"file_example": "/inputs/file_example/message.txt", "string_example": "hello world", "number_example": 196883, "speedup": true}' \
+-e PLEX_JOB_INPUTS="$PLEX_JOB_INPUTS" \
+-e FLOW_UUID="$FLOW_UUID" \
+-e JOB_UUID="$JOB_UUID" \
+-e CHECKPOINT_COMPATIBLE="False" \
+--env-file ~/aws.env \
 -v $PWD/testdata/inputs:/inputs/ \
 -v "$PWD/$OUTPUT_DIR":/outputs labsay
-
-# Check if output default_best.pdb exists in $OUTPUT_DIR
-if [ -f "$PWD/$OUTPUT_DIR/result.txt" ]; then
-    echo "Output file result.txt found in $PWD/$OUTPUT_DIR."
-else
-    echo "Output file result.txt not found in $PWD/$OUTPUT_DIR."
-fi

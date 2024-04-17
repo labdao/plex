@@ -14,6 +14,7 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/ipwl"
 	"gorm.io/gorm"
 )
 
@@ -130,8 +131,22 @@ func processJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
+	var ToolJson ipwl.Tool
+	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+		return err
+	}
+
+	var checkpointCompatible string
+	if ToolJson.CheckpointCompatible == true {
+		checkpointCompatible = "True"
+	} else {
+		checkpointCompatible = "False"
+	}
+
+	// TODO may be: If checkpoint is false, do not pass job and flow UUIDs
+
 	if job.BacalhauJobID == "" {
-		if err := submitBacalhauJobAndUpdateID(&job, db); err != nil {
+		if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 			return err
 		}
 	}
@@ -170,7 +185,7 @@ func processJob(jobID uint, db *gorm.DB) error {
 		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
 			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
-			if err := submitBacalhauJobAndUpdateID(&job, db); err != nil {
+			if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 				return err
 			}
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
@@ -363,7 +378,7 @@ func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, output
 	return nil
 }
 
-func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB) error {
+func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB, checkpointCompatible string) error {
 	var inputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
 		return err
@@ -379,7 +394,7 @@ func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 	selector := ""
 
-	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations, flowuuid, jobuuid)
+	bacalhauJob, err := bacalhau.CreateBacalhauJob(inputs, container, selector, maxComputeTime, memory, cpu, gpu, network, annotations, flowuuid, jobuuid, checkpointCompatible)
 	if err != nil {
 		return err
 	}
