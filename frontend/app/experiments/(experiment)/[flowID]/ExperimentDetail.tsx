@@ -66,6 +66,16 @@ export default function ExperimentDetail() {
 
   const isButtonDisabled = updateLoading || isDelaying;
 
+  const tooltipMessage = () => {
+    if (flow.Public) {
+      return "Experiment has already been published and is now read-only.";
+    } else if (status.status === "completed" || status.status === "partial-failure" || status.status === "failed") {
+      return "Click to publish this experiment. Warning: Once published, you can't make changes.";
+    } else {
+      return "You can't publish until your experiments finish. Please try later.";
+    }
+  };
+
   return flow.Name ? (
     <div>
       <>
@@ -112,9 +122,8 @@ export default function ExperimentDetail() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <div className="text-xs">
-                        <p className="mb-1 font-mono uppercase">{!(status.status === "completed" || status.status === "partial-failure" || status.status === "failed") ? "You can't publish until your experiments finish. Please try later." : ""}
-                        {flow.Public ? "Experiment has already been published" : ""}
-                        
+                        <p className="mb-1 font-mono uppercase">
+                        {tooltipMessage()}
                         </p>
                       </div>
                     </TooltipContent>
