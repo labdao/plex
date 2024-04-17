@@ -113,6 +113,7 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AUTOTASK_WEBHOOK: ${AUTOTASK_WEBHOOK}
+      PINATA_API_KEY: ${PINATA_API_KEY}
     depends_on:
       dbbackend:
         condition: service_healthy
