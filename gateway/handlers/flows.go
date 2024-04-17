@@ -615,3 +615,185 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Received Post request to add job to a flow")
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		log.Println("Request body: ", string(body))
+
+		requestData := make(map[string]json.RawMessage)
+		err = json.Unmarshal(body, &requestData)
+		if err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
+			return
+		}
+		params := mux.Vars(r)
+		flowID, err := strconv.Atoi(params["flowID"])
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			return
+		}
+
+		var flow models.Flow
+		if result := db.Preload("Jobs").Where("id = ?", flowID).First(&flow); result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				http.Error(w, "Flow not found", http.StatusNotFound)
+			} else {
+				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		if flow.WalletAddress != user.WalletAddress {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		//TODO: think about moving toolID to flow level instead of job level
+		var toolId = flow.Jobs[0].ToolID
+
+		var tool models.Tool
+		result := db.Where("cid = ?", toolId).First(&tool)
+		if result.Error != nil {
+			if result.Error == gorm.ErrRecordNotFound {
+				http.Error(w, "Tool not found", http.StatusNotFound)
+			} else {
+				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+			}
+			return
+		}
+
+		var scatteringMethod string
+		err = json.Unmarshal(requestData["scatteringMethod"], &scatteringMethod)
+		if err != nil || scatteringMethod == "" {
+			http.Error(w, "Invalid or missing Scattering Method", http.StatusBadRequest)
+			return
+		}
+
+		kwargsRaw, ok := requestData["kwargs"]
+		if !ok {
+			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
+			return
+		}
+		var kwargs map[string][]interface{}
+		err = json.Unmarshal(kwargsRaw, &kwargs)
+		if err != nil {
+			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
+			http.Error(w, "Invalid structure for kwargs", http.StatusBadRequest)
+			return
+		}
+
+		err = json.Unmarshal(requestData["kwargs"], &kwargs)
+		if err != nil {
+			http.Error(w, "Invalid or missing kwargs", http.StatusBadRequest)
+			return
+		}
+
+		ioList, err := ipwl.InitializeIo(tool.CID, scatteringMethod, kwargs)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
+			return
+		}
+		log.Println("Initialized IO List")
+
+		for _, ioItem := range ioList {
+			log.Println("Creating job entry")
+			inputsJSON, err := json.Marshal(ioItem.Inputs)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
+				return
+			}
+			var queue models.QueueType
+			if tool.Gpu == 0 {
+				queue = models.QueueTypeCPU
+			} else {
+				queue = models.QueueTypeGPU
+			}
+			jobUUID := uuid.New().String()
+
+			job := models.Job{
+				ToolID:        ioItem.Tool.IPFS,
+				FlowID:        flow.ID,
+				WalletAddress: user.WalletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				Queue:         queue,
+				CreatedAt:     time.Now(),
+				JobUUID:       jobUUID,
+				Public:        false,
+			}
+
+			result = db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			for _, input := range ioItem.Inputs {
+				var cidsToAdd []string
+				switch v := input.(type) {
+				case string:
+					strInput, ok := input.(string)
+					if !ok {
+						continue
+					}
+					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+						split := strings.SplitN(strInput, "/", 2)
+						cid := split[0]
+						cidsToAdd = append(cidsToAdd, cid)
+					}
+				case []interface{}:
+					fmt.Println("found slice, checking each for 'Qm' prefix")
+					for _, elem := range v {
+						strInput, ok := elem.(string)
+						if !ok {
+							continue
+						}
+						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
+							split := strings.SplitN(strInput, "/", 2)
+							cid := split[0]
+							cidsToAdd = append(cidsToAdd, cid)
+						}
+					}
+				default:
+					continue
+				}
+				for _, cid := range cidsToAdd {
+					var dataFile models.DataFile
+					result := db.First(&dataFile, "cid = ?", cid)
+					if result.Error != nil {
+						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							return
+						} else {
+							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							return
+						}
+					}
+					job.InputFiles = append(job.InputFiles, dataFile)
+				}
+			}
+			result = db.Save(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(flow); err != nil {
+			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+			return
+		}
+	}
+}
