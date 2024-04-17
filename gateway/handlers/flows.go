@@ -409,16 +409,20 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 
+		log.Println("Generating and storing RecordCID...")
 		metadataCID, err := utils.GenerateAndStoreRecordCID(db, &flow)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error generating and storing RecordCID: %v", err), http.StatusInternalServerError)
 			return
 		}
+		log.Printf("Generated and stored RecordCID: %s", metadataCID)
 
+		log.Println("Minting NFT...")
 		if err := utils.MintNFT(db, &flow, metadataCID); err != nil {
 			http.Error(w, fmt.Sprintf("Error minting NFT: %v", err), http.StatusInternalServerError)
 			return
 		}
+		log.Println("NFT minted")
 
 		log.Printf("Updated Flow: %+v", flow)
 
