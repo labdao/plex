@@ -112,6 +112,9 @@ func MonitorRunningJobs(db *gorm.DB) error {
 						return err
 					}
 					fmt.Printf("retrying job %d\n", job.ID)
+					if err := fetchJobWithToolAndFlowData(&job, job.ID, db); err != nil {
+						return err
+					}
 					if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 						fmt.Printf("Error retrying job %d: %v\n", job.ID, err)
 						return err
