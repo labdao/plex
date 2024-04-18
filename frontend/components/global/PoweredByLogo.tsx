@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 export default function PoweredByLogo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center justify-center gap-3 p-3 text-xs text-muted-foreground/50 ", className)}>
+    <a href="https://www.convexity.bio/" className={cn("flex items-center justify-center gap-3 p-3 text-xs text-muted-foreground/50 ", className)} target="_blank" rel="noopener noreferrer">
       <svg xmlns="http://www.w3.org/2000/svg" width={15} height={16} fill="none">
         <path
           fill="currentColor"
@@ -10,6 +10,6 @@ export default function PoweredByLogo({ className }: { className?: string }) {
         <path fill="currentColor" d="M12 10.1h2.2a5 5 0 0 1-3 3.5c.4-1 .7-2 .7-3.5Z" />
       </svg>
       Powered by Convexity Labs
-    </div>
+    </a>
   );
 }

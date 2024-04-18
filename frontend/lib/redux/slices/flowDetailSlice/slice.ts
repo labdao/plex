@@ -11,6 +11,7 @@ export interface FlowDetail {
   StartTime: string;
   EndTime: string;
   Public: boolean;
+  RecordCID: string;
 }
 
 interface FlowDetailSliceState {
@@ -21,7 +22,17 @@ interface FlowDetailSliceState {
 }
 
 const initialState: FlowDetailSliceState = {
-  flow: { ID: null, CID: "", Jobs: [], Name: "", WalletAddress: "", StartTime: "", EndTime: "", Public: false },
+  flow: { 
+    ID: null, 
+    CID: "", 
+    Jobs: [], 
+    Name: "", 
+    WalletAddress: "", 
+    StartTime: "", 
+    EndTime: "", 
+    Public: false,
+    RecordCID: "",
+  },
   loading: true,
   error: null,
   success: false,
