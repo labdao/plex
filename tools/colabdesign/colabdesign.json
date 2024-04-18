@@ -17,8 +17,6 @@
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
-  "memoryGB": 12,
-  "cpu": 3,
   "networkBool": true,
   "inputs": {
     "binder_length": {
@@ -134,69 +132,9 @@
       "grouping": "_advanced",
       "position": "301",
       "required": false
-    "target_end_residue": {
-      "type": "number",
-      "description": "The end residue of the target protein.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "1",
-      "min": "1",
-      "max": "",
-      "example": "300",
-      "grouping": "target",
-      "position": "104",
-      "required": true
-    },
-    "target_protein": {
-      "type": "file",
-      "description": "The target protein to design against.",
-      "array": false,
-      "glob": [
-        "*.pdb"
-      ],
-      "default": "",
-      "min": "",
-      "max": "",
-      "example": "my_target_protein.pdb",
-      "grouping": "target",
-      "position": "101",
-      "required": true
-    },
-    "target_start_residue": {
-      "type": "number",
-      "description": "The start residue of the target protein.",
-      "array": false,
-      "glob": [
-        ""
-      ],
-      "default": "1",
-      "min": "1",
-      "max": "",
-      "example": "1",
-      "grouping": "target",
-      "position": "103",
-      "required": true
-    },
-    "contigs_override": {
-      "type": "string",
-      "default": "",
-      "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-      "example": "A1-283:B1-6/1/B8-20/22/B43-47",
-      "grouping": "_advanced",
-      "position": "301",
-      "required": false
     }
   },
   "outputs": {
-    "all_outputs": {
-      "type": "Array",
-      "item": "File",
-      "glob": [
-        "*.zip"
-      ]
-    },
     "all_outputs": {
       "type": "Array",
       "item": "File",
@@ -210,17 +148,10 @@
       "glob": [
         "*_best.pdb"
       ]
-      "glob": [
-        "*_best.pdb"
-      ]
     },
-    "scores": {
     "scores": {
       "type": "File",
       "item": "",
-      "glob": [
-        "*_scores.csv"
-      ]
       "glob": [
         "*_scores.csv"
       ]
