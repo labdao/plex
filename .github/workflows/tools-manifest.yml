@@ -42,7 +42,7 @@ jobs:
       tools: ${{ steps.filter.outputs.changes }}
     steps:
     - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         # Only run when tool's directory or workflow files have changed
