@@ -8,9 +8,9 @@ const overlayStyles: React.CSSProperties = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)', // Light white overlay
-    cursor: 'not-allowed', // Indicates the area is not interactive
-    zIndex: 10 // Ensures it covers the content
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    cursor: 'default',
+    zIndex: 10
 };
 
 interface ReadOnlyWrapperProps {
@@ -26,5 +26,4 @@ const ReadOnlyWrapper: React.FC<ReadOnlyWrapperProps> = ({ children, readOnly = 
         </div>
     );
 };
-
 export default ReadOnlyWrapper;

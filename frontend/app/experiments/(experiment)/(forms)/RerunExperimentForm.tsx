@@ -39,7 +39,10 @@ export default function RerunExperimentForm() {
   const formSchema = generateRerunSchema(tool.ToolJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
   const flowID = flow?.ID || 0;
-
+  const isReadOnly = flow?.Public;
+  const buttonStyle = isReadOnly ? {
+      background: '#cccccc',
+  } : {};
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
@@ -74,7 +77,7 @@ export default function RerunExperimentForm() {
   }
 
   return flow && lastJob ? (
-    <ReadOnlyWrapper readOnly={flow?.Public}>
+    <ReadOnlyWrapper readOnly={isReadOnly}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           {!!groupedInputs?.standard && (
@@ -114,7 +117,7 @@ export default function RerunExperimentForm() {
                   );
                 })}
                 <CardContent>
-                  <Button type="submit" className="flex-wrap w-full h-auto">
+                  <Button type="submit" className="flex-wrap w-full h-auto" style={buttonStyle}>
                     <RefreshCcwIcon /> Re-run Experiment
                   </Button>
                 </CardContent>
