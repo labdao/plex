@@ -1,0 +1,152 @@
+{
+    "class": "",
+    "name": "labsay v1.4a",
+    "description": "A simple hello world seq-only test with checkpoints",
+    "guide": "This is a guide on how to use the labsay tool.\n\nFollow these steps to use the tool effectively:\n\n1. Enter a binder_protein_sequence.\n2. Enter a target_protein_sequence.\n3. Upload 3 pdb files of your choice to be displayed as checkpoints in the Metrics tab.\n4. Expand the Advanced section to input number_of_binders, init_permissibility_vec, hotspots and high_fidelity.",
+    "author": "labdao",
+    "baseCommand": [],
+    "arguments": [],
+    "dockerPull": "quay.io/labdao/labsay@sha256:5b4f30f61d02bc2cff4972f35d6aef9b4755f8a8b207317d02222b3db8f55a0e",
+    "gpuBool": false,
+    "networkBool": true,
+    "memoryGB": 4,
+    "cpu": 0.8,
+    "taskCategory": "community-models",
+    "checkpointCompatible": true,
+    "maxRunningTime": 200,
+    "inputs": {
+        "binder_protein_sequence": {
+            "type": "string",
+            "description": "Sequence specifying a binder protein template. The sequence has to be written using the one-letter amino acid alphabet and may contain an arbitrary number of X characters to indicate unkown residues. Characters followed by * and an integer n, will be repeated n-times in the sequence, e.g. V*5 -> VVVVV.",
+            "array": false,
+            "glob": [
+            ""
+            ],
+            "default": "MKKAVINGEQIRSISDLHQTLKKELALPEYYGENLDALWDALTGWxxxxLVLEWRQFEQSKQLTENGAESVLQVFREAKAEGADITIILS",
+            "min": "",
+            "max": "",
+            "example": "MKKAVINGEQIRSISDLHQTLKKELALPEYYGENLDALWDALTGWxxxxLVLEWRQFEQSKQLTENGAESVLQVFREAKAEGADITIILS",
+            "grouping": "Sequence prompt",
+            "position": "101",
+            "required": true
+        },
+        "target_protein_sequence": {
+            "type": "string",
+            "description": "Sequence fully specifying the target protein.",
+            "array": false,
+            "glob": [
+            ""
+            ],
+            "default": "MGSSHHHHHHSQAPIEGRAQVINTFDGVADYLQTYHKLPDNYITKSEAQALGWVASKGNLCDVAPGKSIGGDIFSNREGKLPGKSGRTWREADINYTCGFRNSDRILYSSDWLIYKTTDHYQTFTKIR",
+            "min": "",
+            "max": "",
+            "example": "MGSSHHHHHHSQAPIEGRAQVINTFDGVADYLQTYHKLPDNYITKSEAQALGWVASKGNLCDVAPGKSIGGDIFSNREGKLPGKSGRTWREADINYTCGFRNSDRILYSSDWLIYKTTDHYQTFTKIR",
+            "grouping": "Sequence prompt",
+            "position": "102",
+            "required": true
+        },
+        "pdb_checkpoint_0": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "201",
+            "required": true
+        },
+        "pdb_checkpoint_1": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "202",
+            "required": true
+        },
+        "pdb_checkpoint_2": {
+            "type": "file",
+            "description": "File to have contents to be shown as checkpoint.",
+            "array": false,
+            "glob": ["*.pdb"],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Checkpoint File Params",
+            "position": "203",
+            "required": true
+        },
+        "number_of_binders": {
+            "type": "number",
+            "description": "Number of binders generated",
+            "array": false,
+            "glob": [
+            ""
+            ],
+            "default": "3",
+            "min": "1",
+            "max": "8",
+            "example": "4",
+            "grouping": "_Advanced inputs",
+            "position": "301",
+            "required": true
+        },
+        "init_permissibility_vec": {
+            "type": "string",
+            "description": "Contig prompt to specific fixed and masked section of the binder sequence, B3:10 fixes residues 3 to 10, and x11:15 masks residues 11 to 15, ...",
+            "array": false,
+            "glob": [
+            ""
+            ],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "B3:10/x11:15/B21:22",
+            "grouping": "_Advanced inputs",
+            "position": "302",
+            "required": false
+        },
+        "hotspots": {
+            "type": "string",
+            "description": "Hotspot residues on the target sequence indicating binding sites.",
+            "array": false,
+            "glob": [
+            ""
+            ],
+            "default": "",
+            "min": "",
+            "max": "",
+            "example": "A30, A35, A36",
+            "grouping": "_Advanced inputs",
+            "position": "303",
+            "required": false
+        },
+        "speedup": {
+            "type": "boolean",
+            "array": false,
+            "description": "Selecting this option will make LabSay print the logo faster",
+            "glob": [""],
+            "default": false,
+            "min": "",
+            "max": "",
+            "example": "",
+            "grouping": "Boolean Params",
+            "position": "204",
+            "required": true
+        }
+    },
+    "outputs": {
+        "result": {
+            "type": "File",
+            "glob": ["result.txt"]
+        }
+    }
+}
