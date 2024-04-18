@@ -1,0 +1,1 @@
+ALTER TABLE flows DROP COLUMN record_cid;

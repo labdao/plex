@@ -12,7 +12,7 @@ import { AppDispatch, flowDetailThunk, selectFlowDetail, selectToolDetail, setTo
 
 import RerunExperimentForm from "../(forms)/RerunExperimentForm";
 import ExperimentResults from "../(results)/ExperimentResults";
-import ModelInfo from "../ModelInfo";
+import ModelPanel from "../ModelPanel";
 import ExperimentDetail from "./ExperimentDetail";
 
 type ExperimentDetailProps = {
@@ -61,7 +61,7 @@ export default function Layout({ params }: ExperimentDetailProps) {
             <ExperimentResults />
             <PoweredByLogo />
           </div>
-          <ModelInfo task={task} defaultOpen={false} />
+          <ModelPanel task={task} defaultOpen={false} />
         </div>
       </ProtectedComponent>
     </>

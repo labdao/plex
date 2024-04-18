@@ -22,7 +22,7 @@ import Molstar from "@/components/visualization/Molstar/index";
 import { FlowDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
-import { ActiveResultContext } from "./ActiveResultContext";
+import { ExperimentUIContext } from "../ExperimentUIContext";
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -50,7 +50,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
-  const { activeCheckpointUrl, setActiveCheckpointUrl, activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
+  const { activeCheckpointUrl, setActiveCheckpointUrl, activeJobUUID, setActiveJobUUID } = useContext(ExperimentUIContext);
 
   const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
 

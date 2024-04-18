@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -251,23 +252,54 @@ func DownloadFileContents(cid, filepath string) error {
 }
 
 func DownloadFileToTemp(cid, fileName string) (string, error) {
-	// Create a temporary directory
 	tempDir, err := ioutil.TempDir("", "prefix")
 	if err != nil {
+		log.Printf("Failed to create temporary directory: %v", err)
 		return "", err
 	}
 
-	// Generate a random file name
-	tempFilePath := filepath.Join(tempDir, fileName)
-
-	// Download the file from IPFS to the temporary file
-	err = DownloadFileContents(cid, tempFilePath)
+	isDir, err := IsDirectory(cid)
 	if err != nil {
+		log.Printf("Failed to determine if CID %s is a directory: %v", cid, err)
 		return "", err
 	}
 
-	// Return the path to the temporary file
-	return tempFilePath, nil
+	if isDir {
+		log.Printf("CID %s is a directory, downloading contents", cid)
+		err = DownloadToDirectory(cid, tempDir)
+		if err != nil {
+			log.Printf("Failed to download directory with CID %s: %v", cid, err)
+			return "", err
+		}
+
+		files, err := ioutil.ReadDir(tempDir)
+		if err != nil {
+			log.Printf("Failed to read temporary directory: %v", err)
+			return "", err
+		}
+
+		for _, file := range files {
+			if file.Name() == fileName {
+				tempFilePath := filepath.Join(tempDir, fileName)
+				log.Printf("Found file %s in downloaded directory", fileName)
+				return tempFilePath, nil
+			}
+		}
+
+		return "", fmt.Errorf("file %s not found in downloaded directory", fileName)
+	} else {
+		tempFilePath := filepath.Join(tempDir, fileName)
+		log.Printf("Downloading file with CID %s to %s", cid, tempFilePath)
+
+		err = DownloadFileContents(cid, tempFilePath)
+		if err != nil {
+			log.Printf("Failed to download file with CID %s: %v", cid, err)
+			return "", err
+		}
+
+		log.Printf("Downloaded file with CID %s to %s", cid, tempFilePath)
+		return tempFilePath, nil
+	}
 }
 
 func IsValidCID(cidStr string) bool {
