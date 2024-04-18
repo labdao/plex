@@ -8,7 +8,7 @@
   "task": "protein design",
   "taskCategory": "protein-binder-design",
   "checkpointCompatible": true,
-  "maxRunTime": 2700,
+  "maxRunningTime": 2700,
   "baseCommand": [
   ],
   "arguments": [
