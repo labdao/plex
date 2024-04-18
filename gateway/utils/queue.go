@@ -100,6 +100,11 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			log.Printf("Job %d running for %v\n", job.ID, elapsed)
 			if elapsed > maxRunningTime {
 				fmt.Printf("Job %d has exceeded the maximum running time of %v, retrying job\n", job.ID, maxRunningTime)
+				err := bacalhau.CancelBacalhauJob(job.BacalhauJobID, "Maximum running time exceeded")
+				if err != nil {
+					fmt.Printf("Error stopping Bacalhau job %d: %v\n", job.ID, err)
+					return err
+				}
 				if job.RetryCount < 1 {
 					job.RetryCount++
 					job.State = models.JobStateQueued
