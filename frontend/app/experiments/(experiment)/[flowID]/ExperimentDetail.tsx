@@ -68,11 +68,11 @@ export default function ExperimentDetail() {
 
   const tooltipMessage = () => {
     if (flow.Public) {
-      return "Experiment has already been published and is now read-only.";
+      return (<span>Experiment has already been published<br />and is now read-only</span>)
     } else if (status.status === "completed" || status.status === "partial-failure" || status.status === "failed") {
-      return "Click to publish this experiment. Warning: Once published, you can't make changes.";
+      return (<span>Click to publish this experiment<br />Warning: Once published, you can't make changes</span>)
     } else {
-      return "You can't publish until your experiments finish. Please try later.";
+      return (<span>You can't publish until your experiments finish<br />Please try later</span>)
     }
   };
 
