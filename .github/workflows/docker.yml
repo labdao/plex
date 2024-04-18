@@ -117,19 +117,19 @@ jobs:
           echo '`${{ env.DOCKER_IMAGE }}`' >>  $GITHUB_STEP_SUMMARY
           echo 'IMAGE=${{ env.DOCKER_IMAGE }}' >> $GITHUB_OUTPUT
 
-          # - name: Trigger deploy to stg
-          #   id: deploy-to-ecs
-          #   if: >-
-          #     ${{
-          #       github.ref_name == 'main' &&
-          #       (
-          #         inputs.name == 'backend' ||
-          #           (
-          #             inputs.name == 'frontend' && inputs.deploy-environment == 'stg'
-          #           )
-          #       )
-          #     }}
-          #   env:
-          #     GH_TOKEN: ${{ github.token }}
-          #   run: |
-          #     gh workflow run 'Deploy to ECS' -f "image=${{ steps.docker-build-and-push-outputs.outputs.IMAGE }}" -f "container=${{ inputs.name }}" -f "environment=${{ inputs.deploy-environment }}"
+      # - name: Trigger deploy to stg
+      #   id: deploy-to-ecs
+      #   if: >-
+      #     ${{
+      #       github.ref_name == 'main' &&
+      #       (
+      #         inputs.name == 'backend' ||
+      #           (
+      #             inputs.name == 'frontend' && inputs.deploy-environment == 'stg'
+      #           )
+      #       )
+      #     }}
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #   run: |
+      #     gh workflow run 'Deploy to ECS' -f "image=${{ steps.docker-build-and-push-outputs.outputs.IMAGE }}" -f "container=${{ inputs.name }}" -f "environment=${{ inputs.deploy-environment }}"
