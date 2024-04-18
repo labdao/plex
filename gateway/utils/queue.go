@@ -80,7 +80,56 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		}
 		fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
-			// there should not be any errors from checkRunningJob
+			var ToolJson ipwl.Tool
+			var checkpointCompatible string
+			var maxRunningTime time.Duration
+			if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+				return err
+			}
+			if ToolJson.CheckpointCompatible {
+				checkpointCompatible = "True"
+			} else {
+				checkpointCompatible = "False"
+			}
+			if job.Tool.MaxRunningTime != 0 {
+				maxRunningTime = time.Duration(job.Tool.MaxRunningTime) * time.Second
+			} else {
+				maxRunningTime = 2700 * time.Second
+			}
+			elapsed := time.Since(job.StartedAt)
+			log.Printf("Job %d running for %v\n", job.ID, elapsed)
+			if elapsed > maxRunningTime {
+				fmt.Printf("Job %d has exceeded the maximum running time of %v, retrying job\n", job.ID, maxRunningTime)
+				err := bacalhau.CancelBacalhauJob(job.BacalhauJobID, "Maximum running time exceeded")
+				if err != nil {
+					fmt.Printf("Error stopping Bacalhau job %d: %v\n", job.ID, err)
+					return err
+				}
+				if job.RetryCount < 1 {
+					job.RetryCount++
+					job.State = models.JobStateQueued
+					if err := updateJobRetryState(&job, db); err != nil {
+						return err
+					}
+					fmt.Printf("retrying job %d\n", job.ID)
+					if err := fetchJobWithToolAndFlowData(&job, job.ID, db); err != nil {
+						return err
+					}
+					if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
+						fmt.Printf("Error retrying job %d: %v\n", job.ID, err)
+						return err
+					}
+					time.Sleep(retryJobSleepTime)
+					continue
+				} else {
+					fmt.Printf("Job %d has already been retried, failing job\n", job.ID)
+					job.State = models.JobStateFailed
+					if err := db.Save(&job).Error; err != nil {
+						fmt.Printf("Error updating job to failed: %v\n", err)
+						return err
+					}
+				}
+			}
 			if err := checkRunningJob(job.ID, db); err != nil {
 				return err
 			}
@@ -88,6 +137,10 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
 		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
+}
+
+func updateJobRetryState(job *models.Job, db *gorm.DB) error {
+	return db.Model(job).Updates(models.Job{RetryCount: job.RetryCount, State: job.State}).Error
 }
 
 func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
@@ -250,6 +303,7 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 
 func setJobStatus(job *models.Job, state models.JobState, errorMessage string, db *gorm.DB) error {
 	job.State = state
+	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	return db.Save(job).Error
 }

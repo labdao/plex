@@ -236,6 +236,20 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 	return updatedJob, err
 }
 
+func CancelBacalhauJob(jobId string, reason string) error {
+	client, err := GetBacalhauClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Cancel(context.Background(), jobId, reason)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
 	capacityErrorMessages := []string{"not enough capacity", "not enough nodes", "does not have capacity"}
 	falseCapacityMessages := []string{"Could not inspect image", "node does not support the available image platforms"}
