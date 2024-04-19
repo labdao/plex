@@ -1,0 +1,5 @@
+ALTER TABLE jobs
+ADD COLUMN retry_count INT DEFAULT 0;
+
+ALTER TABLE tools
+ADD COLUMN max_running_time INT DEFAULT 2700;

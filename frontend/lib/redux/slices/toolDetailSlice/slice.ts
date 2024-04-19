@@ -22,6 +22,7 @@ export interface ToolDetail {
     guide: string;
     checkpointCompatible: boolean;
     taskCategory?: string;
+    maxRunningTime?: number;
   };
 }
 
@@ -48,6 +49,7 @@ const initialState: ToolDetailSliceState = {
       paper: "",
       guide: "",
       checkpointCompatible: false,
+      maxRunningTime: 2700,
     },
   },
   loading: true,

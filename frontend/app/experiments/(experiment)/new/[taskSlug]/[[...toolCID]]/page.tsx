@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import NewExperimentForm from "@/app/experiments/(experiment)/(forms)/NewExperimentForm";
 import ExperimentResults from "@/app/experiments/(experiment)/(results)/ExperimentResults";
-import ModelInfo from "@/app/experiments/(experiment)/ModelInfo";
+import ModelInfo from "@/app/experiments/(experiment)/ModelPanel";
 import { tasks } from "@/app/tasks/taskList";
 import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";

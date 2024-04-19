@@ -1,18 +1,19 @@
 {
     "class": "",
-    "name": "labsay v1.3",
+    "name": "labsay v1.4b",
     "description": "A simple hello world seq-only test with checkpoints",
     "guide": "This is a guide on how to use the labsay tool.\n\nFollow these steps to use the tool effectively:\n\n1. Enter a binder_protein_sequence.\n2. Enter a target_protein_sequence.\n3. Upload 3 pdb files of your choice to be displayed as checkpoints in the Metrics tab.\n4. Expand the Advanced section to input number_of_binders, init_permissibility_vec, hotspots and high_fidelity.",
     "author": "labdao",
     "baseCommand": [],
     "arguments": [],
-    "dockerPull": "quay.io/labdao/labsay@sha256:e7517c97f07eeb04a2782d0baa3bf516cbcbd7e8dc567cd9e898574c7e4748aa",
+    "dockerPull": "quay.io/labdao/labsay@sha256:5b4f30f61d02bc2cff4972f35d6aef9b4755f8a8b207317d02222b3db8f55a0e",
     "gpuBool": false,
     "networkBool": true,
     "memoryGB": 4,
     "cpu": 0.8,
     "taskCategory": "community-models",
     "checkpointCompatible": true,
+    "maxRunningTime": 20,
     "inputs": {
         "binder_protein_sequence": {
             "type": "string",

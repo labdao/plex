@@ -19,7 +19,7 @@ const renderDescriptionParagraphs = (text: string) => {
         ))}
         <ol className="mt-2 ml-5 list-decimal list-outside">
           {steps.map((step, index) => (
-            <li key={index} className="pb-4 mt-1 mb-4 border-b border-yellow-800/10 last:border-0 last:m-0 last:p-0 marker:text-foreground">
+            <li key={index} className="pb-4 mt-1 mb-4 border-b last:border-0 last:m-0 last:p-0 marker:text-foreground">
               {step.replace(/^\d+\. /, "")}
             </li>
           ))}
@@ -41,10 +41,8 @@ interface ModelGuideProps {
 
 export default function ModelGuide({ tool }: ModelGuideProps) {
   return (
-    <div className="px-4 py-2 my-4 mb-4 rounded-lg bg-yellow-50">
-      <div className="flex items-center justify-between w-full gap-2 py-2 text-left uppercase font-heading">
-        <HelpCircleIcon /> <span className="mr-auto">How to Write Prompts</span>
-      </div>
+    <div>
+      <div className="text-left uppercase font-heading">How to Write Prompts</div>
       <div className="pt-0">
         <div className="space-y-2 text-muted-foreground">{renderDescriptionParagraphs(tool.ToolJson.guide)}</div>
       </div>

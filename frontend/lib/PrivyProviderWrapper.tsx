@@ -2,6 +2,7 @@
 
 import { PrivyProvider, User } from '@privy-io/react-auth';
 import React, { useState } from 'react';
+import { optimismSepolia } from 'viem/chains'
 
 import { PrivyAuthContext } from './PrivyContext';
 
@@ -28,7 +29,9 @@ export default function PrivyProviderWrapper({
                         theme: "dark",
                         accentColor: "#6bdaad",
                         logo: "https://raw.githubusercontent.com/labdao/plex/main/LabBio_whitetext_transparent.png",
-                    }
+                    },
+                    defaultChain: optimismSepolia,
+                    supportedChains: [optimismSepolia]
                 }}
             >
                 {children}

@@ -3,7 +3,7 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { BadgeCheck, Dna } from "lucide-react";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
@@ -27,6 +27,7 @@ import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
 
 import { ExperimentRenameForm } from "../(forms)/ExperimentRenameForm";
 import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
+import { ExperimentUIContext } from "../ExperimentUIContext";
 import ExperimentShare from "./ExperimentShare";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip";
 
@@ -46,6 +47,8 @@ export default function ExperimentDetail() {
   const updateSuccess = useSelector(selectFlowUpdateSuccess);
 
   const userWalletAddress = useSelector(selectUserWalletAddress);
+
+  const { modelPanelOpen, setModelPanelOpen } = useContext(ExperimentUIContext);
 
   const experimentID = flow.ID?.toString();
 
@@ -146,8 +149,16 @@ export default function ExperimentDetail() {
                 </span>
               </div>
               <div className="opacity-50">
-                <CopyToClipboard string={flow.CID}>
-                  Experiment ID: <TruncatedString value={flow.CID} />
+                <CopyToClipboard string={flow.RecordCID || flow.CID}>
+                  {flow.RecordCID ? (
+                    <>
+                      Record ID: <TruncatedString value={flow.RecordCID} />
+                    </>
+                  ) : (
+                    <>
+                      Experiment ID: <TruncatedString value={flow.CID} />
+                    </>
+                  )}
                 </CopyToClipboard>
               </div>
             </div>
@@ -164,9 +175,9 @@ export default function ExperimentDetail() {
                 */}
               <div>
                 <strong>Model: </strong>
-                <Badge variant="outline" className="text-sm border-primary">
+                <Button variant="outline" size="xs" onClick={() => setModelPanelOpen(!modelPanelOpen)}>
                   {flow.Jobs?.[0]?.Tool?.Name}
-                </Badge>
+                </Button>
               </div>
             </div>
           </CardContent>
