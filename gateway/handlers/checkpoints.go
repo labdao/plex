@@ -282,3 +282,34 @@ func GetFlowCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(plotData)
 	}
 }
+
+// StreamJobIDsForFlow streams the job IDs for a given flow to the client
+func StreamJobIDsForFlow(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		flowID := vars["flowID"]
+
+		var flow models.Flow
+		if err := db.Preload("Jobs").First(&flow, "id = ?", flowID).Error; err != nil {
+			http.Error(w, "Flow not found", http.StatusNotFound)
+			return
+		}
+
+		encoder := json.NewEncoder(w)
+		w.Header().Set("Content-Type", "application/json")
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+			return
+		}
+
+		// Stream each job ID to the client
+		for _, job := range flow.Jobs {
+			if err := encoder.Encode(job.ID); err != nil {
+				http.Error(w, "Failed to stream job ID", http.StatusInternalServerError)
+				return
+			}
+			flusher.Flush() // Send each job ID as it's processed
+		}
+	}
+}

@@ -49,36 +49,88 @@ interface CheckpointData {
 export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
-  const [plotData, setPlotData] = useState([]);
+  const [plotData, setPlotData] = useState<CheckpointChartData[]>([]);
   const { activeCheckpointUrl, setActiveCheckpointUrl, activeJobUUID, setActiveJobUUID } = useContext(ActiveResultContext);
 
   const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Currently unused
-        //const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
-        //const checkpointData = await checkpointResponse.json();
-        //setCheckpoints(checkpointData);
+   // Stream job IDs and fetch job checkpoint data
+   const streamAndFetchJobCheckpoints = async (flowID: number) => {
+    const streamUrl = `${backendUrl()}/stream-job-ids/${flowID}`;
+    const response = await fetch(streamUrl);
+    
+    if (response.body) {
+      const reader = response.body.getReader();
+      const textDecoder = new TextDecoder();
+      let accumulatedText = '';
 
-        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
-        const plotData = await plotDataResponse.json();
-        setPlotData(plotData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {//break;
+          // const jobID = value;
+          // if (jobID) {
+          //   await fetchJobCheckpointData(flowID, jobID);
+          // }
+          processJobIDs(flowID, accumulatedText);
+          break;
+        }
       }
-    };
+     } catch (error) {
+        console.error("Error reading stream", error);
+      } finally {
+        reader.releaseLock();
+      }
+    }
+  };
+
+  const processJobIDs = (flowID: number, text: string) => {
+    const jobIDs = text.split(','); // Split by commas if IDs are comma-separated
+    jobIDs.forEach(async jobID => {
+        if (jobID.trim()) {
+            await fetchJobCheckpointData(flowID, jobID.trim());
+        }
+    });
+};
+
+  const fetchJobCheckpointData = async (flowID: number, jobID: string) => {
+    try {
+      const url = `${backendUrl()}/checkpoints/${flowID}/${jobID}/get-data`;
+      const response = await fetch(url);
+      const jobPlotData: CheckpointChartData[] = await response.json(); // Ensure this matches the expected type
+      setPlotData(prevData => [...prevData, ...jobPlotData]);
+    } catch (error) {
+      console.error("Error fetching job checkpoint data:", error);
+    }
+  };
+  
+  useEffect(() => {
+    // const fetchData = async () => {
+    //   try {
+    //     // Currently unused
+    //     //const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
+    //     //const checkpointData = await checkpointResponse.json();
+    //     //setCheckpoints(checkpointData);
+
+    //     const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
+    //     const plotData = await plotDataResponse.json();
+    //     setPlotData(plotData);
+    //   } catch (error) {
+    //     console.error("Error fetching data:", error);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
     if (flow.ID) {
       setLoading(true);
-      fetchData();
+      // fetchData();
+      streamAndFetchJobCheckpoints(flow.ID);
     } else {
       setPlotData([]);
+      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flow]);
+  }, [flow.ID]);
 
   useEffect(() => {
     if (plotData?.length > 0) {
