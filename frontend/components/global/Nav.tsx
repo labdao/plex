@@ -17,6 +17,7 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { InlineEditExperiment } from "@/components/ui/inline-edit-experiment";
 
 export default function Nav() {
   const { user } = usePrivy();
@@ -72,16 +73,7 @@ export default function Nav() {
                         flowID === flow.ID.toString() && "text-foreground bg-muted hover:bg-muted"
                       )}
                     >
-                      {flow.Name}
-                      {/* With renaming functionality in the experiment title (ExperimentRenameForm) this may be unnecessary */}
-                      <Button
-                        onClick={() => toast.warning("Renaming experiments is coming soon!", { position: "top-center" })}
-                        variant="secondary"
-                        size="icon"
-                        className="absolute hidden group-hover:block top-[2px] right-[2px]"
-                      >
-                        <PencilIcon />
-                      </Button>
+                      <InlineEditExperiment flow={flow} />
                     </Link>
                   ))}
                 </div>
