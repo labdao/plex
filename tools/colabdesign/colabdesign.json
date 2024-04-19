@@ -51,7 +51,7 @@
     },
     "hotspot": {
       "type": "string",
-      "description": "The residues that should be in contact with the binder.",
+      "description": "The residues that should be in contact with the binder.e.g. A30,A33,A34",
       "array": false,
       "glob": [
         ""
