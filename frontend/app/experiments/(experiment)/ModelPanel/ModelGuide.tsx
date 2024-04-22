@@ -1,38 +1,43 @@
 import { HelpCircleIcon } from "lucide-react";
 
 import { ToolDetail } from "@/lib/redux";
+import { ReactElement, JSXElementConstructor, ReactNode, PromiseLikeOfReactNode, JSX } from "react";
 
 const renderDescriptionParagraphs = (text: string) => {
   const paragraphs = text.split("\n");
-  const hasNumberedSteps = paragraphs.some((paragraph) => paragraph.match(/^\d+\. /));
 
-  if (hasNumberedSteps) {
-    const steps = paragraphs.filter((paragraph) => paragraph.match(/^\d+\. /));
-    const nonStepParagraphs = paragraphs.filter((paragraph) => !paragraph.match(/^\d+\. /));
+  const renderParagraph = (paragraph: string) => {
+    const modifiedParagraph = paragraph.replace(/\*(.*?)\*/g, (match, p1) => `<strong>${p1}</strong>`);
+    return { __html: modifiedParagraph };
+  };
 
-    return (
-      <>
-        {nonStepParagraphs.map((paragraph, index) => (
-          <p key={index} className="mt-2">
-            {paragraph}
-          </p>
-        ))}
-        <ol className="mt-2 ml-5 list-decimal list-outside">
-          {steps.map((step, index) => (
-            <li key={index} className="pb-4 mt-1 mb-4 border-b last:border-0 last:m-0 last:p-0 marker:text-foreground">
-              {step.replace(/^\d+\. /, "")}
-            </li>
-          ))}
-        </ol>
-      </>
-    );
-  } else {
-    return paragraphs.map((paragraph, index) => (
-      <p key={index} className="mt-2">
-        {paragraph}
-      </p>
-    ));
+  const elements = [];
+  let listItems: JSX.Element[] = [];
+
+  paragraphs.forEach((paragraph, index) => {
+    if (paragraph.match(/^\d+\. /)) {
+      listItems.push(
+        <li key={`step-${index}`} className="pb-4 mt-1 mb-4 border-b last:border-0 last:m-0 last:p-0 marker:text-foreground"
+            dangerouslySetInnerHTML={renderParagraph(paragraph.replace(/^\d+\. /, ""))}>
+        </li>
+      );
+    } else {
+      if (listItems.length > 0) {
+        elements.push(<ol key={`ol-${elements.length}`} className="mt-2 ml-5 list-decimal list-outside">{listItems}</ol>);
+        listItems = [];
+      }
+      elements.push(
+        <p key={`nonstep-${index}`} className="mt-2" dangerouslySetInnerHTML={renderParagraph(paragraph)}>
+        </p>
+      );
+    }
+  });
+
+  if (listItems.length > 0) {
+    elements.push(<ol key={`ol-${elements.length}`} className="mt-2 ml-5 list-decimal list-outside">{listItems}</ol>);
   }
+
+  return <>{elements}</>;
 };
 
 interface ModelGuideProps {
