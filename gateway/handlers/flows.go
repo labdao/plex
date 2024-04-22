@@ -374,80 +374,55 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var requestData struct {
-			Name   *string `json:"name,omitempty"`
-			Public *bool   `json:"public,omitempty"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-			http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		if flow.Public {
+			http.Error(w, "Flow is already public", http.StatusBadRequest)
 			return
 		}
 
-		newPublicFlag := false
-		newName := ""
-		if requestData.Name != nil {
-			newName = *requestData.Name
+		flow.Public = true
+
+		if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+			return
 		}
-		if requestData.Public != nil && *requestData.Public != flow.Public {
-			if flow.Public {
-				http.Error(w, "Flow is already public and cannot be made private", http.StatusBadRequest)
-				return
-			}
-			newPublicFlag = *requestData.Public
+
+		var jobs []models.Job
+		if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
+			return
 		}
-		if newName != "" {
-			flow.Name = newName
-			if result := db.Model(&flow).Updates(models.Flow{Name: flow.Name}); result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+
+		for _, job := range jobs {
+			if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
-		if newPublicFlag {
-			flow.Public = true
 
-			if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
-				return
-			}
-
-			var jobs []models.Job
-			if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
-				return
-			}
-
-			for _, job := range jobs {
-				if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
-
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
-
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
-			}
-
-			log.Println("Generating and storing RecordCID...")
-			metadataCID, err := utils.GenerateAndStoreRecordCID(db, &flow)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error generating and storing RecordCID: %v", err), http.StatusInternalServerError)
-				return
-			}
-			log.Printf("Generated and stored RecordCID: %s", metadataCID)
-
-			log.Println("Minting NFT...")
-			if err := utils.MintNFT(db, &flow, metadataCID); err != nil {
-				http.Error(w, fmt.Sprintf("Error minting NFT: %v", err), http.StatusInternalServerError)
-				return
-			}
-			log.Println("NFT minted")
+		log.Println("Generating and storing RecordCID...")
+		metadataCID, err := utils.GenerateAndStoreRecordCID(db, &flow)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error generating and storing RecordCID: %v", err), http.StatusInternalServerError)
+			return
 		}
+		log.Printf("Generated and stored RecordCID: %s", metadataCID)
+
+		log.Println("Minting NFT...")
+		if err := utils.MintNFT(db, &flow, metadataCID); err != nil {
+			http.Error(w, fmt.Sprintf("Error minting NFT: %v", err), http.StatusInternalServerError)
+			return
+		}
+		log.Println("NFT minted")
 
 		log.Printf("Updated Flow: %+v", flow)
 

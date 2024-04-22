@@ -20,7 +20,6 @@ import { PageLoader } from "@/components/shared/PageLoader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
 import { FlowDetail } from "@/lib/redux";
-import { getAccessToken } from "@privy-io/react-auth";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import { ExperimentUIContext } from "../ExperimentUIContext";
@@ -63,20 +62,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         //const checkpointData = await checkpointResponse.json();
         //setCheckpoints(checkpointData);
 
-        let authToken;
-        try {
-          authToken = await getAccessToken()
-        } catch (error) {
-          console.log('Failed to get access token: ', error)
-          throw new Error("Authentication failed");
-        }
-        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`, {
-          method: 'Get',
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`);
         const plotData = await plotDataResponse.json();
         setPlotData(plotData);
       } catch (error) {

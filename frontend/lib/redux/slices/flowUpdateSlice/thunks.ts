@@ -6,18 +6,14 @@ import { setFlowUpdateError, setFlowUpdateLoading, setFlowUpdateSuccess } from '
 
 interface UpdateFlowArgs {
     flowId: string;
-    updates: {
-        name?: string;
-        public?: boolean;
-    };
 }
 
 export const flowUpdateThunk = createAppAsyncThunk(
     'flow/updateFlow',
-    async ({ flowId, updates }: UpdateFlowArgs, { dispatch }: { dispatch: AppDispatch }) => {
+    async ({ flowId }: UpdateFlowArgs, { dispatch }: { dispatch: AppDispatch }) => {
         dispatch(setFlowUpdateLoading(true));
         try {
-            const result = await updateFlow(flowId, updates);
+            const result = await updateFlow(flowId);
             dispatch(setFlowUpdateSuccess(true));
             return result;
         } catch (error) {

@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
 
-export const updateFlow = async (flowId: string, data: { name?: string; public?: boolean; }): Promise<any> => {
+export const updateFlow = async (flowId: string): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -17,7 +17,6 @@ export const updateFlow = async (flowId: string, data: { name?: string; public?:
       'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data)
   };
 
   try {
@@ -25,7 +24,8 @@ export const updateFlow = async (flowId: string, data: { name?: string; public?:
     if (!response.ok) {
       throw new Error(`Failed to update Flow: ${response.statusText}`);
     }
-    return await response.json();
+    const result = await response.json();
+    return result;
   } catch (error) {
     console.error('Failed to update Flow:', error);
     throw new Error('Failed to update Flow');
