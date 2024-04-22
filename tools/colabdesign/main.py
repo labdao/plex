@@ -100,7 +100,12 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
 def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uuid):
     checkpoint_csv_path = os.path.dirname(result_csv_path)
-    for index, row in df_results.iterrows():
+
+    df_sorted = df_results.sort_values(by=['design', 'rmsd'], ascending=[True, True])
+    best_per_design = df_sorted.groupby('design').first()
+    best_per_design.reset_index(inplace=True)
+
+    for index, row in best_per_design.iterrows():
         plddt_for_checkpoint = row['plddt'] *100
         i_pae_for_checkpoint = row['i_pae']
         design = row['design']
@@ -121,7 +126,6 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         new_df.to_csv(event_csv_filepath, index= False)
 
         bucket_name = "app-checkpoint-bucket"
-        time.sleep(2)
         object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
