@@ -44,9 +44,9 @@ export const InlineEditExperiment: React.FC<InlineEditExperimentProps> = ({ flow
   }
 
   return (
-    <div className="flex items-center justify-between">
-      <span>{name}</span>
-      <button onClick={() => setIsEditing(true)} className="text-gray-500">
+    <div className="flex items-center">
+      <span className="flex-1 mr-2 truncate">{name}</span>
+      <button onClick={() => setIsEditing(true)} className="absolute hidden group-hover:block right-[2px]">
         <PencilIcon size={16} />
       </button>
     </div>
