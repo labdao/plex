@@ -143,7 +143,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
     <div className="relative">
       {!plotData?.length && (
         <div className="absolute inset-0 z-20 flex items-center justify-center p-12 text-center text-muted-foreground bg-gray-50/80">
-          <div>{loading ? <PageLoader /> : <p>Checkpoints will appear here as they complete.</p>}</div>
+          <div>{loading ? <PageLoader /> : <p>Designs will appear here as they are generated.</p>}</div>
         </div>
       )}
 
@@ -163,10 +163,10 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                       <strong>Stability Score:</strong> larger value indicates higher confidence in the predicted local structure
                     </p>
                     <p>
-                      <strong>Affinity Score:</strong> larger value indicates higher confidence in the predicted interface residue distance
+                      <strong>Affinity Score:</strong> larger value indicates higher confidence in the predicted interface structure
                     </p>
                     <p>
-                      <strong>Note:</strong> designs which lie within the green square are likely high quality
+                      <strong>Note:</strong> designs which lie within the green square are recommended for laboratory testing
                     </p>
                   </TooltipContent>
                 </Tooltip>
