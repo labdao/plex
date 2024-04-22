@@ -155,7 +155,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center justify-center gap-1 pl-10 mb-4 text-center font-heading">
-                      Metrics Space <HelpCircleIcon className="text-muted-foreground" size={14} />
+                      Design Metrics <HelpCircleIcon className="text-muted-foreground" size={14} />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs text-xs" side="bottom">
