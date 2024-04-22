@@ -1,25 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { Tool } from "../toolListSlice/slice";
-
-export interface Job {
-  ID: number;
-  BacalhauJobID: string;
-  State: string;
-  Error: string;
-  Tool: Tool;
-  FlowId: string;
-}
+import { JobDetail, ToolDetail } from "@/lib/redux";
 
 export interface FlowDetail {
   ID: number | null;
   CID: string;
-  Jobs: Job[];
+  Jobs: JobDetail[];
   Name: string;
   WalletAddress: string;
   StartTime: string;
   EndTime: string;
   Public: boolean;
+  RecordCID: string;
 }
 
 interface FlowDetailSliceState {
@@ -30,7 +22,17 @@ interface FlowDetailSliceState {
 }
 
 const initialState: FlowDetailSliceState = {
-  flow: { ID: null, CID: "", Jobs: [], Name: "", WalletAddress: "", StartTime: "", EndTime: "", Public: false },
+  flow: { 
+    ID: null, 
+    CID: "", 
+    Jobs: [], 
+    Name: "", 
+    WalletAddress: "", 
+    StartTime: "", 
+    EndTime: "", 
+    Public: false,
+    RecordCID: "",
+  },
   loading: true,
   error: null,
   success: false,
@@ -54,10 +56,14 @@ export const flowDetailSlice = createSlice({
     },
     setFlowDetailPublic: (state, action: PayloadAction<boolean>) => {
       state.flow.Public = action.payload;
-    }
+    },
+    resetFlowDetail: () => {
+      return initialState;
+    },
   },
 });
 
-export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailPublic, setFlowDetailSuccess } = flowDetailSlice.actions;
+export const { setFlowDetail, setFlowDetailLoading, setFlowDetailError, setFlowDetailPublic, setFlowDetailSuccess, resetFlowDetail } =
+  flowDetailSlice.actions;
 
 export default flowDetailSlice.reducer;

@@ -1,4 +1,5 @@
-import { useLogin } from "@privy-io/react-auth";
+// import { switchChain } from "@privy-io/react-auth";
+import { useLogin, useWallets } from "@privy-io/react-auth";
 import { usePrivy } from "@privy-io/react-auth";
 import { Slot } from "@radix-ui/react-slot";
 import React from "react";
@@ -18,10 +19,26 @@ const PrivyLoginButton = (props: ButtonProps) => {
   const { login } = useLogin({
     onComplete: (user, isNewUser, wasAlreadyAuthenticated) => {
       const walletAddress = user?.wallet?.address;
+      const chainId = user?.wallet?.chainId;
+
       if (!walletAddress) {
         console.log("No wallet address found");
         return;
       }
+
+      // if (chainId !== 'eip155:11155420') {
+      //   console.log(`User is on a different network: ${chainId}. Switching to OP Sepolia testnet.`);
+      //   try {
+      //     await switchChain('eip155:11155420');
+      //     console.log("Switched to OP Sepolia testnet successfully.");
+      //   } catch (switchError) {
+      //     console.error("Failed to switch to OP Sepolia testnet:", switchError);
+      //   }
+      // } else {
+      //   console.log("User is already on OP Sepolia testnet.");
+      // }
+
+      console.log(`User authenticated with wallet address: ${walletAddress} on chainId: ${chainId}`)
 
       if (isNewUser) {
         console.log("New user");

@@ -24,6 +24,9 @@ https://ui.shadcn.com/docs/theming#list-of-variables
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
 
+    --secondary-blue: 187 58% 57%;
+    --secondary-blue-foreground: 0 0% 9%;
+
     --muted: 0 0% 96.1%;
     --muted-foreground: 0 0% 40%;
 

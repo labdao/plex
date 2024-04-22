@@ -299,6 +299,7 @@ contracts/coverage
 contracts/coverage.json
 contracts/typechain
 contracts/typechain-types
+contracts/ignition/deployments
 
 # Next.js
 .next/
@@ -331,3 +332,4 @@ docker/.env.tunnel
 
 #
 tools/*/test-runs/
+.vscode/

@@ -1,59 +1,160 @@
 {
-  "class": "CommandLineTool",
-  "name": "colabdesign-dev",
-  "description": "one-pot design of protein backbones and sequences",
-  "author": "",
-  "baseCommand": ["/bin/bash", "-c"],
-  "arguments": [
-    "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml;",
-    "ls /inputs;",
-    "echo 'Attempting main.py...';",
-    "python -u main.py;",
-    "echo 'main.py complete!';"
+  "name": "colabdesign v1.2",
+  "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
+  "guide": "Follow these steps to use the tool effectively:\n\n1. Select a .pdb file containing the structure of the target you would like to design a binder against.\n2. Enter the length of the binder you want to design (total number of residues) and the number of binders to design. These two steps are already enough to prompt the tool and you are ready to submit your experimental run. In case you wish to give additional constraints for the designs, here are additional inputs you can give:\n3. Define hotspot residues on the target as the binding sites, stating the chain followed by the number of the residue. You can specify multiple hotspots at once.\n4. Crop the target structure by specifying start and end residues on the target chain, or selecting a different target chain from the pdb file altogether (chain A is the default).\n5. Define a contig that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",
+  "author": "sokrypton",
+  "github": "https://github.com/sokrypton/ColabDesign",
+  "paper": "https://www.nature.com/articles/s41586-023-06415-8",
+  "task": "protein design",
+  "taskCategory": "protein-binder-design",
+  "checkpointCompatible": true,
+  "maxRunningTime": 2700,
+  "baseCommand": [
   ],
-  "dockerPull": "docker.io/openzyme/colabdesign@sha256:82a83c494cf91adc333cd5ed1f87b4a8fc5eadc39abd41348c58f931477b6d50",
+  "arguments": [
+  ],
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:92ce1b8474fbcc398a5cf037be8cc21695183e087c991d3515789c44a9a0e542",
   "gpuBool": true,
-  "networkBool": true,
-  "cpu": 3,
   "memoryGB": 12,
+  "cpu": 3,
+  "networkBool": true,
   "inputs": {
-    "protein": {
-      "type": "File",
-      "item": "",
-      "glob": ["*.pdb"]
+    "binder_length": {
+      "type": "number",
+      "description": "The length of the protein binder that is being designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "50",
+      "min": "1",
+      "max": "1000",
+      "example": "50",
+      "grouping": "binder",
+      "position": "201",
+      "required": true
     },
-    "config": {
-      "type": "File",
-      "item": "",
-      "glob": ["*.yaml"]
+    "number_of_binders": {
+      "type": "number",
+      "description": "The number of protein binders to be designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "8",
+      "min": "1",
+      "max": "8",
+      "example": "8",
+      "grouping": "binder",
+      "position": "202",
+      "required": true
+    },
+    "hotspot": {
+      "type": "string",
+      "description": "The residues that should be in contact with the binder.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "A30,A33,A34",
+      "grouping": "target",
+      "position": "105",
+      "required": false
+    },
+    "target_chain": {
+      "type": "string",
+      "description": "The chain of the target protein to design against.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "A",
+      "min": "",
+      "max": "",
+      "example": "A",
+      "grouping": "target",
+      "position": "102",
+      "required": true
+    },
+    "target_end_residue": {
+      "type": "number",
+      "description": "The end residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "1",
+      "min": "1",
+      "max": "",
+      "example": "300",
+      "grouping": "target",
+      "position": "104",
+      "required": true
+    },
+    "target_protein": {
+      "type": "file",
+      "description": "The target protein to design against.",
+      "array": false,
+      "glob": [
+        "*.pdb"
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "my_target_protein.pdb",
+      "grouping": "target",
+      "position": "101",
+      "required": true
+    },
+    "target_start_residue": {
+      "type": "number",
+      "description": "The start residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "1",
+      "min": "1",
+      "max": "",
+      "example": "1",
+      "grouping": "target",
+      "position": "103",
+      "required": true
+    },
+    "contigs_override": {
+      "type": "string",
+      "default": "",
+      "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
+      "example": "A1-283:B1-6/1/B8-20/22/B43-47",
+      "grouping": "_advanced",
+      "position": "301",
+      "required": false
     }
   },
   "outputs": {
+    "all_outputs": {
+      "type": "Array",
+      "item": "File",
+      "glob": [
+        "*.zip"
+      ]
+    },
     "best_design": {
       "type": "File",
       "item": "",
-      "glob": ["best.pdb"]
+      "glob": [
+        "*_best.pdb"
+      ]
     },
-    "design_scores": {
+    "scores": {
       "type": "File",
       "item": "",
-      "glob": ["mpnn_results.csv"]
-    },
-    "design_sequences": {
-      "type": "File",
-      "item": "",
-      "glob": ["design.fasta"]
-    },
-    "compressed_designs": {
-      "type": "Array",
-      "item": "File",
-      "glob": ["*.zip"]
+      "glob": [
+        "*_scores.csv"
+      ]
     }
   }
 }
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml; ls /inputs; echo 'Attempting main.py...'; python -u main.py; echo 'main.py complete';"
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "mv /inputs/target_protein/*.pdb /inputs/target_protein.pdb && mv /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && cat /inputs/config.yaml"
-
-docker run --rm -v "$(pwd)/inputs:/inputs" -v "$(pwd)/outputs:/outputs" colabdesign /bin/bash -c "cp /inputs/target_protein/*.pdb /inputs/target_protein.pdb && cp /inputs/config/*.yaml /inputs/config.yaml && ls /inputs && echo 'Attempting main.py...' && python -u main.py && echo 'done'"

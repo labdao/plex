@@ -42,4 +42,5 @@ type Job struct {
 	Annotations   string         `gorm:"type:varchar(255)"`
 	JobUUID       string         `gorm:"type:uuid"`
 	Public        bool           `gorm:"type:boolean;not null;default:false"`
+	RetryCount    int            `gorm:"type:int;not null;default:0"`
 }

@@ -114,6 +114,13 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			taskCategory = tool.TaskCategory
 		}
 
+		var maxRunningTime int
+		//if maxruntime is not provided, set it to 45 minutes
+		if tool.MaxRunningTime == 0 {
+			maxRunningTime = 2700
+		} else {
+			maxRunningTime = tool.MaxRunningTime
+		}
 		// Start transaction
 		tx := db.Begin()
 
@@ -129,19 +136,20 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		toolEntry := models.Tool{
-			CID:           cid,
-			WalletAddress: walletAddress,
-			Name:          tool.Name,
-			ToolJson:      toolJSON,
-			Container:     tool.DockerPull,
-			Memory:        *tool.MemoryGB,
-			Cpu:           *tool.Cpu,
-			Gpu:           toolGpu,
-			Network:       tool.NetworkBool,
-			Timestamp:     time.Now(),
-			Display:       display,
-			TaskCategory:  taskCategory,
-			DefaultTool:   defaultTool,
+			CID:            cid,
+			WalletAddress:  walletAddress,
+			Name:           tool.Name,
+			ToolJson:       toolJSON,
+			Container:      tool.DockerPull,
+			Memory:         *tool.MemoryGB,
+			Cpu:            *tool.Cpu,
+			Gpu:            toolGpu,
+			Network:        tool.NetworkBool,
+			Timestamp:      time.Now(),
+			Display:        display,
+			TaskCategory:   taskCategory,
+			DefaultTool:    defaultTool,
+			MaxRunningTime: maxRunningTime,
 		}
 
 		result := tx.Create(&toolEntry)
@@ -188,9 +196,10 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			TaskCategory *string `json:"taskCategory,omitempty"`
-			Display      *bool   `json:"display,omitempty"`
-			DefaultTool  *bool   `json:"defaultTool,omitempty"`
+			TaskCategory   *string `json:"taskCategory,omitempty"`
+			Display        *bool   `json:"display,omitempty"`
+			DefaultTool    *bool   `json:"defaultTool,omitempty"`
+			MaxRunningTime *int    `json:"maxRunningTime,omitempty"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
@@ -216,6 +225,9 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		if requestData.DefaultTool != nil {
 			updateData["default_tool"] = *requestData.DefaultTool
+		}
+		if requestData.MaxRunningTime != nil {
+			updateData["max_running_time"] = *requestData.MaxRunningTime
 		}
 
 		if len(updateData) == 0 {

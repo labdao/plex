@@ -41,7 +41,7 @@ jobs:
       tools: ${{ steps.filter.outputs.changes }}
     steps:
     - uses: actions/checkout@v4
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       id: filter
       with:
         # Only run when tool's directory or workflow files have changed
@@ -53,36 +53,8 @@ jobs:
             - 'tools/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
-          colabdesign-checkpoint:
-            - 'tools/colabdesign-checkpoint/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          labsay-checkpoint:
-            - 'tools/labsay-checkpoint/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          colabdesign-autoprompt:
-            - 'tools/colabdesign-autoprompt/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          rf-diffusion:
-            - 'tools/rf-diffusion/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          protein-mpnn:
-            - 'tools/protein-mpnn/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          generator:
-            - 'tools/generator/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          protein-to-dna-icodon:
-            - 'tools/protein-to-dna-icodon/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          af2:
-            - 'tools/af2/**'
+          labsay:
+            - 'tools/labsay/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
 

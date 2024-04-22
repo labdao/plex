@@ -42,7 +42,7 @@ func GetBacalhauClient() (*client.APIClient, error) {
 	return bacalhauClient, err
 }
 
-func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, flowUUID string, jobUUID string) (job *model.Job, err error) {
+func CreateBacalhauJob(inputs map[string]interface{}, container, selector string, maxTime, memory int, cpu float64, gpu, network bool, annotations []string, flowUUID string, jobUUID string, checkpointCompatible string) (job *model.Job, err error) {
 	fmt.Println("CreatebacalhauJob")
 	fmt.Println(inputs)
 	job, err = model.NewJobWithSaneProductionDefaults()
@@ -178,6 +178,7 @@ func CreateBacalhauJob(inputs map[string]interface{}, container, selector string
 		fmt.Sprintf("PLEX_JOB_INPUTS=%s", jsonString),
 		fmt.Sprintf("JOB_UUID=%s", jobUUID),
 		fmt.Sprintf("FLOW_UUID=%s", flowUUID),
+		fmt.Sprintf("CHECKPOINT_COMPATIBLE=%s", checkpointCompatible),
 		fmt.Sprintf("AWS_ACCESS_KEY_ID=%s", os.Getenv("AWS_ACCESS_KEY_ID")),
 		fmt.Sprintf("AWS_SECRET_ACCESS_KEY=%s", os.Getenv("AWS_SECRET_ACCESS_KEY")),
 	}
@@ -233,6 +234,20 @@ func GetBacalhauJobState(jobId string) (*model.JobWithInfo, error) {
 	}
 	updatedJob, _, err := client.Get(context.Background(), jobId)
 	return updatedJob, err
+}
+
+func CancelBacalhauJob(jobId string, reason string) error {
+	client, err := GetBacalhauClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Cancel(context.Background(), jobId, reason)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func JobFailedWithCapacityError(job *model.JobWithInfo) bool {
