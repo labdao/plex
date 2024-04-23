@@ -212,8 +212,15 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.DataFile{}).
+			Select("DISTINCT data_files.*, CASE "+
+				"WHEN (user_datafiles.wallet_address = ? AND datafile_tags.tag_name = 'uploaded') THEN 0 "+
+				"WHEN (data_files.public = true AND datafile_tags.tag_name = 'uploaded' AND user_datafiles.wallet_address IS NULL) THEN 1 "+
+				"WHEN (user_datafiles.wallet_address = ? AND datafile_tags.tag_name != 'uploaded') THEN 2 "+
+				"ELSE 3 END AS order_priority", user.WalletAddress, user.WalletAddress).
+			Joins("INNER JOIN datafile_tags ON datafile_tags.data_file_c_id = data_files.cid").
 			Joins("LEFT JOIN user_datafiles ON user_datafiles.data_file_c_id = data_files.cid AND user_datafiles.wallet_address = ?", user.WalletAddress).
-			Where("data_files.public = true OR (data_files.public = false AND user_datafiles.wallet_address = ?)", user.WalletAddress)
+			Where("(data_files.public = false AND user_datafiles.wallet_address = ?) OR (data_files.public = true AND datafile_tags.tag_name = 'uploaded')", user.WalletAddress).
+			Order("order_priority")
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("data_files.cid = ?", cid)
@@ -241,12 +248,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "data_files.timestamp desc"
-		sortParam := r.URL.Query().Get("sort")
-		if sortParam != "" {
-			defaultSort = sortParam
-		}
-		query = query.Order(defaultSort).Offset(offset).Limit(pageSize)
+		query = query.Offset(offset).Limit(pageSize)
 
 		var dataFiles []models.DataFile
 		if result := query.Preload("Tags").Find(&dataFiles); result.Error != nil {
