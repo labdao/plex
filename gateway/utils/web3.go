@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipfs"
@@ -18,6 +19,38 @@ import (
 )
 
 var autotaskWebhook = os.Getenv("AUTOTASK_WEBHOOK")
+
+var rateLimiter = NewTokenBucketRateLimiter(1, 1)
+
+type TokenBucketRateLimiter struct {
+	tokenBucket chan struct{}
+	fillRate    time.Duration
+}
+
+func NewTokenBucketRateLimiter(fillRate time.Duration, capacity int) *TokenBucketRateLimiter {
+	limiter := &TokenBucketRateLimiter{
+		tokenBucket: make(chan struct{}, capacity),
+		fillRate:    fillRate,
+	}
+	go limiter.fillTokenBucket()
+	return limiter
+}
+
+func (l *TokenBucketRateLimiter) Wait() {
+	<-l.tokenBucket
+}
+
+func (l *TokenBucketRateLimiter) fillTokenBucket() {
+	ticker := time.NewTicker(l.fillRate)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		select {
+		case l.tokenBucket <- struct{}{}:
+		default:
+		}
+	}
+}
 
 type postData struct {
 	RecipientAddress string `json:"recipientAddress"`
@@ -214,26 +247,46 @@ func pinFileToPublicIPFS(filePath, name string) (string, error) {
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PINATA_API_TOKEN"))
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send HTTP request: %v", err)
-	}
-	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		rateLimiter.Wait()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("Error sending request to Pinata API: %v", err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			log.Println("Rate limit exceeded. Retrying after a delay...")
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		var result struct {
+			IpfsHash string `json:"IpfsHash"`
+		}
+		err = json.Unmarshal(respBody, &result)
+		if err != nil {
+			return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
+		}
+
+		return result.IpfsHash, nil
 	}
 
-	var result struct {
-		IpfsHash string `json:"IpfsHash"`
-	}
-	err = json.Unmarshal(respBody, &result)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
-	}
-
-	return result.IpfsHash, nil
+	return "", fmt.Errorf("failed to pin file to Pinata after %d retries", maxRetries)
 }
 
 func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
