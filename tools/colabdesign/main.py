@@ -32,6 +32,7 @@ from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
+from visualisers import visualise_protein_complex
 
 
 def get_plex_job_inputs():
@@ -129,6 +130,8 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
+        print("visualising the protein complex")
+        visualise_protein_complex(pdb_path, f"{checkpoint_csv_path}")
         os.remove(event_csv_filepath)
         print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
 
