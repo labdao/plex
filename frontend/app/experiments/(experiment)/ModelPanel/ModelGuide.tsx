@@ -1,7 +1,7 @@
 import { HelpCircleIcon } from "lucide-react";
 
 import { ToolDetail } from "@/lib/redux";
-import { ReactElement, JSXElementConstructor, ReactNode, PromiseLikeOfReactNode, JSX } from "react";
+import { JSX, useEffect, useState } from "react";
 
 const renderDescriptionParagraphs = (text: string) => {
   const paragraphs = text.split("\n");
@@ -45,10 +45,19 @@ interface ModelGuideProps {
 }
 
 export default function ModelGuide({ tool }: ModelGuideProps) {
+  const [maxHeight, setMaxHeight] = useState(window.innerHeight * 0.7);
+  useEffect(() => {
+    const handleResize = () => {
+      setMaxHeight(window.innerHeight * 0.7);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   return (
     <div>
       <div className="text-left uppercase font-heading">How to Write Prompts</div>
-      <div className="pt-0">
+      <div className="pt-0 scrollable-content" style={{ maxHeight, overflowY: 'auto' }}>
         <div className="space-y-2 text-muted-foreground">{renderDescriptionParagraphs(tool.ToolJson.guide)}</div>
       </div>
     </div>
