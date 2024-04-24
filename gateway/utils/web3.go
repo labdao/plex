@@ -185,26 +185,46 @@ func pinJSONToPublicIPFS(jsonData json.RawMessage, name string) (string, error) 
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PINATA_API_TOKEN"))
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send HTTP request: %v", err)
-	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		rateLimiter.Wait()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("Error sending request to Pinata API: %v", err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			log.Println("Rate limit exceeded. Retrying after a delay...")
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		var result struct {
+			IpfsHash string `json:"IpfsHash"`
+		}
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
+		}
+
+		return result.IpfsHash, nil
 	}
 
-	var result struct {
-		IpfsHash string `json:"IpfsHash"`
-	}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
-	}
-
-	return result.IpfsHash, nil
+	return "", fmt.Errorf("failed to pin JSON to Pinata after %d retries", maxRetries)
 }
 
 func pinFileToPublicIPFS(filePath, name string) (string, error) {
