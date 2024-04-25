@@ -21,9 +21,8 @@ class MolecularNodesRender(ProteinBinderTargetStructure):
 class ProteinComplexRender():
     def __init__(self, output_directory=None):
         if output_directory is None:
-            print(os.getcwd())
-            output_directory = output_directory
-            self.output_directory = output_directory
+            output_directory = os.getcwd()  # Use current working directory if none provided
+        self.output_directory = output_directory 
         self.style_cartoon = "cartoon"
         self.style_surface = "surface"
         self.new_style = "MN Default Copy"
@@ -167,21 +166,29 @@ class ProteinComplexRender():
         black_material = bpy.data.materials.new(name="BlackMaterial") # Create a new dark material 
         black_material.diffuse_color = (0.01, 0.01, 0.01, 1) # RGB and Alpha
         plane.data.materials.append(black_material) # Assign the material to the plane
+    
+    def check_gpu_availability(self):
 
-    # def setup_blender_for_gpu():
-    #     # Set Cycles as the renderer
-    #     bpy.context.scene.render.engine = 'CYCLES'
-        
-    #     # Use GPU for rendering
-    #     bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'  # or 'OPTIX' for RTX cards
-        
-    #     # Enable all GPUs
-    #     for device in bpy.context.preferences.addons['cycles'].preferences.devices:
-    #         if device.type == 'CUDA':
-    #             device.use = True
+        bpy.context.scene.render.engine = "CYCLES"
+        bpy.context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA"
+        # Force refresh of available devices
+        bpy.context.preferences.addons["cycles"].preferences.get_devices()
 
-    #     # Configure render settings to use GPU
-    #     bpy.context.scene.cycles.device = 'GPU'
+        # Explicitly enable GPU devices
+        has_gpu = False
+        for device in bpy.context.preferences.addons["cycles"].preferences.devices:
+            if device.type == 'CUDA':  # Check if the device is a GPU
+                device.use = True
+                has_gpu = True
+                print(f"Enabled CUDA Device: {device.name}")
+
+        bpy.context.scene.cycles.device = 'GPU'
+        
+        if not has_gpu:
+            print("No CUDA devices were found or enabled! Fallback to BLENDER_EEVEE")
+            bpy.context.scene.render.engine = "BLENDER_EEVEE"
+            bpy.context.preferences.addons["cycles"].preferences.compute_device_type = 'NONE'  # Disable GPU compute type
+            bpy.context.scene.cycles.device = 'CPU'
 
     def _render_image(self, path, resolution_x, resolution_y, file_format):
         """
@@ -189,7 +196,7 @@ class ProteinComplexRender():
         they can be adjusted to change the output width and height too.
         """
         # bpy.context.scene.render.engine = 'CYCLES' #This is a more powerful rendering engine, it takes much longer
-        # setup_blender_for_gpu()
+        self.check_gpu_availability()
         bpy.context.scene.render.resolution_x = resolution_x
         bpy.context.scene.render.resolution_y = resolution_y
         bpy.context.scene.render.image_settings.file_format = file_format
@@ -234,6 +241,7 @@ def visualise_protein_complex(pdb_file_path: str, output_directory: str):
         target_sequence="ACDEFGHIKLMNPQRSTVWY",
         pdb=FilePath(pdb_file_path)
     )
+    output_directory = os.path.dirname(output_directory)
     renderer = ProteinComplexRender(output_directory)
     result = renderer.visualise(protein_structure)
     print(result.to_dict())

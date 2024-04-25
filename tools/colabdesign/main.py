@@ -131,7 +131,7 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
         print("visualising the protein complex")
-        visualise_protein_complex(pdb_path, f"{checkpoint_csv_path}")
+        visualise_protein_complex(pdb_path, result_csv_path)
         os.remove(event_csv_filepath)
         print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
 
