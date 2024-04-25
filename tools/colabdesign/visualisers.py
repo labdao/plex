@@ -209,7 +209,8 @@ class ProteinComplexRender():
         Render a molecule from a .pdb file and save the result as an image.
         """
         pdb_file_path = str(protein_binder_target_structure.pdb)
-        output_image_filename = f"{uuid.uuid4()}.png"
+        pdb_file_name, extension = os.path.splitext(pdb_file_path)
+        output_image_filename = f"{pdb_file_name}.png"
         output_image_path = os.path.join(self.output_directory, output_image_filename)
 
         self._set_background_color()
@@ -241,7 +242,7 @@ def visualise_protein_complex(pdb_file_path: str, output_directory: str):
         target_sequence="ACDEFGHIKLMNPQRSTVWY",
         pdb=FilePath(pdb_file_path)
     )
-    output_directory = os.path.dirname(output_directory)
+    output_directory = os.path.join(os.path.dirname(output_directory),"visualizations")
     renderer = ProteinComplexRender(output_directory)
     result = renderer.visualise(protein_structure)
     print(result.to_dict())

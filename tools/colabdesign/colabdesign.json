@@ -85,7 +85,6 @@
       "glob": [
         ""
       ],
-      "default": "1",
       "min": "1",
       "max": "",
       "example": "300",
@@ -115,7 +114,6 @@
       "glob": [
         ""
       ],
-      "default": "1",
       "min": "1",
       "max": "",
       "example": "1",
