@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipfs"
@@ -18,6 +19,38 @@ import (
 )
 
 var autotaskWebhook = os.Getenv("AUTOTASK_WEBHOOK")
+
+var rateLimiter = NewTokenBucketRateLimiter(1, 1)
+
+type TokenBucketRateLimiter struct {
+	tokenBucket chan struct{}
+	fillRate    time.Duration
+}
+
+func NewTokenBucketRateLimiter(fillRate time.Duration, capacity int) *TokenBucketRateLimiter {
+	limiter := &TokenBucketRateLimiter{
+		tokenBucket: make(chan struct{}, capacity),
+		fillRate:    fillRate,
+	}
+	go limiter.fillTokenBucket()
+	return limiter
+}
+
+func (l *TokenBucketRateLimiter) Wait() {
+	<-l.tokenBucket
+}
+
+func (l *TokenBucketRateLimiter) fillTokenBucket() {
+	ticker := time.NewTicker(l.fillRate)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		select {
+		case l.tokenBucket <- struct{}{}:
+		default:
+		}
+	}
+}
 
 type postData struct {
 	RecipientAddress string `json:"recipientAddress"`
@@ -68,51 +101,56 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 		log.Printf("Pinning tool JSON to IPFS: %s", tool.Name)
 		toolPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(tool.ToolJson), tool.Name)
 		if err != nil {
-			return "", fmt.Errorf("failed to pin tool JSON to Pinata: %v", err)
-		}
-		log.Printf("Pinned tool JSON to public IPFS with CID: %s", toolPinataHash)
-		ioObject["tool"] = map[string]interface{}{
-			"cid": toolPinataHash,
+			log.Printf("Failed to pin tool JSON to Pinata: %s. Skipping... Error: %v", tool.Name, err)
+		} else {
+			log.Printf("Pinned tool JSON to public IPFS with CID: %s", toolPinataHash)
+			ioObject["tool"] = map[string]interface{}{
+				"cid": toolPinataHash,
+			}
 		}
 
 		for _, inputFile := range inputFiles {
 			log.Printf("Downloading input file: %s", inputFile.Filename)
 			inputTempFilePath, err := ipfs.DownloadFileToTemp(inputFile.CID, inputFile.Filename)
 			if err != nil {
-				return "", fmt.Errorf("failed to download input file: %v", err)
+				log.Printf("Failed to download input file: %s. Skipping... Error: %v", inputFile.Filename, err)
+				continue
 			}
 			defer os.Remove(inputTempFilePath)
 
 			log.Printf("Pinning input file to IPFS: %s", inputFile.Filename)
 			inputPinataHash, err := pinFileToPublicIPFS(inputTempFilePath, inputFile.Filename)
 			if err != nil {
-				return "", fmt.Errorf("failed to pin input file to Pinata: %v", err)
+				log.Printf("Failed to pin input file to Pinata: %s. Skipping... Error: %v", inputFile.Filename, err)
+			} else {
+				log.Printf("Pinned input file to public IPFS with CID: %s", inputPinataHash)
+				ioObject["inputs"] = append(ioObject["inputs"].([]map[string]interface{}), map[string]interface{}{
+					"cid":      inputPinataHash,
+					"filename": inputFile.Filename,
+				})
 			}
-			log.Printf("Pinned input file to public IPFS with CID: %s", inputPinataHash)
-			ioObject["inputs"] = append(ioObject["inputs"].([]map[string]interface{}), map[string]interface{}{
-				"cid":      inputPinataHash,
-				"filename": inputFile.Filename,
-			})
 		}
 
 		for _, outputFile := range outputFiles {
 			log.Printf("Downloading output file: %s", outputFile.Filename)
 			outputTempFilePath, err := ipfs.DownloadFileToTemp(outputFile.CID, outputFile.Filename)
 			if err != nil {
-				return "", fmt.Errorf("failed to download output file: %v", err)
+				log.Printf("Failed to download output file: %s. Skipping... Error: %v", outputFile.Filename, err)
+				continue
 			}
 			defer os.Remove(outputTempFilePath)
 
 			log.Printf("Pinning output file to IPFS: %s", outputFile.Filename)
 			outputPinataHash, err := pinFileToPublicIPFS(outputTempFilePath, outputFile.Filename)
 			if err != nil {
-				return "", fmt.Errorf("failed to pin output file to Pinata: %v", err)
+				log.Printf("Failed to pin output file to Pinata: %s. Skipping... Error: %v", outputFile.Filename, err)
+			} else {
+				log.Printf("Pinned output file to public IPFS with CID: %s", outputPinataHash)
+				ioObject["outputs"] = append(ioObject["outputs"].([]map[string]interface{}), map[string]interface{}{
+					"cid":      outputPinataHash,
+					"filename": outputFile.Filename,
+				})
 			}
-			log.Printf("Pinned output file to public IPFS with CID: %s", outputPinataHash)
-			ioObject["outputs"] = append(ioObject["outputs"].([]map[string]interface{}), map[string]interface{}{
-				"cid":      outputPinataHash,
-				"filename": outputFile.Filename,
-			})
 		}
 
 		metadata["flow"] = append(metadata["flow"].([]map[string]interface{}), ioObject)
@@ -152,26 +190,46 @@ func pinJSONToPublicIPFS(jsonData json.RawMessage, name string) (string, error) 
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PINATA_API_TOKEN"))
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send HTTP request: %v", err)
-	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		rateLimiter.Wait()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("Error sending request to Pinata API: %v", err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			log.Println("Rate limit exceeded. Retrying after a delay...")
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		var result struct {
+			IpfsHash string `json:"IpfsHash"`
+		}
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
+		}
+
+		return result.IpfsHash, nil
 	}
 
-	var result struct {
-		IpfsHash string `json:"IpfsHash"`
-	}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
-	}
-
-	return result.IpfsHash, nil
+	return "", fmt.Errorf("failed to pin JSON to Pinata after %d retries", maxRetries)
 }
 
 func pinFileToPublicIPFS(filePath, name string) (string, error) {
@@ -214,26 +272,46 @@ func pinFileToPublicIPFS(filePath, name string) (string, error) {
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PINATA_API_TOKEN"))
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send HTTP request: %v", err)
-	}
-	defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %v", err)
+	maxRetries := 3
+	retryDelay := 1 * time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		rateLimiter.Wait()
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("Error sending request to Pinata API: %v", err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			log.Println("Rate limit exceeded. Retrying after a delay...")
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+			continue
+		}
+
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response body: %v", err)
+		}
+
+		var result struct {
+			IpfsHash string `json:"IpfsHash"`
+		}
+		err = json.Unmarshal(respBody, &result)
+		if err != nil {
+			return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
+		}
+
+		return result.IpfsHash, nil
 	}
 
-	var result struct {
-		IpfsHash string `json:"IpfsHash"`
-	}
-	err = json.Unmarshal(respBody, &result)
-	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal response JSON: %v", err)
-	}
-
-	return result.IpfsHash, nil
+	return "", fmt.Errorf("failed to pin file to Pinata after %d retries", maxRetries)
 }
 
 func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
