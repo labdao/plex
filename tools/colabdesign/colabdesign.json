@@ -7,7 +7,7 @@
   "task": "protein design",
   "taskCategory": "protein-binder-design",
   "checkpointCompatible": true,
-  "maxRunningTime": 2700,
+  "maxRunningTime": 3600,
   "baseCommand": [
   ],
   "arguments": [
@@ -153,6 +153,13 @@
       "item": "",
       "glob": [
         "*_scores.csv"
+      ]
+    },
+    "visualizations": {
+      "type": "File",
+      "item": "",
+      "glob": [
+        "*.png"
       ]
     }
   }
