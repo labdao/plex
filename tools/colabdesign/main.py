@@ -140,7 +140,6 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         object_name = f"visualizations/{flow_uuid}/{job_uuid}"
         upload_to_s3(png_file_path, bucket_name, f"{object_name}/{png_file_name}")
         os.remove(event_csv_filepath)
-        os.remove(png_file_path)
         print(f"Visualizations uploaded to S3.")
     return
 
