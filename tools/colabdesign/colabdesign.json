@@ -1,5 +1,5 @@
 {
-  "name": "colabdesign v1.6",
+  "name": "colabdesign v1.7",
   "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
   "guide": "Note: steps marked (optional) and (advanced) give additional constraints for the designs but it is not necessary to add/edit their input in order to submit an experimental run.\n\n1. Select a .pdb file containing the *target protein* you would like to design a binder against.\n2. (optional) Select a *target chain* from the pdb file (chain A is the default). \n3. (optional) Crop the target structure by specifying the *target start residue* and the *target end residue* on the target chain. \n4. (optional) Define *hotspot* residues on the target as the binding sites, stating the chain (e.g. A) followed by the number of the residue (e.g. A30). You can specify multiple hotspots at once.\n5. Specify the *binder length* (total number of residues) you wish to design, followed by the *number of binders* to design (max 8 per run). \n6. (advanced) Define a *contigs override* that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",  "author": "sokrypton",
   "github": "https://github.com/sokrypton/ColabDesign",
@@ -12,7 +12,7 @@
   ],
   "arguments": [
   ],
-  "dockerPull": "quay.io/labdao/colabdesign@sha256:536278eb53836347d3529564346704ce31a389de1db1293e363ae062348099e7",
+  "dockerPull": "quay.io/labdao/colabdesign@sha256:9c149aedc355f7b1ef733f984d1966699be9ec9df2e8b758fd3a035303f078f8",
   "gpuBool": true,
   "memoryGB": 12,
   "cpu": 3,
