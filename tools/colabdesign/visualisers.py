@@ -27,10 +27,10 @@ class ProteinComplexRender():
         self.style_surface = "surface"
         self.new_style = "MN Default Copy"
         self.metallic_value = 0.8
-        self.alpha_value = 0.15
-        self.roughness_value = 0.1
-        self.resolution_x = 1000
-        self.resolution_y = 1000
+        self.alpha_value = 0.07
+        self.roughness_value = 0
+        self.resolution_x = 2000
+        self.resolution_y = 2000
         self.file_format = "PNG"    
 
     def _set_background_color(self, color=(0.0, 0.0, 0.0, 1.0)):
