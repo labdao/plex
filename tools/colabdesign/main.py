@@ -32,6 +32,7 @@ from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
+from visualisers import visualise_protein_complex
 
 
 def get_plex_job_inputs():
@@ -129,9 +130,17 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
-        os.remove(event_csv_filepath)
         print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
 
+        print("visualising the protein complex")
+        result = visualise_protein_complex(pdb_path, result_csv_path)
+        png_file_path = result.get('png')
+        png_file_name = os.path.basename(png_file_path)
+        bucket_name = "app-record-bucket"
+        object_name = f"visualizations/{flow_uuid}/{job_uuid}"
+        upload_to_s3(png_file_path, bucket_name, f"{object_name}/{png_file_name}")
+        os.remove(event_csv_filepath)
+        print(f"Visualizations uploaded to S3.")
     return
 
 def enricher(multirun_path, cfg, flow_uuid, job_uuid, checkpoint_compatible):

@@ -1,0 +1,6 @@
+Pillow==10.3.0
+molecularnodes==4.0.12
+pandas==2.2.2
+biopython==1.83
+pydantic==2.7.1
+selfies==2.1.1

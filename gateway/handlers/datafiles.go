@@ -317,7 +317,7 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 		defer os.Remove(tempFilePath)
-
+		fmt.Println("Downloaded file to temp path:", tempFilePath)
 		file, err := os.Open(tempFilePath)
 		if err != nil {
 			utils.SendJSONError(w, "Error opening downloaded file", http.StatusInternalServerError)
