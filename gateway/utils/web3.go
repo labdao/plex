@@ -70,9 +70,11 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 	metadata := map[string]interface{}{
 		"name":        flow.Name,
 		"description": "Research, Reimagined. All Scientists Welcome.",
-		"image":       "ipfs://QmQZLrUPxh4WMmzpQGhUYRsMwU2BXfmFa3YAFhFKkRgHTZ", // Default image is glitchy LabDAO logo gif
+		"image":       "",
 		"flow":        []map[string]interface{}{},
 	}
+
+	var pngCID string
 
 	for _, job := range jobs {
 		var tool models.Tool
@@ -150,7 +152,18 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 					"cid":      outputPinataHash,
 					"filename": outputFile.Filename,
 				})
+
+				if filepath.Ext(outputFile.Filename) == ".png" && pngCID == "" {
+					pngCID = outputPinataHash
+				}
 			}
+		}
+
+		if pngCID != "" {
+			metadata["image"] = "ipfs://" + pngCID
+		} else {
+			// Default image is glitchy LabDAO logo gif
+			metadata["image"] = "ipfs://QmQZLrUPxh4WMmzpQGhUYRsMwU2BXfmFa3YAFhFKkRgHTZ"
 		}
 
 		metadata["flow"] = append(metadata["flow"].([]map[string]interface{}), ioObject)
