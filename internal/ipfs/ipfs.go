@@ -12,6 +12,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 	shell "github.com/ipfs/go-ipfs-api"
+	"github.com/multiformats/go-multihash"
 )
 
 func GetBacalhauApiHost() string {
@@ -375,4 +376,31 @@ func ListFilesInDirectory(cid string) ([]FileEntry, error) {
 	ipfsNodeUrl := DeriveIpfsNodeUrl()
 	sh := shell.NewShell(ipfsNodeUrl)
 	return getContents(sh, cid)
+}
+
+func PrecomputeCID(path string) (string, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if info.IsDir() {
+		return "", fmt.Errorf("path is a directory, not a file")
+	}
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			content = []byte{}
+		} else {
+			return "", err
+		}
+	}
+
+	hash, err := multihash.Sum(content, multihash.SHA2_256, -1)
+	if err != nil {
+		return "", err
+	}
+
+	cidV0 := cid.NewCidV0(hash)
+	return cidV0.String(), nil
 }
