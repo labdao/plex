@@ -209,7 +209,22 @@ services:
       - 5001:5001
       - 8888:8888
 
+  object-store:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: # placeholder
+      MINIO_ROOT_PASSWORD: # placeholder
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - service-network
+
 volumes:
   dbdata-backend:
   dbdata-receptor:
   ipfs:
+  minio-data:
