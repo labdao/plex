@@ -40,7 +40,8 @@ func ServeWebApp() {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKeyID := os.Getenv("MINIO_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("MINIO_SECRET_ACCESS_KEY")
-	useSSL := false
+	useSSL := os.Getenv("MINIO_USE_SSL") == "false"
+	bucketName := os.Getenv("BUCKET_NAME")
 
 	minioClient, err := s3.NewMinIOClient(endpoint, accessKeyID, secretAccessKey, useSSL)
 	if err != nil {
@@ -49,7 +50,6 @@ func ServeWebApp() {
 		fmt.Println("Minio client created successfully")
 	}
 
-	bucketName := "test-bucket-yay"
 	exists, err := minioClient.Client.BucketExists(context.Background(), bucketName)
 	if err != nil {
 		log.Fatalf("Failed to check if bucket exists: %v", err)
