@@ -17,13 +17,14 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/s3"
 
 	"log"
 
 	"gorm.io/gorm"
 )
 
-func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
+func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request to add datafile")
 
@@ -77,6 +78,12 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		defer os.Remove(filename)
+
+		err = minioClient.UploadFile("test-bucket-yay", filename, tempFile.Name())
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
+			return
+		}
 
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
