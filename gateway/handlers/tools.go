@@ -17,11 +17,12 @@ import (
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/s3"
 
 	"gorm.io/gorm"
 )
 
-func AddToolHandler(db *gorm.DB) http.HandlerFunc {
+func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request at /add-tool")
 
@@ -90,6 +91,12 @@ func AddToolHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		defer os.Remove(tempFile.Name())
+
+		err = minioClient.UploadFile("test-bucket-yay", tempFile.Name(), tool.Name+".json")
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
+			return
+		}
 
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
