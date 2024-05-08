@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,9 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
 	"github.com/labdao/plex/gateway/utils"
+	"github.com/minio/minio-go/v7"
+
+	"github.com/labdao/plex/internal/s3"
 
 	"github.com/rs/cors"
 
@@ -32,6 +36,31 @@ func ServeWebApp() {
 			Colorful:      true,         // Enable color
 		},
 	)
+
+	endpoint := os.Getenv("MINIO_ENDPOINT")
+	accessKeyID := os.Getenv("MINIO_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("MINIO_SECRET_ACCESS_KEY")
+	useSSL := true
+
+	minioClient, err := s3.NewMinIOClient(endpoint, accessKeyID, secretAccessKey, useSSL)
+	if err != nil {
+		log.Fatalf("failed to create minio client: %v", err)
+	} else {
+		fmt.Println("Minio client created successfully")
+	}
+
+	bucketName := "test-bucket-yay"
+	exists, err := minioClient.Client.BucketExists(context.Background(), bucketName)
+	if err != nil {
+		log.Fatalf("Failed to check if bucket exists: %v", err)
+	}
+	if !exists {
+		err = minioClient.Client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
+		if err != nil {
+			log.Fatalf("Failed to create bucket: %v", err)
+		}
+		fmt.Println("Bucket created successfully")
+	}
 
 	// Setup database connection
 	// Get environment variables
