@@ -220,8 +220,8 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
-    networks:
-      - service-network
+    # networks:
+    #   - service-network
 
 volumes:
   dbdata-backend:
