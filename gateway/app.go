@@ -40,7 +40,7 @@ func ServeWebApp() {
 	endpoint := os.Getenv("MINIO_ENDPOINT")
 	accessKeyID := os.Getenv("MINIO_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("MINIO_SECRET_ACCESS_KEY")
-	useSSL := true
+	useSSL := false
 
 	minioClient, err := s3.NewMinIOClient(endpoint, accessKeyID, secretAccessKey, useSSL)
 	if err != nil {
@@ -117,7 +117,7 @@ func ServeWebApp() {
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
 	})
 
-	mux := server.NewServer(db)
+	mux := server.NewServer(db, minioClient)
 
 	// Start queue watcher in a separate goroutine
 	go func() {
