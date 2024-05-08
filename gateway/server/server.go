@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/handlers"
 	"github.com/labdao/plex/gateway/middleware"
+	"github.com/labdao/plex/internal/s3"
 
 	"gorm.io/gorm"
 )
@@ -30,7 +31,7 @@ func createAdminProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.H
 	}
 }
 
-func NewServer(db *gorm.DB) *mux.Router {
+func NewServer(db *gorm.DB, minioClient *s3.MinIOClient) *mux.Router {
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
@@ -42,14 +43,20 @@ func NewServer(db *gorm.DB) *mux.Router {
 	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 	router.HandleFunc("/user", protected(handlers.GetUserHandler(db))).Methods("GET")
 
+	// pass in minioClient
 	router.HandleFunc("/tools", protected(adminProtected(handlers.AddToolHandler(db)))).Methods("POST")
+
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
 	router.HandleFunc("/tools/{cid}", protected(adminProtected(handlers.UpdateToolHandler(db)))).Methods("PUT")
 
-	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db))).Methods("POST")
+	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db, minioClient))).Methods("POST")
+
+	// pass in minioClient
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.UpdateDataFileHandler(db))).Methods("PUT")
+
+	// pass in minioClient
 	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db))).Methods("GET")
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
