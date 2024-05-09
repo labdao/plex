@@ -37,10 +37,10 @@ func ServeWebApp() {
 		},
 	)
 
-	endpoint := os.Getenv("MINIO_ENDPOINT")
-	accessKeyID := os.Getenv("MINIO_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("MINIO_SECRET_ACCESS_KEY")
-	useSSL := os.Getenv("MINIO_USE_SSL") == "false"
+	endpoint := os.Getenv("BUCKET_ENDPOINT")
+	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
+	useSSL := os.Getenv("BUCKET_USE_SSL") == "false"
 	bucketName := os.Getenv("BUCKET_NAME")
 
 	minioClient, err := s3.NewMinIOClient(endpoint, accessKeyID, secretAccessKey, useSSL)
