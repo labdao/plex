@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/labdao/plex/internal/ipwl"
 )
 
 var rayClient *http.Client
@@ -30,88 +32,52 @@ func GetRayClient() *http.Client {
 	return rayClient
 }
 
-func CreateRayJob(inputs map[string]interface{}, endpoint string) (*http.Response, error) {
-	// Process the inputs to match the expected structure for the Ray service
-	processedInputs := make(map[string]interface{})
-	for key, value := range inputs {
-		switch key {
-		case "pdb":
-			// Assuming 'pdb' requires special handling
-			pdbData, ok := value.(map[string]interface{})
-			if !ok {
-				return nil, fmt.Errorf("invalid type for pdb, expected map[string]interface{}")
-			}
-			// Validate and process pdbData if necessary
-			// For example, check if 'key' and 'location' exist
-			if _, ok := pdbData["key"]; !ok {
-				return nil, fmt.Errorf("missing 'key' in pdb data")
-			}
-			if _, ok := pdbData["location"]; !ok {
-				return nil, fmt.Errorf("missing 'location' in pdb data")
-			}
-			// Add processed pdb data to processedInputs
-			processedInputs["pdb"] = pdbData
-		default:
-			// For all other keys, use the value as is
-			processedInputs[key] = value
-		}
-	}
-
-	// Marshal the processed inputs to JSON
-	jsonBytes, err := json.Marshal(processedInputs)
+func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
+	tool, _, err := ipwl.ReadToolConfig(toolPath)
 	if err != nil {
-		log.Fatalf("Error marshaling JSON: %v", err)
+		return nil, err
 	}
 
-	// Print the JSON request body
-	fmt.Printf("HTTP Request Body: %s\n", string(jsonBytes))
+	// Validate input keys
+	err = validateInputKeys(inputs, tool.Inputs)
+	if err != nil {
+		return nil, err
+	}
 
-	apiHost := GetRayApiHost()
-	url := fmt.Sprintf("http://%s%s", apiHost, endpoint)
+	// Marshal the inputs to JSON
+	jsonBytes, err := json.Marshal(inputs)
+	if err != nil {
+		return nil, err
+	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", tool.RayServiceURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// Comment out the actual sending of the request
-	// client := GetRayClient()
-	// resp, err := client.Do(req)
-	// if err != nil {
-	//     return nil, err
-	// }
+	// Send the request to the Ray service
+	client := GetRayClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
-	// Return nil response and no error for now
-	return nil, nil
+	return resp, nil
 }
 
-// TODO: when we are ready to submit requests
+func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[string]ipwl.ToolInput) error {
+	for inputKey := range inputVectors {
+		if _, exists := toolInputs[inputKey]; !exists {
+			log.Printf("The argument %s is not in the tool inputs.\n", inputKey)
+			log.Printf("Available keys: %v\n", toolInputs)
+			return fmt.Errorf("the argument %s is not in the tool inputs", inputKey)
+		}
+	}
+	return nil
+}
 
-// func CreateRayJob(inputs map[string]interface{}, endpoint string) (*http.Response, error) {
-// 	jsonBytes, err := json.Marshal(inputs)
-// 	if err != nil {
-// 		log.Fatalf("Error marshaling JSON: %v", err)
-// 	}
-
-// 	apiHost := GetRayApiHost()
-// 	url := fmt.Sprintf("http://%s%s", apiHost, endpoint)
-
-// 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBytes))
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	client := GetRayClient()
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return resp, nil
-// }
-
-func SubmitRayJob(inputs map[string]interface{}, endpoint string) (*http.Response, error) {
-	return CreateRayJob(inputs, endpoint)
+func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
+	return CreateRayJob(toolPath, inputs)
 }
