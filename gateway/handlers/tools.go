@@ -28,7 +28,8 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			// http.Error(w, "Bad request", http.StatusBadRequest)
+			utils.SendJSONError(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 		defer r.Body.Close()
@@ -40,7 +41,8 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 		}
 		err = json.Unmarshal(body, &toolRequest)
 		if err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			// http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
@@ -74,33 +76,38 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 		var tool ipwl.Tool
 		err = json.Unmarshal(toolRequest.ToolJson, &tool)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
+			// http.Error(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
+			utils.SendJSONError(w, fmt.Sprintf("Invalid toolJson format: %v", err), http.StatusBadRequest)
 			return
 		}
 
 		toolJSON, err := json.Marshal(tool)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error re-marshalling tool data: %v", err), http.StatusInternalServerError)
+			// http.Error(w, fmt.Sprintf("Error re-marshalling tool data: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error re-marshalling tool data: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		reader := bytes.NewReader(toolJSON)
 		tempFile, err := utils.CreateAndWriteTempFile(reader, tool.Name+".json")
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
+			// http.Error(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
 			return
 		}
 		defer os.Remove(tempFile.Name())
 
 		err = minioClient.UploadFile("test-bucket-yay", tempFile.Name(), tool.Name+".json")
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
+			// http.Error(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
+			// http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -137,7 +144,8 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 				Where("task_category = ? AND default_tool = TRUE", tool.TaskCategory).
 				Update("default_tool", false).Error; err != nil {
 				tx.Rollback()
-				http.Error(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
+				// http.Error(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error resetting existing default tool: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}
@@ -148,8 +156,8 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 			Name:           tool.Name,
 			ToolJson:       toolJSON,
 			Container:      tool.DockerPull,
-			Memory:         *tool.MemoryGB,
-			Cpu:            *tool.Cpu,
+			Memory:         0,
+			Cpu:            0,
 			Gpu:            toolGpu,
 			Network:        tool.NetworkBool,
 			Timestamp:      time.Now(),
@@ -157,22 +165,35 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 			TaskCategory:   taskCategory,
 			DefaultTool:    defaultTool,
 			MaxRunningTime: maxRunningTime,
+			ToolType:       string(tool.ToolType),
+			RayServiceURL:  tool.RayServiceURL,
+		}
+
+		if tool.MemoryGB != nil {
+			toolEntry.Memory = *tool.MemoryGB
+		}
+
+		if tool.Cpu != nil {
+			toolEntry.Cpu = *tool.Cpu
 		}
 
 		result := tx.Create(&toolEntry)
 		if result.Error != nil {
 			tx.Rollback()
 			if utils.IsDuplicateKeyError(result.Error) {
-				http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
+				// http.Error(w, "A tool with the same CID already exists", http.StatusConflict)
+				utils.SendJSONError(w, "A tool with the same CID already exists", http.StatusConflict)
 			} else {
-				http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
+				// http.Error(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error creating tool entity: %v", result.Error), http.StatusInternalServerError)
 			}
 			return
 		}
 
 		// Commit the transaction
 		if err := tx.Commit().Error; err != nil {
-			http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
+			// http.Error(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Transaction commit error: %v", err), http.StatusInternalServerError)
 			return
 		}
 

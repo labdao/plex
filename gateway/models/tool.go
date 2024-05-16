@@ -21,4 +21,6 @@ type Tool struct {
 	TaskCategory   string         `gorm:"type:text;default:'community-models'"`
 	DefaultTool    bool           `gorm:"type:boolean;default:false"`
 	MaxRunningTime int            `gorm:"type:int;default:2700"`
+	ToolType       string         `gorm:"type:varchar(255);default:'bacalhau'"`
+	RayServiceURL  string         `gorm:"type:varchar(255)"`
 }

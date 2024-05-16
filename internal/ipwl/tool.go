@@ -31,6 +31,13 @@ type ToolOutput struct {
 	Glob []string `json:"glob"`
 }
 
+type ToolType string
+
+const (
+	ToolTypeBacalhau ToolType = "bacalhau"
+	ToolTypeRay      ToolType = "ray"
+)
+
 type Tool struct {
 	Name                 string                `json:"name"`
 	Description          string                `json:"description"`
@@ -51,6 +58,8 @@ type Tool struct {
 	Outputs              map[string]ToolOutput `json:"outputs"`
 	TaskCategory         string                `json:"taskCategory"`
 	MaxRunningTime       int                   `json:"maxRunningTime"`
+	ToolType             ToolType              `json:"toolType"`
+	RayServiceURL        string                `json:"rayServiceURL"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
@@ -113,6 +122,10 @@ func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
 	err = json.Unmarshal(bytes, &tool)
 	if err != nil {
 		return tool, toolInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	if tool.ToolType == "" {
+		tool.ToolType = ToolTypeBacalhau
 	}
 
 	toolInfo.Name = tool.Name
