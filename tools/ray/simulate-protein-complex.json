@@ -1,0 +1,26 @@
+{
+    "name": "colabfold-v1.8",
+    "description": "Simulate a protein complex using ColabFold",
+    "task": "protein folding",
+    "taskCategory": "community-models",
+    "toolType": "ray",
+    "rayServiceURL": "http://localhost:8003/simulate_protein_complex",
+    "inputs": {
+      "binder_sequence": {
+        "type": "string",
+        "description": "The sequence of the binder protein",
+        "required": true
+      },
+      "target_sequence": {
+        "type": "string",
+        "description": "The sequence of the target protein",
+        "required": true
+      }
+    },
+    "outputs": {
+      "complex_structure": {
+        "type": "File",
+        "glob": ["*.pdb"]
+      }
+    }
+}
