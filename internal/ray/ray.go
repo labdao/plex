@@ -44,8 +44,21 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		return nil, err
 	}
 
+	adjustedInputs := make(map[string]string)
+	for key, value := range inputs {
+		if valSlice, ok := value.([]interface{}); ok && len(valSlice) == 1 {
+			if valStr, ok := valSlice[0].(string); ok {
+				adjustedInputs[key] = valStr
+			} else {
+				return nil, fmt.Errorf("expected a string for key %s, got: %v", key, value)
+			}
+		} else {
+			return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, value)
+		}
+	}
+
 	// Marshal the inputs to JSON
-	jsonBytes, err := json.Marshal(inputs)
+	jsonBytes, err := json.Marshal(adjustedInputs)
 	if err != nil {
 		return nil, err
 	}
@@ -79,5 +92,12 @@ func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[strin
 }
 
 func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
-	return CreateRayJob(toolPath, inputs)
+	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
+	resp, err := CreateRayJob(toolPath, inputs)
+	if err != nil {
+		log.Printf("Error creating Ray job: %v\n", err)
+		return nil, err
+	}
+	log.Printf("Ray job created with response status: %s\n", resp.Status)
+	return resp, nil
 }
