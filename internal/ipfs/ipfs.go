@@ -1,6 +1,7 @@
 package ipfs
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -387,20 +388,24 @@ func PrecomputeCID(path string) (string, error) {
 		return "", fmt.Errorf("path is a directory, not a file")
 	}
 
-	content, err := ioutil.ReadFile(path)
+	file, err := os.Open(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			content = []byte{}
-		} else {
-			return "", err
-		}
+		return "", err
 	}
+	defer file.Close()
 
-	hash, err := multihash.Sum(content, multihash.SHA2_256, -1)
+	hash := sha256.New()
+	_, err = io.Copy(hash, file)
 	if err != nil {
 		return "", err
 	}
 
-	cidV0 := cid.NewCidV0(hash)
+	hashBytes := hash.Sum(nil)
+	mh, err := multihash.Encode(hashBytes, multihash.SHA2_256)
+	if err != nil {
+		return "", err
+	}
+
+	cidV0 := cid.NewCidV0(mh)
 	return cidV0.String(), nil
 }
