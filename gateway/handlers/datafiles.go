@@ -79,7 +79,13 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 		}
 		defer os.Remove(filename)
 
-		err = minioClient.UploadFile("test-bucket-yay", filename, tempFile.Name())
+		bucketName := os.Getenv("BUCKET_NAME")
+		if bucketName == "" {
+			utils.SendJSONError(w, "BUCKET_NAME environment variable not set", http.StatusInternalServerError)
+			return
+		}
+
+		err = minioClient.UploadFile(bucketName, filename, tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
 			return

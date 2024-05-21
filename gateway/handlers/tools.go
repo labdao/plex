@@ -97,7 +97,13 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 		}
 		defer os.Remove(tempFile.Name())
 
-		err = minioClient.UploadFile("test-bucket-yay", tempFile.Name(), tool.Name+".json")
+		bucketName := os.Getenv("BUCKET_NAME")
+		if bucketName == "" {
+			utils.SendJSONError(w, "Missing BUCKET_NAME environment variable", http.StatusInternalServerError)
+			return
+		}
+
+		err = minioClient.UploadFile(bucketName, tempFile.Name(), tool.Name+".json")
 		if err != nil {
 			// http.Error(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
