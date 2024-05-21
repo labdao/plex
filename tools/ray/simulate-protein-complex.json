@@ -4,7 +4,7 @@
     "task": "protein folding",
     "taskCategory": "community-models",
     "toolType": "ray",
-    "rayServiceURL": "http://localhost:8003/simulate_protein_complex",
+    "rayServiceURL": "http://colabfold-service:8000/simulate_protein_complex",
     "inputs": {
       "binder_sequence": {
         "type": "string",

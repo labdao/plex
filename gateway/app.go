@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"time"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -42,6 +43,9 @@ func ServeWebApp() {
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 	useSSL := os.Getenv("BUCKET_USE_SSL") == "true"
 	bucketName := os.Getenv("BUCKET_NAME")
+
+	endpoint = strings.TrimPrefix(endpoint, "http://")
+	endpoint = strings.TrimPrefix(endpoint, "https://")
 
 	minioClient, err := s3.NewMinIOClient(endpoint, accessKeyID, secretAccessKey, useSSL)
 	if err != nil {
