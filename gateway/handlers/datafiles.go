@@ -85,7 +85,15 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 			return
 		}
 
-		err = minioClient.UploadFile(bucketName, filename, tempFile.Name())
+		precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		objectKey := precomputedCID + "/" + filename
+		// S3 upload
+		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
 			return
@@ -96,6 +104,16 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 			utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
 			return
 		}
+
+		// TODO: determine why there is a discrepancy
+		// remove logs when resolved
+		log.Println("--------------------")
+		if precomputedCID != cid {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
+		} else {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
+		}
+		log.Println("--------------------")
 
 		dataFile := models.DataFile{
 			CID:           cid,

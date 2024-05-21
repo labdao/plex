@@ -103,19 +103,35 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 			return
 		}
 
-		err = minioClient.UploadFile(bucketName, tempFile.Name(), tool.Name+".json")
+		precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
 		if err != nil {
-			// http.Error(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		objectKey := precomputedCID + "/" + tempFile.Name() + ".json"
+		// S3 upload
+		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
+		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
-			// http.Error(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
 			utils.SendJSONError(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
 			return
 		}
+
+		// TODO: determine why there is a discrepancy
+		// remove logs when resolved
+		log.Println("--------------------")
+		if precomputedCID != cid {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
+		} else {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
+		}
+		log.Println("--------------------")
 
 		var toolGpu int
 		if tool.GpuBool {
