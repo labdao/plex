@@ -379,23 +379,86 @@ func ListFilesInDirectory(cid string) ([]FileEntry, error) {
 	return getContents(sh, cid)
 }
 
-func PrecomputeCID(path string) (string, error) {
-	info, err := os.Stat(path)
+// func PrecomputeCID(path string) (string, error) {
+// 	info, err := os.Stat(path)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	if info.IsDir() {
+// 		return "", fmt.Errorf("path is a directory, not a file")
+// 	}
+
+// 	file, err := os.Open(path)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer file.Close()
+
+// 	hash := sha256.New()
+// 	_, err = io.Copy(hash, file)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	hashBytes := hash.Sum(nil)
+// 	mh, err := multihash.Encode(hashBytes, multihash.SHA2_256)
+// 	if err != nil {
+// 		return "", err
+// 	}
+
+// 	cidV0 := cid.NewCidV0(mh)
+// 	return cidV0.String(), nil
+// }
+
+func PrecomputeCID(filePath string) (string, error) {
+	absPath, err := filepath.Abs(filePath)
 	if err != nil {
 		return "", err
-	}
-	if info.IsDir() {
-		return "", fmt.Errorf("path is a directory, not a file")
 	}
 
-	file, err := os.Open(path)
+	tempDir, err := ioutil.TempDir("", "inputFile")
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer os.RemoveAll(tempDir)
+
+	_, fileName := filepath.Split(absPath)
+	tempFilePath := filepath.Join(tempDir, fileName)
+
+	srcFile, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(tempFilePath)
+	if err != nil {
+		return "", err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return "", err
+	}
 
 	hash := sha256.New()
-	_, err = io.Copy(hash, file)
+	err = filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			return nil
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(hash, file)
+		return err
+	})
 	if err != nil {
 		return "", err
 	}
