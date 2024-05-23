@@ -169,12 +169,20 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			var queue models.QueueType
 			if tool.Gpu == 0 {
-				queue = models.QueueTypeCPU
+				if tool.ToolType == "ray" {
+					queue = models.QueueTypeRayCPU
+				} else {
+					queue = models.QueueTypeBacalhauCPU
+				}
 			} else {
-				queue = models.QueueTypeGPU
+				if tool.ToolType == "ray" {
+					queue = models.QueueTypeRayGPU
+				} else {
+					queue = models.QueueTypeBacalhauGPU
+				}
 			}
 			jobUUID := uuid.New().String()
-
+			// TODO: consolidate below with the above checks.
 			var jobType models.JobType
 			if tool.ToolType == "ray" {
 				jobType = models.JobTypeRay
@@ -598,9 +606,17 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			var queue models.QueueType
 			if tool.Gpu == 0 {
-				queue = models.QueueTypeCPU
+				if tool.ToolType == "ray" {
+					queue = models.QueueTypeRayCPU
+				} else {
+					queue = models.QueueTypeBacalhauCPU
+				}
 			} else {
-				queue = models.QueueTypeGPU
+				if tool.ToolType == "ray" {
+					queue = models.QueueTypeRayGPU
+				} else {
+					queue = models.QueueTypeBacalhauGPU
+				}
 			}
 			jobUUID := uuid.New().String()
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -11,10 +12,12 @@ import (
 
 	"encoding/json"
 
+	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/ray"
 	"gorm.io/gorm"
 )
 
@@ -37,12 +40,12 @@ var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
 var retryJobSleepTime = time.Duration(10) * time.Second
 
 func StartJobQueues(db *gorm.DB) error {
-	errChan := make(chan error, 2) // Buffer for two types of jobs
+	errChan := make(chan error, 4) // Buffer for two types of jobs
 
-	go ProcessJobQueue(models.QueueTypeCPU, errChan, db)
-	go ProcessJobQueue(models.QueueTypeGPU, errChan, db)
-	// go ProcessJobQueue(models.QueueTypeRayCPU, errChan, db)
-	// go ProcessJobQueue(models.QueueTypeRayGPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeBacalhauCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeBacalhauGPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeRayCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeRayGPU, errChan, db)
 
 	// Wait for error from any queue
 	for i := 0; i < 4; i++ {
@@ -59,7 +62,8 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 		var job models.Job
 		err := fetchOldestQueuedJob(&job, queueType, db)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
+			//TODO: uncomment this later
+			// fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
 			time.Sleep(5 * time.Second)
 			continue
 		} else if err != nil {
@@ -67,7 +71,7 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 			return
 		}
 
-		if job.JobType == models.JobTypeRay {
+		if queueType == models.QueueTypeRayCPU || queueType == models.QueueTypeRayGPU {
 			if err := processRayJob(job.ID, db); err != nil {
 				errChan <- err
 				return
@@ -87,7 +91,8 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		if err := fetchRunningJobsWithToolData(&jobs, db); err != nil {
 			return err
 		}
-		fmt.Printf("There are %d running jobs\n", len(jobs))
+		//TODO: uncomment this later
+		// fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
 			var ToolJson ipwl.Tool
 			var checkpointCompatible string
@@ -143,7 +148,8 @@ func MonitorRunningJobs(db *gorm.DB) error {
 				return err
 			}
 		}
-		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
+		//TODO: uncomment this later
+		// fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
 		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
 }
@@ -276,34 +282,88 @@ func processBacalhauJob(jobID uint, db *gorm.DB) error {
 }
 
 func processRayJob(jobID uint, db *gorm.DB) error {
-	fmt.Printf("Processing Ray job placeholder %v\n", jobID)
-	// var job models.Job
-	// err := fetchJobWithToolAndFlowData(&job, jobID, db)
-	// if err != nil {
-	// 	return err
+	fmt.Printf("Processing Ray Job %v\n", jobID)
+	var job models.Job
+	err := fetchJobWithToolAndFlowData(&job, jobID, db)
+	if err != nil {
+		return err
+	}
+
+	var ToolJson ipwl.Tool
+	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+		return err
+	}
+
+	// var checkpointCompatible string
+	// if ToolJson.CheckpointCompatible == true {
+	// 	checkpointCompatible = "True"
+	// } else {
+	// 	checkpointCompatible = "False"
 	// }
 
-	// // Submit the Ray job
-	// inputs := map[string]interface{}{}
-	// if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
-	// 	return err
-	// }
+	if job.JobID == "" {
+		if err := submitRayJobAndUpdateID(&job, db); err != nil {
+			return err
+		}
+	}
 
-	// toolPath := job.Tool.ToolPath
-	// rayJob := ray_queue.Task{
-	// 	ID:     job.JobUUID,
-	// 	Inputs: inputs,
-	// }
-
-	// // Add job to Ray queue
-	// rayQueue := ray_queue.NewRayQueue(db, 5, 3) // Initialize the Ray queue with db, maxWorkers, and maxRetry
-	// rayQueue.AddToQueue(toolPath, rayJob.Inputs)
-
-	// // Update the job status to running
-	// job.State = models.JobStateRunning
-	// return db.Save(&job).Error
 	return nil
 }
+
+func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
+	log.Println("Preparing to submit job to Ray service")
+	var jobInputs map[string]interface{}
+	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
+		return err
+	}
+	inputs := make(map[string]interface{})
+	for key, value := range jobInputs {
+		inputs[key] = value
+	}
+	toolCID := job.Tool.CID
+
+	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
+	resp, err := ray.SubmitRayJob(toolCID, inputs)
+	if err != nil {
+		return err
+	}
+
+	//for now only handling 200 and failed. implement retry and timeout later
+	rayJobID := uuid.New()
+	job.JobID = rayJobID.String()
+	if resp.StatusCode != http.StatusOK {
+		job.State = models.JobStateCompleted
+	} else {
+		job.State = models.JobStateFailed
+	}
+	fmt.Printf("Job had id %v\n", job.ID)
+	fmt.Printf("Finished Job with Ray id %v\n", rayJobID)
+	return db.Save(job).Error
+}
+
+// // Submit the Ray job
+// inputs := map[string]interface{}{}
+// if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
+// 	return err
+// }
+
+// toolPath := job.Tool.ToolPath
+// rayJob := ray_queue.Task{
+// 	ID:     job.JobUUID,
+// 	Inputs: inputs,
+// }
+
+// // Add job to Ray queue
+// rayQueue := ray_queue.NewRayQueue(db, 5, 3) // Initialize the Ray queue with db, maxWorkers, and maxRetry
+// rayQueue.AddToQueue(toolPath, rayJob.Inputs)
+
+// // Update the job status to completed
+//sleep for 30 sec
+// time.Sleep(30 * time.Second)
+// 	fmt.Printf("Set status to complete %v\n", jobID)
+// 	job.State = models.JobStateCompleted
+// 	return db.Save(&job).Error
+// }
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
 	var job models.Job

@@ -1,0 +1,37 @@
+{
+    "name": "colabdesign v1.8 ray",
+    "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
+    "task": "protein folding",
+    "taskCategory": "community-models",
+    "toolType": "ray",
+    "rayServiceURL": "http://localhost:8003/simulate_protein_complex",
+    "inputs": {
+
+      "pdb": {
+        "type": 
+      }
+      
+      "/app/test_data/test.pdb",
+      "binder_length": 80,
+      "binder_chain": "",
+      "target_chain": "",
+      "contig": ""
+
+      "binder_sequence": {
+        "type": "string",
+        "description": "The sequence of the binder protein",
+        "required": true
+      },
+      "target_sequence": {
+        "type": "string",
+        "description": "The sequence of the target protein",
+        "required": true
+      }
+    },
+    "outputs": {
+      "complex_structure": {
+        "type": "File",
+        "glob": ["*.pdb"]
+      }
+    }
+}

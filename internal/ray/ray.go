@@ -98,6 +98,22 @@ func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err
 	}
-	log.Printf("Ray job created with response status: %s\n", resp.Status)
+	defer resp.Body.Close()
+
+	log.Printf("Ray job finished with response status: %s\n", resp.Status)
+	// if resp.StatusCode != http.StatusOK {
+	// 	return "", fmt.Errorf("failed to create Ray job, status code: %d", resp.StatusCode)
+	// }
+
+	// var responseBody map[string]string
+	// if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
+	// 	return "", fmt.Errorf("failed to decode response body: %v", err)
+	// }
+
+	// jobID, exists := responseBody["job_id"]
+	// if !exists {
+	// 	return "", fmt.Errorf("job_id not found in response")
+	// }
+
 	return resp, nil
 }

@@ -18,8 +18,10 @@ const (
 type QueueType string
 
 const (
-	QueueTypeCPU QueueType = "cpu"
-	QueueTypeGPU QueueType = "gpu"
+	QueueTypeBacalhauCPU QueueType = "bacalhau_cpu"
+	QueueTypeBacalhauGPU QueueType = "bacalhau_gpu"
+	QueueTypeRayCPU      QueueType = "ray_cpu"
+	QueueTypeRayGPU      QueueType = "ray_gpu"
 )
 
 type JobType string

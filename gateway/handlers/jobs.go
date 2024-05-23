@@ -194,33 +194,29 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			switch data.QueueType {
-			case models.QueueTypeCPU:
-				if data.JobType == models.JobTypeBacalhau {
-					if data.State == models.JobStateQueued {
-						summary.BacalhauCPU.Queued = jobSummary
-					} else if data.State == models.JobStateRunning {
-						summary.BacalhauCPU.Running = jobSummary
-					}
-				} else {
-					if data.State == models.JobStateQueued {
-						summary.RayCPU.Queued = jobSummary
-					} else if data.State == models.JobStateRunning {
-						summary.RayCPU.Running = jobSummary
-					}
+			case models.QueueTypeBacalhauCPU:
+				if data.State == models.JobStateQueued {
+					summary.BacalhauCPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.BacalhauCPU.Running = jobSummary
 				}
-			case models.QueueTypeGPU:
-				if data.JobType == models.JobTypeBacalhau {
-					if data.State == models.JobStateQueued {
-						summary.BacalhauGPU.Queued = jobSummary
-					} else if data.State == models.JobStateRunning {
-						summary.BacalhauGPU.Running = jobSummary
-					}
-				} else {
-					if data.State == models.JobStateQueued {
-						summary.RayGPU.Queued = jobSummary
-					} else if data.State == models.JobStateRunning {
-						summary.RayGPU.Running = jobSummary
-					}
+			case models.QueueTypeRayCPU:
+				if data.State == models.JobStateQueued {
+					summary.RayCPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.RayCPU.Running = jobSummary
+				}
+			case models.QueueTypeBacalhauGPU:
+				if data.State == models.JobStateQueued {
+					summary.BacalhauGPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.BacalhauGPU.Running = jobSummary
+				}
+			case models.QueueTypeRayGPU:
+				if data.State == models.JobStateQueued {
+					summary.RayGPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.RayGPU.Running = jobSummary
 				}
 			}
 		}
