@@ -20,7 +20,6 @@ import (
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
-	"github.com/labdao/plex/internal/ray"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -176,6 +175,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			jobUUID := uuid.New().String()
 
+			var jobType models.JobType
+			if tool.ToolType == "ray" {
+				jobType = models.JobTypeRay
+			} else {
+				jobType = models.JobTypeBacalhau
+			}
 			job := models.Job{
 				ToolID:        ioItem.Tool.IPFS,
 				FlowID:        flow.ID,
@@ -185,36 +190,43 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				CreatedAt:     time.Now(),
 				JobUUID:       jobUUID,
 				Public:        false,
+				JobType:       jobType,
 			}
 
-			if tool.ToolType == "ray" {
-				log.Println("Preparing to submit job to Ray service")
-				inputs := make(map[string]interface{})
-				for key, value := range kwargs {
-					inputs[key] = value
-				}
-				log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-				response, err := ray.SubmitRayJob(toolCid, inputs)
-				if err != nil {
-					log.Printf("Error submitting job to Ray: %v\n", err)
-					http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
-					return
-				}
-				defer response.Body.Close()
-				if response.StatusCode != http.StatusOK {
-					log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
-					http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
-					return
-				}
-				log.Println("Job submitted to Ray service successfully")
-			} else {
-				// TODO: ensure we are not creating a Bacalhau job when this entry gets created
-				// this occurs due to queue.go
-				result = db.Create(&job)
-				if result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
+			// if tool.ToolType == "ray" {
+			// 	log.Println("Preparing to submit job to Ray service")
+			// 	inputs := make(map[string]interface{})
+			// 	for key, value := range kwargs {
+			// 		inputs[key] = value
+			// 	}
+			// 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
+			// 	response, err := ray.SubmitRayJob(toolCid, inputs)
+			// 	if err != nil {
+			// 		log.Printf("Error submitting job to Ray: %v\n", err)
+			// 		http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// 	defer response.Body.Close()
+			// 	if response.StatusCode != http.StatusOK {
+			// 		log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
+			// 		http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// 	log.Println("Job completed successfully")
+			// } else {
+			// 	// TODO: ensure we are not creating a Bacalhau job when this entry gets created
+			// 	// this occurs due to queue.go
+			// 	result = db.Create(&job)
+			// 	if result.Error != nil {
+			// 		http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// }
+
+			result := db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
 
 			for _, input := range ioItem.Inputs {
@@ -603,39 +615,39 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Public:        false,
 			}
 
-			if tool.ToolType == "ray" {
-				log.Println("Preparing to submit job to Ray service")
-				inputs := make(map[string]interface{})
-				for key, value := range kwargs {
-					inputs[key] = value
-				}
-				log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-				response, err := ray.SubmitRayJob(tool.CID, inputs)
-				if err != nil {
-					log.Printf("Error submitting job to Ray: %v\n", err)
-					http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
-					return
-				}
-				defer response.Body.Close()
-				if response.StatusCode != http.StatusOK {
-					log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
-					http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
-					return
-				}
-				log.Println("Job submitted to Ray service successfully")
-			} else {
-				result = db.Create(&job)
-				if result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
-			}
-
-			// result = db.Create(&job)
-			// if result.Error != nil {
-			// 	http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-			// 	return
+			// if tool.ToolType == "ray" {
+			// 	log.Println("Preparing to submit job to Ray service")
+			// 	inputs := make(map[string]interface{})
+			// 	for key, value := range kwargs {
+			// 		inputs[key] = value
+			// 	}
+			// 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
+			// 	response, err := ray.SubmitRayJob(tool.CID, inputs)
+			// 	if err != nil {
+			// 		log.Printf("Error submitting job to Ray: %v\n", err)
+			// 		http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// 	defer response.Body.Close()
+			// 	if response.StatusCode != http.StatusOK {
+			// 		log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
+			// 		http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// 	log.Println("Job submitted to Ray service successfully")
+			// } else {
+			// 	result = db.Create(&job)
+			// 	if result.Error != nil {
+			// 		http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+			// 		return
+			// 	}
 			// }
+
+			result = db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
 
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string

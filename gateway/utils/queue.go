@@ -41,9 +41,11 @@ func StartJobQueues(db *gorm.DB) error {
 
 	go ProcessJobQueue(models.QueueTypeCPU, errChan, db)
 	go ProcessJobQueue(models.QueueTypeGPU, errChan, db)
+	// go ProcessJobQueue(models.QueueTypeRayCPU, errChan, db)
+	// go ProcessJobQueue(models.QueueTypeRayGPU, errChan, db)
 
 	// Wait for error from any queue
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 4; i++ {
 		if err := <-errChan; err != nil {
 			return err
 		}
@@ -65,9 +67,16 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 			return
 		}
 
-		if err := processJob(job.ID, db); err != nil {
-			errChan <- err
-			return
+		if job.JobType == models.JobTypeRay {
+			if err := processRayJob(job.ID, db); err != nil {
+				errChan <- err
+				return
+			}
+		} else {
+			if err := processBacalhauJob(job.ID, db); err != nil {
+				errChan <- err
+				return
+			}
 		}
 	}
 }
@@ -176,7 +185,7 @@ func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
 	}
 }
 
-func processJob(jobID uint, db *gorm.DB) error {
+func processBacalhauJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing job %v\n", jobID)
 	var job models.Job
 	err := fetchJobWithToolAndFlowData(&job, jobID, db)
@@ -264,6 +273,36 @@ func processJob(jobID uint, db *gorm.DB) error {
 			continue
 		}
 	}
+}
+
+func processRayJob(jobID uint, db *gorm.DB) error {
+	fmt.Printf("Processing Ray job placeholder %v\n", jobID)
+	// var job models.Job
+	// err := fetchJobWithToolAndFlowData(&job, jobID, db)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// // Submit the Ray job
+	// inputs := map[string]interface{}{}
+	// if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
+	// 	return err
+	// }
+
+	// toolPath := job.Tool.ToolPath
+	// rayJob := ray_queue.Task{
+	// 	ID:     job.JobUUID,
+	// 	Inputs: inputs,
+	// }
+
+	// // Add job to Ray queue
+	// rayQueue := ray_queue.NewRayQueue(db, 5, 3) // Initialize the Ray queue with db, maxWorkers, and maxRetry
+	// rayQueue.AddToQueue(toolPath, rayJob.Inputs)
+
+	// // Update the job status to running
+	// job.State = models.JobStateRunning
+	// return db.Save(&job).Error
+	return nil
 }
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
