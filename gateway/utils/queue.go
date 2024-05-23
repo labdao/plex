@@ -318,7 +318,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	inputs := make(map[string]interface{})
 	for key, value := range jobInputs {
-		inputs[key] = value
+		inputs[key] = []interface{}{value}
 	}
 	toolCID := job.Tool.CID
 
