@@ -54,7 +54,9 @@ export default function ExperimentDetail() {
   const handlePublish = () => {
     setIsDelaying(true);
     if (experimentID) {
-      dispatch(flowUpdateThunk({ flowId: experimentID })).then(() => {
+      dispatch(flowUpdateThunk({ flowId: experimentID, updates: { public: true } }))
+      .unwrap()
+      .then(() => {
         setTimeout(() => {
           dispatch(setFlowDetailPublic(true));
           setIsDelaying(false);
@@ -68,7 +70,7 @@ export default function ExperimentDetail() {
 
   const isButtonDisabled = updateLoading || isDelaying;
 
-  return flow.Name ? (
+  return flow.Name && experimentID ? (
     <div>
       <>
         <Card>
@@ -79,7 +81,7 @@ export default function ExperimentDetail() {
                 <ExperimentStatus jobs={flow.Jobs} className="mr-1 mt-3.5" />
                 <ExperimentRenameForm
                   initialName={flow.Name}
-                  key={flow.Name}
+                  flowId={experimentID}
                   inputProps={{ variant: "subtle", className: "text-xl shrink-0 font-heading w-full" }}
                 />
               </div>

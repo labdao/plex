@@ -283,6 +283,10 @@ func DownloadFileToTemp(cid, fileName string) (string, error) {
 				tempFilePath := filepath.Join(tempDir, fileName)
 				log.Printf("Found file %s in downloaded directory", fileName)
 				return tempFilePath, nil
+			} else if file.Name() == cid {
+				tempFilePath := filepath.Join(tempDir, cid)
+				log.Printf("Found file %s in downloaded directory", fileName)
+				return tempFilePath, nil
 			}
 		}
 

@@ -27,7 +27,7 @@ interface ModelInfoProps {
 
 export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoProps) {
   const { modelPanelOpen, setModelPanelOpen } = useContext(ExperimentUIContext);
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState("guide");
   const dispatch = useDispatch<AppDispatch>();
   const tool = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
@@ -40,7 +40,7 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
 
   const handleToolChange = (value: any) => {
     dispatch(toolDetailThunk(value));
-    setActiveTab("info");
+    setActiveTab("guide");
   };
 
   const handleOpen = () => {
@@ -56,12 +56,12 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
 
   return (
     <Card
-      className={cn(
-        "transition-all lg:rounded-r-none m-2 lg:mx-0 lg:my-2 lg:sticky top-10 grow-0 h-[calc(100vh-7rem)] shrink-0 basis-14",
-        modelPanelOpen && "basis-1/3"
-      )}
+    className={cn(
+      "transition-all lg:rounded-r-none m-2 lg:mx-0 lg:my-2 lg:sticky top-10 grow-0 overflow-auto h-[calc(100vh)] shrink-0 basis-14",
+      modelPanelOpen && "basis-1/3"
+    )}
     >
-      <div className={cn("min-w-[26vw] flex flex-col h-full", modelPanelOpen && "opacity-1")}>
+      <div className={cn("min-w-[26vw] flex flex-col h-full overflow-hidden", modelPanelOpen && "opacity-1")}>
         <div className="flex items-center gap-3 p-3 border-b">
           <div>
             <Button size="icon" variant="ghost" className="" onClick={handleOpen}>
@@ -79,14 +79,6 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
 
         <div className="flex grow">
           <div className="flex flex-col justify-start h-auto gap-2 p-3">
-            <Button
-              onClick={() => handleTabChange("info")}
-              variant="ghost"
-              size="icon"
-              className={activeTab === "info" && modelPanelOpen ? "bg-muted" : undefined}
-            >
-              <InfoIcon size={48} />
-            </Button>
             {tool.ToolJson?.guide && (
               <Button
                 onClick={() => handleTabChange("guide")}
@@ -97,10 +89,19 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
                 <HelpCircleIcon />
               </Button>
             )}
+            <Button
+              onClick={() => handleTabChange("info")}
+              variant="ghost"
+              size="icon"
+              className={activeTab === "info" && modelPanelOpen ? "bg-muted" : undefined}
+            >
+              <InfoIcon size={48} />
+            </Button>
+            
           </div>
           <div className="p-2 mt-2 grow">
-            {tool.ToolJson?.description && activeTab === "info" && <ModelInfo tool={tool} />}
             {tool.ToolJson?.guide && activeTab === "guide" && <ModelGuide tool={tool} />}
+            {tool.ToolJson?.description && activeTab === "info" && <ModelInfo tool={tool} />}
           </div>
         </div>
       </div>

@@ -32,6 +32,7 @@ from colabdesign.rf.utils import get_ca
 from colabdesign.rf.utils import fix_contigs, fix_partial_contigs, fix_pdb, sym_it
 from colabdesign.shared.protein import pdb_to_string
 from colabdesign.shared.plot import plot_pseudo_3D
+from visualisers import visualise_protein_complex
 
 
 def get_plex_job_inputs():
@@ -100,8 +101,13 @@ def add_deepest_keys_to_dataframe(deepest_keys_values, df_results):
 
 def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uuid):
     checkpoint_csv_path = os.path.dirname(result_csv_path)
-    for index, row in df_results.iterrows():
-        plddt_for_checkpoint = row['plddt'] *100
+
+    df_sorted = df_results.sort_values(by=['design', 'rmsd'], ascending=[True, True])
+    best_per_design = df_sorted.groupby('design').first()
+    best_per_design.reset_index(inplace=True)
+
+    for index, row in best_per_design.iterrows():
+        plddt_for_checkpoint = row['plddt'] * 100
         i_pae_for_checkpoint = row['i_pae']
         design = row['design']
         n = row['n']
@@ -118,16 +124,27 @@ def create_and_upload_checkpoints(df_results, result_csv_path, flow_uuid, job_uu
         }, index=[0])
         event_csv_filename = f"checkpoint_{index}_summary.csv"
         event_csv_filepath = f"{checkpoint_csv_path}/{event_csv_filename}"
-        new_df.to_csv(event_csv_filepath, index= False)
+        new_df.to_csv(event_csv_filepath, index=False)
 
         bucket_name = "app-checkpoint-bucket"
-        time.sleep(2)
         object_name = f"checkpoints/{flow_uuid}/{job_uuid}/checkpoint_{index}"
         upload_to_s3(event_csv_filepath, bucket_name, f"{object_name}/{event_csv_filename}")
         upload_to_s3(pdb_path, bucket_name, f"{object_name}/{pdb_file_name}")
-        os.remove(event_csv_filepath)
         print(f"Checkpoint {index} event CSV and PDB created and uploaded.")
 
+    overall_best_design = df_sorted.iloc[0]
+    overall_best_design_pdb_file_name = f"design{overall_best_design['design']}_n{overall_best_design['n']}.pdb"
+    overall_best_design_pdb_path = f"{checkpoint_csv_path}/default/all_pdb/{overall_best_design_pdb_file_name}"
+
+    print("Visualizing the protein complex for the overall best design")
+    result = visualise_protein_complex(overall_best_design_pdb_path, result_csv_path)
+    png_file_path = result.get('png')
+    png_file_name = os.path.basename(png_file_path)
+    bucket_name = "app-record-bucket"
+    object_name = f"visualizations/{flow_uuid}/{job_uuid}"
+    upload_to_s3(png_file_path, bucket_name, f"{object_name}/{png_file_name}")
+    os.remove(event_csv_filepath)
+    print(f"Visualization for the overall best design uploaded to S3.")
     return
 
 def enricher(multirun_path, cfg, flow_uuid, job_uuid, checkpoint_compatible):

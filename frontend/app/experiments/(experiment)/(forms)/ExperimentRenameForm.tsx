@@ -7,24 +7,24 @@ import { z } from "zod";
 
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { flowUpdateThunk, useDispatch } from "@/lib/redux";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
 });
 
-export function ExperimentRenameForm({ initialName, inputProps }: { initialName: string; inputProps?: any }) {
+export function ExperimentRenameForm({ initialName, inputProps, flowId }: { initialName: string; inputProps?: any; flowId: string }) {
+  const dispatch = useDispatch();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: initialName,
-    },
+    defaultValues: { name: initialName },
     mode: "onChange",
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    toast.warning("Renaming experiments is coming soon!", { position: "top-center" });
-    console.log(values);
-  }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    await dispatch(flowUpdateThunk({ flowId, updates: { name: values.name } }));
+    toast.success("Experiment renamed successfully!");
+  };
 
   return (
     <Form {...form}>
