@@ -58,7 +58,7 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 		err := fetchOldestQueuedJob(&job, queueType, db)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
-			time.Sleep(500 * time.Second)
+			time.Sleep(5 * time.Second)
 			continue
 		} else if err != nil {
 			errChan <- err
@@ -135,7 +135,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			}
 		}
 		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
-		time.Sleep(100 * time.Second) // Wait for some time before the next cycle
+		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
 }
 

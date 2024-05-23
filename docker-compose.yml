@@ -233,4 +233,3 @@ volumes:
   dbdata-backend:
   dbdata-receptor:
   ipfs:
-  minio-data:

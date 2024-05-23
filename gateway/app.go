@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
