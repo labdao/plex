@@ -98,7 +98,6 @@ func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err
 	}
-	defer resp.Body.Close()
 
 	log.Printf("Ray job finished with response status: %s\n", resp.Status)
 	// if resp.StatusCode != http.StatusOK {

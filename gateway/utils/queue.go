@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	"encoding/json"
 
-	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
@@ -20,6 +20,16 @@ import (
 	"github.com/labdao/plex/internal/ray"
 	"gorm.io/gorm"
 )
+
+type RayJobResponse struct {
+	UUID             string                   `json:"uuid"`
+	PDB              map[string]interface{}   `json:"pdb"`
+	StructureMetrics map[string]interface{}   `json:"structure_metrics"`
+	Plots            []map[string]interface{} `json:"plots"`
+	MSA              map[string]interface{}   `json:"msa"`
+	PLDDT            interface{}              `json:"plddt"` // Use interface{} if the type can vary or is unknown
+	IPAE             interface{}              `json:"ipae"`  // Use interface{} if the type can vary or is unknown
+}
 
 func getEnvAsInt(name string, defaultValue int) int {
 	valueStr := os.Getenv(name)
@@ -327,17 +337,34 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading response body: %v", err)
+	}
+
+	var rayJobResponse RayJobResponse
+	if err := json.Unmarshal(body, &rayJobResponse); err != nil {
+		log.Fatalf("Error unmarshalling response: %v", err)
+	}
+
+	fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
+
+	prettyJSON, err := json.MarshalIndent(rayJobResponse, "", "    ")
+	if err != nil {
+		log.Fatalf("Error generating pretty JSON: %v", err)
+	}
+	fmt.Printf("Parsed Ray job response:\n%s\n", string(prettyJSON))
 
 	//for now only handling 200 and failed. implement retry and timeout later
-	rayJobID := uuid.New()
-	job.JobID = rayJobID.String()
-	if resp.StatusCode != http.StatusOK {
+	job.JobID = rayJobResponse.UUID
+	if resp.StatusCode == http.StatusOK {
 		job.State = models.JobStateCompleted
 	} else {
 		job.State = models.JobStateFailed
 	}
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v\n", rayJobID)
+	fmt.Printf("Finished Job with Ray id %v\n", job.JobID)
 	return db.Save(job).Error
 }
 
