@@ -333,6 +333,8 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	toolCID := job.Tool.CID
 
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
+	setJobStatus(job, models.JobStateRunning, "", db)
+	log.Printf("setting job %v to running\n", job.ID)
 	resp, err := ray.SubmitRayJob(toolCID, inputs)
 	if err != nil {
 		return err
@@ -358,6 +360,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 	//for now only handling 200 and failed. implement retry and timeout later
 	job.JobID = rayJobResponse.UUID
+	job.ResultJSON = body
 	if resp.StatusCode == http.StatusOK {
 		job.State = models.JobStateCompleted
 	} else {
