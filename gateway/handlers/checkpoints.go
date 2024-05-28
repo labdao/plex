@@ -20,6 +20,49 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
+	var response models.RayJobResponse
+	var rawData map[string]interface{}
+
+	if err := json.Unmarshal(data, &rawData); err != nil {
+		return response, err
+	}
+
+	response.UUID = rawData["uuid"].(string)
+	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+		response.PDB = models.FileDetail{
+			Key:      pdbData["key"].(string),
+			Location: pdbData["location"].(string),
+		}
+	}
+
+	response.Scores = make(map[string]float64)
+	response.Files = make(map[string]models.FileDetail)
+
+	for key, value := range rawData {
+		switch key {
+		case "uuid", "pdb":
+			// Ignore already processed fields
+			continue
+		default:
+			if valMap, ok := value.(map[string]interface{}); ok {
+				if keyPath, ok := valMap["key"].(string); ok {
+					// It's a file detail
+					response.Files[key] = models.FileDetail{
+						Key:      keyPath,
+						Location: valMap["location"].(string),
+					}
+				}
+			} else if valFloat, ok := value.(float64); ok {
+				// It's a score
+				response.Scores[key] = valFloat
+			}
+		}
+	}
+
+	return response, nil
+}
+
 func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
@@ -41,7 +84,10 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	var files []map[string]string
 
 	var resultJSON models.RayJobResponse
-	if err := json.Unmarshal([]byte(job.ResultJSON), &resultJSON); err != nil {
+
+	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+	if err != nil {
+		fmt.Println("Error unmarshalling result JSON:", err)
 		return nil, err
 	}
 
@@ -124,11 +170,6 @@ func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func GetDynamicFieldValue(response models.RayJobResponse, field string) (interface{}, bool) {
-	value, exists := response.DynamicFields[field]
-	return value, exists
-}
-
 func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotData, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
@@ -148,30 +189,13 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	svc := s3.New(sess)
 
-	var resultMap map[string]interface{}
-	if err := json.Unmarshal([]byte(job.ResultJSON), &resultMap); err != nil {
-		return nil, err
-	}
-
-	// Create a RayJobResponse and populate known fields
 	var resultJSON models.RayJobResponse
-	knownFieldsData, err := json.Marshal(resultMap)
+
+	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
 	if err != nil {
+		fmt.Println("Error unmarshalling result JSON:", err)
 		return nil, err
 	}
-	if err := json.Unmarshal(knownFieldsData, &resultJSON); err != nil {
-		return nil, err
-	}
-
-	// Remove known fields from the map
-	delete(resultMap, "uuid")
-	delete(resultMap, "pdb")
-	delete(resultMap, "structure_metrics")
-	delete(resultMap, "plots")
-	delete(resultMap, "msa")
-
-	// Assign the remaining fields to DynamicFields
-	resultJSON.DynamicFields = resultMap
 
 	var ToolJson ipwl.Tool
 	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
@@ -181,33 +205,11 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	xAxis := ToolJson.XAxis
 	yAxis := ToolJson.YAxis
 
-	xAxisValue, xAxisExists := GetDynamicFieldValue(resultJSON, xAxis)
-	yAxisValue, yAxisExists := GetDynamicFieldValue(resultJSON, yAxis)
+	xAxisValue, xAxisExists := resultJSON.Scores[xAxis]
+	yAxisValue, yAxisExists := resultJSON.Scores[yAxis]
 
 	if !xAxisExists || !yAxisExists {
 		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
-	}
-
-	// Default to 0 if xAxis or yAxis value is nil
-	var xAxisFloat, yAxisFloat float64
-	var xAxisIsFloat, yAxisIsFloat bool
-
-	if xAxisValue == nil {
-		xAxisFloat = 0
-	} else {
-		xAxisFloat, xAxisIsFloat = xAxisValue.(float64)
-		if !xAxisIsFloat {
-			return nil, fmt.Errorf("xAxis value is not a float64")
-		}
-	}
-
-	if yAxisValue == nil {
-		yAxisFloat = 0
-	} else {
-		yAxisFloat, yAxisIsFloat = yAxisValue.(float64)
-		if !yAxisIsFloat {
-			return nil, fmt.Errorf("yAxis value is not a float64")
-		}
 	}
 
 	pdbKey := resultJSON.PDB.Key
@@ -217,7 +219,6 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(pdbKey),
 	})
-
 	urlStr, err := req.Presign(15 * time.Minute)
 	if err != nil {
 		return nil, err
@@ -225,8 +226,8 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	plotData := []models.ScatterPlotData{}
 	plotData = append(plotData, models.ScatterPlotData{
-		Plddt:         xAxisFloat,
-		IPae:          yAxisFloat,
+		Plddt:         xAxisValue,
+		IPae:          yAxisValue,
 		Checkpoint:    "0", // Default checkpoint
 		StructureFile: pdbFileName,
 		PdbFilePath:   urlStr,

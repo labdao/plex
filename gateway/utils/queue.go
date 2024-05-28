@@ -312,45 +312,67 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 
 func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	var response models.RayJobResponse
-	if err := json.Unmarshal(data, &response); err != nil {
+	var rawData map[string]interface{}
+
+	if err := json.Unmarshal(data, &rawData); err != nil {
 		return response, err
 	}
 
-	// Unmarshal again to get dynamic fields
-	var dynamicFields map[string]interface{}
-	if err := json.Unmarshal(data, &dynamicFields); err != nil {
-		return response, err
+	response.UUID = rawData["uuid"].(string)
+	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+		response.PDB = models.FileDetail{
+			Key:      pdbData["key"].(string),
+			Location: pdbData["location"].(string),
+		}
 	}
 
-	// Remove known fields
-	delete(dynamicFields, "uuid")
-	delete(dynamicFields, "pdb")
-	delete(dynamicFields, "structure_metrics")
-	delete(dynamicFields, "plots")
-	delete(dynamicFields, "msa")
+	response.Scores = make(map[string]float64)
+	response.Files = make(map[string]models.FileDetail)
 
-	response.DynamicFields = dynamicFields
+	for key, value := range rawData {
+		switch key {
+		case "uuid", "pdb":
+			// Ignore already processed fields
+			continue
+		default:
+			if valMap, ok := value.(map[string]interface{}); ok {
+				if keyPath, ok := valMap["key"].(string); ok {
+					// It's a file detail
+					response.Files[key] = models.FileDetail{
+						Key:      keyPath,
+						Location: valMap["location"].(string),
+					}
+				}
+			} else if valFloat, ok := value.(float64); ok {
+				// It's a score
+				response.Scores[key] = valFloat
+			}
+		}
+	}
+
 	return response, nil
 }
 
 // Function to pretty print RayJobResponse with dynamic fields
 func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
-	// Convert known fields to a map
-	knownFieldsMap := map[string]interface{}{
-		"uuid":           response.UUID,
-		"pdb":            response.PDB,
-		"struct metrics": response.StructureMetrics,
-		"plots":          response.Plots,
-		"msa":            response.MSA,
+	// Convert the structured data to a map
+	result := map[string]interface{}{
+		"uuid": response.UUID,
+		"pdb":  response.PDB,
 	}
 
-	// Merge known fields and dynamic fields
-	for k, v := range response.DynamicFields {
-		knownFieldsMap[k] = v
+	for key, value := range response.Scores {
+		result[key] = value
 	}
 
-	// Marshal the merged map to a JSON string
-	prettyJSON, err := json.MarshalIndent(knownFieldsMap, "", "    ")
+	filesMap := make(map[string]interface{})
+	for key, fileDetail := range response.Files {
+		filesMap[key] = fileDetail
+	}
+	result["files"] = filesMap
+
+	// Marshal the result map to a JSON string
+	prettyJSON, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
 		return "", err
 	}
