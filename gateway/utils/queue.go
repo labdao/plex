@@ -391,10 +391,6 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		return err
 	}
 
-	// if err := json.Unmarshal(body, &rayJobResponse); err != nil {
-	// 	log.Fatalf("Error unmarshalling response: %v", err)
-	// }
-
 	fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
 	prettyJSON, err := PrettyPrintRayJobResponse(rayJobResponse)
 	if err != nil {
