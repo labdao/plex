@@ -21,16 +21,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type RayJobResponse struct {
-	UUID             string                   `json:"uuid"`
-	PDB              map[string]interface{}   `json:"pdb"`
-	StructureMetrics map[string]interface{}   `json:"structure_metrics"`
-	Plots            []map[string]interface{} `json:"plots"`
-	MSA              map[string]interface{}   `json:"msa"`
-	PLDDT            interface{}              `json:"plddt"` // Use interface{} if the type can vary or is unknown
-	IPAE             interface{}              `json:"ipae"`  // Use interface{} if the type can vary or is unknown
-}
-
 func getEnvAsInt(name string, defaultValue int) int {
 	valueStr := os.Getenv(name)
 	if valueStr == "" {
@@ -320,6 +310,54 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 	return nil
 }
 
+func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
+	var response models.RayJobResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return response, err
+	}
+
+	// Unmarshal again to get dynamic fields
+	var dynamicFields map[string]interface{}
+	if err := json.Unmarshal(data, &dynamicFields); err != nil {
+		return response, err
+	}
+
+	// Remove known fields
+	delete(dynamicFields, "uuid")
+	delete(dynamicFields, "pdb")
+	delete(dynamicFields, "structure_metrics")
+	delete(dynamicFields, "plots")
+	delete(dynamicFields, "msa")
+
+	response.DynamicFields = dynamicFields
+	return response, nil
+}
+
+// Function to pretty print RayJobResponse with dynamic fields
+func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
+	// Convert known fields to a map
+	knownFieldsMap := map[string]interface{}{
+		"uuid":           response.UUID,
+		"pdb":            response.PDB,
+		"struct metrics": response.StructureMetrics,
+		"plots":          response.Plots,
+		"msa":            response.MSA,
+	}
+
+	// Merge known fields and dynamic fields
+	for k, v := range response.DynamicFields {
+		knownFieldsMap[k] = v
+	}
+
+	// Marshal the merged map to a JSON string
+	prettyJSON, err := json.MarshalIndent(knownFieldsMap, "", "    ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(prettyJSON), nil
+}
+
 func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
 	var jobInputs map[string]interface{}
@@ -345,18 +383,25 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		log.Fatalf("Error reading response body: %v", err)
 	}
 
-	var rayJobResponse RayJobResponse
-	if err := json.Unmarshal(body, &rayJobResponse); err != nil {
-		log.Fatalf("Error unmarshalling response: %v", err)
+	var rayJobResponse models.RayJobResponse
+
+	rayJobResponse, err = UnmarshalRayJobResponse([]byte(body))
+	if err != nil {
+		fmt.Println("Error unmarshalling result JSON:", err)
+		return err
 	}
 
-	fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
+	// if err := json.Unmarshal(body, &rayJobResponse); err != nil {
+	// 	log.Fatalf("Error unmarshalling response: %v", err)
+	// }
 
-	prettyJSON, err := json.MarshalIndent(rayJobResponse, "", "    ")
+	fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
+	prettyJSON, err := PrettyPrintRayJobResponse(rayJobResponse)
 	if err != nil {
 		log.Fatalf("Error generating pretty JSON: %v", err)
 	}
-	fmt.Printf("Parsed Ray job response:\n%s\n", string(prettyJSON))
+	// Print the pretty JSON
+	fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
 
 	//for now only handling 200 and failed. implement retry and timeout later
 	job.JobID = rayJobResponse.UUID
