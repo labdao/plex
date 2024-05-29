@@ -26,7 +26,7 @@ func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
 	}
 }
 
-// TODO: move ray part of the queue from queue.go to ray_queue.go later
+// TODO_PR#970: move ray part of the queue from queue.go to ray_queue.go later
 // func (rq *RayQueue) AddToQueue(toolPath string, inputs map[string]interface{}) error {
 // 	// Create a new RayJob
 // 	rayJob := &ray.RayJob{

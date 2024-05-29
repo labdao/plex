@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -62,7 +63,7 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 		var job models.Job
 		err := fetchOldestQueuedJob(&job, queueType, db)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			//TODO: uncomment this later
+			//TODO_PR#970: uncomment this later
 			// fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
 			time.Sleep(5 * time.Second)
 			continue
@@ -91,7 +92,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		if err := fetchRunningJobsWithToolData(&jobs, db); err != nil {
 			return err
 		}
-		//TODO: uncomment this later
+		//TODO_PR#970: uncomment this later
 		// fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
 			var ToolJson ipwl.Tool
@@ -148,7 +149,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 				return err
 			}
 		}
-		//TODO: uncomment this later
+		//TODO_PR#970: uncomment this later
 		// fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
 		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
@@ -294,13 +295,6 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	// var checkpointCompatible string
-	// if ToolJson.CheckpointCompatible == true {
-	// 	checkpointCompatible = "True"
-	// } else {
-	// 	checkpointCompatible = "False"
-	// }
-
 	if job.JobID == "" {
 		if err := submitRayJobAndUpdateID(&job, db); err != nil {
 			return err
@@ -329,49 +323,57 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
-	for key, value := range rawData {
-		switch key {
-		case "uuid", "pdb":
-			// Ignore already processed fields
-			continue
-		default:
-			if valMap, ok := value.(map[string]interface{}); ok {
-				if keyPath, ok := valMap["key"].(string); ok {
-					// It's a file detail
-					response.Files[key] = models.FileDetail{
-						Key:      keyPath,
-						Location: valMap["location"].(string),
-					}
+	// Function to recursively process map entries
+	var processMap func(string, interface{})
+	processMap = func(prefix string, value interface{}) {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			// Check if it's a file detail
+			if key, keyOk := v["key"].(string); keyOk {
+				if loc, locOk := v["location"].(string); locOk {
+					response.Files[prefix] = models.FileDetail{Key: key, Location: loc}
+					return
 				}
-			} else if valFloat, ok := value.(float64); ok {
-				// It's a score
-				response.Scores[key] = valFloat
 			}
+			// Otherwise, recursively process each field in the map
+			for k, val := range v {
+				newPrefix := k
+				if prefix != "" {
+					newPrefix = prefix + "." + k // To trace nested keys
+				}
+				processMap(newPrefix, val)
+			}
+		case []interface{}:
+			// Process each item in the array
+			for i, arrVal := range v {
+				arrPrefix := fmt.Sprintf("%s[%d]", prefix, i)
+				processMap(arrPrefix, arrVal)
+			}
+		case float64:
+			// Handle scores which are float64
+			response.Scores[prefix] = v
 		}
+	}
+
+	// Initialize the recursive processing with an empty prefix
+	for key, value := range rawData {
+		if key == "uuid" || key == "pdb" {
+			continue // Skip already processed or special handled fields
+		}
+		processMap(key, value)
 	}
 
 	return response, nil
 }
 
-// Function to pretty print RayJobResponse with dynamic fields
 func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
-	// Convert the structured data to a map
 	result := map[string]interface{}{
-		"uuid": response.UUID,
-		"pdb":  response.PDB,
+		"uuid":   response.UUID,
+		"pdb":    response.PDB,
+		"files":  response.Files,
+		"scores": response.Scores,
 	}
 
-	for key, value := range response.Scores {
-		result[key] = value
-	}
-
-	filesMap := make(map[string]interface{})
-	for key, fileDetail := range response.Files {
-		filesMap[key] = fileDetail
-	}
-	result["files"] = filesMap
-
-	// Marshal the result map to a JSON string
 	prettyJSON, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
 		return "", err
@@ -421,42 +423,18 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	// Print the pretty JSON
 	fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
 
-	//for now only handling 200 and failed. implement retry and timeout later
-	job.JobID = rayJobResponse.UUID
-	job.ResultJSON = body
 	if resp.StatusCode == http.StatusOK {
-		job.State = models.JobStateCompleted
+		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
 	} else {
+		//create a fn to handle this
 		job.State = models.JobStateFailed
 	}
+	//for now only handling 200 and failed. implement retry and timeout later
+
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Finished Job with Ray id %v\n", job.JobID)
 	return db.Save(job).Error
 }
-
-// // Submit the Ray job
-// inputs := map[string]interface{}{}
-// if err := json.Unmarshal(job.Inputs, &inputs); err != nil {
-// 	return err
-// }
-
-// toolPath := job.Tool.ToolPath
-// rayJob := ray_queue.Task{
-// 	ID:     job.JobUUID,
-// 	Inputs: inputs,
-// }
-
-// // Add job to Ray queue
-// rayQueue := ray_queue.NewRayQueue(db, 5, 3) // Initialize the Ray queue with db, maxWorkers, and maxRetry
-// rayQueue.AddToQueue(toolPath, rayJob.Inputs)
-
-// // Update the job status to completed
-//sleep for 30 sec
-// time.Sleep(30 * time.Second)
-// 	fmt.Printf("Set status to complete %v\n", jobID)
-// 	job.State = models.JobStateCompleted
-// 	return db.Save(&job).Error
-// }
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
 	var job models.Job
@@ -498,6 +476,72 @@ func setJobStatus(job *models.Job, state models.JobState, errorMessage string, d
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	return db.Save(job).Error
+}
+
+func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
+
+	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
+	//for now only handling 200 and failed. implement retry and timeout later
+	job.JobID = resultJSON.UUID
+	job.ResultJSON = body
+	job.State = models.JobStateCompleted
+
+	// Iterate over all files in the RayJobResponse
+	for key, fileDetail := range resultJSON.Files {
+		if err := addFileToDB(job, fileDetail, key, db); err != nil {
+			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
+		}
+	}
+
+	// Special handling for PDB as it's a common file across many jobs
+	if err := addFileToDB(job, resultJSON.PDB, "pdb", db); err != nil {
+		return fmt.Errorf("failed to add PDB file to database: %v", err)
+	}
+
+	return nil
+}
+
+func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string, db *gorm.DB) error {
+	fmt.Printf("Processing file: %s, Type: %s\n", fileDetail.Key, fileType)
+
+	// Check if the file already exists
+	var dataFile models.DataFile
+	result := db.Where("cid = ?", fileDetail.Key).First(&dataFile)
+	if result.Error == nil {
+		fmt.Println("File already exists in DB:", fileDetail.Key)
+		return nil // File already processed
+	}
+
+	// Handle not found error specifically
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("error querying DataFile table: %v", result.Error)
+	}
+
+	// Create new DataFile entry
+	tags := []models.Tag{
+		{Name: fileType, Type: "filetype"},
+		{Name: "generated", Type: "autogenerated"},
+	}
+
+	dataFile = models.DataFile{
+		CID:           fileDetail.Key,
+		WalletAddress: job.WalletAddress,
+		Filename:      filepath.Base(fileDetail.Key),
+		Tags:          tags,
+		Timestamp:     time.Now(),
+	}
+
+	if err := db.Create(&dataFile).Error; err != nil {
+		return fmt.Errorf("error creating DataFile record: %v", err)
+	}
+
+	// Associate file with job output
+	job.OutputFiles = append(job.OutputFiles, dataFile)
+	if err := db.Save(&job).Error; err != nil {
+		return fmt.Errorf("error updating job with new output file: %v", err)
+	}
+
+	return nil
 }
 
 func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, outputDirCID string, db *gorm.DB) error {

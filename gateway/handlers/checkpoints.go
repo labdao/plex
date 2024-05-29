@@ -39,25 +39,42 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
-	for key, value := range rawData {
-		switch key {
-		case "uuid", "pdb":
-			// Ignore already processed fields
-			continue
-		default:
-			if valMap, ok := value.(map[string]interface{}); ok {
-				if keyPath, ok := valMap["key"].(string); ok {
-					// It's a file detail
-					response.Files[key] = models.FileDetail{
-						Key:      keyPath,
-						Location: valMap["location"].(string),
-					}
+	var processMap func(string, interface{})
+	processMap = func(prefix string, value interface{}) {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			// Check if it's a file detail
+			if key, keyOk := v["key"].(string); keyOk {
+				if loc, locOk := v["location"].(string); locOk {
+					response.Files[prefix] = models.FileDetail{Key: key, Location: loc}
+					return
 				}
-			} else if valFloat, ok := value.(float64); ok {
-				// It's a score
-				response.Scores[key] = valFloat
 			}
+			// Otherwise, recursively process each field in the map
+			for k, val := range v {
+				newPrefix := k
+				if prefix != "" {
+					newPrefix = prefix + "." + k // To trace nested keys
+				}
+				processMap(newPrefix, val)
+			}
+		case []interface{}:
+			for i, arrVal := range v {
+				arrPrefix := fmt.Sprintf("%s[%d]", prefix, i)
+				processMap(arrPrefix, arrVal)
+			}
+		case float64:
+			// Handle scores which are float64
+			response.Scores[prefix] = v
 		}
+	}
+
+	// Initialize the recursive processing with an empty prefix
+	for key, value := range rawData {
+		if key == "uuid" || key == "pdb" {
+			continue // Skip already processed or special handled fields
+		}
+		processMap(key, value)
 	}
 
 	return response, nil
