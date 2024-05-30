@@ -25,6 +25,16 @@ func GetRayApiHost() string {
 }
 
 // Prevents race conditions with Ray Client
+// TODO_PR#970 - revisit timeout later
+//
+//	func GetRayClient(maxRunningTime int) *http.Client {
+//		once.Do(func() {
+//			rayClient = &http.Client{
+//				Timeout: time.Second * time.Duration(maxRunningTime),
+//			}
+//		})
+//		return rayClient
+//	}
 func GetRayClient() *http.Client {
 	once.Do(func() {
 		rayClient = &http.Client{}
