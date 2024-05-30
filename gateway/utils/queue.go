@@ -100,7 +100,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			log.Printf("Job %d running for %v\n", job.ID, elapsed)
 			if elapsed > maxRunningTime {
 				fmt.Printf("Job %d has exceeded the maximum running time of %v, retrying job\n", job.ID, maxRunningTime)
-				err := bacalhau.CancelBacalhauJob(job.BacalhauJobID, "Maximum running time exceeded")
+				err := bacalhau.CancelBacalhauJob(job.JobID, "Maximum running time exceeded")
 				if err != nil {
 					fmt.Printf("Error stopping Bacalhau job %d: %v\n", job.ID, err)
 					return err
@@ -198,7 +198,7 @@ func processJob(jobID uint, db *gorm.DB) error {
 
 	// TODO may be: If checkpoint is false, do not pass job and flow UUIDs
 
-	if job.BacalhauJobID == "" {
+	if job.JobID == "" {
 		if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 			return err
 		}
@@ -218,48 +218,48 @@ func processJob(jobID uint, db *gorm.DB) error {
 			return fmt.Errorf("Error checking DB for Job state: %v", err)
 		}
 		if isCompleted {
-			fmt.Printf("Job %v , %v already completed\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v already completed\n", job.ID, job.JobID)
 			return nil
 		}
 
-		fmt.Printf("Checking status for %v , %v\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Checking status for %v , %v\n", job.ID, job.JobID)
 		if time.Since(job.CreatedAt) > maxQueueTime {
-			fmt.Printf("Job %v , %v timed out\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v timed out\n", job.ID, job.JobID)
 			return setJobStatus(&job, models.JobStateFailed, "timed out in queue", db)
 		}
 
-		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.JobID)
 		if err != nil {
 			return err
 		}
 
 		// keep retrying job if there is a capacity error until job times out
 		// ideally replace with a query if the Bacalhau nodes have capacity
-		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.JobID, bacalhauJob.State.State)
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
-			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.JobID)
 			if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 				return err
 			}
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			continue
 		} else if bacalhau.JobIsRunning(bacalhauJob) {
-			fmt.Printf("Job %v , %v is running\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v is running\n", job.ID, job.JobID)
 			return setJobStatus(&job, models.JobStateRunning, "", db)
 		} else if bacalhau.JobFailed(bacalhauJob) {
-			fmt.Printf("Job %v , %v failed\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
+			fmt.Printf("Job %v , %v failed\n", job.ID, job.JobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.JobID), db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
-			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v completed\n", job.ID, job.JobID)
 			if len(bacalhauJob.State.Executions) > 0 {
 				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 			}
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 		} else if bacalhau.JobCancelled(bacalhauJob) {
-			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.BacalhauJobID), db)
+			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.JobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.JobID), db)
 		} else {
-			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.JobID, bacalhauJob.State.State)
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			continue
 		}
@@ -272,31 +272,31 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.JobID)
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
-		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
+		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.JobID)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.JobID), db)
 	} else if err != nil {
 		return err
 	}
 
 	if bacalhau.JobIsRunning(bacalhauJob) {
-		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.JobID)
 		return nil
 	} else if bacalhau.JobBidAccepted(bacalhauJob) {
-		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.JobID)
 		return nil
 	} else if bacalhau.JobFailed(bacalhauJob) {
-		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
+		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.JobID)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.JobID), db)
 	} else if bacalhau.JobCompleted(bacalhauJob) {
-		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.JobID)
 		if len(bacalhauJob.State.Executions) > 0 {
 			return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 		}
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 	} else {
-		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.JobID, bacalhauJob.State.State)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
 	}
 }
@@ -458,7 +458,7 @@ func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB, checkpointCompat
 		return err
 	}
 
-	job.BacalhauJobID = submittedBacalhauJob.Metadata.ID
+	job.JobID = submittedBacalhauJob.Metadata.ID
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Creating Job with bacalhau id %v\n", submittedBacalhauJob.Metadata.ID)
 	return db.Save(job).Error
