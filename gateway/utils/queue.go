@@ -425,23 +425,21 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		log.Fatalf("Error reading response body: %v", err)
 	}
 
-	var rayJobResponse models.RayJobResponse
-
-	rayJobResponse, err = UnmarshalRayJobResponse([]byte(body))
-	if err != nil {
-		fmt.Println("Error unmarshalling result JSON:", err)
-		return err
-	}
-
-	fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
-	prettyJSON, err := PrettyPrintRayJobResponse(rayJobResponse)
-	if err != nil {
-		log.Fatalf("Error generating pretty JSON: %v", err)
-	}
-	// Print the pretty JSON
-	fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
-
 	if resp.StatusCode == http.StatusOK {
+		var rayJobResponse models.RayJobResponse
+		rayJobResponse, err = UnmarshalRayJobResponse([]byte(body))
+		if err != nil {
+			fmt.Println("Error unmarshalling result JSON:", err)
+			return err
+		}
+
+		fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
+		prettyJSON, err := PrettyPrintRayJobResponse(rayJobResponse)
+		if err != nil {
+			log.Fatalf("Error generating pretty JSON: %v", err)
+		}
+		// Print the pretty JSON
+		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
 		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
 	} else {
 		//create a fn to handle this
@@ -450,7 +448,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	//for now only handling 200 and failed. implement retry and timeout later
 
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v\n", job.JobID)
+	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.JobID, job.State)
 	return db.Save(job).Error
 }
 
