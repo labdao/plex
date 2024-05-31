@@ -114,6 +114,12 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AUTOTASK_WEBHOOK: ${AUTOTASK_WEBHOOK}
       PINATA_API_TOKEN: ${PINATA_API_TOKEN}
+      BUCKET_ENDPOINT: ${BUCKET_ENDPOINT}
+      BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID}
+      BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY}
+      BUCKET_USE_SSL: ${BUCKET_USE_SSL}
+      BUCKET_NAME: ${BUCKET_NAME}
+      RAY_API_HOST: ${RAY_API_HOST}
     depends_on:
       dbbackend:
         condition: service_healthy
@@ -207,6 +213,20 @@ services:
       - 4001:4001
       - 5001:5001
       - 8888:8888
+
+  object-store:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    # networks:
+    #   - service-network
 
 volumes:
   dbdata-backend:

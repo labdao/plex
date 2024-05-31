@@ -17,13 +17,14 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/internal/s3"
 
 	"log"
 
 	"gorm.io/gorm"
 )
 
-func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
+func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request to add datafile")
 
@@ -78,11 +79,41 @@ func AddDataFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		defer os.Remove(filename)
 
+		bucketName := os.Getenv("BUCKET_NAME")
+		if bucketName == "" {
+			utils.SendJSONError(w, "BUCKET_NAME environment variable not set", http.StatusInternalServerError)
+			return
+		}
+
+		precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		objectKey := precomputedCID + "/" + filename
+		// S3 upload
+		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
+			return
+		}
+
 		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
 			return
 		}
+
+		// TODO: determine why there is a discrepancy
+		// remove logs when resolved
+		log.Println("--------------------")
+		if precomputedCID != cid {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
+		} else {
+			log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
+		}
+		log.Println("--------------------")
 
 		dataFile := models.DataFile{
 			CID:           cid,
