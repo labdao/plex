@@ -16,6 +16,7 @@ var rayClient *http.Client
 var once sync.Once
 
 func GetRayApiHost() string {
+	// For colabfold local testing set this env var to http://colabfold-service:<PORT>
 	rayApiHost, exists := os.LookupEnv("RAY_API_HOST")
 	if exists {
 		return rayApiHost
@@ -122,8 +123,10 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		return nil, err
 	}
 
+	// construct from env var BUCKET ENDPOINT + tool.RayServiceEndpoint
+	rayServiceURL := GetRayApiHost() + tool.RayServiceEndpoint
 	// Create the HTTP request
-	req, err := http.NewRequest("POST", tool.RayServiceURL, bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest("POST", rayServiceURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
 	}

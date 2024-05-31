@@ -1,0 +1,1 @@
+ALTER TABLE tools RENAME COLUMN ray_service_endpoint TO ray_service_url;

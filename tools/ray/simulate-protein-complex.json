@@ -7,7 +7,7 @@
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
-    "rayServiceURL": "http://colabfold-service:8000/simulate_protein_complex",
+    "rayServiceEndpoint": "/simulate_protein_complex",
     "inputs": {
       "binder_sequence": {
         "type": "string",
