@@ -390,7 +390,25 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	inputs := make(map[string]interface{})
 	for key, value := range jobInputs {
+		//TODO_PR#970: work on input file handling after convexity side key, location has been moved to uri
+		// until then, job submission wont work with input files
+		// if key == "pdb" {
+		// 	var dataFile models.DataFile
+		// 	if err := db.First(&dataFile, "s3_location = ?", value).Error; err == nil {
+		// 		pdbPath := map[string]string{
+		// 			"key":      dataFile.S3Location,
+		// 			"location": dataFile.S3Bucket,
+		// 		}
+		// 		inputs[key] = []interface{}{pdbPath}
+		// 	} else {
+		// 		// Fallback if no S3 details are available
+		// 		log.Printf("Error fetching pdb details: %v\n", err)
+		// 		return err
+		// 	}
+		// } else {
+		// Default handling for other inputs
 		inputs[key] = []interface{}{value}
+		// }
 	}
 	toolCID := job.Tool.CID
 

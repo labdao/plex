@@ -126,7 +126,7 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 		fmt.Println("Hash of", filename, "is", hash)
 		defer os.Remove(filename)
 
-		objectKey := "uploaded/" + hash + "/" + filename
+		objectKey := hash + "/" + filename
 		// S3 upload
 		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
