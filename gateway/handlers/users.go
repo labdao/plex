@@ -106,16 +106,27 @@ func GetUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		response := struct {
-			WalletAddress string `json:"walletAddress"`
-			DID           string `json:"did"`
-			IsAdmin       bool   `json:"isAdmin"`
+			WalletAddress string      `json:"walletAddress"`
+			DID           string      `json:"did"`
+			IsAdmin       bool        `json:"isAdmin"`
+			Tier          models.Tier `json:"tier"`
 		}{
 			WalletAddress: user.WalletAddress,
 			DID:           user.DID,
 			IsAdmin:       user.Admin,
+			Tier:          user.Tier,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+func getTier(db *gorm.DB, walletAddress string) (models.Tier, error) {
+	var user models.User
+	err := db.Where("wallet_address = ?", walletAddress).First(&user).Error
+	if err != nil {
+		return models.TierFree, err
+	}
+	return user.Tier, nil
 }
