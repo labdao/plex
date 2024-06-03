@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,18 +25,29 @@ func NewS3Client() (*S3Client, error) {
 	sessOpts := session.Options{
 		Config: aws.Config{
 			Region:           aws.String(region),
-			Endpoint:         aws.String(endpoint),
-			DisableSSL:       aws.Bool(!useSSL),
 			S3ForcePathStyle: aws.Bool(true),
 		},
 	}
 
-	if endpoint != "" && os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+	if endpoint != "" {
+		fmt.Println("Configuring S3 client for local development")
+		sessOpts.Config.Endpoint = aws.String(endpoint)
+		sessOpts.Config.DisableSSL = aws.Bool(!useSSL)
 		sessOpts.Config.Credentials = credentials.NewStaticCredentials(
-			os.Getenv("AWS_ACCESS_KEY_ID"),
-			os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			os.Getenv("BUCKET_ACCESS_KEY_ID"),
+			os.Getenv("BUCKET_SECRET_ACCESS_KEY"),
 			"",
 		)
+	} else {
+		fmt.Println("Configuring S3 client for AWS deployment")
+		sessOpts.Config.Region = aws.String(region)
+		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+			sessOpts.Config.Credentials = credentials.NewStaticCredentials(
+				os.Getenv("BUCKET_ACCESS_KEY_ID"),
+				os.Getenv("BUCKET_SECRET_ACCESS_KEY"),
+				"",
+			)
+		}
 	}
 
 	sess, err := session.NewSessionWithOptions(sessOpts)
@@ -45,7 +57,6 @@ func NewS3Client() (*S3Client, error) {
 
 	return &S3Client{Client: s3.New(sess)}, nil
 }
-
 func (s *S3Client) GetClient() *s3.S3 {
 	return s.Client
 }
@@ -61,6 +72,22 @@ func (s *S3Client) CreateBucket(bucketName string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *S3Client) BucketExists(bucketName string) (bool, error) {
+	_, err := s.Client.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case s3.ErrCodeNoSuchBucket, "NotFound", "Forbidden":
+				return false, nil
+			}
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (s *S3Client) UploadFile(bucketName, objectName, filePath string) error {
