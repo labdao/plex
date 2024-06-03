@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
+func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request at /add-tool")
 
@@ -111,7 +111,7 @@ func AddToolHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
 
 		objectKey := precomputedCID + "/" + tempFile.Name() + ".json"
 		// S3 upload
-		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
+		err = s3c.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			return
