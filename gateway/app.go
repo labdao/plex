@@ -50,7 +50,7 @@ func ServeWebApp() {
 
 	}
 
-	exists, err := s3Client.ObjectExists(bucketName, "")
+	exists, err := s3Client.BucketExists(bucketName)
 	if err != nil {
 		log.Fatalf("Failed to check if bucket exists: %v", err)
 	}
