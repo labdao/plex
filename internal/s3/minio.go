@@ -2,9 +2,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,23 +48,6 @@ func (m *MinIOClient) DownloadFile(bucketName, objectName, filePath string) erro
 	err := m.Client.FGetObject(context.Background(), bucketName, objectName, filePath, minio.GetObjectOptions{})
 	// err = m.Client.FGetObject(context.Background(), "convexity", "uploaded/96942c2c5f73f89849f3ff183dafd864e350dbeaa899a7ba4fcce3c7fcaaf50d/a1bf7360-5f8f-46e2-8461-850d68e15d00_unrelaxed_rank_001_alphafold2_multimer_v3_model_3_seed_000 (1).pdb", "uploaded/96942c2c5f73f89849f3ff183dafd864e350dbeaa899a7ba4fcce3c7fcaaf50d/a1bf7360-5f8f-46e2-8461-850d68e15d00_unrelaxed_rank_001_alphafold2_multimer_v3_model_3_seed_000 (1).pdb", minio.GetObjectOptions{})
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *MinIOClient) StreamFileToResponse(bucketName, objectName string, w http.ResponseWriter, filename string) error {
-	object, err := m.Client.GetObject(context.Background(), bucketName, objectName, minio.GetObjectOptions{})
-	if err != nil {
-		return err
-	}
-	defer object.Close()
-
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	w.Header().Set("Content-Type", "application/octet-stream")
-
-	if _, err = io.Copy(w, object); err != nil {
 		return err
 	}
 

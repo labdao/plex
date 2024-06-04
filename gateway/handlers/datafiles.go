@@ -342,7 +342,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func DownloadDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
+func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cid := vars["cid"]
