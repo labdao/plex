@@ -116,6 +116,7 @@ func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
 // 	}
 // }
 
+// TODO_PR#970: this is not the submitRayJob function used now. check ray.go/submitRayJob
 func (rq *RayQueue) submitRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
 	resp, err := ray.CreateRayJob(toolPath, inputs)
