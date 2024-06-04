@@ -130,3 +130,24 @@ func getTier(db *gorm.DB, walletAddress string) (models.Tier, error) {
 	}
 	return user.Tier, nil
 }
+
+func UpdateUserTier(db *gorm.DB, walletAddress string, threshold int) error {
+	var user models.User
+	err := db.Where("wallet_address = ?", walletAddress).First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	if user.ComputeTally >= threshold && user.Tier != models.TierPaid {
+		user.Tier = models.TierPaid
+		if err := db.Save(&user).Error; err != nil {
+			fmt.Printf("Error updating tier for user with WalletAddress: %s: %v\n", walletAddress, err)
+			return err
+		}
+		fmt.Printf("Successfully updated tier for user with WalletAddress: %s\n", walletAddress)
+	} else {
+		fmt.Printf("No need to update tier for user with WalletAddress: %s\n", walletAddress)
+	}
+
+	return nil
+}
