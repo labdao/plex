@@ -635,6 +635,12 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
+			// result = db.Create(&job)
+			// if result.Error != nil {
+			// 	http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+			// 	return
+			// }
+
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
 				switch v := input.(type) {
