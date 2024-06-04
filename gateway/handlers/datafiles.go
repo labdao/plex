@@ -401,7 +401,7 @@ func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		} else {
 			filename := dataFile.Filename
 
-			if err := minioClient.StreamFileToResponse(dataFile.S3Bucket, dataFile.S3Location, w, filename); err != nil {
+			if err := s3c.StreamFileToResponse(dataFile.S3Bucket, dataFile.S3Location, w, filename); err != nil {
 				utils.SendJSONError(w, "Error downloading file from S3", http.StatusInternalServerError)
 				return
 			}
