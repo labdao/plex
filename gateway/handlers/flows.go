@@ -190,7 +190,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			user.ComputeCredits += tool.ComputeCost
+			user.ComputeTally += tool.ComputeCost
 
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
