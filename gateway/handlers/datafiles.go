@@ -48,7 +48,7 @@ func generateFileHash(filename string) (string, error) {
 	return hex.EncodeToString(hashBytes), nil
 }
 
-func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
+func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request to add datafile")
 
@@ -128,7 +128,7 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 
 		objectKey := hash + "/" + filename
 		// S3 upload
-		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
+		err = s3c.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
 			return
