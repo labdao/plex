@@ -31,8 +31,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.UUID = rawData["uuid"].(string)
 	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
 		response.PDB = models.FileDetail{
-			Key:      pdbData["key"].(string),
-			Location: pdbData["location"].(string),
+			URI: pdbData["uri"].(string),
 		}
 	}
 
@@ -44,11 +43,9 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		switch v := value.(type) {
 		case map[string]interface{}:
 			// Check if it's a file detail
-			if key, keyOk := v["key"].(string); keyOk {
-				if loc, locOk := v["location"].(string); locOk {
-					response.Files[prefix] = models.FileDetail{Key: key, Location: loc}
-					return
-				}
+			if uri, uriOk := v["uri"].(string); uriOk {
+				response.Files[prefix] = models.FileDetail{URI: uri}
+				return
 			}
 			// Otherwise, recursively process each field in the map
 			for k, val := range v {
@@ -108,7 +105,7 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 		return nil, err
 	}
 
-	pdbKey := resultJSON.PDB.Key
+	pdbKey := resultJSON.PDB.URI
 	pdbFileName := filepath.Base(pdbKey)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
@@ -229,7 +226,7 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
 	}
 
-	pdbKey := resultJSON.PDB.Key
+	pdbKey := resultJSON.PDB.URI
 	pdbFileName := filepath.Base(pdbKey)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
