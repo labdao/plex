@@ -119,7 +119,7 @@ services:
       BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID}
       BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY}
       BUCKET_USE_SSL: ${BUCKET_USE_SSL}
-      BUCKET_NAME: ${BUCKET_NAME}
+      BUCKET_NAME: ${BUCKET_NAME:-test-bucket}
       RAY_API_HOST: ${RAY_API_HOST}
     depends_on:
       dbbackend:
