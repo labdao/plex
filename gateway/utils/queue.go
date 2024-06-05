@@ -398,9 +398,9 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		if key == "pdb" {
 			var dataFile models.DataFile
 			// Fetch the data file based on S3 location
-			if err := db.First(&dataFile, "s3_location = ?", value).Error; err == nil {
+			if err := db.First(&dataFile, "s3_uri = ?", value).Error; err == nil {
 				// Construct the S3 URI
-				pdbPath := "s3://" + dataFile.S3Bucket + "/" + dataFile.S3Location
+				pdbPath := dataFile.S3URI
 				// Assign the URI as a single-element slice to the inputs
 				inputs[key] = []string{pdbPath}
 			} else {
@@ -547,18 +547,13 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 		return fmt.Errorf("error hashing S3 object: %v", err)
 	}
 
-	bucket, key, err := ray.GetBucketAndKeyFromURI(fileDetail.URI)
-	if err != nil {
-		return fmt.Errorf("error parsing S3 URI: %v", err)
-	}
 	dataFile = models.DataFile{
 		CID:           hash,
 		WalletAddress: job.WalletAddress,
 		Filename:      filepath.Base(fileDetail.URI),
 		Tags:          tags,
 		Timestamp:     time.Now(),
-		S3Bucket:      bucket,
-		S3Location:    key,
+		S3URI:         fileDetail.URI,
 	}
 
 	if err := db.Create(&dataFile).Error; err != nil {

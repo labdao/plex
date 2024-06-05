@@ -45,7 +45,7 @@ func GetRayClient() *http.Client {
 }
 
 func GetBucketAndKeyFromURI(uri string) (string, string, error) {
-	uriParts := strings.Split(uri, "//:")
+	uriParts := strings.Split(uri, "://")
 	if len(uriParts) != 2 {
 		return "", "", fmt.Errorf("invalid URI: %s", uri)
 	}

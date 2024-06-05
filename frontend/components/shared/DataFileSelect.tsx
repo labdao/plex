@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 interface DataFile {
   CID: string;
   Filename: string;
+  S3URI: string;
 }
 
 interface DataFileFilters {
@@ -66,7 +67,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
       });
   }, [dispatch, currentPage, filters, searchTerm, open]);
 
-  const getDataFileValue = (dataFile: DataFile): string => `${dataFile?.CID}/${dataFile?.Filename}`;
+  const getDataFileValue = (dataFile: DataFile): string => `${dataFile?.S3URI}`;
 
   const handleUpload = async (cid: string) => {
     // Since we only know the cid and not the filename after upload,

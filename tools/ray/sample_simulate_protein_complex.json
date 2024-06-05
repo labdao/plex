@@ -1,10 +1,10 @@
 {
-    "name": "sample_colabfold_v4",
+    "name": "colabfold_v4",
     "description": "Simulate a protein complex using ColabFold",
     "task": "protein folding",
     "taskCategory": "protein-binder-design",
     "toolType": "ray",
-    "rayServiceEndpoint": "/sample_simulate_protein_complex",
+    "rayServiceEndpoint": "/simulate_protein_complex",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
