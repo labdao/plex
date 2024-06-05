@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/ray"
 
 	"gorm.io/gorm"
 
@@ -226,12 +227,15 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
 	}
 
-	pdbKey := resultJSON.PDB.URI
-	pdbFileName := filepath.Base(pdbKey)
+	_, key, err := ray.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
+	if err != nil {
+		return nil, err
+	}
+	pdbFileName := filepath.Base(key)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(pdbKey),
+		Key:    aws.String(key),
 	})
 	urlStr, err := req.Presign(15 * time.Minute)
 	if err != nil {

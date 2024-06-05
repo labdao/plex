@@ -334,7 +334,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		switch v := value.(type) {
 		case map[string]interface{}:
 			// Check if it's a file detail
-			if uri, uriOk := v["key"].(string); uriOk {
+			if uri, uriOk := v["uri"].(string); uriOk {
 				response.Files[prefix] = models.FileDetail{URI: uri}
 				return
 			}
@@ -393,25 +393,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	inputs := make(map[string]interface{})
 	for key, value := range jobInputs {
-		//TODO_PR#970: work on input file handling after convexity side key, location has been moved to uri
-		// until then, job submission wont work with input files
-		if key == "pdb" {
-			var dataFile models.DataFile
-			// Fetch the data file based on S3 location
-			if err := db.First(&dataFile, "s3_uri = ?", value).Error; err == nil {
-				// Construct the S3 URI
-				pdbPath := dataFile.S3URI
-				// Assign the URI as a single-element slice to the inputs
-				inputs[key] = []string{pdbPath}
-			} else {
-				// Log the error if fetching details fails
-				log.Printf("Error fetching pdb details: %v\n", err)
-				return err
-			}
-		} else {
-			// Default handling for other inputs
-			inputs[key] = []interface{}{value}
-		}
+		inputs[key] = []interface{}{value}
 	}
 	toolCID := job.Tool.CID
 
