@@ -1,1 +1,1 @@
-ALTER TABLE tools RENAME COLUMN ray_service_endpoint TO ray_service_url;
+ALTER TABLE tools DROP COLUMN ray_service_endpoint VARCHAR(255);
