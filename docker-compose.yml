@@ -225,8 +225,8 @@ services:
       MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID:-minioadmin}
       MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY:-minioadmin}
     command: server /data --console-address ":9001"
-    networks:
-      - service-network
+    volumes:
+      - minio-data:/data
 
 volumes:
   dbdata-backend:
