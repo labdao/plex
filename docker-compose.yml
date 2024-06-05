@@ -216,19 +216,43 @@ services:
       - 5001:5001
       - 8888:8888
 
-  # object-store:
-  #   image: quay.io/minio/minio
-  #   ports:
-  #     - "9000:9000"
-  #     - "9001:9001"
-  #   environment:
-  #     MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID:-minioadmin}
-  #     MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY:-minioadmin}
-  #   command: server /data --console-address ":9001"
-  #   volumes:
-  #     - minio-data:/data
-    # networks:
-    #   - service-network
+  object-store:
+    image: quay.io/minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY}
+    command: server /data --console-address ":9001"
+    networks:
+      - service-network
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+  sidecar:
+    image: python:3.9-slim
+    environment:
+      BUCKET_NAME: ${BUCKET_NAME}
+      BUCKET_ENDPOINT: ${BUCKET_ENDPOINT}
+      BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID}
+      BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY}
+      BUCKET_VERIFY: "False"
+      BUCKET_CLEAN: "False"
+      BUCKET_CREATE: "True"
+    volumes:
+      - ./utils:/utils
+    networks:
+      - service-network
+    depends_on:
+      object-store:
+        condition: service_healthy
+    command: >
+      sh -c "pip install boto3 && ls -lah /utils/test_data &&
+             python utils/sidecar.py"
 
 volumes:
   dbdata-backend:
