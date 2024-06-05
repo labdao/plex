@@ -233,26 +233,6 @@ services:
       timeout: 10s
       retries: 10
       start_period: 10s
-  sidecar:
-    image: python:3.9-slim
-    environment:
-      BUCKET_NAME: ${BUCKET_NAME}
-      BUCKET_ENDPOINT: ${BUCKET_ENDPOINT}
-      BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID}
-      BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY}
-      BUCKET_VERIFY: "False"
-      BUCKET_CLEAN: "False"
-      BUCKET_CREATE: "True"
-    volumes:
-      - ./utils:/utils
-    networks:
-      - service-network
-    depends_on:
-      object-store:
-        condition: service_healthy
-    command: >
-      sh -c "pip install boto3 && ls -lah /utils/test_data &&
-             python utils/sidecar.py"
 
 volumes:
   dbdata-backend:
