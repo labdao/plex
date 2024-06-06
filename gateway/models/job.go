@@ -18,8 +18,10 @@ const (
 type QueueType string
 
 const (
-	QueueTypeCPU QueueType = "cpu"
-	QueueTypeGPU QueueType = "gpu"
+	QueueTypeBacalhauCPU QueueType = "bacalhau_cpu"
+	QueueTypeBacalhauGPU QueueType = "bacalhau_gpu"
+	QueueTypeRayCPU      QueueType = "ray_cpu"
+	QueueTypeRayGPU      QueueType = "ray_gpu"
 )
 
 type JobType string
@@ -51,4 +53,5 @@ type Job struct {
 	Public        bool           `gorm:"type:boolean;not null;default:false"`
 	RetryCount    int            `gorm:"type:int;not null;default:0"`
 	JobType       JobType        `gorm:"type:varchar(255);not null;default:'bacalhau'"`
+	ResultJSON    datatypes.JSON `gorm:"type:json"`
 }

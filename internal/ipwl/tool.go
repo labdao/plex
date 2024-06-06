@@ -59,7 +59,9 @@ type Tool struct {
 	TaskCategory         string                `json:"taskCategory"`
 	MaxRunningTime       int                   `json:"maxRunningTime"`
 	ToolType             ToolType              `json:"toolType"`
-	RayServiceURL        string                `json:"rayServiceURL"`
+	RayServiceEndpoint   string                `json:"rayServiceEndpoint"`
+	XAxis                string                `json:"xAxis"`
+	YAxis                string                `json:"yAxis"`
 }
 
 func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {

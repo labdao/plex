@@ -2,6 +2,8 @@ package s3
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -118,6 +120,26 @@ func (s *S3Client) DownloadFile(bucketName, objectName, filePath string) error {
 		Key:    aws.String(objectName),
 	})
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *S3Client) StreamFileToResponse(bucketName, objectName string, w http.ResponseWriter, filename string) error {
+	output, err := s.Client.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(objectName),
+	})
+	if err != nil {
+		return err
+	}
+	defer output.Body.Close()
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	if _, err = io.Copy(w, output.Body); err != nil {
 		return err
 	}
 

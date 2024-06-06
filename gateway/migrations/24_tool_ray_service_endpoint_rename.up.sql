@@ -1,0 +1,1 @@
+ALTER TABLE tools ADD COLUMN ray_service_endpoint VARCHAR(255);

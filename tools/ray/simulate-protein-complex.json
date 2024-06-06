@@ -2,23 +2,30 @@
     "name": "colabfold-v1.8",
     "description": "Simulate a protein complex using ColabFold",
     "task": "protein folding",
-    "taskCategory": "community-models",
+    "taskCategory": "protein-binder-design",
     "toolType": "ray",
-    "rayServiceURL": "http://colabfold-service:8000/simulate_protein_complex",
+    "checkpointCompatible": true,
+    "xAxis": "plddt",
+    "yAxis": "i_pae",
+    "rayServiceEndpoint": "/simulate_protein_complex",
     "inputs": {
       "binder_sequence": {
         "type": "string",
         "description": "The sequence of the binder protein",
-        "required": true
+        "required": true,
+        "default": "PTVEAVTLLAKGEKEP",
+        "example": "PTVEAVTLLAKGEKEP"
       },
       "target_sequence": {
         "type": "string",
         "description": "The sequence of the target protein",
-        "required": true
+        "required": true,
+        "default": "ASISTGGGN",
+        "example": "ASISTGGGN"
       }
     },
     "outputs": {
-      "complex_structure": {
+      "pdb": {
         "type": "File",
         "glob": ["*.pdb"]
       }

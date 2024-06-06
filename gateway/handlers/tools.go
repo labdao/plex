@@ -173,22 +173,22 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		toolEntry := models.Tool{
-			CID:            cid,
-			WalletAddress:  walletAddress,
-			Name:           tool.Name,
-			ToolJson:       toolJSON,
-			Container:      tool.DockerPull,
-			Memory:         0,
-			Cpu:            0,
-			Gpu:            toolGpu,
-			Network:        tool.NetworkBool,
-			Timestamp:      time.Now(),
-			Display:        display,
-			TaskCategory:   taskCategory,
-			DefaultTool:    defaultTool,
-			MaxRunningTime: maxRunningTime,
-			ToolType:       string(tool.ToolType),
-			RayServiceURL:  tool.RayServiceURL,
+			CID:                cid,
+			WalletAddress:      walletAddress,
+			Name:               tool.Name,
+			ToolJson:           toolJSON,
+			Container:          tool.DockerPull,
+			Memory:             0,
+			Cpu:                0,
+			Gpu:                toolGpu,
+			Network:            tool.NetworkBool,
+			Timestamp:          time.Now(),
+			Display:            display,
+			TaskCategory:       taskCategory,
+			DefaultTool:        defaultTool,
+			MaxRunningTime:     maxRunningTime,
+			ToolType:           string(tool.ToolType),
+			RayServiceEndpoint: tool.RayServiceEndpoint,
 		}
 
 		if tool.MemoryGB != nil {

@@ -52,7 +52,7 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.UpdateDataFileHandler(db))).Methods("PUT")
 	// pass in minioClient
-	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db))).Methods("GET")
+	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db, s3c))).Methods("GET")
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
 	router.HandleFunc("/checkpoints/{flowID}", protected(handlers.ListFlowCheckpointsHandler(db))).Methods("GET")
