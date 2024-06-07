@@ -149,8 +149,10 @@ type QueueSummary struct {
 }
 
 type Summary struct {
-	CPU QueueSummary `json:"cpu"`
-	GPU QueueSummary `json:"gpu"`
+	BacalhauCPU QueueSummary `json:"bacalhau_cpu"`
+	BacalhauGPU QueueSummary `json:"bacalhau_gpu"`
+	RayCPU      QueueSummary `json:"ray_cpu"`
+	RayGPU      QueueSummary `json:"ray_gpu"`
 }
 
 type AggregatedData struct {
@@ -160,6 +162,7 @@ type AggregatedData struct {
 	TotalMemoryGb int
 	TotalGpu      int
 	Count         int
+	JobType       models.JobType `gorm:"column:job_type"`
 }
 
 func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
@@ -170,9 +173,9 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		// Perform the query using GORM
 		db = db.Debug()
 		result := db.Table("jobs").
-			Select("queue, state, sum(tools.cpu) as total_cpu, sum(tools.memory) as total_memory_gb, sum(tools.gpu) as total_gpu, count(*) as count").
+			Select("queue, job_type, state, sum(tools.cpu) as total_cpu, sum(tools.memory) as total_memory_gb, sum(tools.gpu) as total_gpu, count(*) as count").
 			Joins("left join tools on tools.cid = jobs.tool_id").
-			Group("queue, state").
+			Group("queue, job_type, state").
 			Find(&aggregatedResults)
 		fmt.Printf("Aggregated Results: %+v\n", aggregatedResults)
 
@@ -191,17 +194,29 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			switch data.QueueType {
-			case models.QueueTypeCPU:
+			case models.QueueTypeBacalhauCPU:
 				if data.State == models.JobStateQueued {
-					summary.CPU.Queued = jobSummary
+					summary.BacalhauCPU.Queued = jobSummary
 				} else if data.State == models.JobStateRunning {
-					summary.CPU.Running = jobSummary
+					summary.BacalhauCPU.Running = jobSummary
 				}
-			case models.QueueTypeGPU:
+			case models.QueueTypeRayCPU:
 				if data.State == models.JobStateQueued {
-					summary.GPU.Queued = jobSummary
+					summary.RayCPU.Queued = jobSummary
 				} else if data.State == models.JobStateRunning {
-					summary.GPU.Running = jobSummary
+					summary.RayCPU.Running = jobSummary
+				}
+			case models.QueueTypeBacalhauGPU:
+				if data.State == models.JobStateQueued {
+					summary.BacalhauGPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.BacalhauGPU.Running = jobSummary
+				}
+			case models.QueueTypeRayGPU:
+				if data.State == models.JobStateQueued {
+					summary.RayGPU.Queued = jobSummary
+				} else if data.State == models.JobStateRunning {
+					summary.RayGPU.Running = jobSummary
 				}
 			}
 		}

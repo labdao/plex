@@ -1,20 +1,30 @@
 package utils
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"encoding/hex"
 	"encoding/json"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/bacalhau"
 	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/ray"
 	"gorm.io/gorm"
 )
 
@@ -37,13 +47,15 @@ var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
 var retryJobSleepTime = time.Duration(10) * time.Second
 
 func StartJobQueues(db *gorm.DB) error {
-	errChan := make(chan error, 2) // Buffer for two types of jobs
+	errChan := make(chan error, 4) // Buffer for two types of jobs
 
-	go ProcessJobQueue(models.QueueTypeCPU, errChan, db)
-	go ProcessJobQueue(models.QueueTypeGPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeBacalhauCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeBacalhauGPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeRayCPU, errChan, db)
+	go ProcessJobQueue(models.QueueTypeRayGPU, errChan, db)
 
 	// Wait for error from any queue
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 4; i++ {
 		if err := <-errChan; err != nil {
 			return err
 		}
@@ -57,7 +69,8 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 		var job models.Job
 		err := fetchOldestQueuedJob(&job, queueType, db)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
+			//TODO_PR#970: uncomment this later
+			// fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
 			time.Sleep(5 * time.Second)
 			continue
 		} else if err != nil {
@@ -65,9 +78,16 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 			return
 		}
 
-		if err := processJob(job.ID, db); err != nil {
-			errChan <- err
-			return
+		if queueType == models.QueueTypeRayCPU || queueType == models.QueueTypeRayGPU {
+			if err := processRayJob(job.ID, db); err != nil {
+				errChan <- err
+				return
+			}
+		} else {
+			if err := processBacalhauJob(job.ID, db); err != nil {
+				errChan <- err
+				return
+			}
 		}
 	}
 }
@@ -78,7 +98,8 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		if err := fetchRunningJobsWithToolData(&jobs, db); err != nil {
 			return err
 		}
-		fmt.Printf("There are %d running jobs\n", len(jobs))
+		//TODO_PR#970: uncomment this later
+		// fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
 			var ToolJson ipwl.Tool
 			var checkpointCompatible string
@@ -100,7 +121,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			log.Printf("Job %d running for %v\n", job.ID, elapsed)
 			if elapsed > maxRunningTime {
 				fmt.Printf("Job %d has exceeded the maximum running time of %v, retrying job\n", job.ID, maxRunningTime)
-				err := bacalhau.CancelBacalhauJob(job.BacalhauJobID, "Maximum running time exceeded")
+				err := bacalhau.CancelBacalhauJob(job.JobID, "Maximum running time exceeded")
 				if err != nil {
 					fmt.Printf("Error stopping Bacalhau job %d: %v\n", job.ID, err)
 					return err
@@ -134,7 +155,8 @@ func MonitorRunningJobs(db *gorm.DB) error {
 				return err
 			}
 		}
-		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
+		//TODO_PR#970: uncomment this later
+		// fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
 		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
 	}
 }
@@ -176,7 +198,7 @@ func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
 	}
 }
 
-func processJob(jobID uint, db *gorm.DB) error {
+func processBacalhauJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing job %v\n", jobID)
 	var job models.Job
 	err := fetchJobWithToolAndFlowData(&job, jobID, db)
@@ -198,7 +220,7 @@ func processJob(jobID uint, db *gorm.DB) error {
 
 	// TODO may be: If checkpoint is false, do not pass job and flow UUIDs
 
-	if job.BacalhauJobID == "" {
+	if job.JobID == "" {
 		if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 			return err
 		}
@@ -218,52 +240,222 @@ func processJob(jobID uint, db *gorm.DB) error {
 			return fmt.Errorf("Error checking DB for Job state: %v", err)
 		}
 		if isCompleted {
-			fmt.Printf("Job %v , %v already completed\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v already completed\n", job.ID, job.JobID)
 			return nil
 		}
 
-		fmt.Printf("Checking status for %v , %v\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Checking status for %v , %v\n", job.ID, job.JobID)
 		if time.Since(job.CreatedAt) > maxQueueTime {
-			fmt.Printf("Job %v , %v timed out\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v timed out\n", job.ID, job.JobID)
 			return setJobStatus(&job, models.JobStateFailed, "timed out in queue", db)
 		}
 
-		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+		bacalhauJob, err := bacalhau.GetBacalhauJobState(job.JobID)
 		if err != nil {
 			return err
 		}
 
 		// keep retrying job if there is a capacity error until job times out
 		// ideally replace with a query if the Bacalhau nodes have capacity
-		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		fmt.Printf("Job %v , %v has state %v\n", job.ID, job.JobID, bacalhauJob.State.State)
 		if bacalhau.JobFailedWithCapacityError(bacalhauJob) {
-			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v failed with capacity full, will try again\n", job.ID, job.JobID)
 			if err := submitBacalhauJobAndUpdateID(&job, db, checkpointCompatible); err != nil {
 				return err
 			}
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			continue
 		} else if bacalhau.JobIsRunning(bacalhauJob) {
-			fmt.Printf("Job %v , %v is running\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v is running\n", job.ID, job.JobID)
 			return setJobStatus(&job, models.JobStateRunning, "", db)
 		} else if bacalhau.JobFailed(bacalhauJob) {
-			fmt.Printf("Job %v , %v failed\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.BacalhauJobID), db)
+			fmt.Printf("Job %v , %v failed\n", job.ID, job.JobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Error running with Bacalhau ID %v", job.JobID), db)
 		} else if bacalhau.JobCompleted(bacalhauJob) {
-			fmt.Printf("Job %v , %v completed\n", job.ID, job.BacalhauJobID)
+			fmt.Printf("Job %v , %v completed\n", job.ID, job.JobID)
 			if len(bacalhauJob.State.Executions) > 0 {
 				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 			}
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 		} else if bacalhau.JobCancelled(bacalhauJob) {
-			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.BacalhauJobID)
-			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.BacalhauJobID), db)
+			fmt.Printf("Job %v , %v cancelled\n", job.ID, job.JobID)
+			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Job %v cancelled", job.JobID), db)
 		} else {
-			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+			fmt.Printf("Job %v , %v has state %v, will requery\n", job.ID, job.JobID, bacalhauJob.State.State)
 			time.Sleep(retryJobSleepTime) // Wait for a short period before checking the status again
 			continue
 		}
 	}
+}
+
+func processRayJob(jobID uint, db *gorm.DB) error {
+	fmt.Printf("Processing Ray Job %v\n", jobID)
+	var job models.Job
+	err := fetchJobWithToolAndFlowData(&job, jobID, db)
+	if err != nil {
+		return err
+	}
+
+	var ToolJson ipwl.Tool
+	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+		return err
+	}
+
+	if job.JobID == "" {
+		if err := submitRayJobAndUpdateID(&job, db); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
+	var response models.RayJobResponse
+	var rawData map[string]interface{}
+
+	if err := json.Unmarshal(data, &rawData); err != nil {
+		return response, err
+	}
+
+	response.UUID = rawData["uuid"].(string)
+	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+		response.PDB = models.FileDetail{
+			Key:      pdbData["key"].(string),
+			Location: pdbData["location"].(string),
+		}
+	}
+
+	response.Scores = make(map[string]float64)
+	response.Files = make(map[string]models.FileDetail)
+
+	// Function to recursively process map entries
+	var processMap func(string, interface{})
+	processMap = func(prefix string, value interface{}) {
+		switch v := value.(type) {
+		case map[string]interface{}:
+			// Check if it's a file detail
+			if key, keyOk := v["key"].(string); keyOk {
+				if loc, locOk := v["location"].(string); locOk {
+					response.Files[prefix] = models.FileDetail{Key: key, Location: loc}
+					return
+				}
+			}
+			// Otherwise, recursively process each field in the map
+			for k, val := range v {
+				newPrefix := k
+				if prefix != "" {
+					newPrefix = prefix + "." + k // To trace nested keys
+				}
+				processMap(newPrefix, val)
+			}
+		case []interface{}:
+			// Process each item in the array
+			for i, arrVal := range v {
+				arrPrefix := fmt.Sprintf("%s[%d]", prefix, i)
+				processMap(arrPrefix, arrVal)
+			}
+		case float64:
+			// Handle scores which are float64
+			response.Scores[prefix] = v
+		}
+	}
+
+	// Initialize the recursive processing with an empty prefix
+	for key, value := range rawData {
+		if key == "uuid" || key == "pdb" {
+			continue // Skip already processed or special handled fields
+		}
+		processMap(key, value)
+	}
+
+	return response, nil
+}
+
+func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
+	result := map[string]interface{}{
+		"uuid":   response.UUID,
+		"pdb":    response.PDB,
+		"files":  response.Files,
+		"scores": response.Scores,
+	}
+
+	prettyJSON, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(prettyJSON), nil
+}
+
+func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
+	log.Println("Preparing to submit job to Ray service")
+	var jobInputs map[string]interface{}
+	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
+		return err
+	}
+	inputs := make(map[string]interface{})
+	for key, value := range jobInputs {
+		//TODO_PR#970: work on input file handling after convexity side key, location has been moved to uri
+		// until then, job submission wont work with input files
+		// if key == "pdb" {
+		// 	var dataFile models.DataFile
+		// 	if err := db.First(&dataFile, "s3_location = ?", value).Error; err == nil {
+		// 		pdbPath := map[string]string{
+		// 			"key":      dataFile.S3Location,
+		// 			"location": dataFile.S3Bucket,
+		// 		}
+		// 		inputs[key] = []interface{}{pdbPath}
+		// 	} else {
+		// 		// Fallback if no S3 details are available
+		// 		log.Printf("Error fetching pdb details: %v\n", err)
+		// 		return err
+		// 	}
+		// } else {
+		// Default handling for other inputs
+		inputs[key] = []interface{}{value}
+		// }
+	}
+	toolCID := job.Tool.CID
+
+	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
+	setJobStatus(job, models.JobStateRunning, "", db)
+	log.Printf("setting job %v to running\n", job.ID)
+	resp, err := ray.SubmitRayJob(toolCID, inputs)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading response body: %v", err)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		var rayJobResponse models.RayJobResponse
+		rayJobResponse, err = UnmarshalRayJobResponse([]byte(body))
+		if err != nil {
+			fmt.Println("Error unmarshalling result JSON:", err)
+			return err
+		}
+
+		fmt.Printf("Parsed Ray job response: %+v\n", rayJobResponse)
+		prettyJSON, err := PrettyPrintRayJobResponse(rayJobResponse)
+		if err != nil {
+			log.Fatalf("Error generating pretty JSON: %v", err)
+		}
+		// Print the pretty JSON
+		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
+		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
+	} else {
+		//create a fn to handle this
+		job.State = models.JobStateFailed
+	}
+	//for now only handling 200 and failed. implement retry and timeout later
+
+	fmt.Printf("Job had id %v\n", job.ID)
+	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.JobID, job.State)
+	return db.Save(job).Error
 }
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
@@ -272,31 +464,31 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.BacalhauJobID)
+	bacalhauJob, err := bacalhau.GetBacalhauJobState(job.JobID)
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
-		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.BacalhauJobID), db)
+		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.JobID)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.JobID), db)
 	} else if err != nil {
 		return err
 	}
 
 	if bacalhau.JobIsRunning(bacalhauJob) {
-		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.JobID)
 		return nil
 	} else if bacalhau.JobBidAccepted(bacalhauJob) {
-		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.JobID)
 		return nil
 	} else if bacalhau.JobFailed(bacalhauJob) {
-		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.BacalhauJobID), db)
+		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.JobID)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.JobID), db)
 	} else if bacalhau.JobCompleted(bacalhauJob) {
-		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.BacalhauJobID)
+		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.JobID)
 		if len(bacalhauJob.State.Executions) > 0 {
 			return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
 		}
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.BacalhauJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 	} else {
-		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.BacalhauJobID, bacalhauJob.State.State)
+		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.JobID, bacalhauJob.State.State)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", bacalhauJob.State.State), db)
 	}
 }
@@ -306,6 +498,125 @@ func setJobStatus(job *models.Job, state models.JobState, errorMessage string, d
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	return db.Save(job).Error
+}
+
+func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
+
+	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
+	//for now only handling 200 and failed. implement retry and timeout later
+	job.JobID = resultJSON.UUID
+	job.ResultJSON = body
+	job.State = models.JobStateCompleted
+
+	// Iterate over all files in the RayJobResponse
+	for key, fileDetail := range resultJSON.Files {
+		if err := addFileToDB(job, fileDetail, key, db); err != nil {
+			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
+		}
+	}
+
+	// Special handling for PDB as it's a common file across many jobs
+	if err := addFileToDB(job, resultJSON.PDB, "pdb", db); err != nil {
+		return fmt.Errorf("failed to add PDB file to database: %v", err)
+	}
+
+	return nil
+}
+
+func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string, db *gorm.DB) error {
+	fmt.Printf("Processing file: %s, Type: %s\n", fileDetail.Key, fileType)
+
+	// Check if the file already exists
+	var dataFile models.DataFile
+	result := db.Where("cid = ?", fileDetail.Key).First(&dataFile)
+	if result.Error == nil {
+		fmt.Println("File already exists in DB:", fileDetail.Key)
+		return nil // File already processed
+	}
+
+	// Handle not found error specifically
+	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("error querying DataFile table: %v", result.Error)
+	}
+
+	// Create new DataFile entry
+	tags := []models.Tag{
+		{Name: fileType, Type: "filetype"},
+		{Name: "generated", Type: "autogenerated"},
+	}
+
+	hash, err := hashS3Object(fileDetail.Location, fileDetail.Key)
+	if err != nil {
+		return fmt.Errorf("error hashing S3 object: %v", err)
+	}
+
+	dataFile = models.DataFile{
+		CID:           hash,
+		WalletAddress: job.WalletAddress,
+		Filename:      filepath.Base(fileDetail.Key),
+		Tags:          tags,
+		Timestamp:     time.Now(),
+		S3Bucket:      fileDetail.Location,
+		S3Location:    fileDetail.Key,
+	}
+
+	if err := db.Create(&dataFile).Error; err != nil {
+		return fmt.Errorf("error creating DataFile record: %v", err)
+	}
+
+	// Associate file with job output
+	job.OutputFiles = append(job.OutputFiles, dataFile)
+	if err := db.Save(&job).Error; err != nil {
+		return fmt.Errorf("error updating job with new output file: %v", err)
+	}
+
+	return nil
+}
+
+func hashS3Object(bucket, key string) (string, error) {
+	// Load the AWS configuration
+	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
+	region := "us-east-1"
+	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
+
+	sess, err := session.NewSession(&aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(bucketEndpoint),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+	})
+	if err != nil {
+		return "", fmt.Errorf("error creating AWS session: %w", err)
+	}
+
+	// Create an S3 service client
+	svc := s3.New(sess)
+
+	// Get the object
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to get S3 object: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Initialize hasher and hash the key
+	hasher := sha256.New()
+	if _, err := hasher.Write([]byte(key)); err != nil {
+		return "", fmt.Errorf("failed to hash key: %w", err)
+	}
+
+	// Read and hash the contents of the object
+	if _, err := io.Copy(hasher, resp.Body); err != nil {
+		return "", fmt.Errorf("failed to hash file contents: %w", err)
+	}
+
+	// Compute the final hash
+	hashBytes := hasher.Sum(nil)
+	return hex.EncodeToString(hashBytes), nil
 }
 
 func completeJobAndAddOutputFiles(job *models.Job, state models.JobState, outputDirCID string, db *gorm.DB) error {
@@ -458,7 +769,7 @@ func submitBacalhauJobAndUpdateID(job *models.Job, db *gorm.DB, checkpointCompat
 		return err
 	}
 
-	job.BacalhauJobID = submittedBacalhauJob.Metadata.ID
+	job.JobID = submittedBacalhauJob.Metadata.ID
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Creating Job with bacalhau id %v\n", submittedBacalhauJob.Metadata.ID)
 	return db.Save(job).Error

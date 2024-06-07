@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -15,6 +16,8 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/server"
 	"github.com/labdao/plex/gateway/utils"
+
+	"github.com/labdao/plex/internal/s3"
 
 	"github.com/rs/cors"
 
@@ -32,6 +35,32 @@ func ServeWebApp() {
 			Colorful:      true,         // Enable color
 		},
 	)
+
+	endpoint := os.Getenv("BUCKET_ENDPOINT")
+	bucketName := os.Getenv("BUCKET_NAME")
+
+	endpoint = strings.TrimPrefix(endpoint, "http://")
+	endpoint = strings.TrimPrefix(endpoint, "https://")
+
+	s3Client, err := s3.NewS3Client()
+	if err != nil {
+		log.Fatalf("failed to create s3 client: %v", err)
+	} else {
+		fmt.Println("S3 client created successfully")
+
+	}
+
+	exists, err := s3Client.BucketExists(bucketName)
+	if err != nil {
+		log.Fatalf("Failed to check if bucket exists: %v", err)
+	}
+	if !exists {
+		err := s3Client.CreateBucket(bucketName)
+		if err != nil {
+			log.Fatalf("Failed to create bucket: %v", err)
+		}
+		fmt.Println("Bucket created successfully")
+	}
 
 	// Setup database connection
 	// Get environment variables
@@ -88,7 +117,7 @@ func ServeWebApp() {
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
 	})
 
-	mux := server.NewServer(db)
+	mux := server.NewServer(db, s3Client)
 
 	// Start queue watcher in a separate goroutine
 	go func() {

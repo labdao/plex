@@ -1,0 +1,2 @@
+ALTER TABLE data_files ADD COLUMN s3_bucket VARCHAR(255);
+ALTER TABLE data_files ADD COLUMN s3_location VARCHAR(255);
