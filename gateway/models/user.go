@@ -17,6 +17,6 @@ type User struct {
 	Admin         bool       `gorm:"column:admin;default:false" json:"admin"`
 	UserDatafiles []DataFile `gorm:"many2many:user_datafiles;foreignKey:WalletAddress;joinForeignKey:wallet_address;inverseJoinForeignKey:c_id"`
 	Tier          Tier       `gorm:"type:int;not null;default:0" json:"tier"`
-	ComputeTally  int        `gorm:"column:compute_credits;default:0" json:"computeCredits"`
+	ComputeTally  int        `gorm:"column:compute_tally;default:0" json:"computeTally"`
 	StripeUserID  string     `gorm:"column:stripe_user_id;type:varchar(255)" json:"stripeUserId"`
 }
