@@ -41,7 +41,6 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
-	// Function to recursively process map entries
 	var processMap func(string, interface{})
 	processMap = func(prefix string, value interface{}) {
 		switch v := value.(type) {
@@ -60,7 +59,6 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 				processMap(newPrefix, val)
 			}
 		case []interface{}:
-			// Process each item in the array
 			for i, arrVal := range v {
 				arrPrefix := fmt.Sprintf("%s[%d]", prefix, i)
 				processMap(arrPrefix, arrVal)

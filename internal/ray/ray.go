@@ -69,54 +69,6 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 
 	adjustedInputs := make(map[string]string)
 	for key, value := range inputs {
-		//TODO_PR#970: work on input file handling after convexity side key, location has been moved to uri
-		// until then, job submission wont work with input files
-		// if key == "pdb" {
-		// 	// // Package both the path and the location into a single JSON string or a structured object
-		// 	// pdbInfo := map[string]string{
-		// 	// 	"key":      value.(string),
-		// 	// 	"location": "convexity",
-		// 	// }
-		// 	// pdbJSON, err := json.Marshal(pdbInfo)
-		// 	// if err != nil {
-		// 	// 	return nil, fmt.Errorf("error marshaling pdb info: %v", err)
-		// 	// }
-		// 	// adjustedInputs[key] = string(pdbJSON)
-		// 	var jsonBytes []byte
-		// 	var err error
-
-		// 	// Check if the value is directly a map[string]interface{}
-		// 	if pdbMap, ok := value.(map[string]interface{}); ok {
-		// 		jsonBytes, err = json.Marshal(pdbMap)
-		// 		if err != nil {
-		// 			return nil, fmt.Errorf("error marshaling pdb map to JSON: %v", err)
-		// 		}
-		// 	} else if valSlice, ok := value.([]interface{}); ok && len(valSlice) == 1 {
-		// 		// If not a map, check if it's a slice with a single map element
-		// 		if pdbMap, ok := valSlice[0].(map[string]interface{}); ok {
-		// 			jsonBytes, err = json.Marshal(pdbMap)
-		// 			if err != nil {
-		// 				return nil, fmt.Errorf("error marshaling pdb map within a slice to JSON: %v", err)
-		// 			}
-		// 		} else if pdbMap, ok := valSlice[0].(map[string]string); ok {
-		// 			// Handle map[string]string if present in the slice
-		// 			tempMap := make(map[string]interface{})
-		// 			for k, v := range pdbMap {
-		// 				tempMap[k] = v
-		// 			}
-		// 			jsonBytes, err = json.Marshal(tempMap)
-		// 			if err != nil {
-		// 				return nil, fmt.Errorf("error marshaling pdb map (string map) within a slice to JSON: %v", err)
-		// 			}
-		// 		} else {
-		// 			return nil, fmt.Errorf("expected a map for key 'pdb' within a slice, got: %v", valSlice[0])
-		// 		}
-		// 	} else {
-		// 		return nil, fmt.Errorf("expected a map or a single-element slice with a map for key 'pdb', got: %v", value)
-		// 	}
-
-		// 	adjustedInputs[key] = string(jsonBytes)
-		// } else {
 		if valSlice, ok := value.([]interface{}); ok && len(valSlice) == 1 {
 			if valStr, ok := valSlice[0].(string); ok {
 				adjustedInputs[key] = valStr
@@ -126,7 +78,6 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		} else {
 			return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, value)
 		}
-		// }
 	}
 
 	// Marshal the inputs to JSON
