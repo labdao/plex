@@ -257,7 +257,7 @@ function FileList({ files }: { files: DataFile[] }) {
                 </FileDownloadLink>
                 <div className="opacity-70 text-muted-foreground">
                   <CopyToClipboard string={file.CID}>
-                    cid: <TruncatedString value={file.CID} />
+                    File ID: <TruncatedString value={file.CID} />
                   </CopyToClipboard>
                 </div>
               </div>

@@ -318,8 +318,10 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		return response, err
 	}
 
-	response.UUID = rawData["uuid"].(string)
-	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+	responseData := rawData["response"].(map[string]interface{})
+
+	response.UUID = responseData["uuid"].(string)
+	if pdbData, ok := responseData["pdb"].(map[string]interface{}); ok {
 		response.PDB = models.FileDetail{
 			URI: pdbData["uri"].(string),
 		}
@@ -359,7 +361,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	}
 
 	// Initialize the recursive processing with an empty prefix
-	for key, value := range rawData {
+	for key, value := range responseData {
 		if key == "uuid" || key == "pdb" {
 			continue // Skip already processed or special handled fields
 		}
@@ -507,7 +509,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 
 	// Check if the file already exists
 	var dataFile models.DataFile
-	result := db.Where("cid = ?", fileDetail.URI).First(&dataFile)
+	result := db.Where("s3_uri = ?", fileDetail.URI).First(&dataFile)
 	if result.Error == nil {
 		fmt.Println("File already exists in DB:", fileDetail.URI)
 		return nil // File already processed

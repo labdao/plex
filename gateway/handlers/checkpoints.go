@@ -29,8 +29,10 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		return response, err
 	}
 
-	response.UUID = rawData["uuid"].(string)
-	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+	responseData := rawData["response"].(map[string]interface{})
+
+	response.UUID = responseData["uuid"].(string)
+	if pdbData, ok := responseData["pdb"].(map[string]interface{}); ok {
 		response.PDB = models.FileDetail{
 			URI: pdbData["uri"].(string),
 		}
@@ -39,6 +41,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
+	// Function to recursively process map entries
 	var processMap func(string, interface{})
 	processMap = func(prefix string, value interface{}) {
 		switch v := value.(type) {
@@ -57,6 +60,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 				processMap(newPrefix, val)
 			}
 		case []interface{}:
+			// Process each item in the array
 			for i, arrVal := range v {
 				arrPrefix := fmt.Sprintf("%s[%d]", prefix, i)
 				processMap(arrPrefix, arrVal)
@@ -68,7 +72,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	}
 
 	// Initialize the recursive processing with an empty prefix
-	for key, value := range rawData {
+	for key, value := range responseData {
 		if key == "uuid" || key == "pdb" {
 			continue // Skip already processed or special handled fields
 		}
