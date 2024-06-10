@@ -8,6 +8,5 @@ type RayJobResponse struct {
 }
 
 type FileDetail struct {
-	Key      string `json:"key"`
-	Location string `json:"location"`
+	URI string `json:"uri"`
 }

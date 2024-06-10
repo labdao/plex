@@ -30,7 +30,7 @@ export default function ListToolFiles() {
     },
     {
       accessorKey: "CID",
-      header: "CID",
+      header: "Tool ID",
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>

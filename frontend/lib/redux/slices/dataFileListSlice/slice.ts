@@ -4,6 +4,7 @@ export interface DataFile {
   Filename: string
   CID: string
   Tags: Tag[]
+  S3URI: string
 }
 
 interface Tag {

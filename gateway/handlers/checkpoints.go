@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
+	"github.com/labdao/plex/internal/ray"
 
 	"gorm.io/gorm"
 
@@ -28,11 +29,12 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		return response, err
 	}
 
-	response.UUID = rawData["uuid"].(string)
-	if pdbData, ok := rawData["pdb"].(map[string]interface{}); ok {
+	responseData := rawData["response"].(map[string]interface{})
+
+	response.UUID = responseData["uuid"].(string)
+	if pdbData, ok := responseData["pdb"].(map[string]interface{}); ok {
 		response.PDB = models.FileDetail{
-			Key:      pdbData["key"].(string),
-			Location: pdbData["location"].(string),
+			URI: pdbData["uri"].(string),
 		}
 	}
 
@@ -44,11 +46,9 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		switch v := value.(type) {
 		case map[string]interface{}:
 			// Check if it's a file detail
-			if key, keyOk := v["key"].(string); keyOk {
-				if loc, locOk := v["location"].(string); locOk {
-					response.Files[prefix] = models.FileDetail{Key: key, Location: loc}
-					return
-				}
+			if uri, uriOk := v["uri"].(string); uriOk {
+				response.Files[prefix] = models.FileDetail{URI: uri}
+				return
 			}
 			// Otherwise, recursively process each field in the map
 			for k, val := range v {
@@ -70,7 +70,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	}
 
 	// Initialize the recursive processing with an empty prefix
-	for key, value := range rawData {
+	for key, value := range responseData {
 		if key == "uuid" || key == "pdb" {
 			continue // Skip already processed or special handled fields
 		}
@@ -108,7 +108,7 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 		return nil, err
 	}
 
-	pdbKey := resultJSON.PDB.Key
+	pdbKey := resultJSON.PDB.URI
 	pdbFileName := filepath.Base(pdbKey)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
@@ -229,12 +229,15 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
 	}
 
-	pdbKey := resultJSON.PDB.Key
-	pdbFileName := filepath.Base(pdbKey)
+	_, key, err := ray.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
+	if err != nil {
+		return nil, err
+	}
+	pdbFileName := filepath.Base(key)
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(pdbKey),
+		Key:    aws.String(key),
 	})
 	urlStr, err := req.Presign(15 * time.Minute)
 	if err != nil {
