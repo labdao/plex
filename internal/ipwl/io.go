@@ -9,7 +9,7 @@ import (
 
 type ToolInfo struct {
 	Name string `json:"name"`
-	IPFS string `json:"ipfs"`
+	S3   string `json:"s3"`
 }
 
 type IO struct {

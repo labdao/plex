@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"os"
@@ -16,7 +15,6 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/s3"
 
 	"log"
@@ -24,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFunc {
+func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received request to add datafile")
 
@@ -77,7 +75,6 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 			utils.SendJSONError(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
 			return
 		}
-		defer os.Remove(filename)
 
 		bucketName := os.Getenv("BUCKET_NAME")
 		if bucketName == "" {
@@ -85,50 +82,63 @@ func AddDataFileHandler(db *gorm.DB, minioClient *s3.MinIOClient) http.HandlerFu
 			return
 		}
 
-		precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
+		//TODO_PR#970 commenting precomputeCID part for now
+		// precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
+		// if err != nil {
+		// 	utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+		// 	return
+		// }
+
+		//generate a uuid and call it precomputedCID
+		// precomputedCID := uuid.New().String()
+
+		hash, err := utils.GenerateFileHash(tempFile.Name())
 		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error generating hash: %v", err), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println("Hash of", filename, "is", hash)
+		defer os.Remove(filename)
 
-		objectKey := precomputedCID + "/" + filename
+		objectKey := hash + "/" + filename
 		// S3 upload
-		err = minioClient.UploadFile(bucketName, objectKey, tempFile.Name())
+		err = s3c.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading file to bucket: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-		if err != nil {
-			utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
-			return
-		}
+		// cid, err := ipfs.WrapAndPinFile(tempFile.Name())
+		// if err != nil {
+		// 	utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
+		// 	return
+		// }
 
-		// TODO: determine why there is a discrepancy
-		// remove logs when resolved
-		log.Println("--------------------")
-		if precomputedCID != cid {
-			log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
-		} else {
-			log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
-		}
-		log.Println("--------------------")
-
+		// // TODO: determine why there is a discrepancy
+		// // remove logs when resolved
+		// log.Println("--------------------")
+		// if precomputedCID != cid {
+		// 	log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
+		// } else {
+		// 	log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
+		// }
+		// log.Println("--------------------")
+		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 		dataFile := models.DataFile{
-			CID:           cid,
+			CID:           hash,
 			WalletAddress: walletAddress,
 			Filename:      filename,
 			Timestamp:     time.Now(),
 			Public:        isPublic,
+			S3URI:         s3_uri,
 		}
 
 		var existingDataFile models.DataFile
-		if err := db.Where("cid = ?", cid).First(&existingDataFile).Error; err == nil {
+		if err := db.Where("cid = ?", hash).First(&existingDataFile).Error; err == nil {
 			var userHasDataFile bool
 			var count int64
 			db.Model(&dataFile).Joins("JOIN user_datafiles ON user_datafiles.c_id = data_files.cid").
-				Where("user_datafiles.wallet_address = ? AND data_files.cid = ?", user.WalletAddress, cid).First(&dataFile).Count(&count)
+				Where("user_datafiles.wallet_address = ? AND data_files.cid = ?", user.WalletAddress, hash).First(&dataFile).Count(&count)
 			userHasDataFile = count > 0
 			if userHasDataFile {
 				utils.SendJSONError(w, "A user data file with the same CID already exists", http.StatusConflict)
@@ -305,7 +315,7 @@ func ListDataFilesHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
+func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		cid := vars["cid"]
@@ -335,34 +345,21 @@ func DownloadDataFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// First attempt with the initial ipfsPath
-		ipfsPath := determineIPFSPath(cid, dataFile)
-		tempFilePath, err := ipfs.DownloadFileToTemp(ipfsPath, dataFile.Filename)
-		if err != nil {
-			// If the first attempt fails, try with an alternative ipfsPath
-			altIPFSPath := determineAltIPFSPath(cid, dataFile)
-			tempFilePath, err = ipfs.DownloadFileToTemp(altIPFSPath, dataFile.Filename)
-			if err != nil {
-				utils.SendJSONError(w, "Error downloading file from IPFS", http.StatusInternalServerError)
+		//if the datafile as S3Bucket and S3Location, download from S3, else error
+		if dataFile.S3URI == "" {
+			utils.SendJSONError(w, "S3URI is null, fetch from IPFS is not supported", http.StatusNotFound)
+		} else {
+			filename := dataFile.Filename
+
+			if err := s3c.StreamFileToResponse(dataFile.S3URI, w, filename); err != nil {
+				utils.SendJSONError(w, "Error downloading file from S3", http.StatusInternalServerError)
 				return
 			}
 		}
-		defer os.Remove(tempFilePath)
-		fmt.Println("Downloaded file to temp path:", tempFilePath)
-		file, err := os.Open(tempFilePath)
-		if err != nil {
-			utils.SendJSONError(w, "Error opening downloaded file", http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
 
 		w.Header().Set("Content-Disposition", "attachment; filename="+dataFile.Filename)
 		w.Header().Set("Content-Type", "application/octet-stream")
 
-		if _, err := io.Copy(w, file); err != nil {
-			utils.SendJSONError(w, "Error sending file", http.StatusInternalServerError)
-			return
-		}
 	}
 }
 

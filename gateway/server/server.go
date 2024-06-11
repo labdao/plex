@@ -31,7 +31,7 @@ func createAdminProtectedRouteHandler(db *gorm.DB) func(http.HandlerFunc) http.H
 	}
 }
 
-func NewServer(db *gorm.DB, minioClient *s3.MinIOClient) *mux.Router {
+func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router := mux.NewRouter()
 	router.Use(loggingMiddleware)
 
@@ -43,16 +43,16 @@ func NewServer(db *gorm.DB, minioClient *s3.MinIOClient) *mux.Router {
 	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 	router.HandleFunc("/user", protected(handlers.GetUserHandler(db))).Methods("GET")
 
-	router.HandleFunc("/tools", protected(adminProtected(handlers.AddToolHandler(db, minioClient)))).Methods("POST")
+	router.HandleFunc("/tools", protected(adminProtected(handlers.AddToolHandler(db, s3c)))).Methods("POST")
 	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
 	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
 	router.HandleFunc("/tools/{cid}", protected(adminProtected(handlers.UpdateToolHandler(db)))).Methods("PUT")
 
-	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db, minioClient))).Methods("POST")
+	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db, s3c))).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.UpdateDataFileHandler(db))).Methods("PUT")
 	// pass in minioClient
-	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db))).Methods("GET")
+	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db, s3c))).Methods("GET")
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
 	router.HandleFunc("/checkpoints/{flowID}", protected(handlers.ListFlowCheckpointsHandler(db))).Methods("GET")
@@ -67,7 +67,7 @@ func NewServer(db *gorm.DB, minioClient *s3.MinIOClient) *mux.Router {
 	router.HandleFunc("/flows/{flowID}/add-job", protected(handlers.AddJobToFlowHandler(db))).Methods("PUT")
 
 	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
-	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
+	// router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
 	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")

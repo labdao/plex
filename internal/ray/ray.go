@@ -10,12 +10,14 @@ import (
 	"sync"
 
 	"github.com/labdao/plex/internal/ipwl"
+	"gorm.io/gorm"
 )
 
 var rayClient *http.Client
 var once sync.Once
 
 func GetRayApiHost() string {
+	// For colabfold local testing set this env var to http://colabfold-service:<PORT>
 	rayApiHost, exists := os.LookupEnv("RAY_API_HOST")
 	if exists {
 		return rayApiHost
@@ -25,6 +27,16 @@ func GetRayApiHost() string {
 }
 
 // Prevents race conditions with Ray Client
+// TODO_PR#970 - revisit timeout later
+//
+//	func GetRayClient(maxRunningTime int) *http.Client {
+//		once.Do(func() {
+//			rayClient = &http.Client{
+//				Timeout: time.Second * time.Duration(maxRunningTime),
+//			}
+//		})
+//		return rayClient
+//	}
 func GetRayClient() *http.Client {
 	once.Do(func() {
 		rayClient = &http.Client{}
@@ -32,8 +44,9 @@ func GetRayClient() *http.Client {
 	return rayClient
 }
 
-func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
-	tool, _, err := ipwl.ReadToolConfig(toolPath)
+func CreateRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
+	tool, _, err := ipwl.ReadToolConfig(toolPath, db)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +76,10 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Respons
 		return nil, err
 	}
 
+	// construct from env var BUCKET ENDPOINT + tool.RayServiceEndpoint
+	rayServiceURL := GetRayApiHost() + tool.RayServiceEndpoint
 	// Create the HTTP request
-	req, err := http.NewRequest("POST", tool.RayServiceURL, bytes.NewBuffer(jsonBytes))
+	req, err := http.NewRequest("POST", rayServiceURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -91,13 +106,28 @@ func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[strin
 	return nil
 }
 
-func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
+func SubmitRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
-	resp, err := CreateRayJob(toolPath, inputs)
+	resp, err := CreateRayJob(toolPath, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err
 	}
-	log.Printf("Ray job created with response status: %s\n", resp.Status)
+
+	log.Printf("Ray job finished with response status: %s\n", resp.Status)
+	// if resp.StatusCode != http.StatusOK {
+	// 	return "", fmt.Errorf("failed to create Ray job, status code: %d", resp.StatusCode)
+	// }
+
+	// var responseBody map[string]string
+	// if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
+	// 	return "", fmt.Errorf("failed to decode response body: %v", err)
+	// }
+
+	// jobID, exists := responseBody["job_id"]
+	// if !exists {
+	// 	return "", fmt.Errorf("job_id not found in response")
+	// }
+
 	return resp, nil
 }

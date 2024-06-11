@@ -112,13 +112,14 @@ services:
       PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
       AUTOTASK_WEBHOOK: ${AUTOTASK_WEBHOOK}
       PINATA_API_TOKEN: ${PINATA_API_TOKEN}
-      BUCKET_ENDPOINT: ${BUCKET_ENDPOINT}
-      BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID}
-      BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY}
+      BUCKET_ENDPOINT: ${BUCKET_ENDPOINT:-http://object-store:9000}
+      BUCKET_ACCESS_KEY_ID: ${BUCKET_ACCESS_KEY_ID:-minioadmin}
+      BUCKET_SECRET_ACCESS_KEY: ${BUCKET_SECRET_ACCESS_KEY:-minioadmin}
       BUCKET_USE_SSL: ${BUCKET_USE_SSL}
-      BUCKET_NAME: ${BUCKET_NAME}
+      BUCKET_NAME: ${BUCKET_NAME:-test-bucket}
       RAY_API_HOST: ${RAY_API_HOST}
     depends_on:
       dbbackend:
@@ -221,15 +222,14 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID}
-      MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY}
+      MINIO_ROOT_USER: ${BUCKET_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${BUCKET_SECRET_ACCESS_KEY:-minioadmin}
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
-    # networks:
-    #   - service-network
 
 volumes:
   dbdata-backend:
   dbdata-receptor:
   ipfs:
+  minio-data:

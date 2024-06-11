@@ -1,13 +1,13 @@
 {
-    "name": "colabfold-v1.8",
+    "name": "colabfold_v4",
     "description": "Simulate a protein complex using ColabFold",
     "task": "protein folding",
     "taskCategory": "protein-binder-design",
     "toolType": "ray",
+    "rayServiceEndpoint": "/simulate_protein_complex",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
-    "rayServiceEndpoint": "/simulate_protein_complex",
     "inputs": {
       "binder_sequence": {
         "type": "string",
@@ -25,9 +25,9 @@
       }
     },
     "outputs": {
-      "pdb": {
+      "string_message": {
         "type": "File",
-        "glob": ["*.pdb"]
+        "glob": ["*.json"]
       }
     }
 }

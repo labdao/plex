@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,39 +17,10 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
-	"github.com/labdao/plex/internal/ray"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
-
-func pinIoList(ios []ipwl.IO) (string, error) {
-	data, err := json.Marshal(ios)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal IO slice: %v", err)
-	}
-
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "prefix-")
-	if err != nil {
-		return "", fmt.Errorf("cannot create temporary file: %v", err)
-	}
-
-	if _, err = tmpFile.Write(data); err != nil {
-		return "", fmt.Errorf("failed to write to temporary file: %v", err)
-	}
-
-	cid, err := ipfs.PinFile(tmpFile.Name())
-	if err != nil {
-		return "", fmt.Errorf("failed to pin file: %v", err)
-	}
-
-	if err := tmpFile.Close(); err != nil {
-		return "", fmt.Errorf("failed to close the file: %v", err)
-	}
-
-	return cid, nil
-}
 
 func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +99,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs)
+		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -137,7 +107,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		// save ioList to IPFS
-		ioListCid, err := pinIoList(ioList)
+		// ioListCid, err := pinIoList(ioList)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
 			return
@@ -146,7 +116,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		flowUUID := uuid.New().String()
 
 		flow := models.Flow{
-			CID:           ioListCid,
 			WalletAddress: user.WalletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
@@ -169,15 +138,19 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if tool.Gpu == 0 {
-				queue = models.QueueTypeCPU
-			} else {
-				queue = models.QueueTypeGPU
+			if tool.ToolType == "ray" {
+				queue = models.QueueTypeRay
 			}
 			jobUUID := uuid.New().String()
-
+			// TODO: consolidate below with the above checks.
+			var jobType models.JobType
+			if tool.ToolType == "ray" {
+				jobType = models.JobTypeRay
+			} else {
+				jobType = models.JobTypeBacalhau
+			}
 			job := models.Job{
-				ToolID:        ioItem.Tool.IPFS,
+				ToolID:        ioItem.Tool.S3,
 				FlowID:        flow.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
@@ -185,36 +158,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				CreatedAt:     time.Now(),
 				JobUUID:       jobUUID,
 				Public:        false,
+				JobType:       jobType,
 			}
 
-			if tool.ToolType == "ray" {
-				log.Println("Preparing to submit job to Ray service")
-				inputs := make(map[string]interface{})
-				for key, value := range kwargs {
-					inputs[key] = value
-				}
-				log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-				response, err := ray.SubmitRayJob(toolCid, inputs)
-				if err != nil {
-					log.Printf("Error submitting job to Ray: %v\n", err)
-					http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
-					return
-				}
-				defer response.Body.Close()
-				if response.StatusCode != http.StatusOK {
-					log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
-					http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
-					return
-				}
-				log.Println("Job submitted to Ray service successfully")
-			} else {
-				// TODO: ensure we are not creating a Bacalhau job when this entry gets created
-				// this occurs due to queue.go
-				result = db.Create(&job)
-				if result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
+			result := db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
 
 			for _, input := range ioItem.Inputs {
@@ -570,7 +520,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(tool.CID, scatteringMethod, kwargs)
+		ioList, err := ipwl.InitializeIo(tool.CID, scatteringMethod, kwargs, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -585,15 +535,13 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if tool.Gpu == 0 {
-				queue = models.QueueTypeCPU
-			} else {
-				queue = models.QueueTypeGPU
+			if tool.ToolType == "ray" {
+				queue = models.QueueTypeRay
 			}
 			jobUUID := uuid.New().String()
 
 			job := models.Job{
-				ToolID:        ioItem.Tool.IPFS,
+				ToolID:        ioItem.Tool.S3,
 				FlowID:        flow.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
@@ -603,39 +551,11 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Public:        false,
 			}
 
-			if tool.ToolType == "ray" {
-				log.Println("Preparing to submit job to Ray service")
-				inputs := make(map[string]interface{})
-				for key, value := range kwargs {
-					inputs[key] = value
-				}
-				log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-				response, err := ray.SubmitRayJob(tool.CID, inputs)
-				if err != nil {
-					log.Printf("Error submitting job to Ray: %v\n", err)
-					http.Error(w, fmt.Sprintf("Error submitting job to Ray: %v", err), http.StatusInternalServerError)
-					return
-				}
-				defer response.Body.Close()
-				if response.StatusCode != http.StatusOK {
-					log.Printf("Ray job submission failed with status code: %d\n", response.StatusCode)
-					http.Error(w, fmt.Sprintf("Ray job submission failed: %s", response.Status), http.StatusInternalServerError)
-					return
-				}
-				log.Println("Job submitted to Ray service successfully")
-			} else {
-				result = db.Create(&job)
-				if result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-					return
-				}
+			result = db.Create(&job)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
-
-			// result = db.Create(&job)
-			// if result.Error != nil {
-			// 	http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
-			// 	return
-			// }
 
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string

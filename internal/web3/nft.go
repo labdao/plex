@@ -49,19 +49,6 @@ func buildTokenMetadata(ioPath, imageCid, tokenName string) (string, error) {
 		graphs = append(graphs, graph)
 	}
 
-	if !ipfs.IsValidCID(imageCid) {
-		return "", fmt.Errorf("invalid image CID: %s", imageCid)
-	}
-
-	isDir, err := ipfs.IsDirectory(imageCid)
-	if err != nil {
-		return "", err
-	}
-
-	if isDir {
-		return "", fmt.Errorf("image CID must be a file, not a directory")
-	}
-
 	outputMap := map[string]interface{}{
 		"name":        tokenName,
 		"description": "Research, Reimagined. All Scientists Welcome.",

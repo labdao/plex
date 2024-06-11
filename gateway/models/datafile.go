@@ -14,4 +14,5 @@ type DataFile struct {
 	Tags          []Tag     `gorm:"many2many:datafile_tags;foreignKey:CID;joinForeignKey:data_file_c_id;inverseJoinForeignKey:tag_name"`
 	Public        bool      `gorm:"type:boolean;not null;default:false"`
 	UserDatafiles []User    `gorm:"many2many:user_datafiles;foreignKey:CID;joinForeignKey:c_id;inverseJoinForeignKey:wallet_address"`
+	S3URI         string    `gorm:"type:varchar(255)"`
 }

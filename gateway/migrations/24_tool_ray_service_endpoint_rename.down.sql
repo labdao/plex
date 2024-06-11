@@ -1,0 +1,1 @@
+ALTER TABLE tools DROP COLUMN ray_service_endpoint VARCHAR(255);
