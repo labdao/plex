@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -88,9 +87,18 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
+	var presignedURLEndpoint string
+
+	// Check if the bucket endpoint is the local development endpoint
+	if bucketEndpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = bucketEndpoint
+	}
+
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
+		Endpoint:         aws.String(presignedURLEndpoint),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	})
@@ -112,15 +120,6 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	pdbKey := resultJSON.PDB.URI
 	pdbFileName := filepath.Base(pdbKey)
 
-	var presignedURLEndpoint string
-
-	// Check if the bucket endpoint is the local development endpoint
-	if bucketEndpoint == "http://object-store:9000" {
-		presignedURLEndpoint = "http://localhost:9000"
-	} else {
-		presignedURLEndpoint = bucketEndpoint
-	}
-
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(pdbKey),
@@ -129,8 +128,6 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	urlStr = strings.Replace(urlStr, bucketEndpoint, presignedURLEndpoint, 1)
 
 	files = append(files, map[string]string{
 		"fileName": pdbFileName,
@@ -206,9 +203,18 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
+	var presignedURLEndpoint string
+
+	// Check if the bucket endpoint is the local development endpoint
+	if bucketEndpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = bucketEndpoint
+	}
+
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
+		Endpoint:         aws.String(presignedURLEndpoint),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	})
@@ -247,15 +253,6 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	}
 	pdbFileName := filepath.Base(key)
 
-	var presignedURLEndpoint string
-
-	// Check if the bucket endpoint is the local development endpoint
-	if bucketEndpoint == "http://object-store:9000" {
-		presignedURLEndpoint = "http://localhost:9000"
-	} else {
-		presignedURLEndpoint = bucketEndpoint
-	}
-
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(key),
@@ -264,8 +261,6 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	if err != nil {
 		return nil, err
 	}
-
-	urlStr = strings.Replace(urlStr, bucketEndpoint, presignedURLEndpoint, 1)
 
 	plotData := []models.ScatterPlotData{}
 	plotData = append(plotData, models.ScatterPlotData{
