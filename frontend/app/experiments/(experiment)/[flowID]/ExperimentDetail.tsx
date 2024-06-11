@@ -120,14 +120,14 @@ export default function ExperimentDetail() {
                 </span>
               </div>
               <div className="opacity-50">
-                <CopyToClipboard string={flow.RecordCID || flow.CID}>
+                <CopyToClipboard string={flow.RecordCID || String(flow.ID)}>
                   {flow.RecordCID ? (
                     <>
                       Record ID: <TruncatedString value={flow.RecordCID} />
                     </>
                   ) : (
                     <>
-                      Experiment ID: <TruncatedString value={flow.CID} />
+                      Experiment ID: <TruncatedString value={String(flow.ID)} />
                     </>
                   )}
                 </CopyToClipboard>

@@ -67,7 +67,7 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/flows/{flowID}/add-job", protected(handlers.AddJobToFlowHandler(db))).Methods("PUT")
 
 	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
-	router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
+	// router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
 	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")

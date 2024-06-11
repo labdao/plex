@@ -11,7 +11,6 @@ interface FlowAddSliceState {
   name: string
   tool: ToolDetail
   kwargs: Kwargs
-  cid: string
   loading: boolean
   error: string | null
   success: boolean
@@ -39,7 +38,6 @@ const initialState: FlowAddSliceState = {
     } 
   },
   kwargs: {},
-  cid: "",
   loading: false,
   error: null,
   success: false,
@@ -57,9 +55,6 @@ export const flowAddSlice = createSlice({
     },
     setFlowAddKwargs: (state, action: PayloadAction<Kwargs>) => {
       state.kwargs = action.payload;
-    },
-    setFlowAddCid: (state, action: PayloadAction<string>) => {
-      state.cid = action.payload;
     },
     setFlowAddID: (state, action: PayloadAction<number | null>) => {
       state.ID = action.payload
@@ -79,7 +74,6 @@ export const flowAddSlice = createSlice({
 export const {
   setFlowAddName,
   setFlowAddTool,
-  setFlowAddCid,
   setFlowAddID,
   setFlowAddKwargs,
   setFlowAddError,

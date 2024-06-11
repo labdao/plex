@@ -23,4 +23,5 @@ type Tool struct {
 	MaxRunningTime     int            `gorm:"type:int;default:2700"`
 	ToolType           string         `gorm:"type:varchar(255);default:'bacalhau'"`
 	RayServiceEndpoint string         `gorm:"type:varchar(255)"`
+	S3URI              string         `gorm:"type:varchar(255)"`
 }

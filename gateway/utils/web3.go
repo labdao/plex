@@ -14,7 +14,8 @@ import (
 	"time"
 
 	"github.com/labdao/plex/gateway/models"
-	"github.com/labdao/plex/internal/ipfs"
+
+	"github.com/labdao/plex/internal/s3"
 	"gorm.io/gorm"
 )
 
@@ -110,18 +111,26 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 				"cid": toolPinataHash,
 			}
 		}
-
+		s3c, err := s3.NewS3Client()
 		for _, inputFile := range inputFiles {
 			log.Printf("Downloading input file: %s", inputFile.Filename)
-			inputTempFilePath, err := ipfs.DownloadFileToTemp(inputFile.CID, inputFile.Filename)
+			// inputTempFilePath, err := ipfs.DownloadFileToTemp(inputFile.CID, inputFile.Filename)
 			if err != nil {
-				log.Printf("Failed to download input file: %s. Skipping... Error: %v", inputFile.Filename, err)
-				continue
+				return "", fmt.Errorf("failed to create S3 client: %v", err)
 			}
-			defer os.Remove(inputTempFilePath)
+			bucket, key, err := s3c.GetBucketAndKeyFromURI(inputFile.S3URI)
+			if err != nil {
+				return "", fmt.Errorf("failed to get bucket and key from URI: %v", err)
+			}
+			fileName := filepath.Base(key)
+			err = s3c.DownloadFile(bucket, key, fileName)
+			if err != nil {
+				return "", fmt.Errorf("failed to download input file: %s. Skipping... Error: %v", inputFile.Filename, err)
+			}
+			defer os.Remove(fileName)
 
 			log.Printf("Pinning input file to IPFS: %s", inputFile.Filename)
-			inputPinataHash, err := pinFileToPublicIPFS(inputTempFilePath, inputFile.Filename)
+			inputPinataHash, err := pinFileToPublicIPFS(key, inputFile.Filename)
 			if err != nil {
 				log.Printf("Failed to pin input file to Pinata: %s. Skipping... Error: %v", inputFile.Filename, err)
 			} else {
@@ -135,15 +144,21 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 
 		for _, outputFile := range outputFiles {
 			log.Printf("Downloading output file: %s", outputFile.Filename)
-			outputTempFilePath, err := ipfs.DownloadFileToTemp(outputFile.CID, outputFile.Filename)
+			// outputTempFilePath, err := ipfs.DownloadFileToTemp(outputFile.CID, outputFile.Filename)
+			bucket, key, err := s3c.GetBucketAndKeyFromURI(outputFile.S3URI)
+			if err != nil {
+				return "", fmt.Errorf("failed to get bucket and key from URI: %v", err)
+			}
+			fileName := filepath.Base(key)
+			err = s3c.DownloadFile(bucket, key, fileName)
 			if err != nil {
 				log.Printf("Failed to download output file: %s. Skipping... Error: %v", outputFile.Filename, err)
 				continue
 			}
-			defer os.Remove(outputTempFilePath)
+			defer os.Remove(fileName)
 
 			log.Printf("Pinning output file to IPFS: %s", outputFile.Filename)
-			outputPinataHash, err := pinFileToPublicIPFS(outputTempFilePath, outputFile.Filename)
+			outputPinataHash, err := pinFileToPublicIPFS(key, outputFile.Filename)
 			if err != nil {
 				log.Printf("Failed to pin output file to Pinata: %s. Skipping... Error: %v", outputFile.Filename, err)
 			} else {
