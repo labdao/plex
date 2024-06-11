@@ -73,6 +73,7 @@ const Molstar = ({ url, isExpanded, showControls, className }: MolstarProps) => 
         if (window.molstar) {
           window.molstar.clear();
           if (url) {
+            console.log('URL:', url)
             const data = await window.molstar.builders.data.download({ url: url }, { state: { isGhost: true } });
             const trajectory = await window.molstar.builders.structure.parseTrajectory(data, "pdb");
             await window.molstar.builders.structure.hierarchy.applyPreset(trajectory, "default");
