@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/labdao/plex/internal/ray"
 )
 
 type S3Client struct {
@@ -126,7 +127,11 @@ func (s *S3Client) DownloadFile(bucketName, objectName, filePath string) error {
 	return nil
 }
 
-func (s *S3Client) StreamFileToResponse(bucketName, objectName string, w http.ResponseWriter, filename string) error {
+func (s *S3Client) StreamFileToResponse(s3URI string, w http.ResponseWriter, filename string) error {
+	bucketName, objectName, err := ray.GetBucketAndKeyFromURI(s3URI)
+	if err != nil {
+		return err
+	}
 	output, err := s.Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),

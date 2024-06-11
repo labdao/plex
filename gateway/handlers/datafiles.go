@@ -149,15 +149,14 @@ func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		// 	log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
 		// }
 		// log.Println("--------------------")
-
+		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 		dataFile := models.DataFile{
 			CID:           hash,
 			WalletAddress: walletAddress,
 			Filename:      filename,
 			Timestamp:     time.Now(),
 			Public:        isPublic,
-			S3Bucket:      bucketName,
-			S3Location:    objectKey,
+			S3URI:         s3_uri,
 		}
 
 		var existingDataFile models.DataFile
@@ -373,7 +372,7 @@ func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		//if the datafile as S3Bucket and S3Location, download from S3, else from IPFS
-		if dataFile.S3Bucket == "" && dataFile.S3Location == "" {
+		if dataFile.S3URI == "" {
 			// First attempt with the initial ipfsPath
 			ipfsPath := determineIPFSPath(cid, dataFile)
 			tempFilePath, err := ipfs.DownloadFileToTemp(ipfsPath, dataFile.Filename)
@@ -401,7 +400,7 @@ func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		} else {
 			filename := dataFile.Filename
 
-			if err := s3c.StreamFileToResponse(dataFile.S3Bucket, dataFile.S3Location, w, filename); err != nil {
+			if err := s3c.StreamFileToResponse(dataFile.S3URI, w, filename); err != nil {
 				utils.SendJSONError(w, "Error downloading file from S3", http.StatusInternalServerError)
 				return
 			}
