@@ -4,7 +4,6 @@ import { JobDetail, ToolDetail } from "@/lib/redux";
 
 export interface FlowDetail {
   ID: number;
-  CID: string;
   Jobs: JobDetail[];
   Name: string;
   WalletAddress: string;
@@ -24,7 +23,6 @@ interface FlowDetailSliceState {
 const initialState: FlowDetailSliceState = {
   flow: { 
     ID: 0, 
-    CID: "", 
     Jobs: [], 
     Name: "", 
     WalletAddress: "", 
