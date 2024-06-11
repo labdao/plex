@@ -77,7 +77,9 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
             'Content-Type': 'application/json',
           },
         });
+        console.log('Plot data response:', plotDataResponse);
         const plotData = await plotDataResponse.json();
+        console.log('Plot data:', plotData)
         setPlotData(plotData);
       } catch (error) {
         console.error("Error fetching data:", error);
