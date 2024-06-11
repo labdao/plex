@@ -374,6 +374,9 @@ func hashS3Object(URI string) (string, error) {
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 	s3client, err := s3client.NewS3Client()
+	if err != nil {
+		return "", fmt.Errorf("error creating S3 client: %w", err)
+	}
 	bucket, key, err := s3client.GetBucketAndKeyFromURI(URI)
 	if err != nil {
 		return "", fmt.Errorf("error parsing S3 URI: %w", err)

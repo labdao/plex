@@ -116,7 +116,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		flowUUID := uuid.New().String()
 
 		flow := models.Flow{
-			CID:           "",
 			WalletAddress: user.WalletAddress,
 			Name:          name,
 			StartTime:     time.Now(),
