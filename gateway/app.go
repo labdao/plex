@@ -111,7 +111,7 @@ func ServeWebApp() {
 
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000", "https://editor.swagger.io", "https://editor-next.swagger.io"},
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000", "http://frontend:3000"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "PATCH", "PUT"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type", "X-Requested-With"},
