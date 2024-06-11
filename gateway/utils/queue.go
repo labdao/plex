@@ -274,7 +274,8 @@ func processBacalhauJob(jobID uint, db *gorm.DB) error {
 		} else if bacalhau.JobCompleted(bacalhauJob) {
 			fmt.Printf("Job %v , %v completed\n", job.ID, job.JobID)
 			if len(bacalhauJob.State.Executions) > 0 {
-				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+				lastExecutionIndex := len(bacalhauJob.State.Executions) - 1
+				return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[lastExecutionIndex].PublishedResult.CID, db)
 			}
 			return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 		} else if bacalhau.JobCancelled(bacalhauJob) {
@@ -465,7 +466,8 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 	} else if bacalhau.JobCompleted(bacalhauJob) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.JobID)
 		if len(bacalhauJob.State.Executions) > 0 {
-			return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[0].PublishedResult.CID, db)
+			lastExecutionIndex := len(bacalhauJob.State.Executions) - 1
+			return completeJobAndAddOutputFiles(&job, models.JobStateCompleted, bacalhauJob.State.Executions[lastExecutionIndex].PublishedResult.CID, db)
 		}
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Output execution data lost for %v", job.JobID), db)
 	} else {
