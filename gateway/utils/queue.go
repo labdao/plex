@@ -23,6 +23,7 @@ import (
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
+	s3client "github.com/labdao/plex/internal/s3"
 	"gorm.io/gorm"
 )
 
@@ -250,7 +251,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	setJobStatus(job, models.JobStateRunning, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(toolCID, inputs)
+	resp, err := ray.SubmitRayJob(toolCID, inputs, db)
 	if err != nil {
 		return err
 	}
@@ -372,7 +373,8 @@ func hashS3Object(URI string) (string, error) {
 	region := "us-east-1"
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
-	bucket, key, err := ray.GetBucketAndKeyFromURI(URI)
+	s3client, err := s3client.NewS3Client()
+	bucket, key, err := s3client.GetBucketAndKeyFromURI(URI)
 	if err != nil {
 		return "", fmt.Errorf("error parsing S3 URI: %w", err)
 	}

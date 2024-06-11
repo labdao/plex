@@ -7,10 +7,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/labdao/plex/internal/ipwl"
+	"gorm.io/gorm"
 )
 
 var rayClient *http.Client
@@ -44,19 +44,9 @@ func GetRayClient() *http.Client {
 	return rayClient
 }
 
-func GetBucketAndKeyFromURI(uri string) (string, string, error) {
-	uriParts := strings.Split(uri, "://")
-	if len(uriParts) != 2 {
-		return "", "", fmt.Errorf("invalid URI: %s", uri)
-	}
-	uriParts = strings.Split(uriParts[1], "/")
-	bucket := uriParts[0]
-	path := strings.Join(uriParts[1:], "/")
-	return bucket, path, nil
-}
-
-func CreateRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
-	tool, _, err := ipwl.ReadToolConfig(toolPath)
+func CreateRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
+	tool, _, err := ipwl.ReadToolConfig(toolPath, db)
 	if err != nil {
 		return nil, err
 	}
@@ -116,9 +106,9 @@ func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[strin
 	return nil
 }
 
-func SubmitRayJob(toolPath string, inputs map[string]interface{}) (*http.Response, error) {
+func SubmitRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
-	resp, err := CreateRayJob(toolPath, inputs)
+	resp, err := CreateRayJob(toolPath, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err

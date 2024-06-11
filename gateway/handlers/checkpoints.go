@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
-	"github.com/labdao/plex/internal/ray"
 
 	"gorm.io/gorm"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	s3client "github.com/labdao/plex/internal/s3"
 )
 
 func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
@@ -229,7 +229,12 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
 	}
 
-	_, key, err := ray.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
+	s3client, err := s3client.NewS3Client()
+	if err != nil {
+		return nil, err
+	}
+
+	_, key, err := s3client.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
 	if err != nil {
 		return nil, err
 	}

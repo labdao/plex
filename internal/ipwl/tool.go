@@ -3,12 +3,13 @@ package ipwl
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
-	"path"
-	"strings"
+	"path/filepath"
 
-	"github.com/labdao/plex/internal/ipfs"
+	"github.com/labdao/plex/gateway/models"
+	s3client "github.com/labdao/plex/internal/s3"
+	"gorm.io/gorm"
 )
 
 type ToolInput struct {
@@ -64,73 +65,50 @@ type Tool struct {
 	YAxis                string                `json:"yAxis"`
 }
 
-func ReadToolConfig(toolPath string) (Tool, ToolInfo, error) {
-	var tool Tool
+func ReadToolConfig(toolPath string, db *gorm.DB) (Tool, ToolInfo, error) {
+	var ipwltool Tool
+	var dbTool models.Tool
 	var toolInfo ToolInfo
-	var toolFilePath string
-	var cid string
 	var err error
 
-	if ipfs.IsValidCID(toolPath) {
-		toolInfo.IPFS = toolPath
-		toolFilePath, err = ipfs.DownloadToTempDir(toolPath)
-		if err != nil {
-			return tool, toolInfo, err
-		}
-
-		fileInfo, err := os.Stat(toolFilePath)
-		if err != nil {
-			return tool, toolInfo, err
-		}
-
-		// If the downloaded content is a directory, search for a .json file in it
-		if fileInfo.IsDir() {
-			files, err := ioutil.ReadDir(toolFilePath)
-			if err != nil {
-				return tool, toolInfo, err
-			}
-
-			for _, file := range files {
-				if strings.HasSuffix(file.Name(), ".json") {
-					toolFilePath = path.Join(toolFilePath, file.Name())
-					break
-				}
-			}
-		}
-	} else {
-		if _, err := os.Stat(toolPath); err == nil {
-			toolFilePath = toolPath
-			cid, err = ipfs.WrapAndPinFile(toolFilePath)
-			if err != nil {
-				return tool, toolInfo, fmt.Errorf("failed to pin tool file")
-			}
-			toolInfo.IPFS = cid
-		} else {
-			return tool, toolInfo, fmt.Errorf("tool not found")
-		}
+	s3client, err := s3client.NewS3Client()
+	if err != nil {
+		return ipwltool, toolInfo, err
 	}
 
-	file, err := os.Open(toolFilePath)
+	err = db.Where("cid = ?", toolPath).First(&dbTool).Error
 	if err != nil {
-		return tool, toolInfo, fmt.Errorf("failed to open file: %w", err)
+		return ipwltool, toolInfo, fmt.Errorf("failed to get tool from database: %w", err)
+	}
+	toolInfo.S3 = toolPath
+	toolInfo.Name = dbTool.Name
+	bucket, key, err := s3client.GetBucketAndKeyFromURI(dbTool.S3URI)
+	if err != nil {
+		return ipwltool, toolInfo, fmt.Errorf("failed to get bucket and key from URI: %w", err)
+	}
+	fileName := filepath.Base(key)
+	err = s3client.DownloadFile(bucket, key, fileName)
+	if err != nil {
+		return ipwltool, toolInfo, fmt.Errorf("failed to download file: %w", err)
+	}
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Printf("Failed to open file: %v\n", err)
 	}
 	defer file.Close()
+	defer os.Remove(fileName)
 
-	bytes, err := ioutil.ReadAll(file)
+	fmt.Println("File opened successfully")
+	bytes, err := io.ReadAll(file)
 	if err != nil {
-		return tool, toolInfo, fmt.Errorf("failed to read file: %w", err)
+		return ipwltool, toolInfo, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	err = json.Unmarshal(bytes, &tool)
+	err = json.Unmarshal(bytes, &ipwltool)
 	if err != nil {
-		return tool, toolInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return ipwltool, toolInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	if tool.ToolType == "" {
-		tool.ToolType = ToolTypeBacalhau
-	}
-
-	toolInfo.Name = tool.Name
-
-	return tool, toolInfo, nil
+	return ipwltool, toolInfo, nil
 }

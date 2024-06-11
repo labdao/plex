@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/labdao/plex/internal/web3"
+	"gorm.io/gorm"
 )
 
 var (
@@ -14,9 +15,9 @@ var (
 	scatteringMethod string
 )
 
-func InitializeIo(toolPath string, scatteringMethod string, inputVectors map[string][]interface{}) ([]IO, error) {
+func InitializeIo(toolPath string, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
 	// Open the file and load its content
-	tool, toolInfo, err := ReadToolConfig(toolPath)
+	tool, toolInfo, err := ReadToolConfig(toolPath, db)
 	if err != nil {
 		return nil, err
 	}

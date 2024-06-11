@@ -15,7 +15,6 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/s3"
 
@@ -118,12 +117,6 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
-			return
-		}
-
 		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 
 		var toolGpu int
@@ -166,7 +159,7 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		toolEntry := models.Tool{
-			CID:                cid,
+			CID:                hash,
 			WalletAddress:      walletAddress,
 			Name:               tool.Name,
 			ToolJson:           toolJSON,
