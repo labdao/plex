@@ -1,12 +1,9 @@
 package handlers
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"os"
@@ -18,35 +15,12 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/s3"
 
 	"log"
 
 	"gorm.io/gorm"
 )
-
-func generateFileHash(filename string) (string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	hasher := sha256.New()
-
-	if _, err := hasher.Write([]byte(filename)); err != nil {
-		return "", fmt.Errorf("failed to hash filename: %w", err)
-	}
-
-	if _, err := io.Copy(hasher, file); err != nil {
-		return "", fmt.Errorf("failed to hash file contents: %w", err)
-	}
-
-	hashBytes := hasher.Sum(nil)
-
-	return hex.EncodeToString(hashBytes), nil
-}
 
 func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +92,7 @@ func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		//generate a uuid and call it precomputedCID
 		// precomputedCID := uuid.New().String()
 
-		hash, err := generateFileHash(tempFile.Name())
+		hash, err := utils.GenerateFileHash(tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error generating hash: %v", err), http.StatusInternalServerError)
 			return
@@ -371,32 +345,9 @@ func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		//if the datafile as S3Bucket and S3Location, download from S3, else from IPFS
+		//if the datafile as S3Bucket and S3Location, download from S3, else error
 		if dataFile.S3URI == "" {
-			// First attempt with the initial ipfsPath
-			ipfsPath := determineIPFSPath(cid, dataFile)
-			tempFilePath, err := ipfs.DownloadFileToTemp(ipfsPath, dataFile.Filename)
-			if err != nil {
-				// If the first attempt fails, try with an alternative ipfsPath
-				altIPFSPath := determineAltIPFSPath(cid, dataFile)
-				tempFilePath, err = ipfs.DownloadFileToTemp(altIPFSPath, dataFile.Filename)
-				if err != nil {
-					utils.SendJSONError(w, "Error downloading file from IPFS", http.StatusInternalServerError)
-					return
-				}
-			}
-			defer os.Remove(tempFilePath)
-			fmt.Println("Downloaded file to temp path:", tempFilePath)
-			file, err := os.Open(tempFilePath)
-			if err != nil {
-				utils.SendJSONError(w, "Error opening downloaded file", http.StatusInternalServerError)
-				return
-			}
-			defer file.Close()
-			if _, err := io.Copy(w, file); err != nil {
-				utils.SendJSONError(w, "Error sending file", http.StatusInternalServerError)
-				return
-			}
+			utils.SendJSONError(w, "S3URI is null, fetch from IPFS is not supported", http.StatusNotFound)
 		} else {
 			filename := dataFile.Filename
 
