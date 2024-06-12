@@ -44,7 +44,7 @@ func GetRayClient() *http.Client {
 	return rayClient
 }
 
-func CreateRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
 	tool, _, err := ipwl.ReadToolConfig(toolPath, db)
 	if err != nil {
@@ -69,6 +69,10 @@ func CreateRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (
 			return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, value)
 		}
 	}
+
+	//add rayJobID to inputs
+	fmt.Printf("adding rayJobID to the adjustedInputs: %s\n", rayJobID)
+	adjustedInputs["uuid"] = rayJobID
 
 	// Marshal the inputs to JSON
 	jsonBytes, err := json.Marshal(adjustedInputs)
@@ -106,9 +110,9 @@ func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[strin
 	return nil
 }
 
-func SubmitRayJob(toolPath string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+func SubmitRayJob(toolPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
-	resp, err := CreateRayJob(toolPath, inputs, db)
+	resp, err := CreateRayJob(toolPath, rayJobID, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err

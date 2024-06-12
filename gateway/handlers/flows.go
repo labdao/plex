@@ -141,7 +141,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			if tool.ToolType == "ray" {
 				queue = models.QueueTypeRay
 			}
-			jobUUID := uuid.New().String()
 			// TODO: consolidate below with the above checks.
 			var jobType models.JobType
 			if tool.ToolType == "ray" {
@@ -156,7 +155,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
 				CreatedAt:     time.Now(),
-				JobUUID:       jobUUID,
 				Public:        false,
 				JobType:       jobType,
 			}
@@ -538,7 +536,6 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			if tool.ToolType == "ray" {
 				queue = models.QueueTypeRay
 			}
-			jobUUID := uuid.New().String()
 
 			job := models.Job{
 				ToolID:        ioItem.Tool.S3,
@@ -547,7 +544,6 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
 				CreatedAt:     time.Now(),
-				JobUUID:       jobUUID,
 				Public:        false,
 			}
 

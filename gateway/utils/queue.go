@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
-	"sync"
 	"time"
 
 	"encoding/hex"
@@ -20,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
@@ -32,7 +31,6 @@ type RayQueue struct {
 	maxWorkers int
 	maxRetry   int
 	running    int
-	mutex      sync.Mutex
 }
 
 func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
@@ -44,23 +42,23 @@ func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
 	}
 }
 
-func getEnvAsInt(name string, defaultValue int) int {
-	valueStr := os.Getenv(name)
-	if valueStr == "" {
-		return defaultValue
-	}
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
-		return defaultValue
-	}
-	return value
-}
+// func getEnvAsInt(name string, defaultValue int) int {
+// 	valueStr := os.Getenv(name)
+// 	if valueStr == "" {
+// 		return defaultValue
+// 	}
+// 	value, err := strconv.Atoi(valueStr)
+// 	if err != nil {
+// 		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
+// 		return defaultValue
+// 	}
+// 	return value
+// }
 
-// Consider allowing Job creation payloads to configure lower times
-var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
-var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
-var retryJobSleepTime = time.Duration(10) * time.Second
+// // Consider allowing Job creation payloads to configure lower times
+// var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
+// var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
+// var retryJobSleepTime = time.Duration(10) * time.Second
 
 func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 4) // Buffer for two types of jobs
@@ -100,42 +98,42 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 	}
 }
 
-func updateJobRetryState(job *models.Job, db *gorm.DB) error {
-	return db.Model(job).Updates(models.Job{RetryCount: job.RetryCount, State: job.State}).Error
-}
+// func updateJobRetryState(job *models.Job, db *gorm.DB) error {
+// 	return db.Model(job).Updates(models.Job{RetryCount: job.RetryCount, State: job.State}).Error
+// }
 
-func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
-	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
-}
+// func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
+// 	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
+// }
 
 func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
 	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
 }
 
-func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
-	return db.Preload("Tool").First(&job, id).Error
-}
+// func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
+// 	return db.Preload("Tool").First(&job, id).Error
+// }
 
 func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
 	return db.Preload("Tool").Preload("Flow").First(&job, id).Error
 }
 
-func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
-	var job models.Job
-	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return false, nil
-		} else {
-			return false, result.Error
-		}
-	}
+// func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
+// 	var job models.Job
+// 	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
+// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+// 			return false, nil
+// 		} else {
+// 			return false, result.Error
+// 		}
+// 	}
 
-	if job.State == models.JobStateCompleted {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
+// 	if job.State == models.JobStateCompleted {
+// 		return true, nil
+// 	} else {
+// 		return false, nil
+// 	}
+// }
 
 func processRayJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing Ray Job %v\n", jobID)
@@ -150,7 +148,7 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	if job.JobID == "" {
+	if job.RayJobID == "" {
 		if err := submitRayJobAndUpdateID(&job, db); err != nil {
 			return err
 		}
@@ -248,10 +246,13 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	toolCID := job.Tool.CID
 
+	//create a uuid:
+	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-	setJobStatus(job, models.JobStateRunning, "", db)
+	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
+	setJobStatusAndID(job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(toolCID, inputs, db)
+	resp, err := ray.SubmitRayJob(toolCID, rayJobID, inputs, db)
 	if err != nil {
 		return err
 	}
@@ -284,11 +285,11 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	//for now only handling 200 and failed. implement retry and timeout later
 
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.JobID, job.State)
+	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.State)
 	return db.Save(job).Error
 }
 
-func setJobStatus(job *models.Job, state models.JobState, errorMessage string, db *gorm.DB) error {
+func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
 	job.State = state
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
@@ -299,7 +300,6 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 
 	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
 	//for now only handling 200 and failed. implement retry and timeout later
-	job.JobID = resultJSON.UUID
 	job.ResultJSON = body
 	job.State = models.JobStateCompleted
 
