@@ -169,12 +169,6 @@ jobs:
           # Compose up
           docker compose -f docker-compose.yml up -d --wait
 
-      - name: Bring up the private stack
-        if: matrix.network_mode == 'private'
-        run: |
-          # Compose up
-          docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait
-
       - name: Run docker compose ps
         run: |
           # Inspect number of running containers
