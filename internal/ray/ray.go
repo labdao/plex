@@ -80,6 +80,8 @@ func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{
 		return nil, err
 	}
 
+	log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
+
 	// construct from env var BUCKET ENDPOINT + tool.RayServiceEndpoint
 	rayServiceURL := GetRayApiHost() + tool.RayServiceEndpoint
 	// Create the HTTP request
