@@ -27,7 +27,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Received Post request at /flows")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			utils.SendJSONError(w, "Bad request", http.StatusBadRequest)
 			return
 		}
 
@@ -36,7 +36,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		requestData := make(map[string]json.RawMessage)
 		err = json.Unmarshal(body, &requestData)
 		if err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
@@ -49,7 +49,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		var toolCid string
 		err = json.Unmarshal(requestData["toolCid"], &toolCid)
 		if err != nil || toolCid == "" {
-			http.Error(w, "Invalid or missing Tool CID", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid or missing Tool CID", http.StatusBadRequest)
 			return
 		}
 
@@ -57,10 +57,10 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		result := db.Where("cid = ?", toolCid).First(&tool)
 		if result.Error != nil {
 			log.Printf("Error fetching Tool: %v\n", result.Error)
-			if result.Error == gorm.ErrRecordNotFound {
-				http.Error(w, "Tool not found", http.StatusNotFound)
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
 			} else {
-				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+				utils.SendJSONError(w, "Error fetching Tool", http.StatusInternalServerError)
 			}
 			return
 		}
@@ -68,20 +68,20 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		var scatteringMethod string
 		err = json.Unmarshal(requestData["scatteringMethod"], &scatteringMethod)
 		if err != nil || scatteringMethod == "" {
-			http.Error(w, "Invalid or missing Scattering Method", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid or missing Scattering Method", http.StatusBadRequest)
 			return
 		}
 
 		var name string
 		err = json.Unmarshal(requestData["name"], &name)
 		if err != nil || name == "" {
-			http.Error(w, "Invalid or missing Name", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid or missing Name", http.StatusBadRequest)
 			return
 		}
 
 		kwargsRaw, ok := requestData["kwargs"]
 		if !ok {
-			http.Error(w, "missing kwargs in the request", http.StatusBadRequest)
+			utils.SendJSONError(w, "missing kwargs in the request", http.StatusBadRequest)
 			return
 		}
 
@@ -89,19 +89,19 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		err = json.Unmarshal(kwargsRaw, &kwargs)
 		if err != nil {
 			log.Printf("Error unmarshalling kwargs: %v; Raw data: %s\n", err, string(kwargsRaw))
-			http.Error(w, "Invalid structure for kwargs", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid structure for kwargs", http.StatusBadRequest)
 			return
 		}
 
 		err = json.Unmarshal(requestData["kwargs"], &kwargs)
 		if err != nil {
-			http.Error(w, "Invalid or missing kwargs", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid or missing kwargs", http.StatusBadRequest)
 			return
 		}
 
 		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs, db)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
 		}
 		log.Println("Initialized IO List")
@@ -109,7 +109,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		// save ioList to IPFS
 		// ioListCid, err := pinIoList(ioList)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -126,7 +126,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Creating Flow entry")
 		result = db.Create(&flow)
 		if result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
@@ -134,7 +134,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			log.Println("Creating job entry")
 			inputsJSON, err := json.Marshal(ioItem.Inputs)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
 				return
 			}
 			var queue models.QueueType
@@ -161,7 +161,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 			result := db.Create(&job)
 			if result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
@@ -197,14 +197,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				for _, cid := range cidsToAdd {
 					var dataFile models.DataFile
 					result := db.First(&dataFile, "cid = ?", cid)
-					// result := db.First(&dataFile, "cid = ? and wallet_address = ? ", cid, user.WalletAddress)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							// http.Error(w, fmt.Sprintf("DataFile with CID %v and WalletAddress %v not found", cid, user.WalletAddress), http.StatusInternalServerError)
-							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							utils.SendJSONError(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
-							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							utils.SendJSONError(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
 							return
 						}
 					}
@@ -213,13 +211,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			result = db.Save(&job)
 			if result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+			utils.SendJSONError(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
