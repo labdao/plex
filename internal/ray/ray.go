@@ -44,6 +44,18 @@ func GetRayClient() *http.Client {
 	return rayClient
 }
 
+func handleSingleElementInput(value interface{}) (string, error) {
+	switch v := value.(type) {
+	case string:
+		return v, nil
+	case float64, int, int64:
+		// Convert numeric values to string
+		return fmt.Sprintf("%v", v), nil
+	default:
+		return "", fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
 func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
 	tool, _, err := ipwl.ReadToolConfig(toolPath, db)
@@ -59,14 +71,23 @@ func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{
 
 	adjustedInputs := make(map[string]string)
 	for key, value := range inputs {
-		if valSlice, ok := value.([]interface{}); ok && len(valSlice) == 1 {
-			if valStr, ok := valSlice[0].(string); ok {
-				adjustedInputs[key] = valStr
+		switch v := value.(type) {
+		case []interface{}:
+			if len(v) == 1 {
+				adjustedInputs[key], err = handleSingleElementInput(v[0])
+				if err != nil {
+					return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+				}
 			} else {
-				return nil, fmt.Errorf("expected a string for key %s, got: %v", key, value)
+				return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
 			}
-		} else {
-			return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, value)
+		case string, float64, int:
+			adjustedInputs[key], err = handleSingleElementInput(value)
+			if err != nil {
+				return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
 		}
 	}
 
