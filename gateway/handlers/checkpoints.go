@@ -224,14 +224,6 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	svc := s3.New(sess)
 
-	var resultJSON models.RayJobResponse
-
-	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
-	if err != nil {
-		fmt.Println("Error unmarshalling result JSON:", err)
-		return nil, err
-	}
-
 	var ToolJson ipwl.Tool
 	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
 		return nil, err
@@ -240,44 +232,57 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	xAxis := ToolJson.XAxis
 	yAxis := ToolJson.YAxis
 
-	xAxisValue, xAxisExists := resultJSON.Scores[xAxis]
-	yAxisValue, yAxisExists := resultJSON.Scores[yAxis]
+	var resultJSON models.RayJobResponse
+	// Unmarshal the result JSON from the job only when job.ResultJSON is not empty
+	if string(job.ResultJSON) != "" {
+		resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+		if err != nil {
+			fmt.Println("Error unmarshalling result JSON:", err)
+			return nil, err
+		}
 
-	if !xAxisExists || !yAxisExists {
-		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
+		xAxisValue, xAxisExists := resultJSON.Scores[xAxis]
+		yAxisValue, yAxisExists := resultJSON.Scores[yAxis]
+
+		if !xAxisExists || !yAxisExists {
+			return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
+		}
+
+		s3client, err := s3client.NewS3Client()
+		if err != nil {
+			return nil, err
+		}
+
+		_, key, err := s3client.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
+		if err != nil {
+			return nil, err
+		}
+		pdbFileName := filepath.Base(key)
+
+		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(key),
+		})
+		urlStr, err := req.Presign(15 * time.Minute)
+		if err != nil {
+			return nil, err
+		}
+
+		plotData := []models.ScatterPlotData{}
+		plotData = append(plotData, models.ScatterPlotData{
+			Plddt:         xAxisValue,
+			IPae:          yAxisValue,
+			Checkpoint:    "0", // Default checkpoint
+			StructureFile: pdbFileName,
+			PdbFilePath:   urlStr,
+			RayJobID:      resultJSON.UUID,
+		})
+
+		return plotData, nil
+	} else {
+		// If the job.ResultJSON is empty, return an empty array
+		return []models.ScatterPlotData{}, nil
 	}
-
-	s3client, err := s3client.NewS3Client()
-	if err != nil {
-		return nil, err
-	}
-
-	_, key, err := s3client.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
-	if err != nil {
-		return nil, err
-	}
-	pdbFileName := filepath.Base(key)
-
-	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-	})
-	urlStr, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		return nil, err
-	}
-
-	plotData := []models.ScatterPlotData{}
-	plotData = append(plotData, models.ScatterPlotData{
-		Plddt:         xAxisValue,
-		IPae:          yAxisValue,
-		Checkpoint:    "0", // Default checkpoint
-		StructureFile: pdbFileName,
-		PdbFilePath:   urlStr,
-		JobUUID:       resultJSON.UUID,
-	})
-
-	return plotData, nil
 }
 
 func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {

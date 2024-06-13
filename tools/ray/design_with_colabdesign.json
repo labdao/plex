@@ -1,5 +1,5 @@
 {
-    "name": "design_with_colabdesign_w_string_inputs_v6",
+    "name": "design_with_colabdesign_v7",
     "description": "Design with colabdesign",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
@@ -55,7 +55,7 @@
         "required": true
       },
       "binder_length": {
-        "type": "string",
+        "type": "number",
         "description": "The length of the protein binder that is being designed",
         "array": false,
         "glob": [
@@ -94,7 +94,7 @@
         "required": false
       },
       "start_residue": {
-        "type": "string",
+        "type": "number",
         "description": "The start residue of the target protein.",
         "array": false,
         "glob": [
@@ -109,7 +109,7 @@
         "required": false
       },
       "end_residue": {
-        "type": "string",
+        "type": "number",
         "description": "The end residue of the target protein.",
         "array": false,
         "glob": [

@@ -18,7 +18,7 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
 
   useEffect(() => {
     if (!activeJobUUID) {
-      setActiveJobUUID(flow.Jobs?.[0]?.JobUUID);
+      setActiveJobUUID(flow.Jobs?.[0]?.RayJobID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flow.Jobs]);
@@ -30,14 +30,14 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
         const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
 
         return (
-          <AccordionItem value={job.JobUUID} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
+          <AccordionItem value={job.RayJobID} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
             <Card className="my-2 shadow-sm">
               <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                 <div className="flex items-center gap-2">
                   <div className="w-30">
                     <div>run {index + 1}</div>
                     <div className="flex gap-1 text-xs text-muted-foreground/70">
-                      Job ID: {job.BacalhauJobID ? <TruncatedString value={job.BacalhauJobID} /> : "n/a"}
+                      Job ID: {job.RayJobID ? <TruncatedString value={job.RayJobID} /> : "n/a"}
                     </div>
                   </div>
                   <Badge status={status} variant="outline">

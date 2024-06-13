@@ -30,7 +30,7 @@ const (
 
 type Job struct {
 	ID            uint           `gorm:"primaryKey;autoIncrement"`
-	JobID         string         `gorm:"type:varchar(255)"`
+	RayJobID      string         `gorm:"type:varchar(255)"`
 	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
 	Error         string         `gorm:"type:text;default:''"`
 	WalletAddress string         `gorm:"type:varchar(255)"`
@@ -46,7 +46,6 @@ type Job struct {
 	StartedAt     time.Time      `gorm:""`
 	CompletedAt   time.Time      `gorm:""`
 	Annotations   string         `gorm:"type:varchar(255)"`
-	JobUUID       string         `gorm:"type:uuid"`
 	Public        bool           `gorm:"type:boolean;not null;default:false"`
 	RetryCount    int            `gorm:"type:int;not null;default:0"`
 	JobType       JobType        `gorm:"type:varchar(255);not null;default:'bacalhau'"`
