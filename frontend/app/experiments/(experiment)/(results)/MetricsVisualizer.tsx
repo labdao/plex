@@ -39,7 +39,7 @@ interface CheckpointChartData {
   dim1: number;
   dim2: number;
   pdbFilePath: string;
-  jobUUID: string;
+  rayJobID: string;
 }
 
 interface CheckpointData {
@@ -110,7 +110,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
 
   const handlePointClick = (entry: CheckpointChartData) => {
     setActiveCheckpointUrl(entry.pdbFilePath);
-    setActiveJobUUID(entry.jobUUID);
+    setActiveJobUUID(entry.rayJobID);
   };
 
   const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
@@ -207,7 +207,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
                           stroke="#6BDBAD"
                           strokeOpacity={0.3}
                           paintOrder={"stroke"}
-                          fill={entry.jobUUID === activeJobUUID ? "#000000" : "#959595"}
+                          fill={entry.rayJobID === activeJobUUID ? "#000000" : "#959595"}
                         />
                       );
                     })}

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile, JobDetail, selectToolDetail, ToolDetail, useSelector } from "@/lib/redux";
+import { DataFile, JobDetail as JobDetailType, selectToolDetail, ToolDetail, useSelector } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { groupInputs } from "../(forms)/formUtils";
@@ -22,7 +22,7 @@ interface JobDetailProps {
 }
 
 export default function JobDetail({ jobID }: JobDetailProps) {
-  const [job, setJob] = useState({} as JobDetail);
+  const [job, setJob] = useState({} as JobDetailType);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("raw-files");
 
@@ -90,7 +90,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
       </TabsContent>
       <TabsContent value="logs">
         <div className="w-full">
-          <LogViewer bacalhauJobID={job.BacalhauJobID} />
+          <LogViewer rayJobID={job.RayJobID} />
         </div>
       </TabsContent>
       <TabsContent value="inputs">

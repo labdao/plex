@@ -275,7 +275,7 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 			Checkpoint:    "0", // Default checkpoint
 			StructureFile: pdbFileName,
 			PdbFilePath:   urlStr,
-			JobUUID:       resultJSON.UUID,
+			RayJobID:      resultJSON.UUID,
 		})
 
 		return plotData, nil

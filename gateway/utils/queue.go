@@ -293,6 +293,7 @@ func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, 
 	job.State = state
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
+	job.RayJobID = rayJobID
 	return db.Save(job).Error
 }
 
