@@ -159,7 +159,19 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				JobType:       jobType,
 			}
 
-			result := db.Create(&job)
+			requestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				RetryCount: 0,
+				CreatedAt:  time.Now(),
+			}
+
+			result := db.Create(&requestTracker)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			result = db.Create(&job)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
 				return
@@ -543,6 +555,19 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Queue:         queue,
 				CreatedAt:     time.Now(),
 				Public:        false,
+			}
+
+			requestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				RetryCount: 0,
+				State:      models.JobStateQueued,
+				CreatedAt:  time.Now(),
+			}
+
+			result := db.Create(&requestTracker)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
+				return
 			}
 
 			result = db.Create(&job)
