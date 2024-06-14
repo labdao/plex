@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"encoding/hex"
@@ -44,23 +45,29 @@ func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
 	}
 }
 
-// func getEnvAsInt(name string, defaultValue int) int {
-// 	valueStr := os.Getenv(name)
-// 	if valueStr == "" {
-// 		return defaultValue
-// 	}
-// 	value, err := strconv.Atoi(valueStr)
-// 	if err != nil {
-// 		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
-// 		return defaultValue
-// 	}
-// 	return value
-// }
+func getEnvAsInt(name string, defaultValue int) int {
+	valueStr := os.Getenv(name)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
+		return defaultValue
+	}
+	return value
+}
 
-// // Consider allowing Job creation payloads to configure lower times
-// var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
-// var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
-// var retryJobSleepTime = time.Duration(10) * time.Second
+var maxRetryCountFor500 = getEnvAsInt("MAX_RETRY_COUNT_FOR_500", 2)
+var maxRetryCountFor404 = getEnvAsInt("MAX_RETRY_COUNT_FOR_404", 1)
+
+// Helper function to get a normally distributed random delay
+// TODO_PR979: Make these env variables
+func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev time.Duration) time.Duration {
+	mean := float64(base.Nanoseconds()) * math.Pow(factor, float64(retryCount))
+	delay := mean + rand.NormFloat64()*float64(stdDev.Nanoseconds())
+	return time.Duration(delay)
+}
 
 func StartJobQueues(db *gorm.DB) error {
 	errChan := make(chan error, 4) // Buffer for two types of jobs
@@ -100,21 +107,9 @@ func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.
 	}
 }
 
-// func updateJobRetryState(job *models.Job, db *gorm.DB) error {
-// 	return db.Model(job).Updates(models.Job{RetryCount: job.RetryCount, State: job.State}).Error
-// }
-
-// func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
-// 	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
-// }
-
 func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
 	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
 }
-
-// func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
-// 	return db.Preload("Tool").First(&job, id).Error
-// }
 
 func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
 	return db.Preload("Tool").Preload("Flow").First(&job, id).Error
@@ -123,23 +118,6 @@ func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
 func fetchLatestRequestTracker(requestTracker *models.RequestTracker, jobID uint, db *gorm.DB) error {
 	return db.Where("job_id = ?", jobID).Order("created_at DESC").First(requestTracker).Error
 }
-
-// func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
-// 	var job models.Job
-// 	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
-// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 			return false, nil
-// 		} else {
-// 			return false, result.Error
-// 		}
-// 	}
-
-// 	if job.State == models.JobStateCompleted {
-// 		return true, nil
-// 	} else {
-// 		return false, nil
-// 	}
-// }
 
 func processRayJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing Ray Job %v\n", jobID)
@@ -246,18 +224,8 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 	return string(prettyJSON), nil
 }
 
-// Helper function to get a normally distributed random delay
-func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev time.Duration) time.Duration {
-	mean := float64(base.Nanoseconds()) * math.Pow(factor, float64(retryCount))
-	delay := mean + rand.NormFloat64()*float64(stdDev.Nanoseconds())
-	return time.Duration(delay)
-}
-
 func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTracker, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
-	if job.RetryCount > 1 {
-		return fmt.Errorf("job has already been retried %d times", job.RetryCount)
-	}
 	var jobInputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
 		return err
@@ -300,15 +268,10 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
 		completeRayJobAndAddFiles(requestTracker, job, body, rayJobResponse, db)
 	} else {
-		job.State = models.JobStateFailed
 		requestTracker.State = models.JobStateFailed
 		requestTracker.ResponseCode = resp.StatusCode
 		requestTracker.ErrorMessage = string(body)
 		requestTracker.CompletedAt = time.Now().UTC()
-		err = db.Save(job).Error
-		if err != nil {
-			return err
-		}
 		err = db.Save(requestTracker).Error
 		if err != nil {
 			return err
@@ -316,10 +279,16 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 		// 504 - no retry, 404 - immediate retry once, 500 - exponential back off and retry twice
 		// TBD retry count and delay
 		if resp.StatusCode == http.StatusGatewayTimeout {
-			fmt.Printf("Job %v had timeout. Not retrying again\n", job.ID)
+			fmt.Printf("Job %v had timeout. Not retrying again. Marking as failed\n", job.ID)
+			job.State = models.JobStateFailed
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
 			return nil
-		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < 1 {
+		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < maxRetryCountFor404 {
 			job.RetryCount = job.RetryCount + 1
+			job.State = models.JobStateQueued
 			err = db.Save(job).Error
 			if err != nil {
 				return err
@@ -336,8 +305,9 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			}
 
 			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
-		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < 2 {
+		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < maxRetryCountFor500 {
 			job.RetryCount = job.RetryCount + 1
+			job.State = models.JobStateQueued
 			err = db.Save(job).Error
 			if err != nil {
 				return err
@@ -352,7 +322,6 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			if err != nil {
 				return err
 			}
-
 			// Calculate delay with exponential backoff and randomness
 			delay := getRandomDelay(job.RetryCount, 2*time.Second, 1.2, 500*time.Millisecond)
 
@@ -360,11 +329,16 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			time.Sleep(delay)
 
 			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+		} else {
+			fmt.Printf("Job %v had server error (500). Retried %v times already. Marking as failed\n", job.ID, job.RetryCount)
+			job.State = models.JobStateFailed
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
 		}
 
 	}
-	//for now only handling 200 and failed. implement retry and timeout later
-
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.State)
 	err = db.Save(job).Error
