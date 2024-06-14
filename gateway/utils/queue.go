@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -244,6 +246,13 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 	return string(prettyJSON), nil
 }
 
+// Helper function to get a normally distributed random delay
+func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev time.Duration) time.Duration {
+	mean := float64(base.Nanoseconds()) * math.Pow(factor, float64(retryCount))
+	delay := mean + rand.NormFloat64()*float64(stdDev.Nanoseconds())
+	return time.Duration(delay)
+}
+
 func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTracker, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
 	if job.RetryCount > 1 {
@@ -300,7 +309,16 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 		if err != nil {
 			return err
 		}
-		if resp.StatusCode == http.StatusNotFound && job.RetryCount < 1 {
+		err = db.Save(requestTracker).Error
+		if err != nil {
+			return err
+		}
+		// 504 - no retry, 404 - immediate retry once, 500 - exponential back off and retry twice
+		// TBD retry count and delay
+		if resp.StatusCode == http.StatusGatewayTimeout {
+			fmt.Printf("Job %v had timeout. Not retrying again\n", job.ID)
+			return nil
+		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < 1 {
 			job.RetryCount = job.RetryCount + 1
 			err = db.Save(job).Error
 			if err != nil {
@@ -316,6 +334,30 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			if err != nil {
 				return err
 			}
+
+			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < 2 {
+			job.RetryCount = job.RetryCount + 1
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
+			newRequestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				State:      models.JobStateQueued,
+				RetryCount: 2,
+				CreatedAt:  time.Now().UTC(),
+			}
+			err = db.Save(&newRequestTracker).Error
+			if err != nil {
+				return err
+			}
+
+			// Calculate delay with exponential backoff and randomness
+			delay := getRandomDelay(job.RetryCount, 2*time.Second, 1.2, 500*time.Millisecond)
+
+			log.Printf("Retry after %v due to server error (500)", delay)
+			time.Sleep(delay)
 
 			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
 		}
