@@ -106,13 +106,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Initialized IO List")
 
-		// save ioList to IPFS
-		// ioListCid, err := pinIoList(ioList)
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
-			return
-		}
-
 		flowUUID := uuid.New().String()
 
 		flow := models.Flow{
@@ -556,7 +549,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				Public:        false,
 			}
 
-			result := db.Create(&job)
+			result = db.Create(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating Job entity: %v", result.Error), http.StatusInternalServerError)
 				return
