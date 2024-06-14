@@ -296,7 +296,7 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			newRequestTracker := models.RequestTracker{
 				JobID:      job.ID,
 				State:      models.JobStateQueued,
-				RetryCount: 1,
+				RetryCount: job.RetryCount,
 				CreatedAt:  time.Now().UTC(),
 			}
 			err = db.Save(&newRequestTracker).Error
@@ -315,7 +315,7 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			newRequestTracker := models.RequestTracker{
 				JobID:      job.ID,
 				State:      models.JobStateQueued,
-				RetryCount: 2,
+				RetryCount: job.RetryCount,
 				CreatedAt:  time.Now().UTC(),
 			}
 			err = db.Save(&newRequestTracker).Error
@@ -330,7 +330,12 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 
 			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
 		} else {
-			fmt.Printf("Job %v had server error (500). Retried %v times already. Marking as failed\n", job.ID, job.RetryCount)
+			var latestRequestTracker models.RequestTracker
+			err = fetchLatestRequestTracker(&latestRequestTracker, job.ID, db)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("The latest try of job %v had error %v. Retried %v times already. Marking as failed\n", job.ID, latestRequestTracker.ResponseCode, job.RetryCount)
 			job.State = models.JobStateFailed
 			err = db.Save(job).Error
 			if err != nil {
@@ -375,7 +380,6 @@ func setJobStatusAndID(requestTracker *models.RequestTracker, job *models.Job, s
 func completeRayJobAndAddFiles(requestTracker *models.RequestTracker, job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
 
 	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
-	//for now only handling 200 and failed. implement retry and timeout later
 	requestTracker.CompletedAt = time.Now().UTC()
 	requestTracker.State = models.JobStateCompleted
 	requestTracker.ResponseCode = http.StatusOK
