@@ -128,7 +128,7 @@ func AddDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			CID:           hash,
 			WalletAddress: walletAddress,
 			Filename:      filename,
-			Timestamp:     time.Now(),
+			Timestamp:     time.Now().UTC(),
 			Public:        isPublic,
 			S3URI:         s3_uri,
 		}

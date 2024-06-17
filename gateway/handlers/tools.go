@@ -168,7 +168,7 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			Cpu:                0,
 			Gpu:                toolGpu,
 			Network:            tool.NetworkBool,
-			Timestamp:          time.Now(),
+			Timestamp:          time.Now().UTC(),
 			Display:            display,
 			TaskCategory:       taskCategory,
 			DefaultTool:        defaultTool,

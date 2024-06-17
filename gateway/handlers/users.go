@@ -63,7 +63,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			newUser := models.User{
 				WalletAddress: requestData.WalletAddress,
 				DID:           did,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 			}
 			if result := db.Create(&newUser); result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)

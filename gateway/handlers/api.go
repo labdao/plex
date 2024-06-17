@@ -54,8 +54,8 @@ func AddAPIKeyHandler(db *gorm.DB) http.HandlerFunc {
 		apiKey := models.APIKey{
 			Key:       apiKeyString,
 			Scope:     models.ScopeReadWrite, // default scope is read-write
-			CreatedAt: time.Now(),
-			ExpiresAt: time.Now().Add(30 * 24 * time.Hour), // default expiration time is 30 days
+			CreatedAt: time.Now().UTC(),
+			ExpiresAt: time.Now().UTC().Add(30 * 24 * time.Hour), // default expiration time is 30 days
 			UserID:    walletAddress,
 		}
 

@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"encoding/hex"
@@ -32,34 +31,21 @@ import (
 type RayQueue struct {
 	db         *gorm.DB
 	maxWorkers int
-	maxRetry   int
-	running    int
+	jobChan    chan models.Job
+	errChan    chan error
 }
 
-func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
+func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
 		maxWorkers: maxWorkers,
-		maxRetry:   maxRetry,
-		running:    0,
+		jobChan:    make(chan models.Job, maxWorkers),
+		errChan:    make(chan error, maxWorkers),
 	}
 }
 
-func getEnvAsInt(name string, defaultValue int) int {
-	valueStr := os.Getenv(name)
-	if valueStr == "" {
-		return defaultValue
-	}
-	value, err := strconv.Atoi(valueStr)
-	if err != nil {
-		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
-		return defaultValue
-	}
-	return value
-}
-
-var maxRetryCountFor500 = getEnvAsInt("MAX_RETRY_COUNT_FOR_500", 2)
-var maxRetryCountFor404 = getEnvAsInt("MAX_RETRY_COUNT_FOR_404", 1)
+var maxRetryCountFor500 = GetEnvAsInt("MAX_RETRY_COUNT_FOR_500", 2)
+var maxRetryCountFor404 = GetEnvAsInt("MAX_RETRY_COUNT_FOR_404", 1)
 
 // Helper function to get a normally distributed random delay
 // TODO_PR979: Make these env variables
@@ -69,14 +55,14 @@ func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev t
 	return time.Duration(delay)
 }
 
-func StartJobQueues(db *gorm.DB) error {
-	errChan := make(chan error, 4) // Buffer for two types of jobs
+func StartJobQueues(db *gorm.DB, maxWorkers int) error {
+	rq := NewRayQueue(db, maxWorkers)
+	rq.StartWorkers()
 
-	go ProcessJobQueue(models.QueueTypeRay, errChan, db)
+	go rq.ProcessJobQueue(models.QueueTypeRay)
 
-	// Wait for error from any queue
-	for i := 0; i < 4; i++ {
-		if err := <-errChan; err != nil {
+	for err := range rq.errChan {
+		if err != nil {
 			return err
 		}
 	}
@@ -84,26 +70,34 @@ func StartJobQueues(db *gorm.DB) error {
 	return nil
 }
 
-func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.DB) {
+func (rq *RayQueue) StartWorkers() {
+	for i := 0; i < rq.maxWorkers; i++ {
+		go rq.worker()
+	}
+}
+
+func (rq *RayQueue) worker() {
+	for job := range rq.jobChan {
+		err := processRayJob(job.ID, rq.db)
+		if err != nil {
+			rq.errChan <- err
+		}
+	}
+}
+
+func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
 	for {
 		var job models.Job
-		err := fetchOldestQueuedJob(&job, queueType, db)
+		err := fetchOldestQueuedJob(&job, queueType, rq.db)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			//TODO_PR#970: uncomment this later
-			// fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
 			time.Sleep(5 * time.Second)
 			continue
 		} else if err != nil {
-			errChan <- err
+			rq.errChan <- err
 			return
 		}
 
-		if queueType == models.QueueTypeRay {
-			if err := processRayJob(job.ID, db); err != nil {
-				errChan <- err
-				return
-			}
-		}
+		rq.jobChan <- job
 	}
 }
 
@@ -387,6 +381,7 @@ func completeRayJobAndAddFiles(requestTracker *models.RequestTracker, job *model
 
 	job.ResultJSON = body
 	job.State = models.JobStateCompleted
+	job.CompletedAt = time.Now().UTC()
 
 	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range resultJSON.Files {
@@ -435,7 +430,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 		WalletAddress: job.WalletAddress,
 		Filename:      filepath.Base(fileDetail.URI),
 		Tags:          tags,
-		Timestamp:     time.Now(),
+		Timestamp:     time.Now().UTC(),
 		S3URI:         fileDetail.URI,
 	}
 

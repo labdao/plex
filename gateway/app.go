@@ -120,10 +120,12 @@ func ServeWebApp() {
 
 	mux := server.NewServer(db, s3Client)
 
+	maxWorkers := utils.GetEnvAsInt("MAX_WORKERS", 4)
+
 	// Start queue watcher in a separate goroutine
 	go func() {
 		for {
-			if err := utils.StartJobQueues(db); err != nil {
+			if err := utils.StartJobQueues(db, maxWorkers); err != nil {
 				fmt.Printf("unexpected error processing job queues: %v\n", err)
 				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
 			}

@@ -111,7 +111,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		flow := models.Flow{
 			WalletAddress: user.WalletAddress,
 			Name:          name,
-			StartTime:     time.Now(),
+			StartTime:     time.Now().UTC(),
 			FlowUUID:      flowUUID,
 			Public:        false,
 		}
@@ -147,7 +147,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 				JobType:       jobType,
 			}
@@ -210,7 +210,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			requestTracker := models.RequestTracker{
 				JobID:      job.ID,
 				RetryCount: 0,
-				CreatedAt:  time.Now(),
+				CreatedAt:  time.Now().UTC(),
 			}
 
 			result = db.Save(&requestTracker)
@@ -545,7 +545,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 			}
 
@@ -609,7 +609,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				JobID:      job.ID,
 				RetryCount: 0,
 				State:      models.JobStateQueued,
-				CreatedAt:  time.Now(),
+				CreatedAt:  time.Now().UTC(),
 			}
 
 			result = db.Save(&requestTracker)
