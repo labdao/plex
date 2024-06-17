@@ -165,8 +165,6 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			user.ComputeTally += tool.ComputeCost
-
 			for _, input := range ioItem.Inputs {
 				var cidsToAdd []string
 				switch v := input.(type) {
@@ -214,6 +212,13 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(&job)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			user.ComputeTally += tool.ComputeCost
+			result = db.Save(user)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
