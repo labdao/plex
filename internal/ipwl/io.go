@@ -9,17 +9,17 @@ import (
 
 type ToolInfo struct {
 	Name string `json:"name"`
-	IPFS string `json:"ipfs"`
+	S3   string `json:"s3"`
 }
 
 type IO struct {
-	Tool          ToolInfo               `json:"tool"`
-	Inputs        map[string]interface{} `json:"inputs"`
-	Outputs       map[string]interface{} `json:"outputs"`
-	State         string                 `json:"state"`
-	ErrMsg        string                 `json:"errMsg"`
-	UserID        string                 `json:"userId"`
-	BacalhauJobId string                 `json:"bacalhauJobId"`
+	Tool     ToolInfo               `json:"tool"`
+	Inputs   map[string]interface{} `json:"inputs"`
+	Outputs  map[string]interface{} `json:"outputs"`
+	State    string                 `json:"state"`
+	ErrMsg   string                 `json:"errMsg"`
+	UserID   string                 `json:"userId"`
+	RayJobID string                 `json:"rayJobId"`
 }
 
 func ReadIOList(filePath string) ([]IO, error) {

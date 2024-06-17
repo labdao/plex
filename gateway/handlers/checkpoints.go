@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
-	"github.com/labdao/plex/internal/ray"
 
 	"gorm.io/gorm"
 
@@ -19,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	s3client "github.com/labdao/plex/internal/s3"
 )
 
 func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
@@ -87,9 +87,18 @@ func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
+	var presignedURLEndpoint string
+
+	// Check if the bucket endpoint is the local development endpoint
+	if bucketEndpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = bucketEndpoint
+	}
+
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
+		Endpoint:         aws.String(presignedURLEndpoint),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	})
@@ -194,9 +203,18 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
+	var presignedURLEndpoint string
+
+	// Check if the bucket endpoint is the local development endpoint
+	if bucketEndpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = bucketEndpoint
+	}
+
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
+		Endpoint:         aws.String(presignedURLEndpoint),
 		S3ForcePathStyle: aws.Bool(true),
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
 	})
@@ -206,14 +224,6 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	svc := s3.New(sess)
 
-	var resultJSON models.RayJobResponse
-
-	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
-	if err != nil {
-		fmt.Println("Error unmarshalling result JSON:", err)
-		return nil, err
-	}
-
 	var ToolJson ipwl.Tool
 	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
 		return nil, err
@@ -222,39 +232,57 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	xAxis := ToolJson.XAxis
 	yAxis := ToolJson.YAxis
 
-	xAxisValue, xAxisExists := resultJSON.Scores[xAxis]
-	yAxisValue, yAxisExists := resultJSON.Scores[yAxis]
+	var resultJSON models.RayJobResponse
+	// Unmarshal the result JSON from the job only when job.ResultJSON is not empty
+	if string(job.ResultJSON) != "" {
+		resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+		if err != nil {
+			fmt.Println("Error unmarshalling result JSON:", err)
+			return nil, err
+		}
 
-	if !xAxisExists || !yAxisExists {
-		return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
+		xAxisValue, xAxisExists := resultJSON.Scores[xAxis]
+		yAxisValue, yAxisExists := resultJSON.Scores[yAxis]
+
+		if !xAxisExists || !yAxisExists {
+			return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
+		}
+
+		s3client, err := s3client.NewS3Client()
+		if err != nil {
+			return nil, err
+		}
+
+		_, key, err := s3client.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
+		if err != nil {
+			return nil, err
+		}
+		pdbFileName := filepath.Base(key)
+
+		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(key),
+		})
+		urlStr, err := req.Presign(15 * time.Minute)
+		if err != nil {
+			return nil, err
+		}
+
+		plotData := []models.ScatterPlotData{}
+		plotData = append(plotData, models.ScatterPlotData{
+			Plddt:         xAxisValue,
+			IPae:          yAxisValue,
+			Checkpoint:    "0", // Default checkpoint
+			StructureFile: pdbFileName,
+			PdbFilePath:   urlStr,
+			RayJobID:      resultJSON.UUID,
+		})
+
+		return plotData, nil
+	} else {
+		// If the job.ResultJSON is empty, return an empty array
+		return []models.ScatterPlotData{}, nil
 	}
-
-	_, key, err := ray.GetBucketAndKeyFromURI(resultJSON.PDB.URI)
-	if err != nil {
-		return nil, err
-	}
-	pdbFileName := filepath.Base(key)
-
-	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(key),
-	})
-	urlStr, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		return nil, err
-	}
-
-	plotData := []models.ScatterPlotData{}
-	plotData = append(plotData, models.ScatterPlotData{
-		Plddt:         xAxisValue,
-		IPae:          yAxisValue,
-		Checkpoint:    "0", // Default checkpoint
-		StructureFile: pdbFileName,
-		PdbFilePath:   urlStr,
-		JobUUID:       resultJSON.UUID,
-	})
-
-	return plotData, nil
 }
 
 func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {

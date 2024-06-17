@@ -15,7 +15,6 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/labdao/plex/internal/ipfs"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/s3"
 
@@ -95,7 +94,6 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating temp file: %v", err), http.StatusInternalServerError)
 			return
 		}
-		defer os.Remove(tempFile.Name())
 
 		bucketName := os.Getenv("BUCKET_NAME")
 		if bucketName == "" {
@@ -103,13 +101,15 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
+		hash, err := utils.GenerateFileHash(tempFile.Name())
 		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error hashing file: %v", err), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println("Hash of the tool manifest", tempFile.Name(), " file: ", hash)
+		defer os.Remove(tempFile.Name())
 
-		objectKey := precomputedCID + "/" + tempFile.Name() + ".json"
+		objectKey := hash + "/" + tempFile.Name()
 		// S3 upload
 		err = s3c.UploadFile(bucketName, objectKey, tempFile.Name())
 		if err != nil {
@@ -117,21 +117,7 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error adding to IPFS: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		// TODO: determine why there is a discrepancy
-		// remove logs when resolved
-		log.Println("--------------------")
-		if precomputedCID != cid {
-			log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
-		} else {
-			log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
-		}
-		log.Println("--------------------")
+		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 
 		var toolGpu int
 		if tool.GpuBool {
@@ -173,7 +159,7 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		toolEntry := models.Tool{
-			CID:                cid,
+			CID:                hash,
 			WalletAddress:      walletAddress,
 			Name:               tool.Name,
 			ToolJson:           toolJSON,
@@ -190,6 +176,15 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			ToolType:           string(tool.ToolType),
 			RayServiceEndpoint: tool.RayServiceEndpoint,
 			ComputeCost:        tool.ComputeCost,
+			S3URI:              s3_uri,
+		}
+
+		if tool.MemoryGB != nil {
+			toolEntry.Memory = *tool.MemoryGB
+		}
+
+		if tool.Cpu != nil {
+			toolEntry.Cpu = *tool.Cpu
 		}
 
 		result := tx.Create(&toolEntry)

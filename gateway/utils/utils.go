@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -88,4 +90,26 @@ func CreateAndWriteTempFile(r io.Reader, filename string) (*os.File, error) {
 	}
 
 	return tempFile, nil
+}
+
+func GenerateFileHash(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+
+	if _, err := hasher.Write([]byte(filename)); err != nil {
+		return "", fmt.Errorf("failed to hash filename: %w", err)
+	}
+
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", fmt.Errorf("failed to hash file contents: %w", err)
+	}
+
+	hashBytes := hasher.Sum(nil)
+
+	return hex.EncodeToString(hashBytes), nil
 }

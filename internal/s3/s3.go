@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/labdao/plex/internal/ray"
 )
 
 type S3Client struct {
@@ -109,26 +108,31 @@ func (s *S3Client) UploadFile(bucketName, objectName, filePath string) error {
 	return err
 }
 
-func (s *S3Client) DownloadFile(bucketName, objectName, filePath string) error {
-	file, err := os.Create(filePath)
+func (s *S3Client) DownloadFile(bucketName, objectName, fileName string) error {
+	// Create a new file in the provided path.
+	file, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = s.Client.GetObject(&s3.GetObjectInput{
+	// Get the object from S3 and write its content to the file.
+	output, err := s.Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectName),
 	})
 	if err != nil {
 		return err
 	}
+	defer output.Body.Close()
 
-	return nil
+	// Copy data from S3 object to the file
+	_, err = io.Copy(file, output.Body)
+	return err
 }
 
 func (s *S3Client) StreamFileToResponse(s3URI string, w http.ResponseWriter, filename string) error {
-	bucketName, objectName, err := ray.GetBucketAndKeyFromURI(s3URI)
+	bucketName, objectName, err := s.GetBucketAndKeyFromURI(s3URI)
 	if err != nil {
 		return err
 	}
@@ -219,4 +223,15 @@ func (s *S3Client) ListFilesInDirectory(bucketName, objectPrefix string) ([]stri
 	}
 
 	return files, nil
+}
+
+func (s *S3Client) GetBucketAndKeyFromURI(uri string) (string, string, error) {
+	uriParts := strings.Split(uri, "://")
+	if len(uriParts) != 2 {
+		return "", "", fmt.Errorf("invalid URI: %s", uri)
+	}
+	uriParts = strings.Split(uriParts[1], "/")
+	bucket := uriParts[0]
+	path := strings.Join(uriParts[1:], "/")
+	return bucket, path, nil
 }

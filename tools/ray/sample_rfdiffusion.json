@@ -1,10 +1,10 @@
 {
-    "name": "design_with_colabdesign_v7",
-    "description": "Design with colabdesign",
+    "name": "relay_sample_rfdiffusion_both_ipfs_s3_v4",
+    "description": "Sample RFDiffusion tool",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
     "toolType": "ray",
-    "rayServiceEndpoint": "/design_with_colabdesign",
+    "rayServiceEndpoint": "/sample_relay_rf_diffusion",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
@@ -55,7 +55,7 @@
         "required": true
       },
       "binder_length": {
-        "type": "number",
+        "type": "string",
         "description": "The length of the protein binder that is being designed",
         "array": false,
         "glob": [
@@ -94,7 +94,7 @@
         "required": false
       },
       "start_residue": {
-        "type": "number",
+        "type": "string",
         "description": "The start residue of the target protein.",
         "array": false,
         "glob": [
@@ -109,7 +109,7 @@
         "required": false
       },
       "end_residue": {
-        "type": "number",
+        "type": "string",
         "description": "The end residue of the target protein.",
         "array": false,
         "glob": [

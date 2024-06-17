@@ -97,8 +97,9 @@ func ServeWebApp() {
 		log.Fatalf("An error occurred while migrating the database: %v", err)
 	}
 
+	// If needed use log level debug or info. Default set to silent to avoid noisy logs
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+		Logger: newLogger.LogMode(logger.Silent),
 	})
 	if err != nil {
 		panic("failed to connect to database")
@@ -125,18 +126,6 @@ func ServeWebApp() {
 			if err := utils.StartJobQueues(db); err != nil {
 				fmt.Printf("unexpected error processing job queues: %v\n", err)
 				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
-			}
-		}
-	}()
-
-	// Start running jobs watcher in a separate goroutine
-	go func() {
-		for {
-			if err := utils.MonitorRunningJobs(db); err != nil {
-				fmt.Printf("unexpected error monitoring running jobs: %v\n", err)
-				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
-			} else {
-				break // exit the loop if no error (optional based on your use case)
 			}
 		}
 	}()

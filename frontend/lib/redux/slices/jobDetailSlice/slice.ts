@@ -4,7 +4,6 @@ import { DataFile } from "../dataFileListSlice/slice";
 
 export interface JobDetail {
   ID: number | null;
-  BacalhauJobID: string;
   State: string;
   Error: string;
   ToolID: string;
@@ -12,7 +11,7 @@ export interface JobDetail {
   InputFiles: DataFile[];
   OutputFiles: DataFile[];
   Status: string;
-  JobUUID: string;
+  RayJobID: string;
   Tool: any;
   Inputs: any;
 }
@@ -27,7 +26,6 @@ export interface JobDetailSliceState {
 const initialState: JobDetailSliceState = {
   job: {
     ID: null,
-    BacalhauJobID: "",
     State: "",
     Error: "",
     ToolID: "",
@@ -35,7 +33,7 @@ const initialState: JobDetailSliceState = {
     InputFiles: [],
     OutputFiles: [],
     Status: "unknown",
-    JobUUID: "",
+    RayJobID: "",
     Tool: {},
     Inputs: {},
   },
