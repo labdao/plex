@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -28,6 +28,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   const tool = useSelector(selectToolDetail);
   const walletAddress = user?.wallet?.address;
+  const userTier = useSelector(selectUserTier);
 
   useEffect(() => {
     return () => {
@@ -57,6 +58,21 @@ export default function NewExperimentForm({ task }: { task: any }) {
       console.error("Wallet address missing");
       return;
     }
+
+    if (userTier === 'Paid') {
+      try {
+        const checkoutResult = await dispatch(stripeCheckoutThunk()).unwrap();
+        if (!checkoutResult.success) {
+          // Handle unsuccessful checkout
+          return;
+        }
+      } catch (error) {
+        console.error("Stripe checkout failed", error);
+        // Handle error, maybe show message to user
+        return;
+      }
+    }
+
     const transformedPayload = transformJson(tool, values, walletAddress);
     console.log("Submitting Payload:", transformedPayload);
 

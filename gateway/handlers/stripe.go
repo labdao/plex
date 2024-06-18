@@ -70,7 +70,7 @@ func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error
 	return nil, nil
 }
 
-func createCheckoutSession(walletAddress string, computeCost int) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID string, computeCost int) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -92,7 +92,8 @@ func createCheckoutSession(walletAddress string, computeCost int) (*stripe.Check
 	}
 
 	params := &stripe.CheckoutSessionParams{
-		Customer:   stripe.String(walletAddress),
+		Customer: stripe.String(stripeUserID),
+		// TODO: success url needs to be accessible to user, not just the backend
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
@@ -103,14 +104,16 @@ func createCheckoutSession(walletAddress string, computeCost int) (*stripe.Check
 				},
 			},
 		},
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
 			Metadata: map[string]string{
-				"walletAddress": walletAddress,
+				"Stripe User ID": stripeUserID,
 			},
+			SetupFutureUsage: stripe.String(string(stripe.PaymentIntentSetupFutureUsageOnSession)),
 		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
-	params.AddMetadata("walletAddress", walletAddress)
+	params.AddMetadata("Stripe User ID", stripeUserID)
 
 	session, err := session.New(params)
 	if err != nil {
@@ -149,7 +152,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		// }
 
 		// TODO: modify so we're not passing in hardcoded value
-		session, err := createCheckoutSession(user.WalletAddress, 10)
+		session, err := createCheckoutSession(user.StripeUserID, 10)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
