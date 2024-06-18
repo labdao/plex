@@ -200,11 +200,13 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 
 		endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
 
-		fmt.Fprintf(os.Stderr, "Raw webhook payload: %s\n", string(payload)) 
+		fmt.Fprintf(os.Stderr, "Raw webhook payload: %s\n", string(payload))
 		fmt.Fprintf(os.Stderr, "Stripe-Signature header: %s\n", r.Header.Get("Stripe-Signature"))
 		fmt.Fprintf(os.Stderr, "Endpoint Secret: %s\n", endpointSecret)
 
-		event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
+		event, err := webhook.ConstructEventWithOptions(payload, r.Header.Get("Stripe-Signature"), endpointSecret, webhook.ConstructEventOptions{
+			IgnoreAPIVersionMismatch: true,
+		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error verifying webhook signature: %v\n", err)
 			w.WriteHeader(http.StatusBadRequest)
