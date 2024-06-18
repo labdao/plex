@@ -11,28 +11,95 @@ import (
 	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
-	"github.com/stripe/stripe-go/v76"
-	"github.com/stripe/stripe-go/v76/checkout/session"
-	"github.com/stripe/stripe-go/v76/webhook"
+	"github.com/labdao/plex/gateway/utils"
+	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/checkout/session"
+	"github.com/stripe/stripe-go/v78/customer"
+	"github.com/stripe/stripe-go/v78/paymentintent"
+	"github.com/stripe/stripe-go/v78/paymentmethod"
+	"github.com/stripe/stripe-go/v78/price"
+	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/gorm"
 )
 
-func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error) {
-	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+func setupStripeClient() error {
+	apiKey := os.Getenv("STRIPE_SECRET_KEY")
+	if apiKey == "" {
+		return errors.New("STRIPE_SECRET_KEY environment variable not set")
+	}
+	stripe.Key = apiKey
+	return nil
+}
+
+func createStripeCustomer(walletAddress string) (string, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return "", err
+	}
+
+	params := &stripe.CustomerParams{
+		Name: stripe.String(walletAddress),
+	}
+	customer, err := customer.New(params)
+	if err != nil {
+		return "", err
+	}
+
+	return customer.ID, nil
+}
+
+func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	params := &stripe.PaymentMethodListParams{
+		Customer: stripe.String(stripeUserID),
+		Type:     stripe.String(string(stripe.PaymentMethodTypeCard)),
+	}
+	i := paymentmethod.List(params)
+
+	for i.Next() {
+		return i.PaymentMethod(), nil
+	}
+
+	if err := i.Err(); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func createCheckoutSession(walletAddress string, computeCost int) (*stripe.CheckoutSession, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return nil, err
+	}
 
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
 		frontendURL = "http://localhost:3000"
 	}
 
+	priceParams := &stripe.PriceParams{
+		UnitAmount: stripe.Int64(int64(computeCost)),
+		Currency:   stripe.String(string(stripe.CurrencyUSD)),
+		Product:    stripe.String(os.Getenv("STRIPE_PRODUCT_ID")),
+	}
+	price, err := price.New(priceParams)
+	if err != nil {
+		return nil, err
+	}
+
 	params := &stripe.CheckoutSessionParams{
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(os.Getenv("STRIPE_PRODUCT_SLUG")), // comes from Stripe Product Dashboard
+				Price:    stripe.String(price.ID),
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
-					Enabled: stripe.Bool(true),
+					Enabled: stripe.Bool(false),
 				},
 			},
 		},
@@ -44,12 +111,36 @@ func createCheckoutSession(walletAddress string) (*stripe.CheckoutSession, error
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
 	params.AddMetadata("walletAddress", walletAddress)
-	result, err := session.New(params)
+
+	session, err := session.New(params)
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return session, nil
+}
+
+func createPaymentIntent(stripeUserID string, computeCost int, jobID string) (*stripe.PaymentIntent, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	params := &stripe.PaymentIntentParams{
+		Amount:   stripe.Int64(int64(computeCost)),
+		Currency: stripe.String(string(stripe.CurrencyUSD)),
+		Customer: stripe.String(stripeUserID),
+		Metadata: map[string]string{
+			"jobID": jobID,
+		},
+	}
+
+	paymentIntent, err := paymentintent.New(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return paymentIntent, nil
 }
 
 func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
@@ -57,13 +148,30 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
 		user, ok := ctxUser.(*models.User)
 		if !ok {
-			http.Error(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
 			return
 		}
 
-		session, err := createCheckoutSession(user.WalletAddress)
+		toolID := r.URL.Query().Get("toolID")
+		if toolID == "" {
+			utils.SendJSONError(w, "Tool ID not provided", http.StatusBadRequest)
+			return
+		}
+
+		var tool models.Tool
+		result := db.Where("cid = ?", toolID).First(&tool)
+		if result.Error != nil {
+			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+				utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
+			} else {
+				utils.SendJSONError(w, fmt.Sprintf("Error fetching Tool: %v", result.Error), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		session, err := createCheckoutSession(user.WalletAddress, tool.ComputeCost)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
 		}
 
