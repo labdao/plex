@@ -15,7 +15,6 @@ import (
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
-	"github.com/stripe/stripe-go/v78/paymentintent"
 	"github.com/stripe/stripe-go/v78/paymentmethod"
 	"github.com/stripe/stripe-go/v78/price"
 	"github.com/stripe/stripe-go/v78/webhook"
@@ -120,29 +119,6 @@ func createCheckoutSession(walletAddress string, computeCost int) (*stripe.Check
 	return session, nil
 }
 
-func createPaymentIntent(stripeUserID string, computeCost int, jobID string) (*stripe.PaymentIntent, error) {
-	err := setupStripeClient()
-	if err != nil {
-		return nil, err
-	}
-
-	params := &stripe.PaymentIntentParams{
-		Amount:   stripe.Int64(int64(computeCost)),
-		Currency: stripe.String(string(stripe.CurrencyUSD)),
-		Customer: stripe.String(stripeUserID),
-		Metadata: map[string]string{
-			"jobID": jobID,
-		},
-	}
-
-	paymentIntent, err := paymentintent.New(params)
-	if err != nil {
-		return nil, err
-	}
-
-	return paymentIntent, nil
-}
-
 func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
@@ -174,6 +150,8 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
 		}
+
+		fmt.Println("Checkout URL:", session.URL)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"url": session.URL})
