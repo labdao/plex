@@ -36,8 +36,8 @@ type Job struct {
 	WalletAddress string         `gorm:"type:varchar(255)"`
 	ToolID        string         `gorm:"type:varchar(255);not null;index"`
 	Tool          Tool           `gorm:"foreignKey:ToolID"`
-	FlowID        uint           `gorm:"type:int;not null;index"`
-	Flow          Flow           `gorm:"foreignKey:FlowID"`
+	ExperimentID  uint           `gorm:"type:int;not null;index"`
+	Experiment    Experiment     `gorm:"foreignKey:ExperimentID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
 	InputFiles    []DataFile     `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
 	OutputFiles   []DataFile     `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`

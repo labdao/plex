@@ -14,16 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   AppDispatch,
-  selectFlowDetail,
-  selectFlowDetailError,
-  selectFlowDetailLoading,
-  selectFlowUpdateError,
-  selectFlowUpdateLoading,
-  selectFlowUpdateSuccess,
+  selectExperimentDetail,
+  selectExperimentDetailError,
+  selectExperimentDetailLoading,
+  selectExperimentUpdateError,
+  selectExperimentUpdateLoading,
+  selectExperimentUpdateSuccess,
   selectUserWalletAddress,
-  setFlowDetailPublic,
+  setExperimentDetailPublic,
 } from "@/lib/redux";
-import { flowUpdateThunk } from "@/lib/redux/slices/flowUpdateSlice/thunks";
+import { experimentUpdateThunk } from "@/lib/redux/slices/experimentUpdateSlice/thunks";
 
 import { ExperimentRenameForm } from "../(forms)/ExperimentRenameForm";
 import { aggregateJobStatus, ExperimentStatus } from "../ExperimentStatus";
@@ -34,31 +34,31 @@ dayjs.extend(relativeTime);
 
 export default function ExperimentDetail() {
   const dispatch = useDispatch<AppDispatch>();
-  const flow = useSelector(selectFlowDetail);
-  const loading = useSelector(selectFlowDetailLoading);
-  const error = useSelector(selectFlowDetailError);
+  const experiment = useSelector(selectExperimentDetail);
+  const loading = useSelector(selectExperimentDetailLoading);
+  const error = useSelector(selectExperimentDetailError);
 
-  const status = aggregateJobStatus(flow.Jobs);
+  const status = aggregateJobStatus(experiment.Jobs);
 
   const [isDelaying, setIsDelaying] = useState(false);
-  const updateLoading = useSelector(selectFlowUpdateLoading);
-  const updateError = useSelector(selectFlowUpdateError);
-  const updateSuccess = useSelector(selectFlowUpdateSuccess);
+  const updateLoading = useSelector(selectExperimentUpdateLoading);
+  const updateError = useSelector(selectExperimentUpdateError);
+  const updateSuccess = useSelector(selectExperimentUpdateSuccess);
 
   const userWalletAddress = useSelector(selectUserWalletAddress);
 
   const { modelPanelOpen, setModelPanelOpen } = useContext(ExperimentUIContext);
 
-  const experimentID = flow.ID?.toString();
+  const experimentID = experiment.ID?.toString();
 
   const handlePublish = () => {
     setIsDelaying(true);
     if (experimentID) {
-      dispatch(flowUpdateThunk({ flowId: experimentID, updates: { public: true } }))
+      dispatch(experimentUpdateThunk({ experimentId: experimentID, updates: { public: true } }))
       .unwrap()
       .then(() => {
         setTimeout(() => {
-          dispatch(setFlowDetailPublic(true));
+          dispatch(setExperimentDetailPublic(true));
           setIsDelaying(false);
         }, 2000);
       });
@@ -70,7 +70,7 @@ export default function ExperimentDetail() {
 
   const isButtonDisabled = updateLoading || isDelaying;
 
-  return flow.Name && experimentID ? (
+  return experiment.Name && experimentID ? (
     <div>
       <>
         <Card>
@@ -78,22 +78,22 @@ export default function ExperimentDetail() {
             {error && <Alert variant="destructive">{error}</Alert>}
             <div className="flex items-center justify-between">
               <div className="flex grow">
-                <ExperimentStatus jobs={flow.Jobs} className="mr-1 mt-3.5" />
+                <ExperimentStatus jobs={experiment.Jobs} className="mr-1 mt-3.5" />
                 <ExperimentRenameForm
-                  initialName={flow.Name}
-                  flowId={experimentID}
+                  initialName={experiment.Name}
+                  experimentId={experimentID}
                   inputProps={{ variant: "subtle", className: "text-xl shrink-0 font-heading w-full" }}
                 />
               </div>
               <div className="flex justify-end space-x-2 ">
-                {userWalletAddress === flow.WalletAddress && (
-                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || flow.Public}>
+                {userWalletAddress === experiment.WalletAddress && (
+                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || experiment.Public}>
                     {updateLoading || isDelaying ? (
                       <>
                         <Dna className="w-4 h-4 ml-2 animate-spin" />
                         <span>Publishing...</span>
                       </>
-                    ) : flow.Public ? (
+                    ) : experiment.Public ? (
                       <>
                         <BadgeCheck className="w-4 h-4 mr-2" /> Published
                       </>
@@ -104,7 +104,7 @@ export default function ExperimentDetail() {
                     )}
                   </Button>
                 )}
-                {flow.Public && experimentID && (
+                {experiment.Public && experimentID && (
                   // <Button variant="outline" className="text-sm">
                   //   <Share2 className="w-4 h-4 mr-2" /> Share
                   // </Button>
@@ -114,20 +114,20 @@ export default function ExperimentDetail() {
             </div>
             <div className="py-4 space-y-1 text-xs pl-7">
               <div className="opacity-70">
-                Started by <TruncatedString value={flow.WalletAddress} trimLength={4} />{" "}
+                Started by <TruncatedString value={experiment.WalletAddress} trimLength={4} />{" "}
                 <span className="text-muted-foreground" suppressHydrationWarning>
-                  {dayjs().to(dayjs(flow.StartTime))}
+                  {dayjs().to(dayjs(experiment.StartTime))}
                 </span>
               </div>
               <div className="opacity-50">
-                <CopyToClipboard string={flow.RecordCID || String(flow.ID)}>
-                  {flow.RecordCID ? (
+                <CopyToClipboard string={experiment.RecordCID || String(experiment.ID)}>
+                  {experiment.RecordCID ? (
                     <>
-                      Record ID: <TruncatedString value={flow.RecordCID} />
+                      Record ID: <TruncatedString value={experiment.RecordCID} />
                     </>
                   ) : (
                     <>
-                      Experiment ID: <TruncatedString value={String(flow.ID)} />
+                      Experiment ID: <TruncatedString value={String(experiment.ID)} />
                     </>
                   )}
                 </CopyToClipboard>
@@ -136,18 +136,18 @@ export default function ExperimentDetail() {
             <div className="space-y-2 font-mono text-sm uppercase pl-7">
               <div>
                 <strong>Queued: </strong>
-                {dayjs(flow.StartTime).format("YYYY-MM-DD HH:mm:ss")}
+                {dayjs(experiment.StartTime).format("YYYY-MM-DD HH:mm:ss")}
               </div>
               {/*@TODO: Endtime currently doesn't show a correct datetime and Runtime is missing
                 <div>
                   <strong>Completed: </strong>
-                  {dayjs(flow.EndTime).format("YYYY-MM-DD HH:mm:ss")}
+                  {dayjs(experiment.EndTime).format("YYYY-MM-DD HH:mm:ss")}
                 </div>             
                 */}
               <div>
                 <strong>Model: </strong>
                 <Button variant="outline" size="xs" onClick={() => setModelPanelOpen(!modelPanelOpen)}>
-                  {flow.Jobs?.[0]?.Tool?.Name}
+                  {experiment.Jobs?.[0]?.Tool?.Name}
                 </Button>
               </div>
             </div>

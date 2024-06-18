@@ -114,8 +114,8 @@ func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.
 // 	return db.Preload("Tool").First(&job, id).Error
 // }
 
-func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
-	return db.Preload("Tool").Preload("Flow").First(&job, id).Error
+func fetchJobWithToolAndExperimentData(job *models.Job, id uint, db *gorm.DB) error {
+	return db.Preload("Tool").Preload("Experiment").First(&job, id).Error
 }
 
 // func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
@@ -138,7 +138,7 @@ func fetchJobWithToolAndFlowData(job *models.Job, id uint, db *gorm.DB) error {
 func processRayJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing Ray Job %v\n", jobID)
 	var job models.Job
-	err := fetchJobWithToolAndFlowData(&job, jobID, db)
+	err := fetchJobWithToolAndExperimentData(&job, jobID, db)
 	if err != nil {
 		return err
 	}

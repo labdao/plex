@@ -53,7 +53,7 @@ const inputsToDefaultValues = (inputs: InputType) => {
   return defaultValues;
 };
 
-// Take the inputs from a flow job and format them for the form
+// Take the inputs from a experiment job and format them for the form
 const inputsToValues = (inputs: InputType) => {
   const values: { [key: string]: { value: string | number }[] } = {};
   for (var key in inputs) {

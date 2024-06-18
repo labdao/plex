@@ -14,8 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
-import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+import { AppDispatch, experimentListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
+import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
@@ -61,19 +61,19 @@ export default function NewExperimentForm({ task }: { task: any }) {
     console.log("Submitting Payload:", transformedPayload);
 
     try {
-      const response = await createFlow(transformedPayload);
+      const response = await createExperiment(transformedPayload);
       if (response && response.ID) {
-        console.log("Flow created", response);
+        console.log("Experiment created", response);
         console.log(response.ID);
         router.push(`/experiments/${response.ID}`, { scroll: false });
-        // Update the navbar list of flows
-        dispatch(flowListThunk(walletAddress));
+        // Update the navbar list of experiments
+        dispatch(experimentListThunk(walletAddress));
         toast.success("Experiment started successfully");
       } else {
         console.log("Something went wrong", response);
       }
     } catch (error) {
-      console.error("Failed to create flow", error);
+      console.error("Failed to create experiment", error);
       // Handle error, maybe show message to user
     }
   }

@@ -97,10 +97,10 @@ runs:
     #     fi
     #   shell: bash
 
-    # - name: Test Add Flow Endpoint
+    # - name: Test Add Experiment Endpoint
     #   run: |
     #     payload='{
-    #       "name": "testFlow",
+    #       "name": "testExperiment",
     #       "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
     #       "toolCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
     #       "scatteringMethod": "dotProduct",
@@ -111,7 +111,7 @@ runs:
     #       }
     #     }'
 
-    #     response=$(curl -s -X POST "http://localhost:8080/flows" \
+    #     response=$(curl -s -X POST "http://localhost:8080/experiments" \
     #            -H "Content-Type: application/json" \
     #            -d "$payload")
 
@@ -123,9 +123,9 @@ runs:
     #     # Check if the CID exists
     #     if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
     #        echo "$response" | jq -r '.CID'
-    #        echo "Create Flow test passed"
+    #        echo "Create Experiment test passed"
     #     else
-    #        echo "Create Flow test failed: CID not found in the response"
+    #        echo "Create Experiment test failed: CID not found in the response"
     #        echo "response was:"
     #        echo "$response"
     #        exit 1

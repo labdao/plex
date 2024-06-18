@@ -44,7 +44,7 @@ const LogViewer = ({ rayJobID }: { rayJobID: string }) => {
   return (
     <div className="relative -mt-2">
       <CopyToClipboard string={logs} className="absolute z-10 top-2 right-6 bg-background" />
-      <div className="flex flex-col-reverse w-full h-56 min-w-0 overflow-scroll no-scrollbar">
+      <div className="flex flex-col-reverse w-full h-56 min-w-0 overexperiment-scroll no-scrollbar">
         <pre className="p-6 font-mono text-xs">{logs}</pre>
       </div>
     </div>

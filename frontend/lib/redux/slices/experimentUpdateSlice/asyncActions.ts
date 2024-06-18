@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
 
-export const updateFlow = async (flowId: string, data: { name?: string; public?: boolean; }): Promise<any> => {
+export const updateExperiment = async (experimentId: string, data: { name?: string; public?: boolean; }): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -10,7 +10,7 @@ export const updateFlow = async (flowId: string, data: { name?: string; public?:
     throw new Error("Authentication failed");
   }
 
-  const requestUrl = `${backendUrl()}/flows/${flowId}`;
+  const requestUrl = `${backendUrl()}/experiments/${experimentId}`;
   const requestOptions = {
     method: 'PUT',
     headers: {
@@ -23,11 +23,11 @@ export const updateFlow = async (flowId: string, data: { name?: string; public?:
   try {
     const response = await fetch(requestUrl, requestOptions);
     if (!response.ok) {
-      throw new Error(`Failed to update Flow: ${response.statusText}`);
+      throw new Error(`Failed to update Experiment: ${response.statusText}`);
     }
     return await response.json();
   } catch (error) {
-    console.error('Failed to update Flow:', error);
-    throw new Error('Failed to update Flow');
+    console.error('Failed to update Experiment:', error);
+    throw new Error('Failed to update Experiment');
   }
 };

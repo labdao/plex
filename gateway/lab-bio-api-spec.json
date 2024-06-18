@@ -608,10 +608,10 @@
           }
         }
       },
-      "/flows": {
+      "/experiments": {
         "post": {
-          "operationId": "addFlow",
-          "summary": "Add Flow",
+          "operationId": "addExperiment",
+          "summary": "Add Experiment",
           "requestBody": {
             "required": true,
             "content": {
@@ -650,7 +650,7 @@
           },
           "responses": {
             "201": {
-              "description": "Flow created successfully",
+              "description": "Experiment created successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -668,7 +668,7 @@
               "description": "Bad request, such as missing fields or invalid data"
             },
             "409": {
-              "description": "Conflict, flow with the same CID already exists"
+              "description": "Conflict, experiment with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -676,8 +676,8 @@
           }
         },
         "get": {
-          "operationId": "listFlows",
-          "summary": "List Flows",
+          "operationId": "listExperiments",
+          "summary": "List Experiments",
           "parameters": [
             {
               "name": "cid",
@@ -706,13 +706,13 @@
           ],
           "responses": {
             "200": {
-              "description": "List of flows",
+              "description": "List of experiments",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Flow"
+                      "$ref": "#/components/schemas/Experiment"
                     }
                   }
                 }
@@ -724,10 +724,10 @@
           }
         }
       },
-      "/flows/{cid}": {
+      "/experiments/{cid}": {
         "get": {
-          "operationId": "getFlowByCid",
-          "summary": "Get Flow",
+          "operationId": "getExperimentByCid",
+          "summary": "Get Experiment",
           "parameters": [
             {
               "name": "cid",
@@ -740,11 +740,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Flow data",
+              "description": "Experiment data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Flow"
+                    "$ref": "#/components/schemas/Experiment"
                   }
                 }
               }
@@ -755,8 +755,8 @@
           }
         },
         "patch": {
-          "operationId": "updateFlow",
-          "summary": "Update Flow",
+          "operationId": "updateExperiment",
+          "summary": "Update Experiment",
           "parameters": [
             {
               "name": "cid",
@@ -769,11 +769,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Flow updated successfully",
+              "description": "Experiment updated successfully",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Flow"
+                    "$ref": "#/components/schemas/Experiment"
                   }
                 }
               }
@@ -1061,7 +1061,7 @@
             }
           }
         },
-        "Flow": {
+        "Experiment": {
           "type": "object",
           "properties": {
             "cid": {
@@ -1102,11 +1102,11 @@
             "tool": {
               "$ref": "#/components/schemas/Tool"
             },
-            "flowID": {
+            "experimentID": {
               "type": "string"
             },
-            "flow": {
-              "$ref": "#/components/schemas/Flow"
+            "experiment": {
+              "$ref": "#/components/schemas/Experiment"
             },
             "inputs": {
               "type": "array",

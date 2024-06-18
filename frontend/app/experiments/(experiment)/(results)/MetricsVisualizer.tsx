@@ -19,7 +19,7 @@ import {
 import { PageLoader } from "@/components/shared/PageLoader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import Molstar from "@/components/visualization/Molstar/index";
-import { FlowDetail } from "@/lib/redux";
+import { ExperimentDetail } from "@/lib/redux";
 import { getAccessToken } from "@privy-io/react-auth";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
@@ -47,19 +47,19 @@ interface CheckpointData {
   url: string;
 }
 
-export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
+export default function MetricsVisualizer({ experiment }: { experiment: ExperimentDetail }) {
   const [loading, setLoading] = useState(false);
   const [checkpoints, setCheckpoints] = useState([]);
   const [plotData, setPlotData] = useState([]);
   const { activeCheckpointUrl, setActiveCheckpointUrl, activeJobUUID, setActiveJobUUID } = useContext(ExperimentUIContext);
 
-  const { status: flowStatus } = aggregateJobStatus(flow.Jobs || []);
+  const { status: experimentStatus } = aggregateJobStatus(experiment.Jobs || []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Currently unused
-        //const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}`);
+        //const checkpointResponse = await fetch(`${backendUrl()}/checkpoints/${experiment.ID}`);
         //const checkpointData = await checkpointResponse.json();
         //setCheckpoints(checkpointData);
 
@@ -70,7 +70,7 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
           console.log('Failed to get access token: ', error)
           throw new Error("Authentication failed");
         }
-        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${flow.ID}/get-data`, {
+        const plotDataResponse = await fetch(`${backendUrl()}/checkpoints/${experiment.ID}/get-data`, {
           method: 'Get',
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -87,14 +87,14 @@ export default function MetricsVisualizer({ flow }: { flow: FlowDetail }) {
         setLoading(false);
       }
     };
-    if (flow.ID) {
+    if (experiment.ID) {
       setLoading(true);
       fetchData();
     } else {
       setPlotData([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flow]);
+  }, [experiment]);
 
   useEffect(() => {
     if (plotData?.length > 0) {

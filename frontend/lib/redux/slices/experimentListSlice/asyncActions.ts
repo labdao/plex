@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
-export const listFlows = async (walletAddress: string): Promise<any> => {
+export const listExperiments = async (walletAddress: string): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -10,7 +10,7 @@ export const listFlows = async (walletAddress: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  const requestUrl = `${backendUrl()}/flows?walletAddress=${encodeURIComponent(walletAddress)}`;
+  const requestUrl = `${backendUrl()}/experiments?walletAddress=${encodeURIComponent(walletAddress)}`;
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -21,7 +21,7 @@ export const listFlows = async (walletAddress: string): Promise<any> => {
   const response = await fetch(requestUrl, requestOptions);
 
   if (!response) {
-    let errorText = "Failed to list Flows";
+    let errorText = "Failed to list Experiments";
     try {
       console.log(errorText);
     } catch (e) {

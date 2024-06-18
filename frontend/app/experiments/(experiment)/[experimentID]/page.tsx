@@ -8,7 +8,7 @@ import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import PoweredByLogo from "@/components/global/PoweredByLogo";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectToolDetail, setToolDetail, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectToolDetail, setToolDetail, toolDetailThunk } from "@/lib/redux";
 
 import RerunExperimentForm from "../(forms)/RerunExperimentForm";
 import ExperimentResults from "../(results)/ExperimentResults";
@@ -16,40 +16,40 @@ import ModelPanel from "../ModelPanel";
 import ExperimentDetail from "./ExperimentDetail";
 
 type ExperimentDetailProps = {
-  params: { flowID: string };
+  params: { experimentID: string };
 };
 
 export default function Layout({ params }: ExperimentDetailProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const flow = useSelector(selectFlowDetail);
+  const experiment = useSelector(selectExperimentDetail);
   const tool = useSelector(selectToolDetail);
-  const { flowID } = params;
+  const { experimentID } = params;
 
   const task = tasks.find((task) => task.slug === tool?.ToolJson?.taskCategory);
   let breadcrumbItems = [{ name: "Experiments", href: "/experiments" }];
 
   useEffect(() => {
-    if (flowID) {
-      dispatch(flowDetailThunk(flowID));
+    if (experimentID) {
+      dispatch(experimentDetailThunk(experimentID));
     }
-  }, [dispatch, flowID]);
+  }, [dispatch, experimentID]);
 
   useEffect(() => {
-    if (!!flow.Jobs?.length) {
-      //Update redux with the tool stored in the flow rather than making a separate request
-      dispatch(setToolDetail(flow.Jobs?.[0]?.Tool));
+    if (!!experiment.Jobs?.length) {
+      //Update redux with the tool stored in the experiment rather than making a separate request
+      dispatch(setToolDetail(experiment.Jobs?.[0]?.Tool));
     }
-  }, [dispatch, flow.Jobs]);
+  }, [dispatch, experiment.Jobs]);
 
   if (task?.name) {
     breadcrumbItems.push({ name: task.name, href: `/experiments/new/${task.slug}` });
   }
 
-  if (flow?.Name) {
-    breadcrumbItems.push({ name: flow.Name, href: "" });
+  if (experiment?.Name) {
+    breadcrumbItems.push({ name: experiment.Name, href: "" });
   }
 
-  return flowID ? (
+  return experimentID ? (
     <>
       <ProtectedComponent method="hide" message="Log in to continue">
         <Breadcrumbs items={breadcrumbItems} />
@@ -57,7 +57,7 @@ export default function Layout({ params }: ExperimentDetailProps) {
         <div className="flex flex-col-reverse min-h-screen lg:flex-row">
           <div className="max-w-4xl p-2 mx-auto space-y-3 shrink-0 grow basis-2/3">
             <ExperimentDetail />
-            <RerunExperimentForm key={flow.ID} />
+            <RerunExperimentForm key={experiment.ID} />
             <ExperimentResults />
             <PoweredByLogo />
           </div>

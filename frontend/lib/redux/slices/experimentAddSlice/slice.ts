@@ -6,7 +6,7 @@ export interface Kwargs {
   [key: string]: string[];
 }
 
-interface FlowAddSliceState {
+interface ExperimentAddSliceState {
   ID: number | null
   name: string
   tool: ToolDetail
@@ -16,7 +16,7 @@ interface FlowAddSliceState {
   success: boolean
 }
 
-const initialState: FlowAddSliceState = {
+const initialState: ExperimentAddSliceState = {
   ID: null,
   name: "",
   tool: { 
@@ -43,42 +43,42 @@ const initialState: FlowAddSliceState = {
   success: false,
 };
 
-export const flowAddSlice = createSlice({
-  name: "flowAdd",
+export const experimentAddSlice = createSlice({
+  name: "experimentAdd",
   initialState,
   reducers: {
-    setFlowAddName: (state, action: PayloadAction<string>) => {
+    setExperimentAddName: (state, action: PayloadAction<string>) => {
       state.name = action.payload;
     },
-    setFlowAddTool: (state, action: PayloadAction<ToolDetail>) => {
+    setExperimentAddTool: (state, action: PayloadAction<ToolDetail>) => {
       state.tool = action.payload;
     },
-    setFlowAddKwargs: (state, action: PayloadAction<Kwargs>) => {
+    setExperimentAddKwargs: (state, action: PayloadAction<Kwargs>) => {
       state.kwargs = action.payload;
     },
-    setFlowAddID: (state, action: PayloadAction<number | null>) => {
+    setExperimentAddID: (state, action: PayloadAction<number | null>) => {
       state.ID = action.payload
     },
-    setFlowAddError: (state, action: PayloadAction<string | null>) => {
+    setExperimentAddError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setFlowAddLoading: (state, action: PayloadAction<boolean>) => {
+    setExperimentAddLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setFlowAddSuccess: (state, action: PayloadAction<boolean>) => {
+    setExperimentAddSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
   },
 });
 
 export const {
-  setFlowAddName,
-  setFlowAddTool,
-  setFlowAddID,
-  setFlowAddKwargs,
-  setFlowAddError,
-  setFlowAddLoading,
-  setFlowAddSuccess,
-} = flowAddSlice.actions
+  setExperimentAddName,
+  setExperimentAddTool,
+  setExperimentAddID,
+  setExperimentAddKwargs,
+  setExperimentAddError,
+  setExperimentAddLoading,
+  setExperimentAddSuccess,
+} = experimentAddSlice.actions
 
-export default flowAddSlice.reducer;
+export default experimentAddSlice.reducer;

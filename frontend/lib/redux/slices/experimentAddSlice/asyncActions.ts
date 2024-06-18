@@ -3,7 +3,7 @@ import backendUrl from "lib/backendUrl"
 
 import { Kwargs } from "./slice"
 
-export const createFlow = async (
+export const createExperiment = async (
     payload: { name: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }
 ): Promise<any> => {
     let authToken
@@ -14,7 +14,7 @@ export const createFlow = async (
         throw new Error("Authentication failed")
     }
 
-    const response = await fetch(`${backendUrl()}/flows`, {
+    const response = await fetch(`${backendUrl()}/experiments`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -24,14 +24,14 @@ export const createFlow = async (
     })
 
     if (!response) {
-        throw new Error("Failed to create Flow")
+        throw new Error("Failed to create Experiment")
     }
 
     const result = await response.json()
     return result;
 }
 
-export const addJobToFlow = async (flowId: number, payload: { name: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }): Promise<any> => {
+export const addJobToExperiment = async (experimentId: number, payload: { name: string, toolCid: string, scatteringMethod: string, kwargs: Kwargs }): Promise<any> => {
     let authToken;
     try {
       authToken = await getAccessToken()
@@ -40,7 +40,7 @@ export const addJobToFlow = async (flowId: number, payload: { name: string, tool
       throw new Error("Authentication failed");
     }
   
-    const requestUrl = `${backendUrl()}/flows/${flowId}/add-job`;
+    const requestUrl = `${backendUrl()}/experiments/${experimentId}/add-job`;
     const requestOptions = {
       method: 'PUT',
       headers: {
@@ -53,12 +53,12 @@ export const addJobToFlow = async (flowId: number, payload: { name: string, tool
     try {
       const response = await fetch(requestUrl, requestOptions);
       if (!response.ok) {
-        throw new Error(`Failed to add job to Flow: ${response.statusText}`);
+        throw new Error(`Failed to add job to Experiment: ${response.statusText}`);
       }
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Failed to add job to Flow:', error);
-      throw new Error('Failed to add job to Flow');
+      console.error('Failed to add job to Experiment:', error);
+      throw new Error('Failed to add job to Experiment');
     }
   };

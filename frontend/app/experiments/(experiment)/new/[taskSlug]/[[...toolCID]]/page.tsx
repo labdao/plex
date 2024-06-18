@@ -11,7 +11,7 @@ import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import PoweredByLogo from "@/components/global/PoweredByLogo";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
-import { AppDispatch, resetFlowDetail, selectFlowDetail } from "@/lib/redux";
+import { AppDispatch, resetExperimentDetail, selectExperimentDetail } from "@/lib/redux";
 
 type NewExperimentProps = {
   params: { taskSlug: string };
@@ -19,12 +19,12 @@ type NewExperimentProps = {
 
 export default function NewExperiment({ params }: NewExperimentProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const flow = useSelector(selectFlowDetail);
+  const experiment = useSelector(selectExperimentDetail);
   const { taskSlug } = params;
   const task = tasks.find((task) => task.slug === taskSlug);
 
   useEffect(() => {
-    dispatch(resetFlowDetail());
+    dispatch(resetExperimentDetail());
   }, [dispatch]);
 
   let breadcrumbItems = [
@@ -39,8 +39,8 @@ export default function NewExperiment({ params }: NewExperimentProps) {
     breadcrumbItems.push({ name: task.name, href: `/experiments/new/${task.slug}` });
   }
 
-  if (flow?.Name) {
-    breadcrumbItems.push({ name: flow.Name, href: "" });
+  if (experiment?.Name) {
+    breadcrumbItems.push({ name: experiment.Name, href: "" });
   }
 
   return (

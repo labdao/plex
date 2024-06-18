@@ -7,7 +7,7 @@ export interface JobDetail {
   State: string;
   Error: string;
   ToolID: string;
-  FlowID: string;
+  ExperimentID: string;
   InputFiles: DataFile[];
   OutputFiles: DataFile[];
   Status: string;
@@ -29,7 +29,7 @@ const initialState: JobDetailSliceState = {
     State: "",
     Error: "",
     ToolID: "",
-    FlowID: "",
+    ExperimentID: "",
     InputFiles: [],
     OutputFiles: [],
     Status: "unknown",

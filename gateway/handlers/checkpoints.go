@@ -143,7 +143,7 @@ func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.Preload("Flow").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Experiment").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}
@@ -164,20 +164,20 @@ func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
+func ListExperimentCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		flowID := vars["flowID"]
+		experimentID := vars["experimentID"]
 
-		var flow models.Flow
-		if err := db.Preload("Jobs").First(&flow, "id = ?", flowID).Error; err != nil {
-			http.Error(w, "Flow not found", http.StatusNotFound)
+		var experiment models.Experiment
+		if err := db.Preload("Jobs").First(&experiment, "id = ?", experimentID).Error; err != nil {
+			http.Error(w, "Experiment not found", http.StatusNotFound)
 			return
 		}
 
 		var allFiles []map[string]string
 
-		for _, job := range flow.Jobs {
+		for _, job := range experiment.Jobs {
 			files, err := fetchJobCheckpoints(job)
 			if err != nil {
 				http.Error(w, "Failed to fetch checkpoints", http.StatusInternalServerError)
@@ -291,7 +291,7 @@ func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.Preload("Flow").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Experiment").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}
@@ -307,20 +307,20 @@ func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func GetFlowCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
+func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		flowID := vars["flowID"]
+		experimentID := vars["experimentID"]
 
-		var flow models.Flow
-		if err := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID).Error; err != nil {
-			http.Error(w, "Flow not found", http.StatusNotFound)
+		var experiment models.Experiment
+		if err := db.Preload("Jobs.Tool").First(&experiment, "id = ?", experimentID).Error; err != nil {
+			http.Error(w, "Experiment not found", http.StatusNotFound)
 			return
 		}
 
 		var allPlotData []models.ScatterPlotData
 
-		for _, job := range flow.Jobs {
+		for _, job := range experiment.Jobs {
 			plotData, err := fetchJobScatterPlotData(job, db)
 			if err != nil {
 				http.Error(w, "Failed to fetch scatter plot data for a job", http.StatusInternalServerError)

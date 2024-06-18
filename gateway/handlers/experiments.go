@@ -22,9 +22,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
+func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Post request at /flows")
+		log.Println("Received Post request at /experiments")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			utils.SendJSONError(w, "Bad request", http.StatusBadRequest)
@@ -113,20 +113,20 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		flowUUID := uuid.New().String()
+		experimentUUID := uuid.New().String()
 
-		flow := models.Flow{
-			WalletAddress: user.WalletAddress,
-			Name:          name,
-			StartTime:     time.Now(),
-			FlowUUID:      flowUUID,
-			Public:        false,
+		experiment := models.Experiment{
+			WalletAddress:  user.WalletAddress,
+			Name:           name,
+			StartTime:      time.Now(),
+			ExperimentUUID: experimentUUID,
+			Public:         false,
 		}
 
-		log.Println("Creating Flow entry")
-		result = db.Create(&flow)
+		log.Println("Creating Experiment entry")
+		result = db.Create(&experiment)
 		if result.Error != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error creating Flow entity: %v", result.Error), http.StatusInternalServerError)
+			utils.SendJSONError(w, fmt.Sprintf("Error creating Experiment entity: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
@@ -150,7 +150,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			job := models.Job{
 				ToolID:        ioItem.Tool.S3,
-				FlowID:        flow.ID,
+				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
@@ -216,14 +216,14 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			utils.SendJSONError(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(experiment); err != nil {
+			utils.SendJSONError(w, "Error encoding Experiment to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
+func GetExperimentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
@@ -237,38 +237,38 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		params := mux.Vars(r)
-		flowID, err := strconv.Atoi(params["flowID"])
+		experimentID, err := strconv.Atoi(params["experimentID"])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Experiment ID (%v) could not be converted to int", params["experimentID"]), http.StatusNotFound)
 			return
 		}
 
-		var flow models.Flow
-		query := db.Preload("Jobs.Tool").Where("id = ?", flowID)
+		var experiment models.Experiment
+		query := db.Preload("Jobs.Tool").Where("id = ?", experimentID)
 
-		if result := query.First(&flow); result.Error != nil {
+		if result := query.First(&experiment); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
+				http.Error(w, "Experiment not found", http.StatusNotFound)
 			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error fetching Experiment: %v", result.Error), http.StatusInternalServerError)
 			}
 			return
 		}
 
-		if !flow.Public && flow.WalletAddress != user.WalletAddress && !user.Admin {
-			http.Error(w, "Flow not found or not authorized", http.StatusNotFound)
+		if !experiment.Public && experiment.WalletAddress != user.WalletAddress && !user.Admin {
+			http.Error(w, "Experiment not found or not authorized", http.StatusNotFound)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(experiment); err != nil {
+			http.Error(w, "Error encoding Experiment to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
+func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
@@ -281,7 +281,7 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		query := db.Model(&models.Flow{}).Where("wallet_address = ?", user.WalletAddress)
+		query := db.Model(&models.Experiment{}).Where("wallet_address = ?", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
 			query = query.Where("cid = ?", cid)
@@ -296,23 +296,23 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		query = query.Order("start_time DESC")
 
-		var flows []models.Flow
-		if result := query.Preload("Jobs").Find(&flows); result.Error != nil {
-			http.Error(w, fmt.Sprintf("Error fetching Flows: %v", result.Error), http.StatusInternalServerError)
+		var experiments []models.Experiment
+		if result := query.Preload("Jobs").Find(&experiments); result.Error != nil {
+			http.Error(w, fmt.Sprintf("Error fetching Experiments: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
-		log.Println("Fetched flows from DB: ", flows)
+		log.Println("Fetched experiments from DB: ", experiments)
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flows); err != nil {
-			http.Error(w, "Error encoding Flows to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(experiments); err != nil {
+			http.Error(w, "Error encoding Experiments to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
+func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
 			utils.SendJSONError(w, "Only PUT method is supported", http.StatusBadRequest)
@@ -326,23 +326,23 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		params := mux.Vars(r)
-		flowID, err := strconv.Atoi(params["flowID"])
+		experimentID, err := strconv.Atoi(params["experimentID"])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Experiment ID (%v) could not be converted to int", params["experimentID"]), http.StatusNotFound)
 			return
 		}
 
-		var flow models.Flow
-		if result := db.Where("id = ?", flowID).First(&flow); result.Error != nil {
+		var experiment models.Experiment
+		if result := db.Where("id = ?", experimentID).First(&experiment); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
+				http.Error(w, "Experiment not found", http.StatusNotFound)
 			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error fetching Experiment: %v", result.Error), http.StatusInternalServerError)
 			}
 			return
 		}
 
-		if flow.WalletAddress != user.WalletAddress {
+		if experiment.WalletAddress != user.WalletAddress {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -361,53 +361,53 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 		if requestData.Name != nil {
 			newName = *requestData.Name
 		}
-		if requestData.Public != nil && *requestData.Public != flow.Public {
-			if flow.Public {
-				http.Error(w, "Flow is already public and cannot be made private", http.StatusBadRequest)
+		if requestData.Public != nil && *requestData.Public != experiment.Public {
+			if experiment.Public {
+				http.Error(w, "Experiment is already public and cannot be made private", http.StatusBadRequest)
 				return
 			}
 			newPublicFlag = *requestData.Public
 		}
 		if newName != "" {
-			flow.Name = newName
-			if result := db.Model(&flow).Updates(models.Flow{Name: flow.Name}); result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+			experiment.Name = newName
+			if result := db.Model(&experiment).Updates(models.Experiment{Name: experiment.Name}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Experiment: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}
 		if newPublicFlag {
-			flow.Public = true
+			experiment.Public = true
 
-			if result := db.Model(&flow).Updates(models.Flow{Public: flow.Public}); result.Error != nil {
-				http.Error(w, fmt.Sprintf("Error updating Flow: %v", result.Error), http.StatusInternalServerError)
+			if result := db.Model(&experiment).Updates(models.Experiment{Public: experiment.Public}); result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating Experiment: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
 			var jobs []models.Job
-			if result := db.Where("flow_id = ?", flow.ID).Find(&jobs); result.Error != nil {
+			if result := db.Where("experiment_id = ?", experiment.ID).Find(&jobs); result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error fetching Jobs: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
 			for _, job := range jobs {
-				if result := db.Model(&job).Updates(models.Job{Public: flow.Public}); result.Error != nil {
+				if result := db.Model(&job).Updates(models.Job{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating Job: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: flow.Public}); result.Error != nil {
+				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 			}
 
 			log.Println("Generating and storing RecordCID...")
-			metadataCID, err := utils.GenerateAndStoreRecordCID(db, &flow)
+			metadataCID, err := utils.GenerateAndStoreRecordCID(db, &experiment)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error generating and storing RecordCID: %v", err), http.StatusInternalServerError)
 				return
@@ -415,26 +415,26 @@ func UpdateFlowHandler(db *gorm.DB) http.HandlerFunc {
 			log.Printf("Generated and stored RecordCID: %s", metadataCID)
 
 			log.Println("Minting NFT...")
-			if err := utils.MintNFT(db, &flow, metadataCID); err != nil {
+			if err := utils.MintNFT(db, &experiment, metadataCID); err != nil {
 				http.Error(w, fmt.Sprintf("Error minting NFT: %v", err), http.StatusInternalServerError)
 				return
 			}
 			log.Println("NFT minted")
 		}
 
-		log.Printf("Updated Flow: %+v", flow)
+		log.Printf("Updated Experiment: %+v", experiment)
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(experiment); err != nil {
+			http.Error(w, "Error encoding Experiment to JSON", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
+func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Post request to add job to a flow")
+		log.Println("Received Post request to add job to a experiment")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
@@ -456,28 +456,28 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		params := mux.Vars(r)
-		flowID, err := strconv.Atoi(params["flowID"])
+		experimentID, err := strconv.Atoi(params["experimentID"])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Flow ID (%v) could not be converted to int", params["flowID"]), http.StatusNotFound)
+			http.Error(w, fmt.Sprintf("Experiment ID (%v) could not be converted to int", params["experimentID"]), http.StatusNotFound)
 			return
 		}
 
-		var flow models.Flow
-		if result := db.Preload("Jobs").Where("id = ?", flowID).First(&flow); result.Error != nil {
+		var experiment models.Experiment
+		if result := db.Preload("Jobs").Where("id = ?", experimentID).First(&experiment); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				http.Error(w, "Flow not found", http.StatusNotFound)
+				http.Error(w, "Experiment not found", http.StatusNotFound)
 			} else {
-				http.Error(w, fmt.Sprintf("Error fetching Flow: %v", result.Error), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error fetching Experiment: %v", result.Error), http.StatusInternalServerError)
 			}
 			return
 		}
 
-		if flow.WalletAddress != user.WalletAddress {
+		if experiment.WalletAddress != user.WalletAddress {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		//TODO: think about moving toolID to flow level instead of job level
-		var toolId = flow.Jobs[0].ToolID
+		//TODO: think about moving toolID to experiment level instead of job level
+		var toolId = experiment.Jobs[0].ToolID
 
 		var tool models.Tool
 		result := db.Where("cid = ?", toolId).First(&tool)
@@ -537,7 +537,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 
 			job := models.Job{
 				ToolID:        ioItem.Tool.S3,
-				FlowID:        flow.ID,
+				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
@@ -603,8 +603,8 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flow); err != nil {
-			http.Error(w, "Error encoding Flow to JSON", http.StatusInternalServerError)
+		if err := json.NewEncoder(w).Encode(experiment); err != nil {
+			http.Error(w, "Error encoding Experiment to JSON", http.StatusInternalServerError)
 			return
 		}
 	}

@@ -16,14 +16,14 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { AppDispatch, Flow, flowListThunk, selectFlowList, selectFlowListLoading } from "@/lib/redux";
+import { AppDispatch, Experiment, experimentListThunk, selectExperimentList, selectExperimentListLoading } from "@/lib/redux";
 
 import { ExperimentStatus } from "./(experiment)/ExperimentStatus";
 
 export default function ListExperiments() {
   const { user } = usePrivy();
 
-  const columns: ColumnDef<Flow>[] = [
+  const columns: ColumnDef<Experiment>[] = [
     {
       accessorKey: "ID",
     },
@@ -60,13 +60,13 @@ export default function ListExperiments() {
   ];
 
   const dispatch = useDispatch<AppDispatch>();
-  const flows = useSelector(selectFlowList);
-  const loading = useSelector(selectFlowListLoading);
+  const experiments = useSelector(selectExperimentList);
+  const loading = useSelector(selectExperimentListLoading);
   const walletAddress = user?.wallet?.address;
 
   useEffect(() => {
     if (walletAddress) {
-      dispatch(flowListThunk(walletAddress));
+      dispatch(experimentListThunk(walletAddress));
     }
   }, [dispatch, walletAddress]);
 
@@ -75,7 +75,7 @@ export default function ListExperiments() {
       <Breadcrumbs items={[{ name: "Experiments", href: "/experiments" }]} />
       <ProtectedComponent method="hide" message="Log in to view your experiments">
         <ScrollArea className="w-full bg-white grow">
-          <DataTable columns={columns} data={flows} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />
+          <DataTable columns={columns} data={experiments} sorting={[{ id: "StartTime", desc: true }]} loading={loading} />
           <ScrollBar orientation="horizontal" />
           <ScrollBar orientation="vertical" />
         </ScrollArea>

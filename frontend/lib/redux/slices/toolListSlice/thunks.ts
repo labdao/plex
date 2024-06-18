@@ -20,7 +20,7 @@ export const toolListThunk = createAppAsyncThunk(
       }
       return response
     } catch (error: unknown) {
-      console.log('Failed to list Flows.', error)
+      console.log('Failed to list Experiments.', error)
       if (error instanceof Error) {
         dispatch(setToolListError(error.message))
       } else {

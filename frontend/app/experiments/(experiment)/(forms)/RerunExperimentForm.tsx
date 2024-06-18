@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, flowDetailThunk, flowListThunk, selectFlowDetail, selectToolDetail } from "@/lib/redux";
-import { addJobToFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
+import { AppDispatch, experimentDetailThunk, experimentListThunk, selectExperimentDetail, selectToolDetail } from "@/lib/redux";
+import { addJobToExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 
 import ContinuousSwitch from "./ContinuousSwitch";
@@ -28,16 +28,16 @@ export default function RerunExperimentForm() {
   const { user } = usePrivy();
 
   const tool = useSelector(selectToolDetail);
-  const flow = useSelector(selectFlowDetail);
+  const experiment = useSelector(selectExperimentDetail);
 
-  const lastJob = flow?.Jobs?.[flow?.Jobs?.length - 1];
+  const lastJob = experiment?.Jobs?.[experiment?.Jobs?.length - 1];
 
   const walletAddress = user?.wallet?.address;
 
   const groupedInputs = groupInputs(tool.ToolJson?.inputs);
   const formSchema = generateRerunSchema(tool.ToolJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
-  const flowID = flow?.ID || 0;
+  const experimentID = experiment?.ID || 0;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,24 +55,24 @@ export default function RerunExperimentForm() {
 
     console.log("Submitting Payload:", transformedPayload);
     try {
-      const response = await addJobToFlow(flowID, transformedPayload);
-      console.log("Response from addJobToFlow", response);
+      const response = await addJobToExperiment(experimentID, transformedPayload);
+      console.log("Response from addJobToExperiment", response);
       if (response && response.ID) {
-        console.log("Flow created", response);
+        console.log("Experiment created", response);
         console.log(response.ID);
-        dispatch(flowDetailThunk(response.ID));
-        dispatch(flowListThunk(walletAddress));
+        dispatch(experimentDetailThunk(response.ID));
+        dispatch(experimentListThunk(walletAddress));
         toast.success("Experiment started successfully");
       } else {
         console.log("Something went wrong", response);
       }
     } catch (error) {
-      console.error("Failed to create flow", error);
+      console.error("Failed to create experiment", error);
       // Handle error, maybe show message to user
     }
   }
 
-  return flow && lastJob ? (
+  return experiment && lastJob ? (
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
