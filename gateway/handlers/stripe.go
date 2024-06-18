@@ -189,7 +189,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
+func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		payload, err := ioutil.ReadAll(r.Body)
 		if err != nil {

@@ -76,7 +76,7 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/api-keys", protected(handlers.AddAPIKeyHandler(db))).Methods("POST")
 	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
 
-	router.HandleFunc("/stripe", handlers.StripeFullfillmentHandler(db)).Methods("POST")
+	router.HandleFunc("/stripe", handlers.StripeFulfillmentHandler(db)).Methods("POST")
 	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("GET")
 	router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
 	router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
