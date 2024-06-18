@@ -92,6 +92,7 @@ func createCheckoutSession(walletAddress string, computeCost int) (*stripe.Check
 	}
 
 	params := &stripe.CheckoutSessionParams{
+		Customer:   stripe.String(walletAddress),
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
