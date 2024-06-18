@@ -82,7 +82,7 @@ func createCheckoutSession(walletAddress string, computeCost int) (*stripe.Check
 	}
 
 	priceParams := &stripe.PriceParams{
-		UnitAmount: stripe.Int64(int64(computeCost)),
+		UnitAmount: stripe.Int64(int64(computeCost * 10)),
 		Currency:   stripe.String(string(stripe.CurrencyUSD)),
 		Product:    stripe.String(os.Getenv("STRIPE_PRODUCT_ID")),
 	}
@@ -128,24 +128,27 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		toolID := r.URL.Query().Get("toolID")
-		if toolID == "" {
-			utils.SendJSONError(w, "Tool ID not provided", http.StatusBadRequest)
-			return
-		}
+		// TODO: pass in tool
 
-		var tool models.Tool
-		result := db.Where("cid = ?", toolID).First(&tool)
-		if result.Error != nil {
-			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
-			} else {
-				utils.SendJSONError(w, fmt.Sprintf("Error fetching Tool: %v", result.Error), http.StatusInternalServerError)
-			}
-			return
-		}
+		// toolID := r.URL.Query().Get("toolID")
+		// if toolID == "" {
+		// 	utils.SendJSONError(w, "Tool ID not provided", http.StatusBadRequest)
+		// 	return
+		// }
 
-		session, err := createCheckoutSession(user.WalletAddress, tool.ComputeCost)
+		// var tool models.Tool
+		// result := db.Where("cid = ?", toolID).First(&tool)
+		// if result.Error != nil {
+		// 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// 		utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
+		// 	} else {
+		// 		utils.SendJSONError(w, fmt.Sprintf("Error fetching Tool: %v", result.Error), http.StatusInternalServerError)
+		// 	}
+		// 	return
+		// }
+
+		// TODO: modify so we're not passing in hardcoded value
+		session, err := createCheckoutSession(user.WalletAddress, 10)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
