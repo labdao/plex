@@ -66,17 +66,17 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if user.Tier == 1 {
-			checkoutSession, err := createCheckoutSession(user.WalletAddress, tool.ComputeCost)
-			if err != nil {
-				utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
-				return
-			}
+		// if user.Tier == 1 {
+		// 	checkoutSession, err := createCheckoutSession(user.WalletAddress, tool.ComputeCost)
+		// 	if err != nil {
+		// 		utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
+		// 		return
+		// 	}
 
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"checkout_url": checkoutSession.URL})
-			return
-		}
+		// 	w.Header().Set("Content-Type", "application/json")
+		// 	json.NewEncoder(w).Encode(map[string]string{"checkout_url": checkoutSession.URL})
+		// 	return
+		// }
 
 		var scatteringMethod string
 		err = json.Unmarshal(requestData["scatteringMethod"], &scatteringMethod)
