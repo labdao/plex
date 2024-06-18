@@ -11,9 +11,6 @@ import (
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/web3"
 
-	"github.com/stripe/stripe-go/v78"
-	"github.com/stripe/stripe-go/v78/customer"
-
 	"gorm.io/gorm"
 )
 
@@ -145,15 +142,12 @@ func UpdateUserTier(db *gorm.DB, walletAddress string, threshold int) error {
 		user.Tier = models.TierPaid
 
 		if user.StripeUserID == "" {
-			params := &stripe.CustomerParams{
-				Name: stripe.String(walletAddress),
-			}
-			c, err := customer.New(params)
+			stripeUserID, err := createStripeCustomer(walletAddress)
 			if err != nil {
 				fmt.Printf("Error creating Stripe customer for user with WalletAddress: %s: %v\n", walletAddress, err)
 				return err
 			}
-			user.StripeUserID = c.ID
+			user.StripeUserID = stripeUserID
 		}
 
 		if err := db.Save(&user).Error; err != nil {
