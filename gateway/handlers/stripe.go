@@ -111,8 +111,12 @@ func createCheckoutSession(stripeUserID string, computeCost int) (*stripe.Checko
 			},
 			SetupFutureUsage: stripe.String(string(stripe.PaymentIntentSetupFutureUsageOnSession)),
 		},
+		SavedPaymentMethodOptions: &stripe.CheckoutSessionSavedPaymentMethodOptionsParams{
+			PaymentMethodSave: stripe.String(string(stripe.CheckoutSessionSavedPaymentMethodOptionsPaymentMethodSaveEnabled)),
+		},
 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
+
 	params.AddMetadata("Stripe User ID", stripeUserID)
 
 	session, err := session.New(params)
