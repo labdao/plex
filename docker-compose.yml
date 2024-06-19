@@ -242,8 +242,6 @@ services:
       stripe listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://localhost:8080/stripe"
     environment:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-    networks:
-      - service-network  
     volumes:
       - stripe-secrets:/var/secrets/stripe
 
