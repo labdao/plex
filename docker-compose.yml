@@ -250,3 +250,4 @@ volumes:
   dbdata-receptor:
   ipfs:
   minio-data:
+  stripe-secrets:
