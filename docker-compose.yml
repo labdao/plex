@@ -125,12 +125,16 @@ services:
     depends_on:
       dbbackend:
         condition: service_healthy
+      stripe-cli:
+        condition: service_started
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 10s
+    volumes:
+      - stripe-secrets:/var/secrets/stripe
 
   default-tool-setup:
     image: "alpine"
@@ -228,6 +232,20 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+
+  stripe-cli:
+    image: stripe/stripe-cli
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "export STRIPE_WEBHOOK_SECRET=$(stripe listen --api-key ${STRIPE_SECRET_KEY} --print-secret --forward-to http://backend:8080/stripe | awk '/^> Ready! Your webhook signing secret is/ {print $NF}') &&
+      echo $STRIPE_WEBHOOK_SECRET > /var/secrets/stripe/secret.txt &&
+      stripe listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://localhost:8080/stripe"
+    environment:
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+    networks:
+      - service-network  
+    volumes:
+      - stripe-secrets:/var/secrets/stripe
 
 volumes:
   dbdata-backend:
