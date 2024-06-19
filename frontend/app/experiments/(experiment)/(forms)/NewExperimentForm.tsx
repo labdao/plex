@@ -51,49 +51,6 @@ export default function NewExperimentForm({ task }: { task: any }) {
     form.reset(generateDefaultValues(tool.ToolJson?.inputs, task, tool));
   }, [tool, form, task]);
 
-  // async function onSubmit(values: z.infer<typeof formSchema>) {
-  //   console.log("===== Form Submitted =====", values);
-
-  //   if (!walletAddress) {
-  //     console.error("Wallet address missing");
-  //     return;
-  //   }
-
-  //   if (userTier === 'Paid') {
-  //     try {
-  //       const checkoutResult = await dispatch(stripeCheckoutThunk()).unwrap();
-  //       if (!checkoutResult.success) {
-  //         // Handle unsuccessful checkout
-  //         return;
-  //       }
-  //     } catch (error) {
-  //       console.error("Stripe checkout failed", error);
-  //       // Handle error, maybe show message to user
-  //       return;
-  //     }
-  //   }
-
-  //   const transformedPayload = transformJson(tool, values, walletAddress);
-  //   console.log("Submitting Payload:", transformedPayload);
-
-  //   try {
-  //     const response = await createFlow(transformedPayload);
-  //     if (response && response.ID) {
-  //       console.log("Flow created", response);
-  //       console.log(response.ID);
-  //       router.push(`/experiments/${response.ID}`, { scroll: false });
-  //       // Update the navbar list of flows
-  //       dispatch(flowListThunk(walletAddress));
-  //       toast.success("Experiment started successfully");
-  //     } else {
-  //       console.log("Something went wrong", response);
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to create flow", error);
-  //     // Handle error, maybe show message to user
-  //   }
-  // }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
 
