@@ -50,5 +50,5 @@ func ValidateAPIKey(key string) (bool, error) {
 }
 
 func IsAPIKeyExpired(apiKey models.APIKey) bool {
-	return apiKey.ExpiresAt.Before(time.Now())
+	return apiKey.ExpiresAt.Before(time.Now().UTC())
 }

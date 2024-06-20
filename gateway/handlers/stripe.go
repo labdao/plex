@@ -324,6 +324,18 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
+				requestTracker := models.RequestTracker{
+					JobID:      job.ID,
+					RetryCount: 0,
+					State:      models.JobStateQueued,
+					CreatedAt:  time.Now().UTC(),
+				}
+				if err := db.Create(&requestTracker).Error; err != nil {
+					fmt.Fprintf(os.Stderr, "Error creating request tracker: %v\n", err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
 				for _, input := range ioItem.Inputs {
 					var cidsToAdd []string
 					switch v := input.(type) {

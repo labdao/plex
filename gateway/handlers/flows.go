@@ -107,19 +107,12 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Initialized IO List")
 
-		// save ioList to IPFS
-		// ioListCid, err := pinIoList(ioList)
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error pinning IO List: %v", err), http.StatusInternalServerError)
-			return
-		}
-
 		flowUUID := uuid.New().String()
 
 		flow := models.Flow{
 			WalletAddress: user.WalletAddress,
 			Name:          name,
-			StartTime:     time.Now(),
+			StartTime:     time.Now().UTC(),
 			FlowUUID:      flowUUID,
 			Public:        false,
 		}
@@ -155,7 +148,7 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 				JobType:       jobType,
 			}
@@ -213,6 +206,17 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(&job)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+			requestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				RetryCount: 0,
+				CreatedAt:  time.Now().UTC(),
+			}
+
+			result = db.Save(&requestTracker)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
@@ -567,7 +571,7 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
 				Queue:         queue,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 			}
 
@@ -624,6 +628,19 @@ func AddJobToFlowHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(&job)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			requestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				RetryCount: 0,
+				State:      models.JobStateQueued,
+				CreatedAt:  time.Now().UTC(),
+			}
+
+			result = db.Save(&requestTracker)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 		}

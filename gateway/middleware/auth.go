@@ -67,7 +67,7 @@ func (c *PrivyClaims) Valid() error {
 	if c.Issuer != "privy.io" {
 		return errors.New("Iss claim must be privy.io.")
 	}
-	if c.Expiration < int64(time.Now().Unix()) {
+	if c.Expiration < int64(time.Now().UTC().Unix()) {
 		return errors.New("Token has expired.")
 	}
 	return nil
