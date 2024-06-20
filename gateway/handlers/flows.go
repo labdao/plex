@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -212,6 +213,31 @@ func AddFlowHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(&job)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			user.ComputeTally += tool.ComputeCost
+			result = db.Save(user)
+			if result.Error != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			thresholdStr := os.Getenv("TIER_THRESHOLD")
+			if thresholdStr == "" {
+				utils.SendJSONError(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+				return
+			}
+
+			threshold, err := strconv.Atoi(thresholdStr)
+			if err != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			err = UpdateUserTier(db, user.WalletAddress, threshold)
+			if err != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error updating user tier: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}

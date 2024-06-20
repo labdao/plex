@@ -8,6 +8,7 @@
     "xAxis": "plddt",
     "yAxis": "i_pae",
     "rayServiceEndpoint": "/simulate_protein_complex",
+    "computeCost": 10,
     "inputs": {
       "binder_sequence": {
         "type": "string",

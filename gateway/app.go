@@ -110,6 +110,23 @@ func ServeWebApp() {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 
+	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
+	log.Printf("Initial STRIPE_WEBHOOK_SECRET_KEY: %s\n", stripeWebhookSecret)
+
+	if stripeWebhookSecret == "" {
+		log.Println("STRIPE_WEBHOOK_SECRET_KEY not set, attempting to read from file")
+		stripeWebhookSecretBytes, err := os.ReadFile("/var/secrets/stripe/secret.txt")
+		if err != nil {
+			log.Fatalf("Failed to read Stripe webhook signing secret: %v", err)
+		}
+		stripeWebhookSecret = strings.TrimSpace(string(stripeWebhookSecretBytes))
+
+		os.Setenv("STRIPE_WEBHOOK_SECRET_KEY", stripeWebhookSecret)
+		log.Printf("STRIPE_WEBHOOK_SECRET_KEY set from file: %s\n", stripeWebhookSecret)
+	} else {
+		log.Println("STRIPE_WEBHOOK_SECRET_KEY is already set")
+	}
+
 	// Set up CORS
 	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://localhost:3000", "http://frontend:3000"},

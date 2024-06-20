@@ -175,6 +175,7 @@ func AddToolHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			MaxRunningTime:     maxRunningTime,
 			ToolType:           string(tool.ToolType),
 			RayServiceEndpoint: tool.RayServiceEndpoint,
+			ComputeCost:        tool.ComputeCost,
 			S3URI:              s3_uri,
 		}
 
@@ -237,6 +238,7 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 			Display        *bool   `json:"display,omitempty"`
 			DefaultTool    *bool   `json:"defaultTool,omitempty"`
 			MaxRunningTime *int    `json:"maxRunningTime,omitempty"`
+			ComputeCost    *int    `json:"computeCost,omitempty"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
@@ -265,6 +267,9 @@ func UpdateToolHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		if requestData.MaxRunningTime != nil {
 			updateData["max_running_time"] = *requestData.MaxRunningTime
+		}
+		if requestData.ComputeCost != nil {
+			updateData["compute_cost"] = *requestData.ComputeCost
 		}
 
 		if len(updateData) == 0 {

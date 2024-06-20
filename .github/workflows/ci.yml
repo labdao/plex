@@ -165,12 +165,16 @@ jobs:
 
       - name: Bring up the public stack
         if: matrix.network_mode == 'public'
+        env:
+          STRIPE_WEBHOOK_SECRET_KEY: ${{ secrets.STRIPE_WEBHOOK_SECRET_KEY }}
         run: |
           # Compose up
           docker compose -f docker-compose.yml up -d --wait
 
       - name: Bring up the private stack
         if: matrix.network_mode == 'private'
+        env:
+          STRIPE_WEBHOOK_SECRET_KEY: ${{ secrets.STRIPE_WEBHOOK_SECRET_KEY }}
         run: |
           # Compose up
           docker compose -f docker-compose.yml -f docker-compose.private.yml up -d --wait

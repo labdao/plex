@@ -8,6 +8,7 @@
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
+    "computeCost": 10,
     "inputs": {
       "pdb": {
         "type": "file",
