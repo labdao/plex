@@ -19,7 +19,6 @@ import (
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
-	"github.com/stripe/stripe-go/v78/paymentmethod"
 	"github.com/stripe/stripe-go/v78/price"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/datatypes"
@@ -50,29 +49,6 @@ func createStripeCustomer(walletAddress string) (string, error) {
 	}
 
 	return customer.ID, nil
-}
-
-func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error) {
-	err := setupStripeClient()
-	if err != nil {
-		return nil, err
-	}
-
-	params := &stripe.PaymentMethodListParams{
-		Customer: stripe.String(stripeUserID),
-		Type:     stripe.String(string(stripe.PaymentMethodTypeCard)),
-	}
-	i := paymentmethod.List(params)
-
-	for i.Next() {
-		return i.PaymentMethod(), nil
-	}
-
-	if err := i.Err(); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
 }
 
 func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
