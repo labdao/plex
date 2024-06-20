@@ -1,7 +1,13 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
 
-export const getCheckoutURL = async (): Promise<any> => {
+interface CheckoutPayload {
+  toolCid: string;
+  scatteringMethod: string;
+  kwargs: string;
+}
+
+export const getCheckoutURL = async (payload: CheckoutPayload): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken();
@@ -11,11 +17,12 @@ export const getCheckoutURL = async (): Promise<any> => {
   }
 
   const response = await fetch(`${backendUrl()}/stripe/checkout`, {
-    method: "Get",
+    method: "POST",
     headers: {
       Authorization: `Bearer ${authToken}`,
       "Content-Type": "application/json",
     },
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

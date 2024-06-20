@@ -1,0 +1,1 @@
+ALTER TABLE users DROP COLUMN stripe_user_id;

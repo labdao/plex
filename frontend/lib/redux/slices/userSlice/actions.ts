@@ -40,7 +40,7 @@ export const saveUserDataToServer = async (walletAddress: string): Promise<{ wal
   return result;
 }
 
-export const fetchUserData = async (): Promise<{ walletAddress: string; did: string; isAdmin: boolean }> => {
+export const fetchUserData = async (): Promise<{ walletAddress: string; did: string; tier: 'Free' | 'Paid' | null; isAdmin: boolean }> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -71,5 +71,10 @@ export const fetchUserData = async (): Promise<{ walletAddress: string; did: str
 
   const result = await response.json();
   console.log('result', result);
-  return result;
+  return {
+    walletAddress: result.walletAddress,
+    did: result.did,
+    tier: result.tier === 0 ? 'Free' : result.tier === 1 ? 'Paid' : null,
+    isAdmin: result.isAdmin,
+  };
 }

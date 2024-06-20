@@ -59,6 +59,7 @@ type Tool struct {
 	Outputs              map[string]ToolOutput `json:"outputs"`
 	TaskCategory         string                `json:"taskCategory"`
 	MaxRunningTime       int                   `json:"maxRunningTime"`
+	ComputeCost          int                   `json:"computeCost"`
 	ToolType             ToolType              `json:"toolType"`
 	RayServiceEndpoint   string                `json:"rayServiceEndpoint"`
 	XAxis                string                `json:"xAxis"`
