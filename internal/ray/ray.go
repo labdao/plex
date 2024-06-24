@@ -27,16 +27,6 @@ func GetRayApiHost() string {
 }
 
 // Prevents race conditions with Ray Client
-// TODO_PR#970 - revisit timeout later
-//
-//	func GetRayClient(maxRunningTime int) *http.Client {
-//		once.Do(func() {
-//			rayClient = &http.Client{
-//				Timeout: time.Second * time.Duration(maxRunningTime),
-//			}
-//		})
-//		return rayClient
-//	}
 func GetRayClient() *http.Client {
 	once.Do(func() {
 		rayClient = &http.Client{}
@@ -142,19 +132,5 @@ func SubmitRayJob(toolPath string, rayJobID string, inputs map[string]interface{
 	}
 
 	log.Printf("Ray job finished with response status: %s\n", resp.Status)
-	// if resp.StatusCode != http.StatusOK {
-	// 	return "", fmt.Errorf("failed to create Ray job, status code: %d", resp.StatusCode)
-	// }
-
-	// var responseBody map[string]string
-	// if err := json.NewDecoder(resp.Body).Decode(&responseBody); err != nil {
-	// 	return "", fmt.Errorf("failed to decode response body: %v", err)
-	// }
-
-	// jobID, exists := responseBody["job_id"]
-	// if !exists {
-	// 	return "", fmt.Errorf("job_id not found in response")
-	// }
-
 	return resp, nil
 }

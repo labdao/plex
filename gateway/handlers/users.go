@@ -63,7 +63,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			newUser := models.User{
 				WalletAddress: requestData.WalletAddress,
 				DID:           did,
-				CreatedAt:     time.Now(),
+				CreatedAt:     time.Now().UTC(),
 			}
 			if result := db.Create(&newUser); result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
@@ -106,16 +106,58 @@ func GetUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		response := struct {
-			WalletAddress string `json:"walletAddress"`
-			DID           string `json:"did"`
-			IsAdmin       bool   `json:"isAdmin"`
+			WalletAddress string      `json:"walletAddress"`
+			DID           string      `json:"did"`
+			IsAdmin       bool        `json:"isAdmin"`
+			Tier          models.Tier `json:"tier"`
 		}{
 			WalletAddress: user.WalletAddress,
 			DID:           user.DID,
 			IsAdmin:       user.Admin,
+			Tier:          user.Tier,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+func getTier(db *gorm.DB, walletAddress string) (models.Tier, error) {
+	var user models.User
+	err := db.Where("wallet_address = ?", walletAddress).First(&user).Error
+	if err != nil {
+		return models.TierFree, err
+	}
+	return user.Tier, nil
+}
+
+func UpdateUserTier(db *gorm.DB, walletAddress string, threshold int) error {
+	var user models.User
+	err := db.Where("wallet_address = ?", walletAddress).First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	if user.ComputeTally >= threshold && user.Tier != models.TierPaid {
+		user.Tier = models.TierPaid
+
+		if user.StripeUserID == "" {
+			stripeUserID, err := createStripeCustomer(walletAddress)
+			if err != nil {
+				fmt.Printf("Error creating Stripe customer for user with WalletAddress: %s: %v\n", walletAddress, err)
+				return err
+			}
+			user.StripeUserID = stripeUserID
+		}
+
+		if err := db.Save(&user).Error; err != nil {
+			fmt.Printf("Error updating tier for user with WalletAddress: %s: %v\n", walletAddress, err)
+			return err
+		}
+		fmt.Printf("Successfully updated tier for user with WalletAddress: %s\n", walletAddress)
+	} else {
+		fmt.Printf("No need to update tier for user with WalletAddress: %s\n", walletAddress)
+	}
+
+	return nil
 }

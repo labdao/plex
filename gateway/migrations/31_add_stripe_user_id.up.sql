@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN stripe_user_id VARCHAR(255) UNIQUE;

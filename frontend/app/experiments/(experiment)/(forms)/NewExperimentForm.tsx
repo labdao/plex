@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail } from "@/lib/redux";
+import { addFlowThunk, addFlowWithCheckoutThunk, AppDispatch, flowListThunk, resetToolDetail, resetToolList, selectToolDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
 import { createFlow } from "@/lib/redux/slices/flowAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -28,6 +28,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   const tool = useSelector(selectToolDetail);
   const walletAddress = user?.wallet?.address;
+  const userTier = useSelector(selectUserTier);
 
   useEffect(() => {
     return () => {
@@ -57,26 +58,31 @@ export default function NewExperimentForm({ task }: { task: any }) {
       console.error("Wallet address missing");
       return;
     }
+
     const transformedPayload = transformJson(tool, values, walletAddress);
     console.log("Submitting Payload:", transformedPayload);
 
     try {
-      const response = await createFlow(transformedPayload);
-      if (response && response.ID) {
-        console.log("Flow created", response);
-        console.log(response.ID);
-        router.push(`/experiments/${response.ID}`, { scroll: false });
-        // Update the navbar list of flows
-        dispatch(flowListThunk(walletAddress));
-        toast.success("Experiment started successfully");
+      if (userTier === 'Paid') {
+        await dispatch(addFlowWithCheckoutThunk(transformedPayload)).unwrap();
       } else {
-        console.log("Something went wrong", response);
+        const response = await dispatch(addFlowThunk(transformedPayload)).unwrap();
+        if (response && response.ID) {
+          console.log("Flow created", response);
+          console.log(response.ID);
+          router.push(`/experiments/${response.ID}`, { scroll: false });
+          dispatch(flowListThunk(walletAddress));
+          toast.success("Experiment started successfully");
+        } else {
+          console.log("Something went wrong", response);
+        }
       }
     } catch (error) {
       console.error("Failed to create flow", error);
       // Handle error, maybe show message to user
     }
   }
+
 
   return (
     <>
