@@ -83,7 +83,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
-	region := "us-east-1"
+	region := os.Getenv("AWS_REGION")
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
@@ -199,7 +199,7 @@ func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotData, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
-	region := "us-east-1"
+	region := os.Getenv("AWS_REGION")
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
