@@ -64,9 +64,9 @@ runs:
 
     # - name: Test add Tool Endpoint
     #   run: |
-    #     TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
-    #     json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
-    #     response=$(curl -s -X POST "http://localhost:8080/tools" \
+    #     TOOL_JSON_CONTENT=$(jq -c . < models/labsay/labsay.json)
+    #     json_payload="{\"modelJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+    #     response=$(curl -s -X POST "http://localhost:8080/models" \
     #            -H "Content-Type: application/json" \
     #            -d "$json_payload")
 
@@ -84,7 +84,7 @@ runs:
 
     # - name: Test list Tools Endpoint
     #   run: |
-    #     response=$(curl --silent http://localhost:8080/tools)
+    #     response=$(curl --silent http://localhost:8080/models)
     #     length=$(echo "$response" | jq 'length')
 
     #     if [ "$length" -gt 1 ]; then
@@ -102,7 +102,7 @@ runs:
     #     payload='{
     #       "name": "testExperiment",
     #       "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-    #       "toolCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
+    #       "modelCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
     #       "scatteringMethod": "dotProduct",
     #       "kwargs": {
     #         "file_example": ["QmV1e4ZoBrHuPJ1cqbzhkp9g4trte4N21fGLNrQxQpXgK6/haiku2.txt"],

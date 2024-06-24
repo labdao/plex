@@ -46,15 +46,15 @@ func handleSingleElementInput(value interface{}) (string, error) {
 	}
 }
 
-func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
-	tool, _, err := ipwl.ReadToolConfig(toolPath, db)
+func CreateRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
+	model, _, err := ipwl.ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
 
 	// Validate input keys
-	err = validateInputKeys(inputs, tool.Inputs)
+	err = validateInputKeys(inputs, model.Inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +93,8 @@ func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{
 
 	log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
 
-	// construct from env var BUCKET ENDPOINT + tool.RayServiceEndpoint
-	rayServiceURL := GetRayApiHost() + tool.RayServiceEndpoint
+	// construct from env var BUCKET ENDPOINT + model.RayServiceEndpoint
+	rayServiceURL := GetRayApiHost() + model.RayServiceEndpoint
 	// Create the HTTP request
 	req, err := http.NewRequest("POST", rayServiceURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
@@ -112,20 +112,20 @@ func CreateRayJob(toolPath string, rayJobID string, inputs map[string]interface{
 	return resp, nil
 }
 
-func validateInputKeys(inputVectors map[string]interface{}, toolInputs map[string]ipwl.ToolInput) error {
+func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[string]ipwl.ModelInput) error {
 	for inputKey := range inputVectors {
-		if _, exists := toolInputs[inputKey]; !exists {
-			log.Printf("The argument %s is not in the tool inputs.\n", inputKey)
-			log.Printf("Available keys: %v\n", toolInputs)
-			return fmt.Errorf("the argument %s is not in the tool inputs", inputKey)
+		if _, exists := modelInputs[inputKey]; !exists {
+			log.Printf("The argument %s is not in the model inputs.\n", inputKey)
+			log.Printf("Available keys: %v\n", modelInputs)
+			return fmt.Errorf("the argument %s is not in the model inputs", inputKey)
 		}
 	}
 	return nil
 }
 
-func SubmitRayJob(toolPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	log.Printf("Creating Ray job with toolPath: %s and inputs: %+v\n", toolPath, inputs)
-	resp, err := CreateRayJob(toolPath, rayJobID, inputs, db)
+func SubmitRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
+	resp, err := CreateRayJob(modelPath, rayJobID, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err

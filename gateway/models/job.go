@@ -34,8 +34,8 @@ type Job struct {
 	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
 	Error         string         `gorm:"type:text;default:''"`
 	WalletAddress string         `gorm:"type:varchar(255)"`
-	ToolID        string         `gorm:"type:varchar(255);not null;index"`
-	Tool          Tool           `gorm:"foreignKey:ToolID"`
+	ModelID       string         `gorm:"type:varchar(255);not null;index"`
+	Model         Model          `gorm:"foreignKey:ModelID"`
 	ExperimentID  uint           `gorm:"type:int;not null;index"`
 	Experiment    Experiment     `gorm:"foreignKey:ExperimentID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`

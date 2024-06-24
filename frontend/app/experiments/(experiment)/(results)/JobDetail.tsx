@@ -26,7 +26,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("raw-files");
 
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
 
   interface File {
     CID: string;
@@ -94,7 +94,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         </div>
       </TabsContent>
       <TabsContent value="inputs">
-        <InputList userInputs={job.Inputs} tool={tool} />
+        <InputList userInputs={job.Inputs} model={model} />
       </TabsContent>
 
       {/*
@@ -153,8 +153,8 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
   );
 }
 
-function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; tool: ToolDetail }) {
-  const groupedInputs = groupInputs(tool.ToolJson.inputs);
+function InputList({ userInputs, model }: { userInputs: { [key: string]: any }; model: ToolDetail }) {
+  const groupedInputs = groupInputs(model.ToolJson.inputs);
   return userInputs ? (
     <>
       {!!groupedInputs?.standard && (

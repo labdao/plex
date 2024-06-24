@@ -106,7 +106,7 @@ func ServeWebApp() {
 	}
 
 	// Migrate the schema
-	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.RequestTracker{}); err != nil {
+	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Model{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.RequestTracker{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 

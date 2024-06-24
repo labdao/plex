@@ -147,7 +147,7 @@ export default function ExperimentDetail() {
               <div>
                 <strong>Model: </strong>
                 <Button variant="outline" size="xs" onClick={() => setModelPanelOpen(!modelPanelOpen)}>
-                  {experiment.Jobs?.[0]?.Tool?.Name}
+                  {experiment.Jobs?.[0]?.Model?.Name}
                 </Button>
               </div>
             </div>

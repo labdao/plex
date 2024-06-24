@@ -27,15 +27,15 @@ export default function RerunExperimentForm() {
   const router = useRouter();
   const { user } = usePrivy();
 
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
   const experiment = useSelector(selectExperimentDetail);
 
   const lastJob = experiment?.Jobs?.[experiment?.Jobs?.length - 1];
 
   const walletAddress = user?.wallet?.address;
 
-  const groupedInputs = groupInputs(tool.ToolJson?.inputs);
-  const formSchema = generateRerunSchema(tool.ToolJson?.inputs);
+  const groupedInputs = groupInputs(model.ToolJson?.inputs);
+  const formSchema = generateRerunSchema(model.ToolJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
   const experimentID = experiment?.ID || 0;
 
@@ -51,7 +51,7 @@ export default function RerunExperimentForm() {
       console.error("Wallet address missing");
       return;
     }
-    const transformedPayload = transformJson(tool, values, walletAddress);
+    const transformedPayload = transformJson(model, values, walletAddress);
 
     console.log("Submitting Payload:", transformedPayload);
     try {

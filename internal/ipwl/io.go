@@ -7,13 +7,13 @@ import (
 	"os"
 )
 
-type ToolInfo struct {
+type ModelInfo struct {
 	Name string `json:"name"`
 	S3   string `json:"s3"`
 }
 
 type IO struct {
-	Tool     ToolInfo               `json:"tool"`
+	Model    ModelInfo              `json:"model"`
 	Inputs   map[string]interface{} `json:"inputs"`
 	Outputs  map[string]interface{} `json:"outputs"`
 	State    string                 `json:"state"`

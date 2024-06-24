@@ -29,7 +29,7 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
   const { modelPanelOpen, setModelPanelOpen } = useContext(ExperimentUIContext);
   const [activeTab, setActiveTab] = useState("guide");
   const dispatch = useDispatch<AppDispatch>();
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
   const toolDetailLoading = useSelector(selectToolDetailLoading);
 
   useEffect(() => {
@@ -72,14 +72,14 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
             <ToolSelect onChange={handleToolChange} taskSlug={task?.slug} />
           ) : (
             <div className="ml-2 text-xl truncate font-heading">
-              {tool.ToolJson?.author || "unknown"}/{tool.ToolJson?.name}
+              {model.ToolJson?.author || "unknown"}/{model.ToolJson?.name}
             </div>
           )}
         </div>
 
         <div className="flex grow">
           <div className="flex flex-col justify-start h-auto gap-2 p-3">
-            {tool.ToolJson?.guide && (
+            {model.ToolJson?.guide && (
               <Button
                 onClick={() => handleTabChange("guide")}
                 variant="ghost"
@@ -100,8 +100,8 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
             
           </div>
           <div className="p-2 mt-2 grow">
-            {tool.ToolJson?.guide && activeTab === "guide" && <ModelGuide tool={tool} />}
-            {tool.ToolJson?.description && activeTab === "info" && <ModelInfo tool={tool} />}
+            {model.ToolJson?.guide && activeTab === "guide" && <ModelGuide model={model} />}
+            {model.ToolJson?.description && activeTab === "info" && <ModelInfo model={model} />}
           </div>
         </div>
       </div>

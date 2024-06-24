@@ -3,7 +3,7 @@ import { createAppAsyncThunk } from "@/lib/redux/createAppAsyncThunk";
 import { getTool, patchTool } from "./asyncActions";
 import { setToolDetail, setToolDetailError, setToolDetailLoading, setToolDetailSuccess } from "./slice";
 
-export const toolDetailThunk = createAppAsyncThunk("tool/toolDetail", async (bacalhauToolID: string, { dispatch }) => {
+export const toolDetailThunk = createAppAsyncThunk("model/toolDetail", async (bacalhauToolID: string, { dispatch }) => {
   dispatch(setToolDetailLoading(true));
   try {
     const responseData = await getTool(bacalhauToolID);
@@ -12,18 +12,18 @@ export const toolDetailThunk = createAppAsyncThunk("tool/toolDetail", async (bac
     dispatch(setToolDetailLoading(false));
     return responseData;
   } catch (error: unknown) {
-    console.log("Failed to get Tool.", error);
+    console.log("Failed to get Model.", error);
     if (error instanceof Error) {
       dispatch(setToolDetailError(error.message));
     } else {
-      dispatch(setToolDetailError("Failed to get Tool."));
+      dispatch(setToolDetailError("Failed to get Model."));
     }
     dispatch(setToolDetailLoading(false));
     return false;
   }
 });
 
-export const toolPatchDetailThunk = createAppAsyncThunk("tool/toolPatchDetail", async (bacalhauToolID: string, { dispatch }) => {
+export const toolPatchDetailThunk = createAppAsyncThunk("model/toolPatchDetail", async (bacalhauToolID: string, { dispatch }) => {
   dispatch(setToolDetailLoading(true));
   try {
     const responseData = await patchTool(bacalhauToolID);
@@ -32,11 +32,11 @@ export const toolPatchDetailThunk = createAppAsyncThunk("tool/toolPatchDetail", 
     dispatch(setToolDetail(responseData));
     return responseData;
   } catch (error: unknown) {
-    console.log("Failed to get Tool.", error);
+    console.log("Failed to get Model.", error);
     if (error instanceof Error) {
       dispatch(setToolDetailError(error.message));
     } else {
-      dispatch(setToolDetailError("Failed to patch Tool."));
+      dispatch(setToolDetailError("Failed to patch Model."));
     }
     dispatch(setToolDetailLoading(false));
     return false;

@@ -41,10 +41,10 @@ const renderDescriptionParagraphs = (text: string) => {
 };
 
 interface ModelGuideProps {
-  tool: ToolDetail;
+  model: ToolDetail;
 }
 
-export default function ModelGuide({ tool }: ModelGuideProps) {
+export default function ModelGuide({ model }: ModelGuideProps) {
   const [maxHeight, setMaxHeight] = useState(window.innerHeight * 0.7);
   useEffect(() => {
     const handleResize = () => {
@@ -58,7 +58,7 @@ export default function ModelGuide({ tool }: ModelGuideProps) {
     <div>
       <div className="text-left uppercase font-heading">How to Write Prompts</div>
       <div className="pt-0 scrollable-content" style={{ maxHeight, overflowY: 'auto' }}>
-        <div className="space-y-2 text-muted-foreground">{renderDescriptionParagraphs(tool.ToolJson.guide)}</div>
+        <div className="space-y-2 text-muted-foreground">{renderDescriptionParagraphs(model.ToolJson.guide)}</div>
       </div>
     </div>
   );

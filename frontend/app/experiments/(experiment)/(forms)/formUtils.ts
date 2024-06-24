@@ -29,10 +29,10 @@ type TransformedJSON = {
   kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
 };
 
-export function transformJson(tool: any, originalJson: any, walletAddress: string): TransformedJSON {
-  const { name, tool: toolCid, ...dynamicKeys } = originalJson;
+export function transformJson(model: any, originalJson: any, walletAddress: string): TransformedJSON {
+  const { name, model: toolCid, ...dynamicKeys } = originalJson;
 
-  const toolJsonInputs = tool.ToolJson.inputs;
+  const toolJsonInputs = model.ToolJson.inputs;
 
   const kwargs = Object.fromEntries(
     Object.entries(dynamicKeys).map(([key, valueArray]) => {
@@ -53,7 +53,7 @@ export function transformJson(tool: any, originalJson: any, walletAddress: strin
   // Return the transformed JSON
   return {
     name: name,
-    toolCid: tool.CID,
+    toolCid: model.CID,
     walletAddress: walletAddress,
     scatteringMethod: "crossProduct",
     kwargs: kwargs,

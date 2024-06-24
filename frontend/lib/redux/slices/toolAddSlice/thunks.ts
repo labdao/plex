@@ -8,23 +8,23 @@ interface ToolPayload {
 }
 
 export const createToolThunk = createAppAsyncThunk(
-  'tool/addTool',
+  'model/addTool',
   async ({ toolJson }: ToolPayload, { dispatch }) => {
     try {
       const response = await createTool({ toolJson })
       if (response && response.cid) {
         dispatch(setAddToolSuccess(true))
       } else {
-        console.log('Failed to add tool.', response)
-        dispatch(setAddToolError('Failed to add tool.'))
+        console.log('Failed to add model.', response)
+        dispatch(setAddToolError('Failed to add model.'))
       }
       return response
     } catch (error: unknown) {
-      console.log('Failed to add tool.', error)
+      console.log('Failed to add model.', error)
       if (error instanceof Error) {
         dispatch(setAddToolError(error.message))
       } else {
-        dispatch(setAddToolError('Failed to add tool.'))
+        dispatch(setAddToolError('Failed to add model.'))
       }
       return false
     }

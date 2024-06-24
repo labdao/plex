@@ -13,7 +13,7 @@ on:
     tags:
       - '**'
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools.yml'
       - '.github/workflows/docker.yml'
 
@@ -22,7 +22,7 @@ on:
       - "main"
       - "staging"
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools.yml'
       - '.github/workflows/docker.yml'
 
@@ -50,18 +50,18 @@ jobs:
         ###############################################################
         filters: |
           colabdesign:
-            - 'tools/colabdesign/**'
+            - 'models/colabdesign/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
           labsay:
-            - 'tools/labsay/**'
+            - 'models/labsay/**'
             - '.github/workflows/tools.yml'
             - '.github/workflows/docker.yml'
 
 
   tools:
     needs: changes-tools
-    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-models.outputs.models)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:

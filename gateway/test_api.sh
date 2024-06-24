@@ -43,7 +43,7 @@ read -sp "Please enter your API key: " api_key
 echo # Move to a new line
 
 # Array of GET endpoints that do not require additional parameters
-declare -a endpoints=("tools" "datafiles" "experiments" "queue-summary" "tags")
+declare -a endpoints=("models" "datafiles" "experiments" "queue-summary" "tags")
 
 # Display the table headers
 printf "%-20s %-20s %-20s\n" "Endpoint" "Without API Key" "With API Key"

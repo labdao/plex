@@ -12,7 +12,7 @@ export const createTool = async (
         throw new Error("Authentication failed")
     }
 
-    const response = await fetch(`${backendUrl()}/tools`, {
+    const response = await fetch(`${backendUrl()}/models`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -22,7 +22,7 @@ export const createTool = async (
     })
 
     if (!response) {
-        throw new Error("Failed to create Tool")
+        throw new Error("Failed to create Model")
     }
 
     const result = await response.json()

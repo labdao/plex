@@ -143,7 +143,7 @@ func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.Preload("Experiment").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Experiment").Preload("Model").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}
@@ -224,8 +224,8 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	svc := s3.New(sess)
 
-	var ToolJson ipwl.Tool
-	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+	var ToolJson ipwl.Model
+	if err := json.Unmarshal(job.Model.ToolJson, &ToolJson); err != nil {
 		return nil, err
 	}
 
@@ -291,7 +291,7 @@ func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		jobID := vars["jobID"]
 
 		var job models.Job
-		if err := db.Preload("Experiment").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
+		if err := db.Preload("Experiment").Preload("Model").First(&job, "id = ?", jobID).Error; err != nil {
 			http.Error(w, "Job not found", http.StatusNotFound)
 			return
 		}
@@ -313,7 +313,7 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		experimentID := vars["experimentID"]
 
 		var experiment models.Experiment
-		if err := db.Preload("Jobs.Tool").First(&experiment, "id = ?", experimentID).Error; err != nil {
+		if err := db.Preload("Jobs.Model").First(&experiment, "id = ?", experimentID).Error; err != nil {
 			http.Error(w, "Experiment not found", http.StatusNotFound)
 			return
 		}

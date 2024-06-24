@@ -27,14 +27,14 @@ export interface ToolDetail {
 }
 
 export interface ToolDetailSliceState {
-  tool: ToolDetail;
+  model: ToolDetail;
   loading: boolean;
   error: string | null;
   success: boolean;
 }
 
 const initialState: ToolDetailSliceState = {
-  tool: {
+  model: {
     CID: "",
     WalletAddress: "",
     Name: "",
@@ -62,7 +62,7 @@ export const toolDetailSlice = createSlice({
   initialState,
   reducers: {
     setToolDetail: (state, action: PayloadAction<ToolDetail>) => {
-      state.tool = action.payload;
+      state.model = action.payload;
     },
     setToolDetailLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;

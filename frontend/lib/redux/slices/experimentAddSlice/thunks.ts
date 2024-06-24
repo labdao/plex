@@ -21,8 +21,8 @@ export const addExperimentThunk = createAppAsyncThunk(
         dispatch(setExperimentAddSuccess(true))
         dispatch(setExperimentAddID(response.ID))
       } else {
-        console.log('Failed to add tool.', response)
-        dispatch(setExperimentAddError('Failed to add tool.'))
+        console.log('Failed to add model.', response)
+        dispatch(setExperimentAddError('Failed to add model.'))
       }
       return response
     } catch (error: unknown) {
@@ -30,7 +30,7 @@ export const addExperimentThunk = createAppAsyncThunk(
       if (error instanceof Error) {
         dispatch(setExperimentAddError(error.message))
       } else {
-        dispatch(setExperimentAddError('Failed to add tool.'))
+        dispatch(setExperimentAddError('Failed to add model.'))
       }
       return false
     }

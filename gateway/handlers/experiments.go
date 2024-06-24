@@ -50,18 +50,18 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		var toolCid string
 		err = json.Unmarshal(requestData["toolCid"], &toolCid)
 		if err != nil || toolCid == "" {
-			utils.SendJSONError(w, "Invalid or missing Tool CID", http.StatusBadRequest)
+			utils.SendJSONError(w, "Invalid or missing Model CID", http.StatusBadRequest)
 			return
 		}
 
-		var tool models.Tool
-		result := db.Where("cid = ?", toolCid).First(&tool)
+		var model models.Model
+		result := db.Where("cid = ?", toolCid).First(&model)
 		if result.Error != nil {
-			log.Printf("Error fetching Tool: %v\n", result.Error)
+			log.Printf("Error fetching Model: %v\n", result.Error)
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
+				utils.SendJSONError(w, "Model not found", http.StatusNotFound)
 			} else {
-				utils.SendJSONError(w, "Error fetching Tool", http.StatusInternalServerError)
+				utils.SendJSONError(w, "Error fetching Model", http.StatusInternalServerError)
 			}
 			return
 		}
@@ -132,18 +132,18 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if tool.ToolType == "ray" {
+			if model.ToolType == "ray" {
 				queue = models.QueueTypeRay
 			}
 			// TODO: consolidate below with the above checks.
 			var jobType models.JobType
-			if tool.ToolType == "ray" {
+			if model.ToolType == "ray" {
 				jobType = models.JobTypeRay
 			} else {
 				jobType = models.JobTypeBacalhau
 			}
 			job := models.Job{
-				ToolID:        ioItem.Tool.S3,
+				ToolID:        ioItem.Model.S3,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
@@ -220,7 +220,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			user.ComputeTally += tool.ComputeCost
+			user.ComputeTally += model.ComputeCost
 			result = db.Save(user)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
@@ -274,7 +274,7 @@ func GetExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var experiment models.Experiment
-		query := db.Preload("Jobs.Tool").Where("id = ?", experimentID)
+		query := db.Preload("Jobs.Model").Where("id = ?", experimentID)
 
 		if result := query.First(&experiment); result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -509,13 +509,13 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		//TODO: think about moving toolID to experiment level instead of job level
 		var toolId = experiment.Jobs[0].ToolID
 
-		var tool models.Tool
-		result := db.Where("cid = ?", toolId).First(&tool)
+		var model models.Model
+		result := db.Where("cid = ?", toolId).First(&model)
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
-				http.Error(w, "Tool not found", http.StatusNotFound)
+				http.Error(w, "Model not found", http.StatusNotFound)
 			} else {
-				http.Error(w, "Error fetching Tool", http.StatusInternalServerError)
+				http.Error(w, "Error fetching Model", http.StatusInternalServerError)
 			}
 			return
 		}
@@ -546,7 +546,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(tool.CID, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(model.CID, scatteringMethod, kwargs, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -561,12 +561,12 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if tool.ToolType == "ray" {
+			if model.ToolType == "ray" {
 				queue = models.QueueTypeRay
 			}
 
 			job := models.Job{
-				ToolID:        ioItem.Tool.S3,
+				ToolID:        ioItem.Model.S3,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),

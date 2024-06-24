@@ -105,12 +105,12 @@ func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.
 	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
 }
 
-// func fetchJobWithToolData(job *models.Job, id uint, db *gorm.DB) error {
-// 	return db.Preload("Tool").First(&job, id).Error
+// func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {
+// 	return db.Preload("Model").First(&job, id).Error
 // }
 
-func fetchJobWithToolAndExperimentData(job *models.Job, id uint, db *gorm.DB) error {
-	return db.Preload("Tool").Preload("Experiment").First(&job, id).Error
+func fetchJobWithModelAndExperimentData(job *models.Job, id uint, db *gorm.DB) error {
+	return db.Preload("Model").Preload("Experiment").First(&job, id).Error
 }
 
 func fetchLatestRequestTracker(requestTracker *models.RequestTracker, jobID uint, db *gorm.DB) error {
@@ -120,7 +120,7 @@ func fetchLatestRequestTracker(requestTracker *models.RequestTracker, jobID uint
 func processRayJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing Ray Job %v\n", jobID)
 	var job models.Job
-	err := fetchJobWithToolAndExperimentData(&job, jobID, db)
+	err := fetchJobWithModelAndExperimentData(&job, jobID, db)
 	if err != nil {
 		return err
 	}
@@ -131,8 +131,8 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	var ToolJson ipwl.Tool
-	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+	var ModelJson ipwl.Model
+	if err := json.Unmarshal(job.Model.ModelJson, &ModelJson); err != nil {
 		return err
 	}
 
@@ -232,14 +232,14 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 	for key, value := range jobInputs {
 		inputs[key] = []interface{}{value}
 	}
-	toolCID := job.Tool.CID
+	modelCID := job.Model.CID
 
 	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 	setJobStatusAndID(requestTracker, job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(toolCID, rayJobID, inputs, db)
+	resp, err := ray.SubmitRayJob(modelCID, rayJobID, inputs, db)
 	if err != nil {
 		return err
 	}

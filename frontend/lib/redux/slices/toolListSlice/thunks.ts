@@ -6,7 +6,7 @@ import { setToolList,setToolListError, setToolListSuccess } from './slice'
 
 
 export const toolListThunk = createAppAsyncThunk(
-  'tool/listTools',
+  'model/listTools',
   async (taskSlug: string | undefined, { dispatch }) => {
     console.log('toolListThunk')
     try {
@@ -15,8 +15,8 @@ export const toolListThunk = createAppAsyncThunk(
         dispatch(setToolListSuccess(true))
         dispatch(setToolList(response))
       } else {
-        console.log('Failed to list Tools.', response)
-        dispatch(setToolListError('Failed to list Tools.'))
+        console.log('Failed to list Models.', response)
+        dispatch(setToolListError('Failed to list Models.'))
       }
       return response
     } catch (error: unknown) {
@@ -24,7 +24,7 @@ export const toolListThunk = createAppAsyncThunk(
       if (error instanceof Error) {
         dispatch(setToolListError(error.message))
       } else {
-        dispatch(setToolListError('Failed to add tool.'))
+        dispatch(setToolListError('Failed to add model.'))
       }
       return false
     }

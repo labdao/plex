@@ -43,10 +43,10 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 	router.HandleFunc("/user", protected(handlers.GetUserHandler(db))).Methods("GET")
 
-	router.HandleFunc("/tools", protected(adminProtected(handlers.AddToolHandler(db, s3c)))).Methods("POST")
-	router.HandleFunc("/tools/{cid}", protected(handlers.GetToolHandler(db))).Methods("GET")
-	router.HandleFunc("/tools", protected(handlers.ListToolsHandler(db))).Methods("GET")
-	router.HandleFunc("/tools/{cid}", protected(adminProtected(handlers.UpdateToolHandler(db)))).Methods("PUT")
+	router.HandleFunc("/models", protected(adminProtected(handlers.AddModelHandler(db, s3c)))).Methods("POST")
+	router.HandleFunc("/models/{cid}", protected(handlers.GetModelHandler(db))).Methods("GET")
+	router.HandleFunc("/models", protected(handlers.ListModelsHandler(db))).Methods("GET")
+	router.HandleFunc("/models/{cid}", protected(adminProtected(handlers.UpdateModelHandler(db)))).Methods("PUT")
 
 	router.HandleFunc("/datafiles", protected(handlers.AddDataFileHandler(db, s3c))).Methods("POST")
 	router.HandleFunc("/datafiles/{cid}", protected(handlers.GetDataFileHandler(db))).Methods("GET")

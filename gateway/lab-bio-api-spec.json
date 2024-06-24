@@ -82,10 +82,10 @@
           }
         }
       },
-      "/tools": {
+      "/models": {
         "post": {
           "operationId": "addTool",
-          "summary": "Add Tool",
+          "summary": "Add Model",
           "requestBody": {
             "required": true,
             "content": {
@@ -111,7 +111,7 @@
           },
           "responses": {
             "201": {
-              "description": "Tool created successfully",
+              "description": "Model created successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -130,7 +130,7 @@
               "description": "Bad request, such as invalid JSON format or missing fields"
             },
             "409": {
-              "description": "Conflict, tool with the same CID already exists"
+              "description": "Conflict, model with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -139,7 +139,7 @@
         },
         "get": {
           "operationId": "listTools",
-          "summary": "List Tools",
+          "summary": "List Models",
           "parameters": [
             {
               "name": "cid",
@@ -184,13 +184,13 @@
           ],
           "responses": {
             "200": {
-              "description": "List of tools",
+              "description": "List of models",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Tool"
+                      "$ref": "#/components/schemas/Model"
                     }
                   }
                 }
@@ -202,10 +202,10 @@
           }
         }
       },
-      "/tools/{cid}": {
+      "/models/{cid}": {
         "get": {
           "operationId": "getToolByCid",
-          "summary": "Get Tool",
+          "summary": "Get Model",
           "parameters": [
             {
               "name": "cid",
@@ -218,11 +218,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Tool data",
+              "description": "Model data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Tool"
+                    "$ref": "#/components/schemas/Model"
                   }
                 }
               }
@@ -233,10 +233,10 @@
           }
         }
       },
-      "/update-tool/{cid}": {
+      "/update-model/{cid}": {
         "put": {
           "operationId": "updateTool",
-          "summary": "Update Tool",
+          "summary": "Update Model",
           "parameters": [
             {
               "name": "cid",
@@ -245,7 +245,7 @@
               "schema": {
                 "type": "string"
               },
-              "description": "The CID of the tool to update"
+              "description": "The CID of the model to update"
             }
           ],
           "requestBody": {
@@ -257,15 +257,15 @@
                   "properties": {
                     "taskCategory": {
                       "type": "string",
-                      "description": "The new task category for the tool"
+                      "description": "The new task category for the model"
                     },
                     "display": {
                       "type": "boolean",
-                      "description": "Flag indicating whether the tool should be displayed"
+                      "description": "Flag indicating whether the model should be displayed"
                     },
                     "defaultTool": {
                       "type": "boolean",
-                      "description": "Flag indicating whether the tool is the default tool for its category"
+                      "description": "Flag indicating whether the model is the default model for its category"
                     }
                   },
                   "anyOf": [
@@ -286,7 +286,7 @@
           },
           "responses": {
             "200": {
-              "description": "Tool updated successfully",
+              "description": "Model updated successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -294,7 +294,7 @@
                     "properties": {
                       "message": {
                         "type": "string",
-                        "example": "Tool updated successfully"
+                        "example": "Model updated successfully"
                       }
                     }
                   }
@@ -334,7 +334,7 @@
               }
             },
             "404": {
-              "description": "Tool with the specified CID not found",
+              "description": "Model with the specified CID not found",
               "content": {
                 "application/json": {
                   "schema": {
@@ -342,7 +342,7 @@
                     "properties": {
                       "message": {
                         "type": "string",
-                        "example": "Tool with the specified CID not found"
+                        "example": "Model with the specified CID not found"
                       }
                     }
                   }
@@ -980,7 +980,7 @@
             }
           }
         },
-        "Tool": {
+        "Model": {
           "type": "object",
           "properties": {
             "cid": {
@@ -1099,8 +1099,8 @@
             "toolID": {
               "type": "string"
             },
-            "tool": {
-              "$ref": "#/components/schemas/Tool"
+            "model": {
+              "$ref": "#/components/schemas/Model"
             },
             "experimentID": {
               "type": "string"

@@ -11,7 +11,7 @@ import { ToolDetail } from "@/lib/redux";
 interface ExperimentSummaryProps {
   form: UseFormReturn<any>;
   sortedInputs: any;
-  tool: ToolDetail;
+  model: ToolDetail;
   showVariants?: boolean;
 }
 

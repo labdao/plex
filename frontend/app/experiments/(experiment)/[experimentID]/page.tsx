@@ -22,10 +22,10 @@ type ExperimentDetailProps = {
 export default function Layout({ params }: ExperimentDetailProps) {
   const dispatch = useDispatch<AppDispatch>();
   const experiment = useSelector(selectExperimentDetail);
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
   const { experimentID } = params;
 
-  const task = tasks.find((task) => task.slug === tool?.ToolJson?.taskCategory);
+  const task = tasks.find((task) => task.slug === model?.ToolJson?.taskCategory);
   let breadcrumbItems = [{ name: "Experiments", href: "/experiments" }];
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function Layout({ params }: ExperimentDetailProps) {
 
   useEffect(() => {
     if (!!experiment.Jobs?.length) {
-      //Update redux with the tool stored in the experiment rather than making a separate request
-      dispatch(setToolDetail(experiment.Jobs?.[0]?.Tool));
+      //Update redux with the model stored in the experiment rather than making a separate request
+      dispatch(setToolDetail(experiment.Jobs?.[0]?.Model));
     }
   }, [dispatch, experiment.Jobs]);
 

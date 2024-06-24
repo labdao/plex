@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ToolDetail } from "@/lib/redux";
 
 interface ModelInfoProps {
-  tool: ToolDetail;
+  model: ToolDetail;
 }
 
 type OutputSummaryItem = {
@@ -50,8 +50,8 @@ const renderDescriptionParagraphs = (text: string) => {
   }
 };
 
-export default function ModelInfo({ tool }: ModelInfoProps) {
-  const { description, github, paper, outputs } = tool.ToolJson;
+export default function ModelInfo({ model }: ModelInfoProps) {
+  const { description, github, paper, outputs } = model.ToolJson;
 
   let outputSummaryInfo = { items: [] as OutputSummaryItem[] };
   for (const key in outputs) {
@@ -89,9 +89,9 @@ export default function ModelInfo({ tool }: ModelInfoProps) {
             </a>
           </Button>
         )}
-        {tool?.CID && (
+        {model?.CID && (
           <Button asChild variant="outline" size="xs">
-            <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${tool?.CID}/`} target="_blank">
+            <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${model?.CID}/`} target="_blank">
               <FileJsonIcon /> Manifest
             </a>
           </Button>

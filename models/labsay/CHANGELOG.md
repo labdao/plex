@@ -1,18 +1,18 @@
 # Changelog
 
-All notable changes to this tool will be documented in this file.
+All notable changes to this model will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 # Versions available on the platform:
 ## v1.4 - 2024-04-16
 
-- max running time set to 20 seconds. refactored labsay tool with checkpoint compatible toggle
+- max running time set to 20 seconds. refactored labsay model with checkpoint compatible toggle
 
-# Older versions of the tool (hidden/no longer available/archived)
+# Older versions of the model (hidden/no longer available/archived)
 ## v1.0 - 2024-04-04
 
-- combined labsay tool with the ability to toggle checkpoints on and off
+- combined labsay model with the ability to toggle checkpoints on and off
 
 ## v0.4 - 2024-03-22
 

@@ -1,3 +1,3 @@
 export default function IndexPage() {
-  return null; // We redirect to the tool list in next.config
+  return null; // We redirect to the model list in next.config
 }

@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { addFlowThunk, addFlowWithCheckoutThunk, AppDispatch, experimentListThunk, resetToolDetail, resetToolList, selectToolDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
+import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, resetToolDetail, resetToolList, selectToolDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
 import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -26,7 +26,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
   const router = useRouter();
   const { user } = usePrivy();
 
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
   const walletAddress = user?.wallet?.address;
   const userTier = useSelector(selectUserTier);
 
@@ -37,19 +37,19 @@ export default function NewExperimentForm({ task }: { task: any }) {
     };
   }, [dispatch]);
 
-  const groupedInputs = groupInputs(tool.ToolJson?.inputs);
-  const formSchema = generateSchema(tool.ToolJson?.inputs);
-  const defaultValues = generateDefaultValues(tool.ToolJson?.inputs, task, tool);
+  const groupedInputs = groupInputs(model.ToolJson?.inputs);
+  const formSchema = generateSchema(model.ToolJson?.inputs);
+  const defaultValues = generateDefaultValues(model.ToolJson?.inputs, task, model);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
   });
 
-  // If the tool changes, fetch new tool details
+  // If the model changes, fetch new model details
   useEffect(() => {
-    form.reset(generateDefaultValues(tool.ToolJson?.inputs, task, tool));
-  }, [tool, form, task]);
+    form.reset(generateDefaultValues(model.ToolJson?.inputs, task, model));
+  }, [model, form, task]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
@@ -59,19 +59,19 @@ export default function NewExperimentForm({ task }: { task: any }) {
       return;
     }
 
-    const transformedPayload = transformJson(tool, values, walletAddress);
+    const transformedPayload = transformJson(model, values, walletAddress);
     console.log("Submitting Payload:", transformedPayload);
 
     try {
       if (userTier === 'Paid') {
-        await dispatch(addFlowWithCheckoutThunk(transformedPayload)).unwrap();
+        await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
       } else {
-        const response = await dispatch(addFlowThunk(transformedPayload)).unwrap();
+        const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
         if (response && response.ID) {
-          console.log("Flow created", response);
+          console.log("Experiment created", response);
           console.log(response.ID);
           router.push(`/experiments/${response.ID}`, { scroll: false });
-          dispatch(flowListThunk(walletAddress));
+          dispatch(experimentListThunk(walletAddress));
           toast.success("Experiment started successfully");
         } else {
           console.log("Something went wrong", response);

@@ -14,8 +14,8 @@ interface ToolSelectProps {
 export function ToolSelect({ onChange, taskSlug }: ToolSelectProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const tool = useSelector(selectToolDetail);
-  const tools = useSelector(selectToolList);
+  const model = useSelector(selectToolDetail);
+  const models = useSelector(selectToolList);
   const toolListError = useSelector(selectToolListError);
 
   useEffect(() => {
@@ -27,29 +27,29 @@ export function ToolSelect({ onChange, taskSlug }: ToolSelectProps) {
   }, [dispatch, taskSlug]);
 
   useEffect(() => {
-    const defaultTool = tools.find((tool) => tool.DefaultTool === true);
+    const defaultTool = models.find((model) => model.DefaultTool === true);
     const defaultToolCID = defaultTool?.CID;
 
     if (defaultToolCID) {
       dispatch(toolDetailThunk(defaultToolCID));
     }
-  }, [dispatch, tools]);
+  }, [dispatch, models]);
 
   const handleSelectionChange = (value: string) => {
     onChange(value);
   };
 
   return (
-    <Select onValueChange={handleSelectionChange} value={tool?.CID}>
+    <Select onValueChange={handleSelectionChange} value={model?.CID}>
       <SelectTrigger className="font-mono text-sm font-bold uppercase rounded-full border-primary hover:bg-primary/10">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>
-          {tools.map((tool, index) => {
+          {models.map((model, index) => {
             return (
-              <SelectItem key={index} value={tool?.CID}>
-                {tool.Name}
+              <SelectItem key={index} value={model?.CID}>
+                {model.Name}
               </SelectItem>
             );
           })}

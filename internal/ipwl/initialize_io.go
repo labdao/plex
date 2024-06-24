@@ -15,15 +15,15 @@ var (
 	scatteringMethod string
 )
 
-func InitializeIo(toolPath string, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
+func InitializeIo(modelPath string, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
 	// Open the file and load its content
-	tool, toolInfo, err := ReadToolConfig(toolPath, db)
+	model, modelInfo, err := ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
 
 	// Validate input keys
-	err = validateInputKeys(inputVectors, tool.Inputs)
+	err = validateInputKeys(inputVectors, model.Inputs)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func InitializeIo(toolPath string, scatteringMethod string, inputVectors map[str
 	var ioList []IO
 
 	for _, inputs := range inputsList {
-		io, err := createSingleIo(inputs, tool, toolInfo, userId, inputVectors)
+		io, err := createSingleIo(inputs, model, modelInfo, userId, inputVectors)
 		if err != nil {
 			return nil, err
 		}
@@ -67,12 +67,12 @@ func InitializeIo(toolPath string, scatteringMethod string, inputVectors map[str
 	return ioList, nil
 }
 
-func validateInputKeys(inputVectors map[string][]interface{}, toolInputs map[string]ToolInput) error {
+func validateInputKeys(inputVectors map[string][]interface{}, modelInputs map[string]ModelInput) error {
 	for inputKey := range inputVectors {
-		if _, exists := toolInputs[inputKey]; !exists {
-			log.Printf("The argument %s is not in the tool inputs.\n", inputKey)
-			log.Printf("Available keys: %v\n", toolInputs)
-			return fmt.Errorf("the argument %s is not in the tool inputs", inputKey)
+		if _, exists := modelInputs[inputKey]; !exists {
+			log.Printf("The argument %s is not in the model inputs.\n", inputKey)
+			log.Printf("Available keys: %v\n", modelInputs)
+			return fmt.Errorf("the argument %s is not in the model inputs", inputKey)
 		}
 	}
 	return nil
@@ -145,9 +145,9 @@ func crossProductScattering(inputVectors map[string][]interface{}) ([][]interfac
 	return inputsList, nil
 }
 
-func createSingleIo(inputs []interface{}, tool Tool, toolInfo ToolInfo, userId string, inputVectors map[string][]interface{}) (IO, error) {
+func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, userId string, inputVectors map[string][]interface{}) (IO, error) {
 	io := IO{
-		Tool:    toolInfo,
+		Model:   modelInfo,
 		Inputs:  make(map[string]interface{}),
 		Outputs: make(map[string]interface{}),
 		State:   "created",
@@ -168,7 +168,7 @@ func createSingleIo(inputs []interface{}, tool Tool, toolInfo ToolInfo, userId s
 		io.Inputs[inputKey] = inputValue
 	}
 
-	for outputKey, outputValue := range tool.Outputs {
+	for outputKey, outputValue := range model.Outputs {
 		io.Outputs[outputKey] = outputValue
 	}
 

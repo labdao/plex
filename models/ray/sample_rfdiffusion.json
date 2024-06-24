@@ -1,6 +1,6 @@
 {
     "name": "relay_sample_rfdiffusion_both_ipfs_s3_v4",
-    "description": "Sample RFDiffusion tool",
+    "description": "Sample RFDiffusion model",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
     "toolType": "ray",

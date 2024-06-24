@@ -43,7 +43,7 @@ const inputsToSchema = (inputs: InputType) => {
   return schema;
 };
 
-// Take the default values indicated on a tool and format them for the form
+// Take the default values indicated on a model and format them for the form
 const inputsToDefaultValues = (inputs: InputType) => {
   const defaultValues: { [key: string]: { value: string | number }[] } = {};
   for (var key in inputs) {
@@ -66,7 +66,7 @@ const inputsToValues = (inputs: InputType) => {
 export function generateSchema(inputs: InputType) {
   return z.object({
     name: z.string().min(1, { message: "Name is required" }),
-    tool: z.string().min(1, { message: "Model is required" }),
+    model: z.string().min(1, { message: "Model is required" }),
     ...inputsToSchema(inputs),
   });
 }
@@ -77,10 +77,10 @@ export function generateRerunSchema(inputs: InputType) {
   });
 }
 
-export function generateDefaultValues(inputs: InputType, task: { slug: string }, tool: ToolDetail) {
+export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ToolDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
-    tool: tool?.CID,
+    model: model?.CID,
     ...inputsToDefaultValues(inputs),
   };
 }

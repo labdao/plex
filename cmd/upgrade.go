@@ -33,7 +33,7 @@ var upgradeCmd = &cobra.Command{
 const (
 	CurrentPlexVersion = "v0.11.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
-	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/tools?ref=main"
+	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/models?ref=main"
 )
 
 func getLatestReleaseVersionStr() (string, error) {
@@ -193,12 +193,12 @@ func writeManifestFile(manifestPath string, manifest map[string]string) error {
 }
 
 func upgradeToolsFolder(latestReleaseVersionStr string) error {
-	toolsFolderPath := filepath.Join(".", "tools")
+	toolsFolderPath := filepath.Join(".", "models")
 	manifestPath := filepath.Join(toolsFolderPath, ".manifest.json")
 
-	// Check if the tools folder exists, and create it if it doesn't
+	// Check if the models folder exists, and create it if it doesn't
 	if _, err := os.Stat(toolsFolderPath); os.IsNotExist(err) {
-		fmt.Println("Creating the tools folder...")
+		fmt.Println("Creating the models folder...")
 		err := os.Mkdir(toolsFolderPath, 0755)
 		if err != nil {
 			return err
@@ -293,10 +293,10 @@ func upgradePlexVersion(dry bool) error {
 			userArch := runtime.GOARCH
 			fmt.Printf("- Operating System detected: %s\n- Chip Architecture detected: %s\n", userOS, userArch)
 
-			// Upgrade tools folder
+			// Upgrade models folder
 			err := upgradeToolsFolder(latestReleaseVersionStr)
 			if err != nil {
-				fmt.Println("Error upgrading tools folder:", err)
+				fmt.Println("Error upgrading models folder:", err)
 				os.Exit(1)
 			}
 

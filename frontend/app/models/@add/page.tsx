@@ -54,7 +54,7 @@ export default function AddTool() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitting tool.json: ", toolJson);
+    console.log("Submitting model.json: ", toolJson);
     dispatch(setAddToolLoading(true));
     dispatch(setAddToolError(""));
     try {
@@ -65,8 +65,8 @@ export default function AddTool() {
       }
       await dispatch(createToolThunk({ toolJson: toolJsonParsed }));
     } catch (error) {
-      console.error("Error creating tool", error);
-      dispatch(setAddToolError("Error creating tool"));
+      console.error("Error creating model", error);
+      dispatch(setAddToolError("Error creating model"));
     }
     dispatch(setAddToolLoading(false));
   };
@@ -86,8 +86,8 @@ export default function AddTool() {
             <form onSubmit={handleSubmit}>
               <MantineProvider>
                 <JsonInput
-                  label="Tool Definition"
-                  placeholder="Paste your tool's JSON definition here."
+                  label="Model Definition"
+                  placeholder="Paste your model's JSON definition here."
                   validationError="Invalid JSON"
                   autosize
                   minRows={10}

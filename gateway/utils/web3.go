@@ -78,9 +78,9 @@ func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, err
 	var pngCID string
 
 	for _, job := range jobs {
-		var tool models.Tool
-		if err := db.Where("cid = ?", job.ToolID).First(&tool).Error; err != nil {
-			return "", fmt.Errorf("failed to retrieve tool: %v", err)
+		var model models.Model
+		if err := db.Where("cid = ?", job.ModelID).First(&model).Error; err != nil {
+			return "", fmt.Errorf("failed to retrieve model: %v", err)
 		}
 
 		var inputFiles []models.DataFile
@@ -94,21 +94,21 @@ func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, err
 		}
 
 		ioObject := map[string]interface{}{
-			"tool":    map[string]interface{}{},
+			"model":   map[string]interface{}{},
 			"inputs":  []map[string]interface{}{},
 			"outputs": []map[string]interface{}{},
 			"state":   job.State,
 			"errMsg":  job.Error,
 		}
 
-		log.Printf("Pinning tool JSON to IPFS: %s", tool.Name)
-		toolPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(tool.ToolJson), tool.Name)
+		log.Printf("Pinning model JSON to IPFS: %s", model.Name)
+		modelPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(model.ModelJson), model.Name)
 		if err != nil {
-			log.Printf("Failed to pin tool JSON to Pinata: %s. Skipping... Error: %v", tool.Name, err)
+			log.Printf("Failed to pin model JSON to Pinata: %s. Skipping... Error: %v", model.Name, err)
 		} else {
-			log.Printf("Pinned tool JSON to public IPFS with CID: %s", toolPinataHash)
-			ioObject["tool"] = map[string]interface{}{
-				"cid": toolPinataHash,
+			log.Printf("Pinned model JSON to public IPFS with CID: %s", modelPinataHash)
+			ioObject["model"] = map[string]interface{}{
+				"cid": modelPinataHash,
 			}
 		}
 		s3c, err := s3.NewS3Client()

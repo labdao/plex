@@ -9,7 +9,7 @@ export interface Kwargs {
 interface ExperimentAddSliceState {
   ID: number | null
   name: string
-  tool: ToolDetail
+  model: ToolDetail
   kwargs: Kwargs
   loading: boolean
   error: string | null
@@ -19,7 +19,7 @@ interface ExperimentAddSliceState {
 const initialState: ExperimentAddSliceState = {
   ID: null,
   name: "",
-  tool: { 
+  model: { 
     CID: "", 
     WalletAddress: "", 
     Name: "", 
@@ -51,7 +51,7 @@ export const experimentAddSlice = createSlice({
       state.name = action.payload;
     },
     setExperimentAddTool: (state, action: PayloadAction<ToolDetail>) => {
-      state.tool = action.payload;
+      state.model = action.payload;
     },
     setExperimentAddKwargs: (state, action: PayloadAction<Kwargs>) => {
       state.kwargs = action.payload;

@@ -12,7 +12,7 @@ export interface JobDetail {
   OutputFiles: DataFile[];
   Status: string;
   RayJobID: string;
-  Tool: any;
+  Model: any;
   Inputs: any;
 }
 
@@ -34,7 +34,7 @@ const initialState: JobDetailSliceState = {
     OutputFiles: [],
     Status: "unknown",
     RayJobID: "",
-    Tool: {},
+    Model: {},
     Inputs: {},
   },
   loading: false,

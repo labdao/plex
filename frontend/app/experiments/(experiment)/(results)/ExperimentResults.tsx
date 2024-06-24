@@ -16,7 +16,7 @@ dayjs.extend(relativeTime);
 export default function ExperimentDetail() {
   const dispatch = useDispatch<AppDispatch>();
   const experiment = useSelector(selectExperimentDetail);
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectToolDetail);
   const loading = useSelector(selectExperimentDetailLoading);
   const error = useSelector(selectExperimentDetailError);
 
@@ -37,7 +37,7 @@ export default function ExperimentDetail() {
 
   return (
     <div>
-      {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer experiment={experiment} key={experiment.ID} />}
+      {model?.ToolJson?.checkpointCompatible && <MetricsVisualizer experiment={experiment} key={experiment.ID} />}
       <JobsAccordion experiment={experiment} />
     </div>
   );
