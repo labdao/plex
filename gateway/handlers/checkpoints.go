@@ -87,10 +87,67 @@ type FlowListCheckpointsResult struct {
 	ToolJson      []byte `gorm:"column:tool_json"`
 }
 
+func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
+	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
+	bucketName := os.Getenv("BUCKET_NAME")
+	region := os.Getenv("AWS_REGION")
+	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
+
+	var presignedURLEndpoint string
+
+	// Check if the bucket endpoint is the local development endpoint
+	if bucketEndpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = bucketEndpoint
+	}
+
+	sess, err := session.NewSession(&aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(presignedURLEndpoint),
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	svc := s3.New(sess)
+	var files []map[string]string
+
+	var resultJSON models.RayJobResponse
+
+	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+	if err != nil {
+		fmt.Println("Error unmarshalling result JSON:", err)
+		return nil, err
+	}
+
+	pdbKey := resultJSON.PDB.URI
+	pdbFileName := filepath.Base(pdbKey)
+
+	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(pdbKey),
+	})
+	urlStr, err := req.Presign(15 * time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	files = append(files, map[string]string{
+		"fileName": pdbFileName,
+		"url":      urlStr,
+	})
+
+	return files, nil
+}
+
 func fetchJobScatterPlotData(flowListCheckpointsResult FlowListCheckpointsResult, db *gorm.DB) ([]models.ScatterPlotData, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
-	region := "us-east-1"
+	region := os.Getenv("AWS_REGION")
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 
