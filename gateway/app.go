@@ -99,7 +99,7 @@ func ServeWebApp() {
 
 	// If needed use log level debug or info. Default set to silent to avoid noisy logs
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger.LogMode(logger.Silent),
+		Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect to database")

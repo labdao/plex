@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -80,123 +81,13 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	return response, nil
 }
 
-func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
-	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
-	bucketName := os.Getenv("BUCKET_NAME")
-	region := "us-east-1"
-	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
-
-	var presignedURLEndpoint string
-
-	// Check if the bucket endpoint is the local development endpoint
-	if bucketEndpoint == "http://object-store:9000" {
-		presignedURLEndpoint = "http://localhost:9000"
-	} else {
-		presignedURLEndpoint = bucketEndpoint
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String(region),
-		Endpoint:         aws.String(presignedURLEndpoint),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	svc := s3.New(sess)
-	var files []map[string]string
-
-	var resultJSON models.RayJobResponse
-
-	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
-	if err != nil {
-		fmt.Println("Error unmarshalling result JSON:", err)
-		return nil, err
-	}
-
-	pdbKey := resultJSON.PDB.URI
-	pdbFileName := filepath.Base(pdbKey)
-
-	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(pdbKey),
-	})
-	urlStr, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		return nil, err
-	}
-
-	files = append(files, map[string]string{
-		"fileName": pdbFileName,
-		"url":      urlStr,
-	})
-
-	return files, nil
+type FlowListCheckpointsResult struct {
+	JobID         int    `gorm:"column:job_id"`
+	JobResultJson []byte `gorm:"column:result_json"`
+	ToolJson      []byte `gorm:"column:tool_json"`
 }
 
-func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		jobID := vars["jobID"]
-
-		var job models.Job
-		if err := db.Preload("Flow").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
-			http.Error(w, "Job not found", http.StatusNotFound)
-			return
-		}
-
-		files, err := fetchJobCheckpoints(job)
-		if err != nil {
-			http.Error(w, "Failed to fetch checkpoints", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		if err := json.NewEncoder(w).Encode(files); err != nil {
-			http.Error(w, "Failed to encode checkpoints", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		flowID := vars["flowID"]
-
-		var flow models.Flow
-		if err := db.Preload("Jobs").First(&flow, "id = ?", flowID).Error; err != nil {
-			http.Error(w, "Flow not found", http.StatusNotFound)
-			return
-		}
-
-		var allFiles []map[string]string
-
-		for _, job := range flow.Jobs {
-			files, err := fetchJobCheckpoints(job)
-			if err != nil {
-				http.Error(w, "Failed to fetch checkpoints", http.StatusInternalServerError)
-				return
-			}
-			allFiles = append(allFiles, files...)
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-
-		if err := json.NewEncoder(w).Encode(allFiles); err != nil {
-			http.Error(w, "Failed to encode checkpoints", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotData, error) {
+func fetchJobScatterPlotData(flowListCheckpointsResult FlowListCheckpointsResult, db *gorm.DB) ([]models.ScatterPlotData, error) {
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
 	region := "us-east-1"
@@ -225,7 +116,7 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	svc := s3.New(sess)
 
 	var ToolJson ipwl.Tool
-	if err := json.Unmarshal(job.Tool.ToolJson, &ToolJson); err != nil {
+	if err := json.Unmarshal(flowListCheckpointsResult.ToolJson, &ToolJson); err != nil {
 		return nil, err
 	}
 
@@ -234,8 +125,8 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	var resultJSON models.RayJobResponse
 	// Unmarshal the result JSON from the job only when job.ResultJSON is not empty
-	if string(job.ResultJSON) != "" {
-		resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+	if string(flowListCheckpointsResult.JobResultJson) != "" {
+		resultJSON, err = UnmarshalRayJobResponse([]byte(flowListCheckpointsResult.JobResultJson))
 		if err != nil {
 			fmt.Println("Error unmarshalling result JSON:", err)
 			return nil, err
@@ -285,43 +176,30 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 	}
 }
 
-func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		jobID := vars["jobID"]
-
-		var job models.Job
-		if err := db.Preload("Flow").Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
-			http.Error(w, "Job not found", http.StatusNotFound)
-			return
-		}
-
-		plotData, err := fetchJobScatterPlotData(job, db)
-		if err != nil {
-			http.Error(w, "Failed to fetch scatter plot data", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(plotData)
-	}
-}
-
 func GetFlowCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		flowID := vars["flowID"]
 
-		var flow models.Flow
-		if err := db.Preload("Jobs.Tool").First(&flow, "id = ?", flowID).Error; err != nil {
-			http.Error(w, "Flow not found", http.StatusNotFound)
+		var flowListCheckpointsResult []FlowListCheckpointsResult
+		if err := db.Table("jobs").
+			Select("jobs.id as job_id, tools.tool_json as tool_json, jobs.result_json as result_json").
+			Joins("join flows on flows.id = jobs.flow_id").
+			Joins("join tools on tools.cid = jobs.tool_id").
+			Where("flows.id = ?", flowID).
+			Scan(&flowListCheckpointsResult).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				http.Error(w, "No jobs found for the given flow", http.StatusNotFound)
+			} else {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+			}
 			return
 		}
 
 		var allPlotData []models.ScatterPlotData
 
-		for _, job := range flow.Jobs {
-			plotData, err := fetchJobScatterPlotData(job, db)
+		for _, job := range flowListCheckpointsResult {
+			plotData, err := fetchJobScatterPlotData(job, db) // Adjust function to accept the new job structure
 			if err != nil {
 				http.Error(w, "Failed to fetch scatter plot data for a job", http.StatusInternalServerError)
 				return
@@ -333,3 +211,156 @@ func GetFlowCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(allPlotData)
 	}
 }
+
+//not used in the UI. but may be useful for API calls
+// func fetchJobCheckpoints(job models.Job) ([]map[string]string, error) {
+// 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
+// 	bucketName := os.Getenv("BUCKET_NAME")
+// 	region := "us-east-1"
+// 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
+// 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
+
+// 	var presignedURLEndpoint string
+
+// 	// Check if the bucket endpoint is the local development endpoint
+// 	if bucketEndpoint == "http://object-store:9000" {
+// 		presignedURLEndpoint = "http://localhost:9000"
+// 	} else {
+// 		presignedURLEndpoint = bucketEndpoint
+// 	}
+
+// 	sess, err := session.NewSession(&aws.Config{
+// 		Region:           aws.String(region),
+// 		Endpoint:         aws.String(presignedURLEndpoint),
+// 		S3ForcePathStyle: aws.Bool(true),
+// 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+// 	})
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	svc := s3.New(sess)
+// 	var files []map[string]string
+
+// 	var resultJSON models.RayJobResponse
+
+// 	resultJSON, err = UnmarshalRayJobResponse([]byte(job.ResultJSON))
+// 	if err != nil {
+// 		fmt.Println("Error unmarshalling result JSON:", err)
+// 		return nil, err
+// 	}
+
+// 	pdbKey := resultJSON.PDB.URI
+// 	pdbFileName := filepath.Base(pdbKey)
+
+// 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+// 		Bucket: aws.String(bucketName),
+// 		Key:    aws.String(pdbKey),
+// 	})
+// 	urlStr, err := req.Presign(15 * time.Minute)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	files = append(files, map[string]string{
+// 		"fileName": pdbFileName,
+// 		"url":      urlStr,
+// 	})
+
+// 	return files, nil
+// }
+
+//not used in the UI. but may be useful for API calls
+// func ListJobCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		vars := mux.Vars(r)
+// 		jobID := vars["jobID"]
+
+// 		var job models.Job
+// 		// if err := db.Joins("JOIN flows ON flows.id = jobs.flow_id").
+// 		// 			 Joins("JOIN tools ON tools.cid = jobs.tool_id").
+// 		// 			 Where("id = ?", jobID).
+// 		// 			 First(&job).Error; err != nil {
+// 		// 				if errors.Is(err, gorm.ErrRecordNotFound) {
+// 		// 					http.Error(w, "Job not found", http.StatusNotFound)
+// 		// 				} else {
+// 		// 					http.Error(w, "Internal server error", http.StatusInternalServerError)
+// 		// 				}
+// 		// 				return
+// 		// }
+// 		if err := db.First(&job, "id = ?", jobID).Error; err != nil {
+// 			http.Error(w, "Job not found", http.StatusNotFound)
+// 			return
+// 		}
+
+// 		files, err := fetchJobCheckpoints(job)
+// 		if err != nil {
+// 			http.Error(w, "Failed to fetch checkpoints", http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		w.Header().Set("Content-Type", "application/json")
+// 		w.WriteHeader(http.StatusOK)
+
+// 		if err := json.NewEncoder(w).Encode(files); err != nil {
+// 			http.Error(w, "Failed to encode checkpoints", http.StatusInternalServerError)
+// 			return
+// 		}
+// 	}
+// }
+
+//not used in the UI. but may be useful for API calls
+// func ListFlowCheckpointsHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		vars := mux.Vars(r)
+// 		flowID := vars["flowID"]
+
+// 		var flow models.Flow
+// 		if err := db.Preload("Jobs").First(&flow, "id = ?", flowID).Error; err != nil {
+// 			http.Error(w, "Flow not found", http.StatusNotFound)
+// 			return
+// 		}
+
+// 		var allFiles []map[string]string
+
+// 		for _, job := range flow.Jobs {
+// 			files, err := fetchJobCheckpoints(job)
+// 			if err != nil {
+// 				http.Error(w, "Failed to fetch checkpoints", http.StatusInternalServerError)
+// 				return
+// 			}
+// 			allFiles = append(allFiles, files...)
+// 		}
+
+// 		w.Header().Set("Content-Type", "application/json")
+// 		w.WriteHeader(http.StatusOK)
+
+// 		if err := json.NewEncoder(w).Encode(allFiles); err != nil {
+// 			http.Error(w, "Failed to encode checkpoints", http.StatusInternalServerError)
+// 			return
+// 		}
+// 	}
+// }
+
+//not used in the UI. but may be useful for API calls
+// func GetJobCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		vars := mux.Vars(r)
+// 		jobID := vars["jobID"]
+
+// 		var job models.Job
+// 		if err := db.Preload("Tool").First(&job, "id = ?", jobID).Error; err != nil {
+// 			http.Error(w, "Job not found", http.StatusNotFound)
+// 			return
+// 		}
+
+// 		plotData, err := fetchJobScatterPlotData(job, db)
+// 		if err != nil {
+// 			http.Error(w, "Failed to fetch scatter plot data", http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		w.Header().Set("Content-Type", "application/json")
+// 		json.NewEncoder(w).Encode(plotData)
+// 	}
+// }
