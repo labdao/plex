@@ -128,7 +128,7 @@ jobs:
           path: |
             /tmp/manifest.json
 
-  models-upload:
+  tools-upload:
     needs:
       - tools
       - changes-tools

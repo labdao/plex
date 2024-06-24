@@ -61,7 +61,7 @@ jobs:
 
   tools:
     needs: changes-tools
-    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-models.outputs.models)) != '[]' }}
+    if: ${{ needs.changes-tools.outputs.tools != '' && toJson(fromJson(needs.changes-tools.outputs.tools)) != '[]' }}
     strategy:
       fail-fast: false
       matrix:
