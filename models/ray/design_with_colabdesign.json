@@ -3,7 +3,7 @@
     "description": "Design with colabdesign",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
-    "toolType": "ray",
+    "modelType": "ray",
     "rayServiceEndpoint": "/design_with_colabdesign",
     "checkpointCompatible": true,
     "xAxis": "plddt",

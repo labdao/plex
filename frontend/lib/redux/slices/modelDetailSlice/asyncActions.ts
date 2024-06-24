@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth"
 import backendUrl from "lib/backendUrl"
 
-export const getTool = async (CID: string): Promise<any> => {
+export const getModel = async (CID: string): Promise<any> => {
   let authToken
   try {
     authToken = await getAccessToken();
@@ -26,7 +26,7 @@ export const getTool = async (CID: string): Promise<any> => {
   return result;
 }
 
-export const patchTool = async (CID: string): Promise<any> => {
+export const patchModel = async (CID: string): Promise<any> => {
   const response = await fetch(`${backendUrl()}/models/${CID}`, {
     method: "PATCH",
     headers: {

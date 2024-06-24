@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl"
 
-export const listTools = async (taskSlug?: string): Promise<any> => {
+export const listModels = async (taskSlug?: string): Promise<any> => {
   const url = taskSlug ? `${backendUrl()}/models?taskCategory=${encodeURIComponent(taskSlug)}` : `${backendUrl()}/models`;
   const authToken = await getAccessToken()
   const response = await fetch(url, {

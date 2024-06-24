@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile, JobDetail as JobDetailType, selectToolDetail, ToolDetail, useSelector } from "@/lib/redux";
+import { DataFile, JobDetail as JobDetailType, selectModelDetail, ModelDetail, useSelector } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { groupInputs } from "../(forms)/formUtils";
@@ -26,7 +26,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("raw-files");
 
-  const model = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
 
   interface File {
     CID: string;
@@ -153,8 +153,8 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
   );
 }
 
-function InputList({ userInputs, model }: { userInputs: { [key: string]: any }; model: ToolDetail }) {
-  const groupedInputs = groupInputs(model.ToolJson.inputs);
+function InputList({ userInputs, model }: { userInputs: { [key: string]: any }; model: ModelDetail }) {
+  const groupedInputs = groupInputs(model.ModelJson.inputs);
   return userInputs ? (
     <>
       {!!groupedInputs?.standard && (

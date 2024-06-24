@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface ToolDetail {
+export interface ModelDetail {
   CID: string;
   WalletAddress: string;
   Name: string;
-  DefaultTool: boolean;
-  ToolJson: {
+  DefaultModel: boolean;
+  ModelJson: {
     inputs: {};
     outputs: {
       [key: string]: {
@@ -26,20 +26,20 @@ export interface ToolDetail {
   };
 }
 
-export interface ToolDetailSliceState {
-  model: ToolDetail;
+export interface ModelDetailSliceState {
+  model: ModelDetail;
   loading: boolean;
   error: string | null;
   success: boolean;
 }
 
-const initialState: ToolDetailSliceState = {
+const initialState: ModelDetailSliceState = {
   model: {
     CID: "",
     WalletAddress: "",
     Name: "",
-    DefaultTool: false,
-    ToolJson: {
+    DefaultModel: false,
+    ModelJson: {
       inputs: {},
       outputs: {},
       name: "",
@@ -57,28 +57,28 @@ const initialState: ToolDetailSliceState = {
   success: false,
 };
 
-export const toolDetailSlice = createSlice({
-  name: "toolDetail",
+export const modelDetailSlice = createSlice({
+  name: "modelDetail",
   initialState,
   reducers: {
-    setToolDetail: (state, action: PayloadAction<ToolDetail>) => {
+    setModelDetail: (state, action: PayloadAction<ModelDetail>) => {
       state.model = action.payload;
     },
-    setToolDetailLoading: (state, action: PayloadAction<boolean>) => {
+    setModelDetailLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setToolDetailError: (state, action: PayloadAction<string | null>) => {
+    setModelDetailError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setToolDetailSuccess: (state, action: PayloadAction<boolean>) => {
+    setModelDetailSuccess: (state, action: PayloadAction<boolean>) => {
       state.success = action.payload;
     },
-    resetToolDetail: () => {
+    resetModelDetail: () => {
       return initialState;
     },
   },
 });
 
-export const { setToolDetail, setToolDetailLoading, setToolDetailError, setToolDetailSuccess, resetToolDetail } = toolDetailSlice.actions;
+export const { setModelDetail, setModelDetailLoading, setModelDetailError, setModelDetailSuccess, resetModelDetail } = modelDetailSlice.actions;
 
-export default toolDetailSlice.reducer;
+export default modelDetailSlice.reducer;

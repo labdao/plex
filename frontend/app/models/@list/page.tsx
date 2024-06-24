@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-export default function ListToolFiles() {
+export default function ListModelFiles() {
   interface Model {
     CID: string;
     Name: string;
@@ -48,7 +48,7 @@ export default function ListToolFiles() {
     },
   ];
 
-  const [models, setTools] = useState<Model[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,7 +65,7 @@ export default function ListToolFiles() {
         }
 
         const data = await response.json();
-        setTools(data);
+        setModels(data);
       } catch (error) {
         console.error("Error fetching models:", error);
       }

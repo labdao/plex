@@ -1,8 +1,8 @@
 package ipwl
 
-// func TestReadToolConfig(t *testing.T) {
-// 	filePath := "testdata/example_tool.json"
-// 	expected := Tool{
+// func TestReadModelConfig(t *testing.T) {
+// 	filePath := "testdata/example_model.json"
+// 	expected := Model{
 // 		Name:        "equibind",
 // 		Author:      "@misc{stärk2022equibind,\n      title={EquiBind: Geometric Deep Learning for Drug Binding Structure Prediction}, \n      author={Hannes Stärk and Octavian-Eugen Ganea and Lagnajit Pattanaik and Regina Barzilay and Tommi Jaakkola},\n      year={2022},\n      eprint={2202.05146},\n      archivePrefix={arXiv},\n      primaryClass={q-bio.BM}\n}",
 // 		Description: "Docking of small molecules to a protein",
@@ -19,7 +19,7 @@ package ipwl
 // 		},
 // 		DockerPull: "ghcr.io/labdao/equibind:main@sha256:21a381d9ab1ff047565685044569c8536a55e489c9531326498b28d6b3cc244f",
 // 		GpuBool:    false,
-// 		Inputs: map[string]ToolInput{
+// 		Inputs: map[string]ModelInput{
 // 			"protein": {
 // 				Type: "File",
 // 				Glob: []string{"*.pdb"},
@@ -29,7 +29,7 @@ package ipwl
 // 				Glob: []string{"*.sdf", "*.mol2"},
 // 			},
 // 		},
-// 		Outputs: map[string]ToolOutput{
+// 		Outputs: map[string]ModelOutput{
 // 			"best_docked_small_molecule": {
 // 				Type: "File",
 // 				Glob: []string{"*_docked.sdf", "*_docked.mol2"},
@@ -41,12 +41,12 @@ package ipwl
 // 		},
 // 	}
 
-// 	tool, _, err := ReadToolConfig(filePath)
+// 	model, _, err := ReadModelConfig(filePath)
 // 	if err != nil {
-// 		t.Fatalf("Error reading tool config: %v", err)
+// 		t.Fatalf("Error reading model config: %v", err)
 // 	}
 
-// 	if !reflect.DeepEqual(tool, expected) {
-// 		t.Errorf("Expected:\n%v\nGot:\n%v", expected, tool)
+// 	if !reflect.DeepEqual(model, expected) {
+// 		t.Errorf("Expected:\n%v\nGot:\n%v", expected, model)
 // 	}
 // }

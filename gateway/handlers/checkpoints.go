@@ -224,13 +224,13 @@ func fetchJobScatterPlotData(job models.Job, db *gorm.DB) ([]models.ScatterPlotD
 
 	svc := s3.New(sess)
 
-	var ToolJson ipwl.Model
-	if err := json.Unmarshal(job.Model.ToolJson, &ToolJson); err != nil {
+	var ModelJson ipwl.Model
+	if err := json.Unmarshal(job.Model.ModelJson, &ModelJson); err != nil {
 		return nil, err
 	}
 
-	xAxis := ToolJson.XAxis
-	yAxis := ToolJson.YAxis
+	xAxis := ModelJson.XAxis
+	yAxis := ModelJson.YAxis
 
 	var resultJSON models.RayJobResponse
 	// Unmarshal the result JSON from the job only when job.ResultJSON is not empty

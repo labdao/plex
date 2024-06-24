@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, experimentDetailThunk, experimentListThunk, selectExperimentDetail, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, experimentDetailThunk, experimentListThunk, selectExperimentDetail, selectModelDetail } from "@/lib/redux";
 import { addJobToExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 
@@ -27,15 +27,15 @@ export default function RerunExperimentForm() {
   const router = useRouter();
   const { user } = usePrivy();
 
-  const model = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
   const experiment = useSelector(selectExperimentDetail);
 
   const lastJob = experiment?.Jobs?.[experiment?.Jobs?.length - 1];
 
   const walletAddress = user?.wallet?.address;
 
-  const groupedInputs = groupInputs(model.ToolJson?.inputs);
-  const formSchema = generateRerunSchema(model.ToolJson?.inputs);
+  const groupedInputs = groupInputs(model.ModelJson?.inputs);
+  const formSchema = generateRerunSchema(model.ModelJson?.inputs);
   const defaultValues = generateValues(lastJob?.Inputs);
   const experimentID = experiment?.ID || 0;
 

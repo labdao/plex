@@ -47,15 +47,15 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var toolCid string
-		err = json.Unmarshal(requestData["toolCid"], &toolCid)
-		if err != nil || toolCid == "" {
+		var modelCid string
+		err = json.Unmarshal(requestData["modelCid"], &modelCid)
+		if err != nil || modelCid == "" {
 			utils.SendJSONError(w, "Invalid or missing Model CID", http.StatusBadRequest)
 			return
 		}
 
 		var model models.Model
-		result := db.Where("cid = ?", toolCid).First(&model)
+		result := db.Where("cid = ?", modelCid).First(&model)
 		if result.Error != nil {
 			log.Printf("Error fetching Model: %v\n", result.Error)
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -100,7 +100,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(toolCid, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(modelCid, scatteringMethod, kwargs, db)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -132,18 +132,18 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if model.ToolType == "ray" {
+			if model.ModelType == "ray" {
 				queue = models.QueueTypeRay
 			}
 			// TODO: consolidate below with the above checks.
 			var jobType models.JobType
-			if model.ToolType == "ray" {
+			if model.ModelType == "ray" {
 				jobType = models.JobTypeRay
 			} else {
 				jobType = models.JobTypeBacalhau
 			}
 			job := models.Job{
-				ToolID:        ioItem.Model.S3,
+				ModelID:       ioItem.Model.S3,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
@@ -506,11 +506,11 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		//TODO: think about moving toolID to experiment level instead of job level
-		var toolId = experiment.Jobs[0].ToolID
+		//TODO: think about moving modelID to experiment level instead of job level
+		var modelId = experiment.Jobs[0].ModelID
 
 		var model models.Model
-		result := db.Where("cid = ?", toolId).First(&model)
+		result := db.Where("cid = ?", modelId).First(&model)
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
 				http.Error(w, "Model not found", http.StatusNotFound)
@@ -561,12 +561,12 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			var queue models.QueueType
-			if model.ToolType == "ray" {
+			if model.ModelType == "ray" {
 				queue = models.QueueTypeRay
 			}
 
 			job := models.Job{
-				ToolID:        ioItem.Model.S3,
+				ModelID:       ioItem.Model.S3,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),

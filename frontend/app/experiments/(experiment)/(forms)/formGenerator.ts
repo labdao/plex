@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import * as z from "zod";
 
-import { ToolDetail } from "@/lib/redux";
+import { ModelDetail } from "@/lib/redux";
 
 type InputType = { [key: string]: any };
 
@@ -77,7 +77,7 @@ export function generateRerunSchema(inputs: InputType) {
   });
 }
 
-export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ToolDetail) {
+export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ModelDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
     model: model?.CID,

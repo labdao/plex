@@ -3,7 +3,7 @@
     "description": "Simulate a protein complex using ColabFold",
     "task": "protein folding",
     "taskCategory": "protein-binder-design",
-    "toolType": "ray",
+    "modelType": "ray",
     "rayServiceEndpoint": "/generate_protein_binder_backbone",
     "checkpointCompatible": true,
     "xAxis": "plddt",

@@ -1,7 +1,7 @@
 import type { ReduxState } from '@/lib/redux'
 
 export const selectExperimentAddName = (state: ReduxState) => state.experimentAdd.name
-export const selectExperimentAddTool = (state: ReduxState) => state.experimentAdd.model
+export const selectExperimentAddModel = (state: ReduxState) => state.experimentAdd.model
 export const selectExperimentAddKwargs = (state: ReduxState) => state.experimentAdd.kwargs
 export const selectExperimentAddLoading = (state: ReduxState) => state.experimentAdd.loading
 export const selectExperimentAddError = (state: ReduxState) => state.experimentAdd.error

@@ -5,7 +5,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectExperimentDetailError, selectExperimentDetailLoading, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectExperimentDetailError, selectExperimentDetailLoading, selectModelDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import JobsAccordion from "./JobsAccordion";
@@ -16,7 +16,7 @@ dayjs.extend(relativeTime);
 export default function ExperimentDetail() {
   const dispatch = useDispatch<AppDispatch>();
   const experiment = useSelector(selectExperimentDetail);
-  const model = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
   const loading = useSelector(selectExperimentDetailLoading);
   const error = useSelector(selectExperimentDetailError);
 
@@ -37,7 +37,7 @@ export default function ExperimentDetail() {
 
   return (
     <div>
-      {model?.ToolJson?.checkpointCompatible && <MetricsVisualizer experiment={experiment} key={experiment.ID} />}
+      {model?.ModelJson?.checkpointCompatible && <MetricsVisualizer experiment={experiment} key={experiment.ID} />}
       <JobsAccordion experiment={experiment} />
     </div>
   );

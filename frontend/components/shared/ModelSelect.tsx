@@ -4,34 +4,34 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AppDispatch, selectToolDetail, selectToolList, selectToolListError, toolDetailThunk, toolListThunk } from "@/lib/redux";
+import { AppDispatch, selectModelDetail, selectModelList, selectModelListError, modelDetailThunk, modelListThunk } from "@/lib/redux";
 
-interface ToolSelectProps {
+interface ModelSelectProps {
   onChange: (value: string) => void;
   taskSlug?: string;
 }
 
-export function ToolSelect({ onChange, taskSlug }: ToolSelectProps) {
+export function ModelSelect({ onChange, taskSlug }: ModelSelectProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const model = useSelector(selectToolDetail);
-  const models = useSelector(selectToolList);
-  const toolListError = useSelector(selectToolListError);
+  const model = useSelector(selectModelDetail);
+  const models = useSelector(selectModelList);
+  const modelListError = useSelector(selectModelListError);
 
   useEffect(() => {
     if (taskSlug) {
-      dispatch(toolListThunk(taskSlug));
+      dispatch(modelListThunk(taskSlug));
     } else {
-      dispatch(toolListThunk());
+      dispatch(modelListThunk());
     }
   }, [dispatch, taskSlug]);
 
   useEffect(() => {
-    const defaultTool = models.find((model) => model.DefaultTool === true);
-    const defaultToolCID = defaultTool?.CID;
+    const defaultModel = models.find((model) => model.DefaultModel === true);
+    const defaultModelCID = defaultModel?.CID;
 
-    if (defaultToolCID) {
-      dispatch(toolDetailThunk(defaultToolCID));
+    if (defaultModelCID) {
+      dispatch(modelDetailThunk(defaultModelCID));
     }
   }, [dispatch, models]);
 

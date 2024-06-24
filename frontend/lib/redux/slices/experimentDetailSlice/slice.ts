@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { JobDetail, ToolDetail } from "@/lib/redux";
+import { JobDetail, ModelDetail } from "@/lib/redux";
 
 export interface ExperimentDetail {
   ID: number;

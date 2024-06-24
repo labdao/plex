@@ -3,7 +3,7 @@
     "description": "Sample RFDiffusion model",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
-    "toolType": "ray",
+    "modelType": "ray",
     "rayServiceEndpoint": "/sample_relay_rf_diffusion",
     "checkpointCompatible": true,
     "xAxis": "plddt",

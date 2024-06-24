@@ -6,12 +6,12 @@ import { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { ToolDetail } from "@/lib/redux";
+import { ModelDetail } from "@/lib/redux";
 
 interface ExperimentSummaryProps {
   form: UseFormReturn<any>;
   sortedInputs: any;
-  model: ToolDetail;
+  model: ModelDetail;
   showVariants?: boolean;
 }
 

@@ -84,7 +84,7 @@
       },
       "/models": {
         "post": {
-          "operationId": "addTool",
+          "operationId": "addModel",
           "summary": "Add Model",
           "requestBody": {
             "required": true,
@@ -97,13 +97,13 @@
                       "type": "string",
                       "example": "0x1234567890abcdef1234567890abcdef12345678"
                     },
-                    "toolJson": {
+                    "modelJson": {
                       "type": "object"
                     }
                   },
                   "required": [
                     "walletAddress",
-                    "toolJson"
+                    "modelJson"
                   ]
                 }
               }
@@ -138,7 +138,7 @@
           }
         },
         "get": {
-          "operationId": "listTools",
+          "operationId": "listModels",
           "summary": "List Models",
           "parameters": [
             {
@@ -204,7 +204,7 @@
       },
       "/models/{cid}": {
         "get": {
-          "operationId": "getToolByCid",
+          "operationId": "getModelByCid",
           "summary": "Get Model",
           "parameters": [
             {
@@ -235,7 +235,7 @@
       },
       "/update-model/{cid}": {
         "put": {
-          "operationId": "updateTool",
+          "operationId": "updateModel",
           "summary": "Update Model",
           "parameters": [
             {
@@ -263,7 +263,7 @@
                       "type": "boolean",
                       "description": "Flag indicating whether the model should be displayed"
                     },
-                    "defaultTool": {
+                    "defaultModel": {
                       "type": "boolean",
                       "description": "Flag indicating whether the model is the default model for its category"
                     }
@@ -276,7 +276,7 @@
                       "required": ["display"]
                     },
                     {
-                      "required": ["defaultTool"]
+                      "required": ["defaultModel"]
                     }
                   ],
                   "minProperties": 1
@@ -623,7 +623,7 @@
                       "type": "string",
                       "example": "0x1234567890abcdef1234567890abcdef12345678"
                     },
-                    "toolCid": {
+                    "modelCid": {
                       "type": "string",
                       "example": "Qm..."
                     },
@@ -639,7 +639,7 @@
                   },
                   "required": [
                     "walletAddress",
-                    "toolCid",
+                    "modelCid",
                     "scatteringMethod",
                     "name",
                     "kwargs"
@@ -992,7 +992,7 @@
             "walletAddress": {
               "type": "string"
             },
-            "toolJson": {
+            "modelJson": {
               "type": "object"
             },
             "Container": {
@@ -1020,7 +1020,7 @@
             "TaskCategory": {
               "type": "string"
             },
-            "DefaultTool": {
+            "DefaultModel": {
               "type": "boolean"
             }
           }
@@ -1096,7 +1096,7 @@
             "walletAddress": {
               "type": "string"
             },
-            "toolID": {
+            "modelID": {
               "type": "string"
             },
             "model": {

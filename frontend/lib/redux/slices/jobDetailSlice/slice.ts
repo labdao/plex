@@ -6,7 +6,7 @@ export interface JobDetail {
   ID: number | null;
   State: string;
   Error: string;
-  ToolID: string;
+  ModelID: string;
   ExperimentID: string;
   InputFiles: DataFile[];
   OutputFiles: DataFile[];
@@ -28,7 +28,7 @@ const initialState: JobDetailSliceState = {
     ID: null,
     State: "",
     Error: "",
-    ToolID: "",
+    ModelID: "",
     ExperimentID: "",
     InputFiles: [],
     OutputFiles: [],

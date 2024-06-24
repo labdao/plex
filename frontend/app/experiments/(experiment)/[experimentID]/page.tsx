@@ -8,7 +8,7 @@ import ProtectedComponent from "@/components/auth/ProtectedComponent";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import PoweredByLogo from "@/components/global/PoweredByLogo";
 import TransactionSummaryInfo from "@/components/payment/TransactionSummaryInfo";
-import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectToolDetail, setToolDetail, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectModelDetail, setModelDetail, modelDetailThunk } from "@/lib/redux";
 
 import RerunExperimentForm from "../(forms)/RerunExperimentForm";
 import ExperimentResults from "../(results)/ExperimentResults";
@@ -22,10 +22,10 @@ type ExperimentDetailProps = {
 export default function Layout({ params }: ExperimentDetailProps) {
   const dispatch = useDispatch<AppDispatch>();
   const experiment = useSelector(selectExperimentDetail);
-  const model = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
   const { experimentID } = params;
 
-  const task = tasks.find((task) => task.slug === model?.ToolJson?.taskCategory);
+  const task = tasks.find((task) => task.slug === model?.ModelJson?.taskCategory);
   let breadcrumbItems = [{ name: "Experiments", href: "/experiments" }];
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Layout({ params }: ExperimentDetailProps) {
   useEffect(() => {
     if (!!experiment.Jobs?.length) {
       //Update redux with the model stored in the experiment rather than making a separate request
-      dispatch(setToolDetail(experiment.Jobs?.[0]?.Model));
+      dispatch(setModelDetail(experiment.Jobs?.[0]?.Model));
     }
   }, [dispatch, experiment.Jobs]);
 

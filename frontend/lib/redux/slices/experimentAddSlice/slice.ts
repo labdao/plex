@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { ToolDetail } from "@/lib/redux";
+import { ModelDetail } from "@/lib/redux";
 
 export interface Kwargs {
   [key: string]: string[];
@@ -9,7 +9,7 @@ export interface Kwargs {
 interface ExperimentAddSliceState {
   ID: number | null
   name: string
-  model: ToolDetail
+  model: ModelDetail
   kwargs: Kwargs
   loading: boolean
   error: string | null
@@ -23,8 +23,8 @@ const initialState: ExperimentAddSliceState = {
     CID: "", 
     WalletAddress: "", 
     Name: "", 
-    DefaultTool: false, 
-    ToolJson: { 
+    DefaultModel: false, 
+    ModelJson: { 
       inputs: {}, 
       outputs: {}, 
       name: "", 
@@ -50,7 +50,7 @@ export const experimentAddSlice = createSlice({
     setExperimentAddName: (state, action: PayloadAction<string>) => {
       state.name = action.payload;
     },
-    setExperimentAddTool: (state, action: PayloadAction<ToolDetail>) => {
+    setExperimentAddModel: (state, action: PayloadAction<ModelDetail>) => {
       state.model = action.payload;
     },
     setExperimentAddKwargs: (state, action: PayloadAction<Kwargs>) => {
@@ -73,7 +73,7 @@ export const experimentAddSlice = createSlice({
 
 export const {
   setExperimentAddName,
-  setExperimentAddTool,
+  setExperimentAddModel,
   setExperimentAddID,
   setExperimentAddKwargs,
   setExperimentAddError,

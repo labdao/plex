@@ -33,7 +33,7 @@ var upgradeCmd = &cobra.Command{
 const (
 	CurrentPlexVersion = "v0.11.1"
 	ReleaseURL         = "https://api.github.com/repos/labdao/plex/releases/latest"
-	ToolsURL           = "https://api.github.com/repos/labdao/plex/contents/models?ref=main"
+	ModelsURL          = "https://api.github.com/repos/labdao/plex/contents/models?ref=main"
 )
 
 func getLatestReleaseVersionStr() (string, error) {
@@ -192,7 +192,7 @@ func writeManifestFile(manifestPath string, manifest map[string]string) error {
 	return nil
 }
 
-func upgradeToolsFolder(latestReleaseVersionStr string) error {
+func upgradeModelsFolder(latestReleaseVersionStr string) error {
 	toolsFolderPath := filepath.Join(".", "models")
 	manifestPath := filepath.Join(toolsFolderPath, ".manifest.json")
 
@@ -212,7 +212,7 @@ func upgradeToolsFolder(latestReleaseVersionStr string) error {
 
 	updatedManifest := make(map[string]string)
 
-	resp, err := http.Get(ToolsURL)
+	resp, err := http.Get(ModelsURL)
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func upgradePlexVersion(dry bool) error {
 			fmt.Printf("- Operating System detected: %s\n- Chip Architecture detected: %s\n", userOS, userArch)
 
 			// Upgrade models folder
-			err := upgradeToolsFolder(latestReleaseVersionStr)
+			err := upgradeModelsFolder(latestReleaseVersionStr)
 			if err != nil {
 				fmt.Println("Error upgrading models folder:", err)
 				os.Exit(1)

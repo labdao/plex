@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, resetToolDetail, resetToolList, selectToolDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
+import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, resetModelDetail, resetModelList, selectModelDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
 import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -26,20 +26,20 @@ export default function NewExperimentForm({ task }: { task: any }) {
   const router = useRouter();
   const { user } = usePrivy();
 
-  const model = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
   const walletAddress = user?.wallet?.address;
   const userTier = useSelector(selectUserTier);
 
   useEffect(() => {
     return () => {
-      dispatch(resetToolDetail());
-      dispatch(resetToolList());
+      dispatch(resetModelDetail());
+      dispatch(resetModelList());
     };
   }, [dispatch]);
 
-  const groupedInputs = groupInputs(model.ToolJson?.inputs);
-  const formSchema = generateSchema(model.ToolJson?.inputs);
-  const defaultValues = generateDefaultValues(model.ToolJson?.inputs, task, model);
+  const groupedInputs = groupInputs(model.ModelJson?.inputs);
+  const formSchema = generateSchema(model.ModelJson?.inputs);
+  const defaultValues = generateDefaultValues(model.ModelJson?.inputs, task, model);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,7 +48,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   // If the model changes, fetch new model details
   useEffect(() => {
-    form.reset(generateDefaultValues(model.ToolJson?.inputs, task, model));
+    form.reset(generateDefaultValues(model.ModelJson?.inputs, task, model));
   }, [model, form, task]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {

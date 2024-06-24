@@ -4,10 +4,10 @@ import { BookOpenIcon, FileJsonIcon, FileLineChart, GithubIcon } from "lucide-re
 import React from "react";
 
 import { Button } from "@/components/ui/button";
-import { ToolDetail } from "@/lib/redux";
+import { ModelDetail } from "@/lib/redux";
 
 interface ModelInfoProps {
-  model: ToolDetail;
+  model: ModelDetail;
 }
 
 type OutputSummaryItem = {
@@ -51,7 +51,7 @@ const renderDescriptionParagraphs = (text: string) => {
 };
 
 export default function ModelInfo({ model }: ModelInfoProps) {
-  const { description, github, paper, outputs } = model.ToolJson;
+  const { description, github, paper, outputs } = model.ModelJson;
 
   let outputSummaryInfo = { items: [] as OutputSummaryItem[] };
   for (const key in outputs) {
