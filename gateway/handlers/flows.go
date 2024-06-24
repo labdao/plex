@@ -297,41 +297,6 @@ func GetFlowHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
-func ListFlowNamesHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			utils.SendJSONError(w, "Only GET method is supported", http.StatusBadRequest)
-			return
-		}
-
-		user, ok := r.Context().Value(middleware.UserContextKey).(*models.User)
-		if !ok {
-			utils.SendJSONError(w, "User not found in context", http.StatusUnauthorized)
-			return
-		}
-
-		var flowNames []struct {
-			ID        int
-			Name      string
-			StartTime time.Time
-		}
-		if result := db.Model(&models.Flow{}).
-			Where("wallet_address = ?", user.WalletAddress).
-			Select("name, id, start_time").
-			Find(&flowNames); result.Error != nil { // Directly scan the names into the slice of strings
-			http.Error(w, fmt.Sprintf("Error fetching flow names: %v", result.Error), http.StatusInternalServerError)
-			return
-		}
-
-		log.Println("Fetched flow names from DB: ", flowNames)
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(flowNames); err != nil { // Encode the slice of flow names directly
-			http.Error(w, "Error encoding flow names to JSON", http.StatusInternalServerError)
-			return
-		}
-	}
-}
 
 func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
