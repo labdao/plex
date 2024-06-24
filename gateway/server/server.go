@@ -62,8 +62,6 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 
 	router.HandleFunc("/flows", protected(handlers.AddFlowHandler(db))).Methods("POST")
 	router.HandleFunc("/flows", protected(handlers.ListFlowsHandler(db))).Methods("GET")
-	// lightweight endpoint for getting flow names list
-	router.HandleFunc("/flows/names", protected(handlers.ListFlowNamesHandler(db))).Methods("GET")
 	router.HandleFunc("/flows/{flowID}", protected(handlers.GetFlowHandler(db))).Methods("GET")
 	router.HandleFunc("/flows/{flowID}", protected(handlers.UpdateFlowHandler(db))).Methods("PUT")
 	router.HandleFunc("/flows/{flowID}/add-job", protected(handlers.AddJobToFlowHandler(db))).Methods("PUT")
