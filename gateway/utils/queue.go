@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,45 +31,38 @@ import (
 type RayQueue struct {
 	db         *gorm.DB
 	maxWorkers int
-	maxRetry   int
-	running    int
+	jobChan    chan models.Job
+	errChan    chan error
 }
 
-func NewRayQueue(db *gorm.DB, maxWorkers, maxRetry int) *RayQueue {
+func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
 		maxWorkers: maxWorkers,
-		maxRetry:   maxRetry,
-		running:    0,
+		jobChan:    make(chan models.Job, maxWorkers),
+		errChan:    make(chan error, maxWorkers),
 	}
 }
 
-// func getEnvAsInt(name string, defaultValue int) int {
-// 	valueStr := os.Getenv(name)
-// 	if valueStr == "" {
-// 		return defaultValue
-// 	}
-// 	value, err := strconv.Atoi(valueStr)
-// 	if err != nil {
-// 		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
-// 		return defaultValue
-// 	}
-// 	return value
-// }
+var maxRetryCountFor500 = GetEnvAsInt("MAX_RETRY_COUNT_FOR_500", 2)
+var maxRetryCountFor404 = GetEnvAsInt("MAX_RETRY_COUNT_FOR_404", 1)
 
-// // Consider allowing Job creation payloads to configure lower times
-// var maxQueueTime = time.Duration(getEnvAsInt("MAX_QUEUE_TIME_SECONDS", 259200)) * time.Second
-// var maxComputeTime = getEnvAsInt("MAX_COMPUTE_TIME_SECONDS", 259200)
-// var retryJobSleepTime = time.Duration(10) * time.Second
+// Helper function to get a normally distributed random delay
+// TODO_PR979: Make these env variables
+func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev time.Duration) time.Duration {
+	mean := float64(base.Nanoseconds()) * math.Pow(factor, float64(retryCount))
+	delay := mean + rand.NormFloat64()*float64(stdDev.Nanoseconds())
+	return time.Duration(delay)
+}
 
-func StartJobQueues(db *gorm.DB) error {
-	errChan := make(chan error, 4) // Buffer for two types of jobs
+func StartJobQueues(db *gorm.DB, maxWorkers int) error {
+	rq := NewRayQueue(db, maxWorkers)
+	rq.StartWorkers()
 
-	go ProcessJobQueue(models.QueueTypeRay, errChan, db)
+	go rq.ProcessJobQueue(models.QueueTypeRay)
 
-	// Wait for error from any queue
-	for i := 0; i < 4; i++ {
-		if err := <-errChan; err != nil {
+	for err := range rq.errChan {
+		if err != nil {
 			return err
 		}
 	}
@@ -75,36 +70,36 @@ func StartJobQueues(db *gorm.DB) error {
 	return nil
 }
 
-func ProcessJobQueue(queueType models.QueueType, errChan chan<- error, db *gorm.DB) {
-	for {
-		var job models.Job
-		err := fetchOldestQueuedJob(&job, queueType, db)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			//TODO_PR#970: uncomment this later
-			// fmt.Printf("There are no Jobs Queued for %v, will recheck later\n", queueType)
-			time.Sleep(5 * time.Second)
-			continue
-		} else if err != nil {
-			errChan <- err
-			return
-		}
+func (rq *RayQueue) StartWorkers() {
+	for i := 0; i < rq.maxWorkers; i++ {
+		go rq.worker()
+	}
+}
 
-		if queueType == models.QueueTypeRay {
-			if err := processRayJob(job.ID, db); err != nil {
-				errChan <- err
-				return
-			}
+func (rq *RayQueue) worker() {
+	for job := range rq.jobChan {
+		err := processRayJob(job.ID, rq.db)
+		if err != nil {
+			rq.errChan <- err
 		}
 	}
 }
 
-// func updateJobRetryState(job *models.Job, db *gorm.DB) error {
-// 	return db.Model(job).Updates(models.Job{RetryCount: job.RetryCount, State: job.State}).Error
-// }
+func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
+	for {
+		var job models.Job
+		err := fetchOldestQueuedJob(&job, queueType, rq.db)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			time.Sleep(5 * time.Second)
+			continue
+		} else if err != nil {
+			rq.errChan <- err
+			return
+		}
 
-// func fetchRunningJobsWithToolData(jobs *[]models.Job, db *gorm.DB) error {
-// 	return db.Preload("Tool").Where("state = ?", models.JobStateRunning).Find(jobs).Error
-// }
+		rq.jobChan <- job
+	}
+}
 
 func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
 	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
@@ -118,27 +113,20 @@ func fetchJobWithToolAndExperimentData(job *models.Job, id uint, db *gorm.DB) er
 	return db.Preload("Tool").Preload("Experiment").First(&job, id).Error
 }
 
-// func checkDBForJobStateCompleted(jobID uint, db *gorm.DB) (bool, error) {
-// 	var job models.Job
-// 	if result := db.First(&job, "id = ?", jobID); result.Error != nil {
-// 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 			return false, nil
-// 		} else {
-// 			return false, result.Error
-// 		}
-// 	}
-
-// 	if job.State == models.JobStateCompleted {
-// 		return true, nil
-// 	} else {
-// 		return false, nil
-// 	}
-// }
+func fetchLatestRequestTracker(requestTracker *models.RequestTracker, jobID uint, db *gorm.DB) error {
+	return db.Where("job_id = ?", jobID).Order("created_at DESC").First(requestTracker).Error
+}
 
 func processRayJob(jobID uint, db *gorm.DB) error {
 	fmt.Printf("Processing Ray Job %v\n", jobID)
 	var job models.Job
 	err := fetchJobWithToolAndExperimentData(&job, jobID, db)
+	if err != nil {
+		return err
+	}
+
+	var requestTracker models.RequestTracker
+	err = fetchLatestRequestTracker(&requestTracker, jobID, db)
 	if err != nil {
 		return err
 	}
@@ -149,7 +137,7 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 	}
 
 	if job.RayJobID == "" {
-		if err := submitRayJobAndUpdateID(&job, db); err != nil {
+		if err := submitRayJobAndUpdateID(&job, &requestTracker, db); err != nil {
 			return err
 		}
 	}
@@ -234,7 +222,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 	return string(prettyJSON), nil
 }
 
-func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
+func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTracker, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
 	var jobInputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
@@ -246,11 +234,10 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	toolCID := job.Tool.CID
 
-	//create a uuid:
 	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
-	setJobStatusAndID(job, models.JobStateRunning, rayJobID, "", db)
+	setJobStatusAndID(requestTracker, job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
 	resp, err := ray.SubmitRayJob(toolCID, rayJobID, inputs, db)
 	if err != nil {
@@ -275,34 +262,130 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		if err != nil {
 			log.Fatalf("Error generating pretty JSON: %v", err)
 		}
-		// Print the pretty JSON
-		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
-		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
-	} else {
-		//create a fn to handle this
-		job.State = models.JobStateFailed
-	}
-	//for now only handling 200 and failed. implement retry and timeout later
 
+		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
+		completeRayJobAndAddFiles(requestTracker, job, body, rayJobResponse, db)
+	} else {
+		requestTracker.State = models.JobStateFailed
+		requestTracker.ResponseCode = resp.StatusCode
+		requestTracker.ErrorMessage = string(body)
+		requestTracker.CompletedAt = time.Now().UTC()
+		err = db.Save(requestTracker).Error
+		if err != nil {
+			return err
+		}
+		// 504 - no retry, 404 - immediate retry once, 500 - exponential back off and retry twice
+		// TBD retry count and delay
+		if resp.StatusCode == http.StatusGatewayTimeout {
+			fmt.Printf("Job %v had timeout. Not retrying again. Marking as failed\n", job.ID)
+			job.State = models.JobStateFailed
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
+			return nil
+		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < maxRetryCountFor404 {
+			job.RetryCount = job.RetryCount + 1
+			job.State = models.JobStateQueued
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
+			newRequestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				State:      models.JobStateQueued,
+				RetryCount: job.RetryCount,
+				CreatedAt:  time.Now().UTC(),
+			}
+			err = db.Save(&newRequestTracker).Error
+			if err != nil {
+				return err
+			}
+
+			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < maxRetryCountFor500 {
+			job.RetryCount = job.RetryCount + 1
+			job.State = models.JobStateQueued
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
+			newRequestTracker := models.RequestTracker{
+				JobID:      job.ID,
+				State:      models.JobStateQueued,
+				RetryCount: job.RetryCount,
+				CreatedAt:  time.Now().UTC(),
+			}
+			err = db.Save(&newRequestTracker).Error
+			if err != nil {
+				return err
+			}
+			// Calculate delay with exponential backoff and randomness
+			delay := getRandomDelay(job.RetryCount, 2*time.Second, 1.2, 500*time.Millisecond)
+
+			log.Printf("Retry after %v due to server error (500)", delay)
+			time.Sleep(delay)
+
+			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+		} else {
+			var latestRequestTracker models.RequestTracker
+			err = fetchLatestRequestTracker(&latestRequestTracker, job.ID, db)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("The latest try of job %v had error %v. Retried %v times already. Marking as failed\n", job.ID, latestRequestTracker.ResponseCode, job.RetryCount)
+			job.State = models.JobStateFailed
+			err = db.Save(job).Error
+			if err != nil {
+				return err
+			}
+		}
+
+	}
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.State)
-	return db.Save(job).Error
+	err = db.Save(job).Error
+	if err != nil {
+		return err
+	}
+	err = db.Save(requestTracker).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
+func setJobStatusAndID(requestTracker *models.RequestTracker, job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
+	requestTracker.RayJobID = rayJobID
+	requestTracker.State = state
+	requestTracker.StartedAt = time.Now().UTC()
+	err := db.Save(requestTracker).Error
+	if err != nil {
+		return err
+	}
+
 	job.State = state
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	job.RayJobID = rayJobID
-	return db.Save(job).Error
+	err = db.Save(job).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
+func completeRayJobAndAddFiles(requestTracker *models.RequestTracker, job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
 
 	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
-	//for now only handling 200 and failed. implement retry and timeout later
+	requestTracker.CompletedAt = time.Now().UTC()
+	requestTracker.State = models.JobStateCompleted
+	requestTracker.ResponseCode = http.StatusOK
+	requestTracker.JobResponse = body
+
 	job.ResultJSON = body
 	job.State = models.JobStateCompleted
+	job.CompletedAt = time.Now().UTC()
 
 	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range resultJSON.Files {
@@ -351,7 +434,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 		WalletAddress: job.WalletAddress,
 		Filename:      filepath.Base(fileDetail.URI),
 		Tags:          tags,
-		Timestamp:     time.Now(),
+		Timestamp:     time.Now().UTC(),
 		S3URI:         fileDetail.URI,
 	}
 

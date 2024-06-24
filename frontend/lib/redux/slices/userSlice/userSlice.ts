@@ -6,6 +6,7 @@ interface UserState {
   error: string | null;
   walletAddress: string | null;
   did: string | null;
+  tier: 'Free' | 'Paid' | null;
   isAdmin: boolean | null;
 }
 
@@ -13,6 +14,7 @@ const initialState: UserState = {
   error: null,
   walletAddress: null,
   did: null,
+  tier: null,
   isAdmin: null,
 };
 
@@ -28,6 +30,7 @@ export const userSlice = createSlice({
     builder.addCase(fetchUserDataAsync.fulfilled, (state, action) => {
       state.walletAddress = action.payload.walletAddress;
       state.did = action.payload.did;
+      state.tier = action.payload.tier;
       state.isAdmin = action.payload.isAdmin;
     });
   }

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -112,4 +113,17 @@ func GenerateFileHash(filename string) (string, error) {
 	hashBytes := hasher.Sum(nil)
 
 	return hex.EncodeToString(hashBytes), nil
+}
+
+func GetEnvAsInt(name string, defaultValue int) int {
+	valueStr := os.Getenv(name)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		fmt.Printf("Warning: Invalid format for %s. Using default value. \n", name)
+		return defaultValue
+	}
+	return value
 }

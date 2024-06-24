@@ -107,7 +107,7 @@ services:
       MAX_COMPUTE_TIME_SECONDS: ${MAX_COMPUTE_TIME_SECONDS:-259200} # default 72 hours
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET_KEY: ${STRIPE_WEBHOOK_SECRET_KEY}
-      STRIPE_PRODUCT_SLUG: ${STRIPE_PRODUCT_SLUG:-price_1OlwVPE7xzGf7nZbaccQCnHv}
+      STRIPE_PRODUCT_ID: ${STRIPE_PRODUCT_ID:-price_1OlwVPE7xzGf7nZbaccQCnHv}
       NEXT_PUBLIC_PRIVY_APP_ID: ${NEXT_PUBLIC_PRIVY_APP_ID}
       PRIVY_PUBLIC_KEY: ${PRIVY_PUBLIC_KEY}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
@@ -121,15 +121,20 @@ services:
       BUCKET_USE_SSL: ${BUCKET_USE_SSL}
       BUCKET_NAME: ${BUCKET_NAME:-test-bucket}
       RAY_API_HOST: ${RAY_API_HOST}
+      TIER_THRESHOLD: ${TIER_THRESHOLD}
     depends_on:
       dbbackend:
         condition: service_healthy
+      # stripe-cli:
+      #   condition: service_started
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8080/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 10s
+    volumes:
+      - stripe-secrets:/var/secrets/stripe
 
   default-tool-setup:
     image: "alpine"
@@ -228,8 +233,21 @@ services:
     volumes:
       - minio-data:/data
 
+  # stripe-cli:
+  #   image: stripe/stripe-cli
+  #   entrypoint: ["/bin/sh", "-c"]
+  #   command: >
+  #     "export STRIPE_WEBHOOK_SECRET_KEY=$(stripe listen --api-key ${STRIPE_SECRET_KEY} --print-secret --forward-to http://backend:8080/stripe | awk '/^> Ready! Your webhook signing secret is/ {print $NF}') &&
+  #     echo $STRIPE_WEBHOOK_SECRET_KEY > /var/secrets/stripe/secret.txt &&
+  #     stripe listen --api-key ${STRIPE_SECRET_KEY} --forward-to http://localhost:8080/stripe"
+  #   environment:
+  #     STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+  #   volumes:
+  #     - stripe-secrets:/var/secrets/stripe
+
 volumes:
   dbdata-backend:
   dbdata-receptor:
   ipfs:
   minio-data:
+  stripe-secrets:

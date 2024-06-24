@@ -106,8 +106,25 @@ func ServeWebApp() {
 	}
 
 	// Migrate the schema
-	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}, &models.Tag{}, &models.Transaction{}); err != nil {
+	if err := db.AutoMigrate(&models.DataFile{}, &models.User{}, &models.Tool{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.RequestTracker{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
+	}
+
+	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
+	log.Printf("Initial STRIPE_WEBHOOK_SECRET_KEY: %s\n", stripeWebhookSecret)
+
+	if stripeWebhookSecret == "" {
+		log.Println("STRIPE_WEBHOOK_SECRET_KEY not set, attempting to read from file")
+		stripeWebhookSecretBytes, err := os.ReadFile("/var/secrets/stripe/secret.txt")
+		if err != nil {
+			log.Fatalf("Failed to read Stripe webhook signing secret: %v", err)
+		}
+		stripeWebhookSecret = strings.TrimSpace(string(stripeWebhookSecretBytes))
+
+		os.Setenv("STRIPE_WEBHOOK_SECRET_KEY", stripeWebhookSecret)
+		log.Printf("STRIPE_WEBHOOK_SECRET_KEY set from file: %s\n", stripeWebhookSecret)
+	} else {
+		log.Println("STRIPE_WEBHOOK_SECRET_KEY is already set")
 	}
 
 	// Set up CORS
@@ -120,10 +137,12 @@ func ServeWebApp() {
 
 	mux := server.NewServer(db, s3Client)
 
+	maxWorkers := utils.GetEnvAsInt("MAX_WORKERS", 4)
+
 	// Start queue watcher in a separate goroutine
 	go func() {
 		for {
-			if err := utils.StartJobQueues(db); err != nil {
+			if err := utils.StartJobQueues(db, maxWorkers); err != nil {
 				fmt.Printf("unexpected error processing job queues: %v\n", err)
 				time.Sleep(5 * time.Second) // wait for 5 seconds before retrying
 			}
