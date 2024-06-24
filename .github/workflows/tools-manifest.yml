@@ -57,10 +57,6 @@ jobs:
           # you would add,
           # mymodel_mymodel_config_file:
           #   - 'models/mymodel/mymodel_config_file.json'
-          colabdesign_colabdesign:
-            - 'models/colabdesign/colabdesign.json'
-          labsay_labsay:
-            - 'models/labsay/labsay.json'
 
   tools:
     needs: changes-tools
