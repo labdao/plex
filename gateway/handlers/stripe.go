@@ -51,7 +51,69 @@ func createStripeCustomer(walletAddress string) (string, error) {
 	return customer.ID, nil
 }
 
-func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+// func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+// 	err := setupStripeClient()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	frontendURL := os.Getenv("FRONTEND_URL")
+// 	if frontendURL == "" {
+// 		frontendURL = "http://localhost:3000"
+// 	}
+
+// 	priceParams := &stripe.PriceParams{
+// 		UnitAmount: stripe.Int64(int64(computeCost * 10)),
+// 		Currency:   stripe.String(string(stripe.CurrencyUSD)),
+// 		Product:    stripe.String(os.Getenv("STRIPE_PRODUCT_ID")),
+// 	}
+// 	price, err := price.New(priceParams)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	params := &stripe.CheckoutSessionParams{
+// 		Customer: stripe.String(stripeUserID),
+// 		// TODO: success url needs to be accessible to user, not just the backend
+// 		// SuccessURL: stripe.String(frontendURL),
+// 		SuccessURL: stripe.String("http://localhost:3000"),
+// 		LineItems: []*stripe.CheckoutSessionLineItemParams{
+// 			{
+// 				Price:    stripe.String(price.ID),
+// 				Quantity: stripe.Int64(1),
+// 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
+// 					Enabled: stripe.Bool(false),
+// 				},
+// 			},
+// 		},
+// 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+// 		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+// 			Metadata: map[string]string{
+// 				"Stripe User ID":    stripeUserID,
+// 				"Wallet Address":    walletAddress,
+// 				"Tool CID":          toolCID,
+// 				"Scattering Method": scatteringMethod,
+// 				"Kwargs":            kwargs,
+// 			},
+// 			SetupFutureUsage: stripe.String(string(stripe.PaymentIntentSetupFutureUsageOnSession)),
+// 		},
+// 		SavedPaymentMethodOptions: &stripe.CheckoutSessionSavedPaymentMethodOptionsParams{
+// 			PaymentMethodSave: stripe.String(string(stripe.CheckoutSessionSavedPaymentMethodOptionsPaymentMethodSaveEnabled)),
+// 		},
+// 		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+// 	}
+
+// 	params.AddMetadata("Stripe User ID", stripeUserID)
+
+// 	session, err := session.New(params)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return session, nil
+// }
+
+func createCheckoutSession(stripeUserID string, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -62,24 +124,32 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 		frontendURL = "http://localhost:3000"
 	}
 
-	priceParams := &stripe.PriceParams{
-		UnitAmount: stripe.Int64(int64(computeCost * 10)),
-		Currency:   stripe.String(string(stripe.CurrencyUSD)),
-		Product:    stripe.String(os.Getenv("STRIPE_PRODUCT_ID")),
+	productID := os.Getenv("STRIPE_PRODUCT_ID")
+	if productID == "" {
+		return nil, errors.New("STRIPE_PRODUCT_ID environment variable not set")
 	}
-	price, err := price.New(priceParams)
-	if err != nil {
-		return nil, err
+
+	priceParams := &stripe.PriceListParams{
+		Product: stripe.String(productID),
+	}
+	priceList := price.List(priceParams)
+	if priceList.Err() != nil {
+		return nil, fmt.Errorf("error fetching price list: %v", priceList.Err())
+	}
+
+	var priceID string
+	if len(priceList.Data) > 0 {
+		priceID = priceList.Data[0].ID
+	} else {
+		return nil, errors.New("no prices found for product")
 	}
 
 	params := &stripe.CheckoutSessionParams{
-		Customer: stripe.String(stripeUserID),
-		// TODO: success url needs to be accessible to user, not just the backend
-		// SuccessURL: stripe.String(frontendURL),
-		SuccessURL: stripe.String("http://localhost:3000"),
+		Customer:   stripe.String(stripeUserID),
+		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(price.ID),
+				Price:    stripe.String(priceID),
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
 					Enabled: stripe.Bool(false),
@@ -89,7 +159,6 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
 			Metadata: map[string]string{
-				"Stripe User ID":    stripeUserID,
 				"Wallet Address":    walletAddress,
 				"Tool CID":          toolCID,
 				"Scattering Method": scatteringMethod,
