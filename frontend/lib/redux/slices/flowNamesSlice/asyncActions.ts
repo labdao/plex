@@ -11,7 +11,7 @@ export const listFlowNames = async (walletAddress: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  const requestUrl = `${backendUrl()}/flows/names?walletAddress=${encodeURIComponent(walletAddress)}`;
+  const requestUrl = `${backendUrl()}/flows?fields=name&walletAddress=${encodeURIComponent(walletAddress)}`;
   const requestOptions = {
     method: 'GET',
     headers: {
