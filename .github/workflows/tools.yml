@@ -49,14 +49,14 @@ jobs:
         ################## Add new tools here #########################
         ###############################################################
         filters: |
-          colabdesign:
-            - 'models/colabdesign/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          labsay:
-            - 'models/labsay/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
+          # colabdesign:
+          #   - 'models/colabdesign/**'
+          #   - '.github/workflows/tools.yml'
+          #   - '.github/workflows/docker.yml'
+          # labsay:
+          #   - 'models/labsay/**'
+          #   - '.github/workflows/tools.yml'
+          #   - '.github/workflows/docker.yml'
 
 
   tools:
