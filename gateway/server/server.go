@@ -55,10 +55,7 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/datafiles/{cid}/download", protected(handlers.DownloadDataFileHandler(db, s3c))).Methods("GET")
 	router.HandleFunc("/datafiles", protected(handlers.ListDataFilesHandler(db))).Methods("GET")
 
-	router.HandleFunc("/checkpoints/{experimentID}", protected(handlers.ListExperimentCheckpointsHandler(db))).Methods("GET")
 	router.HandleFunc("/checkpoints/{experimentID}/get-data", protected(handlers.GetExperimentCheckpointDataHandler(db))).Methods("GET")
-	router.HandleFunc("/checkpoints/{experimentID}/{jobID}", protected(handlers.ListJobCheckpointsHandler(db))).Methods("GET")
-	router.HandleFunc("/checkpoints/{experimentID}/{jobID}/get-data", protected(handlers.GetJobCheckpointDataHandler(db))).Methods("GET")
 
 	router.HandleFunc("/experiments", protected(handlers.AddExperimentHandler(db))).Methods("POST")
 	router.HandleFunc("/experiments", protected(handlers.ListExperimentsHandler(db))).Methods("GET")
