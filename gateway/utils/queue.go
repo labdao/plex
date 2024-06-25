@@ -454,7 +454,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 func hashS3Object(URI string) (string, error) {
 	// Load the AWS configuration
 	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
-	region := "us-east-1"
+	region := os.Getenv("AWS_REGION")
 	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 	s3client, err := s3client.NewS3Client()

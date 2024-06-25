@@ -324,10 +324,34 @@ func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
+
+		fields := r.URL.Query().Get("fields")
+		if fields != "" {
+			requestedFields := strings.Split(fields, ",")
+			validFields := []string{"id"}
+
+			for _, field := range requestedFields {
+				switch strings.ToLower(strings.TrimSpace(field)) {
+				case "name", "start_time", "end_time", "flow_uuid", "public", "record_cid":
+					validFields = append(validFields, strings.ToLower(strings.TrimSpace(field)))
+				}
+			}
+
+			if !utils.Contains(validFields, "start_time") {
+				validFields = append(validFields, "start_time")
+			}
+
+			query = query.Select(validFields)
+		}
+
 		query = query.Order("start_time DESC")
 
+		if fields == "" {
+			query = query.Preload("Jobs")
+		}
+
 		var experiments []models.Experiment
-		if result := query.Preload("Jobs").Find(&experiments); result.Error != nil {
+		if result := query.Find(&experiments); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching Experiments: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
