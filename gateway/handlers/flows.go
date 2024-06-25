@@ -350,7 +350,7 @@ func ListFlowsHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Preload("Jobs")
 		}
 
-		var flows []models.Flow
+		var flows []map[string]interface{}
 		if result := query.Find(&flows); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching Flows: %v", result.Error), http.StatusInternalServerError)
 			return
