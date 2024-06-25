@@ -35,7 +35,7 @@ export default function JobsAccordion({ experiment }: JobsAccordionProps) {
               <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                 <div className="flex items-center gap-2">
                   <div className="w-30">
-                    <div>run {index + 1}</div>
+                    <div>job {index + 1}</div>
                     <div className="flex gap-1 text-xs text-muted-foreground/70">
                       Job ID: {job.RayJobID ? <TruncatedString value={job.RayJobID} /> : "n/a"}
                     </div>
