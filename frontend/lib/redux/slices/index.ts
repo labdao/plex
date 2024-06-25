@@ -13,3 +13,4 @@ export * from "./toolDetailSlice";
 export * from "./toolListSlice";
 export * from "./transactionsSummarySlice";
 export * from "./userSlice";
+export * from "./flowNamesSlice";

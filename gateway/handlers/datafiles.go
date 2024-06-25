@@ -331,7 +331,7 @@ func DownloadDataFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		var dataFile models.DataFile
-		if err := db.Preload("Tags").Where("cid = ?", cid).First(&dataFile).Error; err != nil {
+		if err := db.Where("cid = ?", cid).First(&dataFile).Error; err != nil {
 			utils.SendJSONError(w, "Data file not found", http.StatusNotFound)
 			return
 		}

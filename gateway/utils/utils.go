@@ -127,3 +127,12 @@ func GetEnvAsInt(name string, defaultValue int) int {
 	}
 	return value
 }
+
+func Contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
