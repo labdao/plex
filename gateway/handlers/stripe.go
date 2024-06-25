@@ -113,7 +113,7 @@ func createStripeCustomer(walletAddress string) (string, error) {
 // 	return session, nil
 // }
 
-func createCheckoutSession(stripeUserID string, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -129,19 +129,14 @@ func createCheckoutSession(stripeUserID string, walletAddress, toolCID, scatteri
 		return nil, errors.New("STRIPE_PRODUCT_ID environment variable not set")
 	}
 
-	priceParams := &stripe.PriceListParams{
-		Product: stripe.String(productID),
-	}
-	priceList := price.List(priceParams)
-	if priceList.Err() != nil {
-		return nil, fmt.Errorf("error fetching price list: %v", priceList.Err())
+	priceID := os.Getenv("STRIPE_PRICE_ID")
+	if priceID == "" {
+		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
 	}
 
-	var priceID string
-	if len(priceList.Data) > 0 {
-		priceID = priceList.Data[0].ID
-	} else {
-		return nil, errors.New("no prices found for product")
+	priceObj, err := price.Get(priceID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching price: %v", err)
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -149,7 +144,7 @@ func createCheckoutSession(stripeUserID string, walletAddress, toolCID, scatteri
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(priceID),
+				Price:    stripe.String(priceObj.ID),
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
 					Enabled: stripe.Bool(false),
@@ -221,7 +216,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		// }
 
 		// TODO: modify so we're not passing in hardcoded value
-		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ToolCID, requestData.ScatteringMethod, requestData.Kwargs)
+		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress, requestData.ToolCID, requestData.ScatteringMethod, requestData.Kwargs)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
