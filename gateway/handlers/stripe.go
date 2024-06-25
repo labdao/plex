@@ -17,9 +17,9 @@ import (
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/billing/meterevent"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
-	"github.com/stripe/stripe-go/v78/price"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -49,6 +49,50 @@ func createStripeCustomer(walletAddress string) (string, error) {
 	}
 
 	return customer.ID, nil
+}
+
+func getStripeCustomerID(db *gorm.DB, walletAddress string) (string, error) {
+	var user models.User
+	result := db.Where("wallet_address ILIKE ?", walletAddress).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return "", errors.New("User not found")
+		}
+		return "", result.Error
+	}
+
+	return user.StripeUserID, nil
+}
+
+// func createSubscription()
+
+// func cancelSubscription()
+
+func createBillingEvent(db *gorm.DB, walletAddress string, computeCost int) error {
+	err := setupStripeClient()
+	if err != nil {
+		return err
+	}
+
+	stripeUserID, err := getStripeCustomerID(db, walletAddress)
+	if err != nil {
+		return err
+	}
+
+	params := &stripe.BillingMeterEventParams{
+		EventName: stripe.String("compute_units"),
+		Payload: map[string]string{
+			"value":              strconv.Itoa(computeCost),
+			"stripe_customer_id": stripeUserID,
+		},
+	}
+
+	_, err = meterevent.New(params)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
@@ -113,6 +157,45 @@ func createStripeCustomer(walletAddress string) (string, error) {
 // 	return session, nil
 // }
 
+func createSubscriptionCheckoutSession(stripeUserID, walletAddress string) (*stripe.CheckoutSession, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
+	priceID := os.Getenv("STRIPE_PRICE_ID")
+	if priceID == "" {
+		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
+	}
+
+	params := &stripe.CheckoutSessionParams{
+		Customer:   stripe.String(stripeUserID),
+		SuccessURL: stripe.String(frontendURL),
+		Mode:       stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				Price:    stripe.String(priceID),
+				Quantity: stripe.Int64(1),
+			},
+		},
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+	}
+
+	params.AddMetadata("Wallet Address", walletAddress)
+
+	session, err := session.New(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
 func createCheckoutSession(stripeUserID, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
@@ -124,19 +207,9 @@ func createCheckoutSession(stripeUserID, walletAddress, toolCID, scatteringMetho
 		frontendURL = "http://localhost:3000"
 	}
 
-	productID := os.Getenv("STRIPE_PRODUCT_ID")
-	if productID == "" {
-		return nil, errors.New("STRIPE_PRODUCT_ID environment variable not set")
-	}
-
 	priceID := os.Getenv("STRIPE_PRICE_ID")
 	if priceID == "" {
 		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
-	}
-
-	priceObj, err := price.Get(priceID, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching price: %v", err)
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -144,27 +217,23 @@ func createCheckoutSession(stripeUserID, walletAddress, toolCID, scatteringMetho
 		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(priceObj.ID),
-				Quantity: stripe.Int64(1),
-				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
-					Enabled: stripe.Bool(false),
-				},
+				Price: stripe.String(priceID),
 			},
 		},
+		Mode:               stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
-			Metadata: map[string]string{
-				"Wallet Address":    walletAddress,
-				"Tool CID":          toolCID,
-				"Scattering Method": scatteringMethod,
-				"Kwargs":            kwargs,
-			},
-			SetupFutureUsage: stripe.String(string(stripe.PaymentIntentSetupFutureUsageOnSession)),
-		},
+		// PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+		// 	Metadata: map[string]string{
+		// 		"Wallet Address":    walletAddress,
+		// 		"Tool CID":          toolCID,
+		// 		"Scattering Method": scatteringMethod,
+		// 		"Kwargs":            kwargs,
+		// 	},
+		// 	SetupFutureUsage: stripe.String(string(stripe.PaymentIntentSetupFutureUsageOnSession)),
+		// },
 		SavedPaymentMethodOptions: &stripe.CheckoutSessionSavedPaymentMethodOptionsParams{
 			PaymentMethodSave: stripe.String(string(stripe.CheckoutSessionSavedPaymentMethodOptionsPaymentMethodSaveEnabled)),
 		},
-		Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
 	}
 
 	params.AddMetadata("Stripe User ID", stripeUserID)
@@ -468,93 +537,3 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
-
-// func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		payload, err := ioutil.ReadAll(r.Body)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "Error reading request body: %v\n", err)
-// 			w.WriteHeader(http.StatusServiceUnavailable)
-// 			return
-// 		}
-
-// 		endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
-
-// 		event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "Error verifying webhook signature: %v\n", err)
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		switch event.Type {
-// 		case "payment_intent.succeeded":
-// 			var paymentIntent stripe.PaymentIntent
-// 			err := json.Unmarshal(event.Data.Raw, &paymentIntent)
-// 			if err != nil {
-// 				fmt.Fprintf(os.Stderr, "Error parsing payment intent: %v\n", err)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			walletAddress, ok := paymentIntent.Metadata["walletAddress"]
-// 			if !ok {
-// 				fmt.Fprintf(os.Stderr, "Wallet address not found in payment intent metadata\n")
-// 				w.WriteHeader(http.StatusBadRequest)
-// 				return
-// 			}
-
-// 			var user models.User
-// 			result := db.Where("wallet_address ILIKE ?", walletAddress).First(&user)
-// 			if result.Error != nil {
-// 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 					fmt.Fprintf(os.Stderr, "User with wallet address %s not found\n", walletAddress)
-// 					w.WriteHeader(http.StatusNotFound)
-// 				} else {
-// 					fmt.Fprintf(os.Stderr, "Error querying user: %v\n", result.Error)
-// 					w.WriteHeader(http.StatusInternalServerError)
-// 				}
-// 				return
-// 			}
-
-// 			// Convert Stripe amount (in cents) to a float64 representation
-// 			amount := float64(paymentIntent.Amount) / 100.0
-
-// 			transaction := models.Transaction{
-// 				ID:          uuid.New().String(),
-// 				Amount:      amount,
-// 				IsDebit:     false, // Assuming payment intents are always credits (money in)
-// 				UserID:      user.WalletAddress,
-// 				Description: "Stripe payment intent succeeded",
-// 			}
-
-// 			if result := db.Create(&transaction); result.Error != nil {
-// 				fmt.Fprintf(os.Stderr, "Failed to save transaction: %v\n", result.Error)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			// Create the flow in your database using the extracted information
-// 			flow := models.Flow{
-// 				WalletAddress:    walletAddress,
-// 				ToolCID:          toolCID,
-// 				ScatteringMethod: scatteringMethod,
-// 				Kwargs:           kwargs,
-// 				// Set other necessary fields
-// 			}
-
-// 			if result := db.Create(&flow); result.Error != nil {
-// 				fmt.Fprintf(os.Stderr, "Failed to save flow: %v\n", result.Error)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			fmt.Printf("PaymentIntent succeeded, Amount: %v, WalletAddress: %v\n", paymentIntent.Amount, walletAddress)
-
-// 		default:
-// 			fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)
-// 		}
-
-// 		w.WriteHeader(http.StatusOK)
-// 	}
-// }
