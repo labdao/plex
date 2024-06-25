@@ -137,8 +137,8 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		if err := db.Where("cid = ?", hash).First(&existingFile).Error; err == nil {
 			var userHasFile bool
 			var count int64
-			db.Model(&file).Joins("JOIN user_files ON user_files.c_id = data_files.cid").
-				Where("user_files.wallet_address = ? AND data_files.cid = ?", user.WalletAddress, hash).First(&file).Count(&count)
+			db.Model(&file).Joins("JOIN user_files ON user_files.c_id = files.cid").
+				Where("user_files.wallet_address = ? AND files.cid = ?", user.WalletAddress, hash).First(&file).Count(&count)
 			userHasFile = count > 0
 			if userHasFile {
 				utils.SendJSONError(w, "A user file with the same CID already exists", http.StatusConflict)
@@ -253,14 +253,14 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.File{}).
-			Joins("LEFT JOIN user_files ON user_files.data_file_c_id = data_files.cid AND user_files.wallet_address = ?", user.WalletAddress).
-			Where("data_files.public = true OR (data_files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
+			Joins("LEFT JOIN user_files ON user_files.file_c_id = files.cid AND user_files.wallet_address = ?", user.WalletAddress).
+			Where("files.public = true OR (files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
 
 		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("data_files.cid = ?", cid)
+			query = query.Where("files.cid = ?", cid)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
-			query = query.Where("data_files.filename LIKE ?", "%"+filename+"%")
+			query = query.Where("files.filename LIKE ?", "%"+filename+"%")
 		}
 		if tsBefore := r.URL.Query().Get("tsBefore"); tsBefore != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsBefore)
@@ -282,7 +282,7 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "data_files.timestamp desc"
+		defaultSort := "files.timestamp desc"
 		sortParam := r.URL.Query().Get("sort")
 		if sortParam != "" {
 			defaultSort = sortParam

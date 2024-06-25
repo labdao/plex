@@ -449,12 +449,12 @@ func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
-				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_input_files").Select("file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating input Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 
-				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_output_files").Select("file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating output Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
