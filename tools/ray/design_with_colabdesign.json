@@ -1,134 +1,139 @@
 {
-    "name": "design_with_colabdesign_v7",
-    "description": "Design with colabdesign",
-    "task": "protein design",
-    "taskCategory": "protein-binder-design",
-    "toolType": "ray",
-    "rayServiceEndpoint": "/design_with_colabdesign",
-    "checkpointCompatible": true,
-    "xAxis": "plddt",
-    "yAxis": "i_pae",
-    "computeCost": 10,
-    "inputs": {
-      "pdb": {
-        "type": "file",
-        "description": "The target protein to design against.",
-        "array": false,
-        "glob": [
-          "*.pdb"
-        ],
-        "default": "",
-        "min": "",
-        "max": "",
-        "example": "my_target_protein.pdb",
-        "grouping": "target",
-        "position": "101",
-        "required": true
-      },
-      "target_chain": {
-        "type": "string",
-        "description": "The chain of the target protein to design against.",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "A",
-        "min": "",
-        "max": "",
-        "example": "A",
-        "grouping": "target",
-        "position": "102",
-        "required": true
-      },
-      "binder_chain": {
-        "type": "string",
-        "description": "The chain of the target protein to design against.",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "B",
-        "min": "",
-        "max": "",
-        "example": "B",
-        "grouping": "target",
-        "position": "103",
-        "required": true
-      },
-      "binder_length": {
-        "type": "number",
-        "description": "The length of the protein binder that is being designed",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "85",
-        "min": "1",
-        "max": "1000",
-        "example": "85",
-        "grouping": "_advanced",
-        "position": "201",
-        "required": false
-      },
-      "contig": {
-        "type": "string",
-        "default": "",
-        "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-        "example": "A1-283:B1-6/1/B8-20/22/B43-47",
-        "grouping": "_advanced",
-        "position": "202",
-        "required": false
-      },
-      "hotspots": {
-        "type": "string",
-        "description": "The residues that should be in contact with the binder. e.g. A30,A33,A34",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "",
-        "min": "",
-        "max": "",
-        "example": "A30,A33,A34",
-        "grouping": "_advanced",
-        "position": "203",
-        "required": false
-      },
-      "start_residue": {
-        "type": "number",
-        "description": "The start residue of the target protein.",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "5",
-        "min": "1",
-        "max": "",
-        "example": "5",
-        "grouping": "_advanced",
-        "position": "204",
-        "required": false
-      },
-      "end_residue": {
-        "type": "number",
-        "description": "The end residue of the target protein.",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "107",
-        "min": "1",
-        "max": "",
-        "example": "107",
-        "grouping": "_advanced",
-        "position": "205",
-        "required": false
-      }
+  "name": "design_with_colabdesign_v8",
+  "description": "RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges. This version includes creating checkpoints for this model",
+  "guide": "Note: steps marked (optional) and (advanced) give additional constraints for the designs but it is not necessary to add/edit their input in order to submit an experimental run.\n\n1. Select a .pdb file containing the *target protein* you would like to design a binder against.\n2. (optional) Select a *target chain* from the pdb file (chain A is the default). \n3. (optional) Crop the target structure by specifying the *target start residue* and the *target end residue* on the target chain. \n4. (optional) Define *hotspot* residues on the target as the binding sites, stating the chain (e.g. A) followed by the number of the residue (e.g. A30). You can specify multiple hotspots at once.\n5. Specify the *binder length* (total number of residues) you wish to design, followed by the *number of binders* to design (max 8 per run). \n6. (advanced) Define a *contigs override* that constrains the binder design to a subset of the residues. The contig consists of information on the target and the binder, separated by a colon. Residues which are to be kept fixed, are indicated by the chain label followed by the range of residue numbers. A number without a chain label indicates the number of residues to be designed.",  
+  "author": "sokrypton",
+  "github": "https://github.com/sokrypton/ColabDesign",
+  "paper": "https://www.nature.com/articles/s41586-023-06415-8",
+  "task": "protein design",
+  "taskCategory": "protein-binder-design",
+  "toolType": "ray",
+  "rayServiceEndpoint": "/design_with_colabdesign",
+  "checkpointCompatible": true,
+  "xAxis": "plddt",
+  "yAxis": "i_pae",
+  "metricsDescription": "*Stability Score:* larger value indicates higher confidence in the predicted local structure\n*Affinity Score:* larger value indicates higher confidence in the predicted interface structure\n*Note:* designs which lie within the green square are recommended for laboratory testing",
+  "computeCost": 10,
+  "inputs": {
+    "pdb": {
+      "type": "file",
+      "description": "The target protein to design against.",
+      "array": false,
+      "glob": [
+        "*.pdb"
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "my_target_protein.pdb",
+      "grouping": "target",
+      "position": "101",
+      "required": true
     },
-    "outputs": {
-      "string_message": {
-        "type": "File",
-        "glob": ["*.json"]
-      }
+    "target_chain": {
+      "type": "string",
+      "description": "The chain of the target protein to design against.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "A",
+      "grouping": "target",
+      "position": "102",
+      "required": true
+    },
+    "binder_chain": {
+      "type": "string",
+      "description": "The chain of the target protein to design against.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "B",
+      "grouping": "_advanced",
+      "position": "201",
+      "required": false
+    },
+    "binder_length": {
+      "type": "number",
+      "description": "The length of the protein binder that is being designed",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "1",
+      "max": "1000",
+      "example": "80",
+      "grouping": "_advanced",
+      "position": "202",
+      "required": false
+    },
+    "contig": {
+      "type": "string",
+      "default": "",
+      "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
+      "example": "A1-283:B1-6/1/B8-20/22/B43-47",
+      "grouping": "_advanced",
+      "position": "203",
+      "required": false
+    },
+    "hotspots": {
+      "type": "string",
+      "description": "The residues that should be in contact with the binder. e.g. A30,A33,A34",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "",
+      "max": "",
+      "example": "A30,A33,A34",
+      "grouping": "_advanced",
+      "position": "204",
+      "required": false
+    },
+    "start_residue": {
+      "type": "number",
+      "description": "The start residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "1",
+      "max": "",
+      "example": "1",
+      "grouping": "_advanced",
+      "position": "205",
+      "required": false
+    },
+    "end_residue": {
+      "type": "number",
+      "description": "The end residue of the target protein.",
+      "array": false,
+      "glob": [
+        ""
+      ],
+      "default": "",
+      "min": "1",
+      "max": "",
+      "example": "120",
+      "grouping": "_advanced",
+      "position": "206",
+      "required": false
     }
+  },
+  "outputs": {
+    "string_message": {
+      "type": "File",
+      "glob": ["*.json"]
+    }
+  }
 }
