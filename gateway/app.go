@@ -30,9 +30,9 @@ func ServeWebApp() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second, // Slow SQL threshold
-			LogLevel:      logger.Info, // Log level
-			Colorful:      true,        // Enable color
+			SlowThreshold: time.Second,  // Slow SQL threshold
+			LogLevel:      logger.Error, // Log level
+			Colorful:      true,         // Enable color
 		},
 	)
 
@@ -99,7 +99,7 @@ func ServeWebApp() {
 
 	// If needed use log level debug or info. Default set to silent to avoid noisy logs
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+		Logger: newLogger.LogMode(logger.Silent),
 	})
 	if err != nil {
 		panic("failed to connect to database")
