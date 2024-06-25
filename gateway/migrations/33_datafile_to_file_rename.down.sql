@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Rename tables
 ALTER TABLE file_tags RENAME TO datafile_tags;
 ALTER TABLE user_files RENAME TO user_datafiles;
@@ -18,3 +20,5 @@ ALTER TABLE job_input_files RENAME COLUMN file_c_id TO data_file_c_id;
 ALTER TABLE job_output_files RENAME COLUMN file_c_id TO data_file_c_id;
 ALTER TABLE job_input_files RENAME CONSTRAINT job_input_files_file_c_id_fkey TO job_input_files_data_file_c_id_fkey;
 ALTER TABLE job_output_files RENAME CONSTRAINT job_output_files_file_c_id_fkey TO job_output_files_data_file_c_id_fkey;
+
+COMMIT;

@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Rename tables
 ALTER TABLE experiments RENAME TO flows;
 
@@ -14,3 +16,5 @@ ALTER TABLE jobs RENAME CONSTRAINT jobs_experimentid_fkey TO jobs_flowid_fkey;
 -- Update indexes
 DROP INDEX idx_jobs_experiment_id;
 CREATE INDEX idx_jobs_flow_id ON jobs USING btree (flow_id);
+
+COMMIT;
