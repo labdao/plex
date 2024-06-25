@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { saveDataFileAsync } from "./thunks";
+import { saveFileAsync } from "./thunks";
 
-interface DataFileSliceState {
+interface FileSliceState {
   filename: string;
   cid: string; // Content Identifier in IPFS
   isLoading: boolean;
@@ -10,7 +10,7 @@ interface DataFileSliceState {
   isUploaded: boolean;
 }
 
-const initialState: DataFileSliceState = {
+const initialState: FileSliceState = {
   filename: "",
   cid: "",
   isLoading: false,
@@ -18,8 +18,8 @@ const initialState: DataFileSliceState = {
   isUploaded: false,
 };
 
-export const dataFileAddSlice = createSlice({
-  name: "dataFile",
+export const fileAddSlice = createSlice({
+  name: "file",
   initialState,
   reducers: {
     setFilenameDataSlice: (state, action: PayloadAction<string>) => {
@@ -28,7 +28,7 @@ export const dataFileAddSlice = createSlice({
     setCidDataSlice: (state, action: PayloadAction<string>) => {
       state.cid = action.payload;
     },
-    setDataFileError: (state, action: PayloadAction<string | null>) => {
+    setFileError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
     startFileUploadDataSlice: (state) => {
@@ -43,11 +43,11 @@ export const dataFileAddSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(saveDataFileAsync.pending, (state) => {
+      .addCase(saveFileAsync.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(saveDataFileAsync.fulfilled, (state, action) => {
+      .addCase(saveFileAsync.fulfilled, (state, action) => {
         state.isLoading = false;
         if (action.payload) {
           console.log("action.payload", action.payload);
@@ -56,14 +56,14 @@ export const dataFileAddSlice = createSlice({
         }
         state.isUploaded = true;
       })
-      .addCase(saveDataFileAsync.rejected, (state, action) => {
+      .addCase(saveFileAsync.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.error.message || "An error occurred while saving data file.";
+        state.error = action.error.message || "An error occurred while saving file.";
       });
   },
 });
 
-export const { setFilenameDataSlice, setCidDataSlice, setDataFileError, startFileUploadDataSlice, endFileUploadDataSlice, setIsUploadedDataSlice } =
-  dataFileAddSlice.actions;
+export const { setFilenameDataSlice, setCidDataSlice, setFileError, startFileUploadDataSlice, endFileUploadDataSlice, setIsUploadedDataSlice } =
+  fileAddSlice.actions;
 
-export default dataFileAddSlice.reducer;
+export default fileAddSlice.reducer;

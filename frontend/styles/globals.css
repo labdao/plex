@@ -91,7 +91,7 @@ https://ui.shadcn.com/docs/theming#list-of-variables
   }
 
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
+    -ms-overexperiment-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
 }

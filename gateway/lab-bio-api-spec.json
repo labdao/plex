@@ -355,10 +355,10 @@
           }
         }
       },
-      "/datafiles": {
+      "/files": {
         "post": {
-          "operationId": "addDataFile",
-          "summary": "Add Data File",
+          "operationId": "addFile",
+          "summary": "Add File",
           "requestBody": {
             "required": true,
             "content": {
@@ -392,7 +392,7 @@
           },
           "responses": {
             "200": {
-              "description": "Data file uploaded successfully",
+              "description": "File uploaded successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -410,7 +410,7 @@
               "description": "Bad request, such as missing fields or parsing error"
             },
             "409": {
-              "description": "Conflict, data file with the same CID already exists"
+              "description": "Conflict, file with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -418,8 +418,8 @@
           }
         },
         "get": {
-          "operationId": "listDataFiles",
-          "summary": "List Data Files",
+          "operationId": "listFiles",
+          "summary": "List Files",
           "parameters": [
             {
               "name": "page",
@@ -491,7 +491,7 @@
           ],
           "responses": {
             "200": {
-              "description": "Paginated list of data files",
+              "description": "Paginated list of files",
               "content": {
                 "application/json": {
                   "schema": {
@@ -500,7 +500,7 @@
                       "data": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/components/schemas/DataFile"
+                          "$ref": "#/components/schemas/File"
                         }
                       },
                       "pagination": {
@@ -531,10 +531,10 @@
           }
         }
       },
-      "/datafiles/{cid}": {
+      "/files/{cid}": {
         "get": {
-          "operationId": "getDataFileByCid",
-          "summary": "Get Data File",
+          "operationId": "getFileByCid",
+          "summary": "Get File",
           "parameters": [
             {
               "name": "cid",
@@ -547,11 +547,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Data file data",
+              "description": "File data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/DataFile"
+                    "$ref": "#/components/schemas/File"
                   }
                 }
               }
@@ -562,10 +562,10 @@
           }
         }
       },
-      "/datafiles/{cid}/download": {
+      "/files/{cid}/download": {
         "get": {
-          "operationId": "downloadDataFile",
-          "summary": "Download Data File",
+          "operationId": "downloadFile",
+          "summary": "Download File",
           "parameters": [
             {
               "name": "cid",
@@ -578,7 +578,7 @@
           ],
           "responses": {
             "200": {
-              "description": "Data file downloaded successfully",
+              "description": "File downloaded successfully",
               "content": {
                 "application/octet-stream": {
                   "schema": {
@@ -600,7 +600,7 @@
               "description": "Bad request, such as missing CID parameter"
             },
             "404": {
-              "description": "Data file not found"
+              "description": "File not found"
             },
             "500": {
               "description": "Internal Server Error"
@@ -1025,7 +1025,7 @@
             }
           }
         },
-        "DataFile": {
+        "File": {
           "type": "object",
           "properties": {
             "cid": {
@@ -1111,13 +1111,13 @@
             "inputs": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             },
             "outputs": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             }
           }
@@ -1131,10 +1131,10 @@
             "type": {
               "type": "string"
             },
-            "dataFiles": {
+            "files": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             }
           }

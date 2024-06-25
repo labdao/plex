@@ -1,8 +1,8 @@
-// redux/flowNames/asyncActions.ts
+// redux/experimentNames/asyncActions.ts
 import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
 
-export const listFlowNames = async (walletAddress: string): Promise<any> => {
+export const listExperimentNames = async (walletAddress: string): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken();
@@ -11,7 +11,7 @@ export const listFlowNames = async (walletAddress: string): Promise<any> => {
     throw new Error("Authentication failed");
   }
 
-  const requestUrl = `${backendUrl()}/flows?fields=name&walletAddress=${encodeURIComponent(walletAddress)}`;
+  const requestUrl = `${backendUrl()}/experiments?fields=name&walletAddress=${encodeURIComponent(walletAddress)}`;
   const requestOptions = {
     method: 'GET',
     headers: {
@@ -22,7 +22,7 @@ export const listFlowNames = async (walletAddress: string): Promise<any> => {
   const response = await fetch(requestUrl, requestOptions);
 
   if (!response) {
-    let errorText = "Failed to list Flows";
+    let errorText = "Failed to list Experiments";
     try {
       console.log(errorText);
     } catch (e) {

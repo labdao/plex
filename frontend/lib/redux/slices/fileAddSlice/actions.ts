@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth"
 import backendUrl from "lib/backendUrl"
 
-export const saveDataFileToServer = async (
+export const saveFileToServer = async (
     file: File,
     metadata: { [key: string]: any },
     isPublic: boolean
@@ -23,7 +23,7 @@ export const saveDataFileToServer = async (
       throw new Error("Authentication failed")
     }
 
-    const response = await fetch(`${backendUrl()}/datafiles`, {
+    const response = await fetch(`${backendUrl()}/files`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${authToken}`,
@@ -32,7 +32,7 @@ export const saveDataFileToServer = async (
     })
 
     if (!response.ok) {
-      let errorMsg = 'An error occurred while uploading the data file'
+      let errorMsg = 'An error occurred while uploading the file'
       try {
         const errorResult = await response.json()
         errorMsg = errorResult.message || errorMsg;

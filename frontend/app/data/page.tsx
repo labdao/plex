@@ -17,15 +17,15 @@ import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-import AddDataFileForm from "./AddDataFileForm";
+import AddFileForm from "./AddFileForm";
 
-export default function ListDataFiles() {
+export default function ListFiles() {
   interface Tag {
     Name: string;
     Type: string;
   }
 
-  interface DataFile {
+  interface File {
     CID: string;
     WalletAddress: string;
     Filename: string;
@@ -33,7 +33,7 @@ export default function ListDataFiles() {
     Tags: Tag[];
   }
 
-  const columns: ColumnDef<DataFile>[] = [
+  const columns: ColumnDef<File>[] = [
     {
       accessorKey: "Filename",
       header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
@@ -47,7 +47,7 @@ export default function ListDataFiles() {
         const handleDownloadClick = async (event: React.MouseEvent<HTMLAnchorElement>) => {
           event.preventDefault();
           const authToken = await getAccessToken();
-          const response = await fetch(`${backendUrl()}/datafiles/${cid}/download`, {
+          const response = await fetch(`${backendUrl()}/files/${cid}/download`, {
             headers: {
               'Authorization': `Bearer ${authToken}`,
             },
@@ -119,36 +119,36 @@ export default function ListDataFiles() {
     },
   ];
 
-  const [dataFiles, setDataFiles] = useState<DataFile[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const pageSize = 50;
 
   useEffect(() => {
-    const fetchDataFiles = async () => {
+    const fetchFiles = async () => {
       setLoading(true);
       try {
         const authToken = await getAccessToken();
-        const response = await fetch(`${backendUrl()}/datafiles?page=${currentPage}&pageSize=${pageSize}`, {
+        const response = await fetch(`${backendUrl()}/files?page=${currentPage}&pageSize=${pageSize}`, {
           headers: {
             'Authorization': `Bearer ${authToken}`,
           },
         });
         if (!response.ok) {
-          throw new Error('Failed to fetch data files');
+          throw new Error('Failed to fetch files');
         }
         const responseJson = await response.json();
-        setDataFiles(responseJson.data);
+        setFiles(responseJson.data);
         setTotalPages(Math.ceil(responseJson.pagination.totalCount / pageSize));
       } catch (error) {
-        console.error("Error fetching data files:", error);
+        console.error("Error fetching files:", error);
       } finally {
         setLoading(false);
       }
     };
   
-    fetchDataFiles();
+    fetchFiles();
   }, [currentPage]);
 
   return (
@@ -156,7 +156,7 @@ export default function ListDataFiles() {
       <Breadcrumbs
         items={[{ name: "Files", href: "/data" }]}
         actions={
-          <AddDataFileForm
+          <AddFileForm
             trigger={
               <Button size="sm">
                 <UploadIcon />
@@ -167,7 +167,7 @@ export default function ListDataFiles() {
         }
       />
       <ScrollArea className="bg-white grow w-[calc(100vw-12rem)]">
-        <DataTable columns={columns} data={dataFiles} sorting={[{ id: "Timestamp", desc: true }]} loading={loading} />
+        <DataTable columns={columns} data={files} sorting={[{ id: "Timestamp", desc: true }]} loading={loading} />
         <ScrollBar orientation="horizontal" />
         <ScrollBar orientation="vertical" />
       </ScrollArea>

@@ -39,8 +39,8 @@ type Job struct {
 	ExperimentID  uint           `gorm:"type:int;not null;index"`
 	Experiment    Experiment     `gorm:"foreignKey:ExperimentID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
-	InputFiles    []DataFile     `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
-	OutputFiles   []DataFile     `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
+	InputFiles    []File         `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
+	OutputFiles   []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
 	Queue         QueueType      `gorm:"type:varchar(255)"`
 	CreatedAt     time.Time      `gorm:""`
 	StartedAt     time.Time      `gorm:""`

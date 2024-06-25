@@ -4,7 +4,7 @@ import { PlusIcon, Trash2Icon } from "lucide-react";
 import React from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
 
-import { DataFileSelect } from "@/components/shared/DataFileSelect";
+import { FileSelect } from "@/components/shared/FileSelect";
 import { BooleanInput } from "@/components/ui/boolean-input";
 import { Button } from "@/components/ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -59,7 +59,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                 <FormControl>
                   <>
                     {(input.type === "File" || input.type === "file") && (
-                      <DataFileSelect
+                      <FileSelect
                         onValueChange={field.onChange}
                         value={field.value}
                         globPatterns={input.glob}

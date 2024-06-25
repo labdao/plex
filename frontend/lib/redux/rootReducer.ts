@@ -2,8 +2,8 @@
 import {
   apiKeyAddSlice,
   apiKeyListSlice,
-  dataFileAddSlice,
-  dataFileListSlice,
+  fileAddSlice,
+  fileListSlice,
   experimentAddSlice,
   experimentDetailSlice,
   experimentListSlice,
@@ -15,12 +15,13 @@ import {
   modelListSlice,
   transactionsSummarySlice,
   userSlice,
+  experimentNamesSlice,
 } from "./slices";
 
 export const reducer = {
   user: userSlice.reducer,
-  dataFileAdd: dataFileAddSlice.reducer,
-  dataFileList: dataFileListSlice.reducer,
+  fileAdd: fileAddSlice.reducer,
+  fileList: fileListSlice.reducer,
   modelAdd: modelAddSlice.reducer,
   modelList: modelListSlice.reducer,
   modelDetail: modelDetailSlice.reducer,
@@ -28,6 +29,7 @@ export const reducer = {
   experimentList: experimentListSlice.reducer,
   experimentDetail: experimentDetailSlice.reducer,
   experimentUpdate: experimentUpdateSlice.reducer,
+  experimentNames: experimentNamesSlice.reducer,
   jobDetail: jobDetailSlice.reducer,
   apiKeyAdd: apiKeyAddSlice.reducer,
   apiKeyList: apiKeyListSlice.reducer,

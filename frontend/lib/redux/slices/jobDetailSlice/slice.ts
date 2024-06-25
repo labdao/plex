@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { DataFile } from "../dataFileListSlice/slice";
+import { File } from "../fileListSlice/slice";
 
 export interface JobDetail {
   ID: number | null;
@@ -8,8 +8,8 @@ export interface JobDetail {
   Error: string;
   ModelID: string;
   ExperimentID: string;
-  InputFiles: DataFile[];
-  OutputFiles: DataFile[];
+  InputFiles: File[];
+  OutputFiles: File[];
   Status: string;
   RayJobID: string;
   Model: any;

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type DataFile struct {
+type File struct {
 	CID           string    `gorm:"primaryKey;column:cid;type:varchar(255);not null"`
 	WalletAddress string    `gorm:"type:varchar(42);not null"`
 	Filename      string    `gorm:"type:varchar(255);not null"`
@@ -13,6 +13,6 @@ type DataFile struct {
 	OutputFiles   []Job     `gorm:"many2many:job_output_files;foreignKey:CID;joinForeignKey:data_file_c_id;inverseJoinForeignKey:job_id"`
 	Tags          []Tag     `gorm:"many2many:datafile_tags;foreignKey:CID;joinForeignKey:data_file_c_id;inverseJoinForeignKey:tag_name"`
 	Public        bool      `gorm:"type:boolean;not null;default:false"`
-	UserDatafiles []User    `gorm:"many2many:user_datafiles;foreignKey:CID;joinForeignKey:c_id;inverseJoinForeignKey:wallet_address"`
+	UserFiles     []User    `gorm:"many2many:user_files;foreignKey:CID;joinForeignKey:c_id;inverseJoinForeignKey:wallet_address"`
 	S3URI         string    `gorm:"type:varchar(255)"`
 }

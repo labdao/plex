@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { InlineEditExperiment } from "@/components/ui/inline-edit-experiment";
-import { CategorizedFlowNames, FlowName, flowNamesThunk, selectCategorizedFlowNames, selectFlowNames, setCategorizedFlowNames } from "@/lib/redux/slices/flowNamesSlice";
 
 export default function Nav() {
   const { user } = usePrivy();

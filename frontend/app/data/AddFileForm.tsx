@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import {
   endFileUploadDataSlice,
   fetchUserDataAsync,
-  saveDataFileAsync,
+  saveFileAsync,
   selectCID,
-  selectDataFileError,
-  selectDataFileIsLoading,
+  selectFileError,
+  selectFileIsLoading,
   selectDateFileIsUploaded,
   selectFilename,
   selectUserIsAdmin,
@@ -24,20 +24,20 @@ import {
   useSelector,
 } from "@/lib/redux";
 
-interface AddDataFileFormProps {
+interface AddFileFormProps {
   trigger: React.ReactNode;
   onUpload?: (cid: string) => void;
   accept?: string;
 }
 
-export default function AddDataFileForm({ trigger, onUpload, accept }: AddDataFileFormProps) {
+export default function AddFileForm({ trigger, onUpload, accept }: AddFileFormProps) {
   const [open, setOpen] = React.useState(false);
   const { user } = usePrivy();
   const dispatch = useDispatch();
 
   const router = useRouter();
-  const errorMessage = useSelector(selectDataFileError);
-  const isLoading = useSelector(selectDataFileIsLoading);
+  const errorMessage = useSelector(selectFileError);
+  const isLoading = useSelector(selectFileIsLoading);
   const walletAddress = user?.wallet?.address;
   const isAdmin = useSelector(selectUserIsAdmin);
 
@@ -75,7 +75,7 @@ export default function AddDataFileForm({ trigger, onUpload, accept }: AddDataFi
     const metadata = { walletAddress };
 
     try {
-      await dispatch(saveDataFileAsync({ file, metadata, isPublic, handleSuccess }));
+      await dispatch(saveFileAsync({ file, metadata, isPublic, handleSuccess }));
       dispatch(endFileUploadDataSlice());
     } catch (error) {
       dispatch(setError("Error uploading file"));
@@ -100,7 +100,7 @@ export default function AddDataFileForm({ trigger, onUpload, accept }: AddDataFi
                 <label>
                   <input type="checkbox" checked={isPublic} onChange={handlePublicChange} />
                   <span className="ml-2 font-bold">Mark Public.</span>
-                  <span className="ml-1 text-sm text-gray-600">Once a datafile is public, this cannot be undone.</span>
+                  <span className="ml-1 text-sm text-gray-600">Once a file is public, this cannot be undone.</span>
                 </label>
               )}
               <Button type="submit" disabled={!file}>

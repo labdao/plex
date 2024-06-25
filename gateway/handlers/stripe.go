@@ -366,20 +366,20 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 						continue
 					}
 					for _, cid := range cidsToAdd {
-						var dataFile models.DataFile
-						result := db.First(&dataFile, "cid = ?", cid)
+						var file models.File
+						result := db.First(&file, "cid = ?", cid)
 						if result.Error != nil {
 							if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-								fmt.Fprintf(os.Stderr, "DataFile with CID %v not found\n", cid)
+								fmt.Fprintf(os.Stderr, "File with CID %v not found\n", cid)
 								w.WriteHeader(http.StatusNotFound)
 								return
 							} else {
-								fmt.Fprintf(os.Stderr, "Error looking up DataFile: %v\n", result.Error)
+								fmt.Fprintf(os.Stderr, "Error looking up File: %v\n", result.Error)
 								w.WriteHeader(http.StatusInternalServerError)
 								return
 							}
 						}
-						job.InputFiles = append(job.InputFiles, dataFile)
+						job.InputFiles = append(job.InputFiles, file)
 					}
 				}
 				result = db.Save(&job)

@@ -4,37 +4,37 @@ import { UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import AddDataFileForm from "@/app/data/AddDataFileForm";
+import AddFileForm from "@/app/data/AddFileForm";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { listDataFiles } from "@/lib/redux/slices/dataFileListSlice/asyncActions";
-import { selectDataFileList, selectDataFileListPagination } from "@/lib/redux/slices/dataFileListSlice/selectors";
-import { dataFileListThunk } from "@/lib/redux/slices/dataFileListSlice/thunks";
+import { listFiles } from "@/lib/redux/slices/fileListSlice/asyncActions";
+import { selectFileList, selectFileListPagination } from "@/lib/redux/slices/fileListSlice/selectors";
+import { fileListThunk } from "@/lib/redux/slices/fileListSlice/thunks";
 import { cn } from "@/lib/utils";
 
-interface DataFile {
+interface File {
   CID: string;
   Filename: string;
   S3URI: string;
 }
 
-interface DataFileFilters {
+interface FileFilters {
   filename?: string;
   cid?: string;
 }
 
-interface DataFileSelectProps {
+interface FileSelectProps {
   onValueChange: (value: string) => void;
   value: string;
   label: string;
   globPatterns?: string[];
 }
 
-export function DataFileSelect({ onValueChange, value, label, globPatterns }: DataFileSelectProps) {
+export function FileSelect({ onValueChange, value, label, globPatterns }: FileSelectProps) {
   const dispatch = useDispatch();
-  const dataFiles = useSelector(selectDataFileList);
-  const pagination = useSelector(selectDataFileListPagination);
+  const files = useSelector(selectFileList);
+  const pagination = useSelector(selectFileListPagination);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [open, setOpen] = useState<boolean>(false);
@@ -45,7 +45,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
 
   let filenameFilter = globPatterns?.map((pattern) => pattern.replace("*", "%")).join("|") || "%";
   let fileAcceptExtensions = globPatterns?.map((pattern) => pattern.replace("*", "")).join(",") || "*";
-  let filters: DataFileFilters = useMemo(() => ({}), []);
+  let filters: FileFilters = useMemo(() => ({}), []);
 
   if (searchTerm && cidPattern.test(searchTerm)) {
     filters.cid = searchTerm;
@@ -58,7 +58,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
     setLoading(true);
     setError(null);
     // @ts-ignore
-    dispatch(dataFileListThunk({ page: currentPage, pageSize: 10, filters }))
+    dispatch(fileListThunk({ page: currentPage, pageSize: 10, filters }))
       .unwrap()
       .then(() => setLoading(false))
       .catch((fetchError: Error) => {
@@ -67,14 +67,14 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
       });
   }, [dispatch, currentPage, filters, searchTerm, open]);
 
-  const getDataFileValue = (dataFile: DataFile): string => `${dataFile?.S3URI}`;
+  const getFileValue = (file: File): string => `${file?.S3URI}`;
 
   const handleUpload = async (cid: string) => {
     // Since we only know the cid and not the filename after upload,
     // search for the file and set the input value from what we find
-    const files = await listDataFiles({ page: 1, pageSize: 10, filters: { cid: cid, filename: filenameFilter } });
+    const files = await listFiles({ page: 1, pageSize: 10, filters: { cid: cid, filename: filenameFilter } });
     if (files?.data?.length && files?.data?.[0]?.CID === cid) {
-      onValueChange(getDataFileValue(files?.data[0]));
+      onValueChange(getFileValue(files?.data[0]));
     }
   };
 
@@ -86,7 +86,7 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
             <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/")?.[1] : `Select ${label} file...`}</span>
           </Button>
         </PopoverTrigger>
-        <AddDataFileForm
+        <AddFileForm
           trigger={
             <Button variant="secondary" size="xs" className="absolute z-30 right-5 group hover:bg-secondary">
               <span className="w-0 overflow-hidden group-hover:w-12 transition-[width]">Upload</span>
@@ -101,18 +101,18 @@ export function DataFileSelect({ onValueChange, value, label, globPatterns }: Da
         <Command>
           <CommandInput placeholder="Search files..." onValueChange={setSearchTerm} value={searchTerm} />
           <CommandEmpty>No file found.</CommandEmpty>
-          {error && <CommandItem>Error fetching data files.</CommandItem>}
+          {error && <CommandItem>Error fetching files.</CommandItem>}
           <CommandGroup>
-            {dataFiles.map((dataFile) => (
+            {files.map((file) => (
               <CommandItem
-                key={dataFile.CID}
-                value={getDataFileValue(dataFile)}
+                key={file.CID}
+                value={getFileValue(file)}
                 onSelect={() => {
-                  onValueChange(getDataFileValue(dataFile) === value ? "" : getDataFileValue(dataFile));
+                  onValueChange(getFileValue(file) === value ? "" : getFileValue(file));
                   setOpen(false);
                 }}
               >
-                {dataFile.Filename}
+                {file.Filename}
               </CommandItem>
             ))}
           </CommandGroup>

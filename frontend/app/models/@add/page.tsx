@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import {
   AppDispatch,
   createModelThunk,
-  dataFileListThunk,
+  fileListThunk,
   selectAddModelError,
   selectAddModelJson,
   selectAddModelLoading,
@@ -45,7 +45,7 @@ export default function AddModel() {
       return;
     }
     dispatch(modelListThunk());
-    dispatch(dataFileListThunk({}));
+    dispatch(fileListThunk({}));
   }, [modelSuccess, dispatch]);
 
   const handleModelJsonChange = (modelJsonInput: string) => {

@@ -1,7 +1,7 @@
 export * from "./apiKeyAddSlice";
 export * from "./apiKeyListSlice";
-export * from "./dataFileAddSlice";
-export * from "./dataFileListSlice";
+export * from "./fileAddSlice";
+export * from "./fileListSlice";
 export * from "./experimentAddSlice";
 export * from "./experimentDetailSlice";
 export * from "./experimentListSlice";
@@ -13,4 +13,4 @@ export * from "./modelDetailSlice";
 export * from "./modelListSlice";
 export * from "./transactionsSummarySlice";
 export * from "./userSlice";
-export * from "./flowNamesSlice";
+export * from "./experimentNamesSlice";

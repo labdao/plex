@@ -189,18 +189,18 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 				for _, cid := range cidsToAdd {
-					var dataFile models.DataFile
-					result := db.First(&dataFile, "cid = ?", cid)
+					var file models.File
+					result := db.First(&file, "cid = ?", cid)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							utils.SendJSONError(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							utils.SendJSONError(w, fmt.Sprintf("File with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
-							utils.SendJSONError(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							utils.SendJSONError(w, fmt.Sprintf("Error looking up File: %v", result.Error), http.StatusInternalServerError)
 							return
 						}
 					}
-					job.InputFiles = append(job.InputFiles, dataFile)
+					job.InputFiles = append(job.InputFiles, file)
 				}
 			}
 			result = db.Save(&job)
@@ -332,7 +332,7 @@ func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 
 			for _, field := range requestedFields {
 				switch strings.ToLower(strings.TrimSpace(field)) {
-				case "name", "start_time", "end_time", "flow_uuid", "public", "record_cid":
+				case "name", "start_time", "end_time", "experiment_uuid", "public", "record_cid":
 					validFields = append(validFields, strings.ToLower(strings.TrimSpace(field)))
 				}
 			}
@@ -449,13 +449,13 @@ func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: experiment.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating input DataFiles: %v", result.Error), http.StatusInternalServerError)
+				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_input_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+					http.Error(w, fmt.Sprintf("Error updating input Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 
-				if result := db.Model(&models.DataFile{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.DataFile{Public: experiment.Public}); result.Error != nil {
-					http.Error(w, fmt.Sprintf("Error updating output DataFiles: %v", result.Error), http.StatusInternalServerError)
+				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_output_files").Select("data_file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+					http.Error(w, fmt.Sprintf("Error updating output Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 			}
@@ -635,18 +635,18 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					continue
 				}
 				for _, cid := range cidsToAdd {
-					var dataFile models.DataFile
-					result := db.First(&dataFile, "cid = ?", cid)
+					var file models.File
+					result := db.First(&file, "cid = ?", cid)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							http.Error(w, fmt.Sprintf("DataFile with CID %v not found", cid), http.StatusInternalServerError)
+							http.Error(w, fmt.Sprintf("File with CID %v not found", cid), http.StatusInternalServerError)
 							return
 						} else {
-							http.Error(w, fmt.Sprintf("Error looking up DataFile: %v", result.Error), http.StatusInternalServerError)
+							http.Error(w, fmt.Sprintf("Error looking up File: %v", result.Error), http.StatusInternalServerError)
 							return
 						}
 					}
-					job.InputFiles = append(job.InputFiles, dataFile)
+					job.InputFiles = append(job.InputFiles, file)
 				}
 			}
 			result = db.Save(&job)

@@ -83,12 +83,12 @@ func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, err
 			return "", fmt.Errorf("failed to retrieve model: %v", err)
 		}
 
-		var inputFiles []models.DataFile
+		var inputFiles []models.File
 		if err := db.Model(&job).Association("InputFiles").Find(&inputFiles); err != nil {
 			return "", fmt.Errorf("failed to retrieve input files: %v", err)
 		}
 
-		var outputFiles []models.DataFile
+		var outputFiles []models.File
 		if err := db.Model(&job).Association("OutputFiles").Find(&outputFiles); err != nil {
 			return "", fmt.Errorf("failed to retrieve output files: %v", err)
 		}
