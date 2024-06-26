@@ -59,6 +59,9 @@ ALTER TABLE models ADD COLUMN user_id INT;
 ALTER TABLE models ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
 ALTER TABLE file_tags DROP CONSTRAINT file_tags_file_c_id_fkey;
+ALTER TABLE file_tags DROP CONSTRAINT IF EXISTS fk_file_tags_file;
+ALTER TABLE file_tags RENAME COLUMN file_c_id TO file_id;
+ALTER TABLE file_tags ALTER COLUMN file_id TYPE int USING file_id::int;
 
 ALTER TABLE job_input_files DROP CONSTRAINT job_input_files_file_c_id_fkey;
 ALTER TABLE job_input_files DROP CONSTRAINT IF EXISTS  fk_job_input_files_file;
@@ -69,7 +72,6 @@ ALTER TABLE job_output_files DROP CONSTRAINT job_output_files_file_c_id_fkey;
 ALTER TABLE job_output_files DROP CONSTRAINT IF EXISTS fk_job_output_files_file;
 ALTER TABLE job_output_files RENAME COLUMN file_c_id TO file_id;
 ALTER TABLE job_output_files ALTER COLUMN file_id TYPE int USING file_id::int;
-
 
 ALTER TABLE user_files DROP CONSTRAINT fk_user_files_file;
 ALTER TABLE user_files DROP CONSTRAINT IF EXISTS fk_user_files_wallet_address;
