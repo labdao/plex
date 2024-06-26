@@ -6,17 +6,17 @@ import (
 	"gorm.io/datatypes"
 )
 
-type RequestTracker struct {
+type InferenceEvent struct {
 	ID           uint           `gorm:"primaryKey;autoIncrement"`
 	JobID        uint           `gorm:"not null"`
 	Job          Job            `gorm:"foreignKey:JobID"`
-	JobResponse  datatypes.JSON `gorm:"type:json"`
 	RayJobID     string         `gorm:"type:varchar(255);not null"`
+	InputJson    datatypes.JSON `gorm:"type:json"`
+	OutputJson   datatypes.JSON `gorm:"type:json"`
 	RetryCount   int            `gorm:"not null"`
-	State        JobState       `gorm:"type:varchar(255);default:'queued'"`
+	JobStatus    JobState       `gorm:"type:varchar(255);default:'queued'"`
 	ResponseCode int            `gorm:"type:int"`
-	CreatedAt    time.Time      `gorm:""`
-	StartedAt    time.Time      `gorm:""`
-	CompletedAt  time.Time      `gorm:""`
-	ErrorMessage string         `gorm:"type:text;default:''"`
+	EventTime    time.Time      `gorm:""`
+	EventMessage string         `gorm:"type:text"`
+	EventType    string         `gorm:"type:text"`
 }
