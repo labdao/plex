@@ -40,10 +40,12 @@ type Job struct {
 	Experiment     Experiment     `gorm:"foreignKey:ExperimentID"`
 	ModelID        string         `gorm:"type:varchar(255);not null;index"`
 	Model          Model          `gorm:"foreignKey:ModelID"`
+	UserID         uint           `gorm:"not null"`
+	User           User           `gorm:"foreignKey:UserID"`
 	Public         bool           `gorm:"type:boolean;not null;default:false"`
 	RetryCount     int            `gorm:"type:int;not null;default:0"`
 	Error          string         `gorm:"type:text;default:''"`
 	Inputs         datatypes.JSON `gorm:"type:json"`
-	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
-	OutputFiles    []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
+	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;references:ID"`
+	OutputFiles    []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:ID"`
 }

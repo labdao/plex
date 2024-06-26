@@ -113,8 +113,8 @@ func fetchJobWithModelAndExperimentData(job *models.Job, id uint, db *gorm.DB) e
 	return db.Preload("Model").Preload("Experiment").First(&job, id).Error
 }
 
-func fetchLatestRequestTracker(requestTracker *models.RequestTracker, jobID uint, db *gorm.DB) error {
-	return db.Where("job_id = ?", jobID).Order("created_at DESC").First(requestTracker).Error
+func fetchLatestInferenceEvent(inferenceEvent *models.InferenceEvent, jobID uint, db *gorm.DB) error {
+	return db.Where("job_id = ?", jobID).Order("created_at DESC").First(inferenceEvent).Error
 }
 
 func processRayJob(jobID uint, db *gorm.DB) error {
@@ -125,8 +125,8 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	var requestTracker models.RequestTracker
-	err = fetchLatestRequestTracker(&requestTracker, jobID, db)
+	var inferenceEvent models.InferenceEvent
+	err = fetchLatestInferenceEvent(&inferenceEvent, jobID, db)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 	}
 
 	if job.RayJobID == "" {
-		if err := submitRayJobAndUpdateID(&job, &requestTracker, db); err != nil {
+		if err := submitRayJobAndUpdateID(&job, &inferenceEvent, db); err != nil {
 			return err
 		}
 	}
@@ -222,7 +222,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 	return string(prettyJSON), nil
 }
 
-func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTracker, db *gorm.DB) error {
+func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEvent, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
 	var jobInputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
@@ -232,14 +232,14 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 	for key, value := range jobInputs {
 		inputs[key] = []interface{}{value}
 	}
-	modelCID := job.Model.CID
+	modelID := job.Model.ID
 
 	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
-	setJobStatusAndID(requestTracker, job, models.JobStateRunning, rayJobID, "", db)
+	setJobStatusAndID(inferenceEvent, job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(modelCID, rayJobID, inputs, db)
+	resp, err := ray.SubmitRayJob(modelID, rayJobID, inputs, db)
 	if err != nil {
 		return err
 	}
@@ -264,13 +264,14 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 		}
 
 		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
-		completeRayJobAndAddFiles(requestTracker, job, body, rayJobResponse, db)
+		completeRayJobAndAddFiles(inferenceEvent, job, body, rayJobResponse, db)
 	} else {
-		requestTracker.State = models.JobStateFailed
-		requestTracker.ResponseCode = resp.StatusCode
-		requestTracker.ErrorMessage = string(body)
-		requestTracker.CompletedAt = time.Now().UTC()
-		err = db.Save(requestTracker).Error
+		inferenceEvent.JobStatus = models.JobStateFailed
+		inferenceEvent.ResponseCode = resp.StatusCode
+		inferenceEvent.EventType = models.EventTypeJobFailed
+		inferenceEvent.EventMessage = string(body)
+		inferenceEvent.EventTime = time.Now().UTC()
+		err = db.Save(inferenceEvent).Error
 		if err != nil {
 			return err
 		}
@@ -278,7 +279,7 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 		// TBD retry count and delay
 		if resp.StatusCode == http.StatusGatewayTimeout {
 			fmt.Printf("Job %v had timeout. Not retrying again. Marking as failed\n", job.ID)
-			job.State = models.JobStateFailed
+			job.JobStatus = models.JobStateFailed
 			err = db.Save(job).Error
 			if err != nil {
 				return err
@@ -286,37 +287,39 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			return nil
 		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < maxRetryCountFor404 {
 			job.RetryCount = job.RetryCount + 1
-			job.State = models.JobStateQueued
+			job.JobStatus = models.JobStateQueued
 			err = db.Save(job).Error
 			if err != nil {
 				return err
 			}
-			newRequestTracker := models.RequestTracker{
+			newInferenceEvent := models.InferenceEvent{
 				JobID:      job.ID,
-				State:      models.JobStateQueued,
+				JobStatus:  models.JobStateQueued,
 				RetryCount: job.RetryCount,
-				CreatedAt:  time.Now().UTC(),
+				EventTime:  time.Now().UTC(),
+				EventType:  models.EventTypeJobCreated,
 			}
-			err = db.Save(&newRequestTracker).Error
+			err = db.Save(&newInferenceEvent).Error
 			if err != nil {
 				return err
 			}
 
-			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+			return submitRayJobAndUpdateID(job, &newInferenceEvent, db)
 		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < maxRetryCountFor500 {
 			job.RetryCount = job.RetryCount + 1
-			job.State = models.JobStateQueued
+			job.JobStatus = models.JobStateQueued
 			err = db.Save(job).Error
 			if err != nil {
 				return err
 			}
-			newRequestTracker := models.RequestTracker{
+			newInferenceEvent := models.InferenceEvent{
 				JobID:      job.ID,
-				State:      models.JobStateQueued,
+				JobStatus:  models.JobStateQueued,
 				RetryCount: job.RetryCount,
-				CreatedAt:  time.Now().UTC(),
+				EventTime:  time.Now().UTC(),
+				EventType:  models.EventTypeJobCreated,
 			}
-			err = db.Save(&newRequestTracker).Error
+			err = db.Save(&newInferenceEvent).Error
 			if err != nil {
 				return err
 			}
@@ -326,15 +329,15 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 			log.Printf("Retry after %v due to server error (500)", delay)
 			time.Sleep(delay)
 
-			return submitRayJobAndUpdateID(job, &newRequestTracker, db)
+			return submitRayJobAndUpdateID(job, &newInferenceEvent, db)
 		} else {
-			var latestRequestTracker models.RequestTracker
-			err = fetchLatestRequestTracker(&latestRequestTracker, job.ID, db)
+			var latestInferenceEvent models.InferenceEvent
+			err = fetchLatestInferenceEvent(&latestInferenceEvent, job.ID, db)
 			if err != nil {
 				return err
 			}
-			fmt.Printf("The latest try of job %v had error %v. Retried %v times already. Marking as failed\n", job.ID, latestRequestTracker.ResponseCode, job.RetryCount)
-			job.State = models.JobStateFailed
+			fmt.Printf("The latest try of job %v had error %v. Retried %v times already. Marking as failed\n", job.ID, latestInferenceEvent.ResponseCode, job.RetryCount)
+			job.JobStatus = models.JobStateFailed
 			err = db.Save(job).Error
 			if err != nil {
 				return err
@@ -343,28 +346,29 @@ func submitRayJobAndUpdateID(job *models.Job, requestTracker *models.RequestTrac
 
 	}
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.State)
+	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
 	err = db.Save(job).Error
 	if err != nil {
 		return err
 	}
-	err = db.Save(requestTracker).Error
+	err = db.Save(inferenceEvent).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func setJobStatusAndID(requestTracker *models.RequestTracker, job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
-	requestTracker.RayJobID = rayJobID
-	requestTracker.State = state
-	requestTracker.StartedAt = time.Now().UTC()
-	err := db.Save(requestTracker).Error
+func setJobStatusAndID(inferenceEvent *models.InferenceEvent, job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
+	inferenceEvent.RayJobID = rayJobID
+	inferenceEvent.JobStatus = state
+	inferenceEvent.EventTime = time.Now().UTC()
+	inferenceEvent.EventType = models.EventTypeJobStarted
+	err := db.Save(inferenceEvent).Error
 	if err != nil {
 		return err
 	}
 
-	job.State = state
+	job.JobStatus = state
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	job.RayJobID = rayJobID
@@ -375,16 +379,16 @@ func setJobStatusAndID(requestTracker *models.RequestTracker, job *models.Job, s
 	return nil
 }
 
-func completeRayJobAndAddFiles(requestTracker *models.RequestTracker, job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
+func completeRayJobAndAddFiles(inferenceEvent *models.InferenceEvent, job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
 
 	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
-	requestTracker.CompletedAt = time.Now().UTC()
-	requestTracker.State = models.JobStateCompleted
-	requestTracker.ResponseCode = http.StatusOK
-	requestTracker.JobResponse = body
+	inferenceEvent.EventTime = time.Now().UTC()
+	inferenceEvent.EventType = models.EventTypeJobCompleted
+	inferenceEvent.JobStatus = models.JobStateCompleted
+	inferenceEvent.ResponseCode = http.StatusOK
+	inferenceEvent.OutputJson = body
 
-	job.ResultJSON = body
-	job.State = models.JobStateCompleted
+	job.JobStatus = models.JobStateCompleted
 	job.CompletedAt = time.Now().UTC()
 
 	// Iterate over all files in the RayJobResponse
@@ -430,12 +434,12 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	}
 
 	file = models.File{
-		CID:           hash,
-		WalletAddress: job.WalletAddress,
-		Filename:      filepath.Base(fileDetail.URI),
-		Tags:          tags,
-		Timestamp:     time.Now().UTC(),
-		S3URI:         fileDetail.URI,
+		FileHash:  hash,
+		UserID:    job.UserID,
+		Filename:  filepath.Base(fileDetail.URI),
+		Tags:      tags,
+		CreatedAt: time.Now().UTC(),
+		S3URI:     fileDetail.URI,
 	}
 
 	if err := db.Create(&file).Error; err != nil {

@@ -44,8 +44,8 @@ func SendJSONError(w http.ResponseWriter, message string, status int) {
 	}
 }
 
-func SendJSONResponseWithCID(w http.ResponseWriter, cid string) {
-	response := map[string]string{"cid": cid}
+func SendJSONResponseWithID(w http.ResponseWriter, id int) {
+	response := map[string]string{"id": strconv.Itoa(id)}
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		SendJSONError(w, fmt.Sprintf("Error encoding response to JSON: %v", err), http.StatusInternalServerError)

@@ -36,17 +36,17 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.Use(loggingMiddleware)
 
 	protected := createProtectedRouteHandler(db)
-	adminProtected := createAdminProtectedRouteHandler(db)
+	// adminProtected := createAdminProtectedRouteHandler(db)
 
 	router.HandleFunc("/healthcheck", handlers.HealthCheckHandler())
 
 	router.HandleFunc("/user", handlers.AddUserHandler(db)).Methods("POST")
 	router.HandleFunc("/user", protected(handlers.GetUserHandler(db))).Methods("GET")
 
-	router.HandleFunc("/models", protected(adminProtected(handlers.AddModelHandler(db, s3c)))).Methods("POST")
-	router.HandleFunc("/models/{cid}", protected(handlers.GetModelHandler(db))).Methods("GET")
-	router.HandleFunc("/models", protected(handlers.ListModelsHandler(db))).Methods("GET")
-	router.HandleFunc("/models/{cid}", protected(adminProtected(handlers.UpdateModelHandler(db)))).Methods("PUT")
+	// router.HandleFunc("/models", protected(adminProtected(handlers.AddModelHandler(db, s3c)))).Methods("POST")
+	// router.HandleFunc("/models/{cid}", protected(handlers.GetModelHandler(db))).Methods("GET")
+	// router.HandleFunc("/models", protected(handlers.ListModelsHandler(db))).Methods("GET")
+	// router.HandleFunc("/models/{cid}", protected(adminProtected(handlers.UpdateModelHandler(db)))).Methods("PUT")
 
 	router.HandleFunc("/files", protected(handlers.AddFileHandler(db, s3c))).Methods("POST")
 	router.HandleFunc("/files/{cid}", protected(handlers.GetFileHandler(db))).Methods("GET")
@@ -57,15 +57,15 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 
 	router.HandleFunc("/checkpoints/{experimentID}/get-data", protected(handlers.GetExperimentCheckpointDataHandler(db))).Methods("GET")
 
-	router.HandleFunc("/experiments", protected(handlers.AddExperimentHandler(db))).Methods("POST")
-	router.HandleFunc("/experiments", protected(handlers.ListExperimentsHandler(db))).Methods("GET")
-	router.HandleFunc("/experiments/{experimentID}", protected(handlers.GetExperimentHandler(db))).Methods("GET")
-	router.HandleFunc("/experiments/{experimentID}", protected(handlers.UpdateExperimentHandler(db))).Methods("PUT")
-	router.HandleFunc("/experiments/{experimentID}/add-job", protected(handlers.AddJobToExperimentHandler(db))).Methods("PUT")
+	// router.HandleFunc("/experiments", protected(handlers.AddExperimentHandler(db))).Methods("POST")
+	// router.HandleFunc("/experiments", protected(handlers.ListExperimentsHandler(db))).Methods("GET")
+	// router.HandleFunc("/experiments/{experimentID}", protected(handlers.GetExperimentHandler(db))).Methods("GET")
+	// router.HandleFunc("/experiments/{experimentID}", protected(handlers.UpdateExperimentHandler(db))).Methods("PUT")
+	// router.HandleFunc("/experiments/{experimentID}/add-job", protected(handlers.AddJobToExperimentHandler(db))).Methods("PUT")
 
-	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
-	// router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
-	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
+	// router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
+	// // router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
+	// router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
@@ -73,10 +73,10 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/api-keys", protected(handlers.AddAPIKeyHandler(db))).Methods("POST")
 	router.HandleFunc("/api-keys", protected(handlers.ListAPIKeysHandler(db))).Methods("GET")
 
-	router.HandleFunc("/stripe", handlers.StripeFulfillmentHandler(db)).Methods("POST")
-	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("POST")
-	router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
-	router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
+	// router.HandleFunc("/stripe", handlers.StripeFulfillmentHandler(db)).Methods("POST")
+	// router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("POST")
+	// router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
+	// router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
 
 	return router
 }

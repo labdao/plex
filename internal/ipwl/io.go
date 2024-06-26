@@ -7,19 +7,14 @@ import (
 	"os"
 )
 
-type ModelInfo struct {
-	Name string `json:"name"`
-	S3   string `json:"s3"`
-}
-
 type IO struct {
-	Model    ModelInfo              `json:"model"`
-	Inputs   map[string]interface{} `json:"inputs"`
-	Outputs  map[string]interface{} `json:"outputs"`
-	State    string                 `json:"state"`
-	ErrMsg   string                 `json:"errMsg"`
-	UserID   string                 `json:"userId"`
-	RayJobID string                 `json:"rayJobId"`
+	ModelName string                 `json:"modelName"`
+	Inputs    map[string]interface{} `json:"inputs"`
+	Outputs   map[string]interface{} `json:"outputs"`
+	State     string                 `json:"state"`
+	ErrMsg    string                 `json:"errMsg"`
+	UserID    string                 `json:"userId"`
+	RayJobID  string                 `json:"rayJobId"`
 }
 
 func ReadIOList(filePath string) ([]IO, error) {

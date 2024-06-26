@@ -7,7 +7,7 @@ import (
 )
 
 type Model struct {
-	ID                 uint           `gorm:"primaryKey;autoIncrement"`
+	ID                 int            `gorm:"primaryKey;autoIncrement"`
 	Name               string         `gorm:"type:text;not null;unique"`
 	UserID             uint           `gorm:"not null"`
 	User               User           `gorm:"foreignKey:UserID"`

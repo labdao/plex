@@ -6,6 +6,15 @@ import (
 	"gorm.io/datatypes"
 )
 
+// event type can only be certain string values
+const (
+	EventTypeJobCreated   = "job_created"
+	EventTypeJobStarted   = "job_started"
+	EventTypeJobCompleted = "job_completed"
+	EventTypeJobFailed    = "job_failed"
+	EventTypeJobCancelled = "job_cancelled"
+)
+
 type InferenceEvent struct {
 	ID           uint           `gorm:"primaryKey;autoIncrement"`
 	JobID        uint           `gorm:"not null"`
@@ -18,5 +27,5 @@ type InferenceEvent struct {
 	ResponseCode int            `gorm:"type:int"`
 	EventTime    time.Time      `gorm:""`
 	EventMessage string         `gorm:"type:text"`
-	EventType    string         `gorm:"type:text"`
+	EventType    string         `gorm:"type:varchar(255);not null"`
 }

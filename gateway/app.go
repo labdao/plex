@@ -30,9 +30,9 @@ func ServeWebApp() {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold: time.Second,  // Slow SQL threshold
-			LogLevel:      logger.Error, // Log level
-			Colorful:      true,         // Enable color
+			SlowThreshold: time.Second, // Slow SQL threshold
+			LogLevel:      logger.Info, // Log level
+			Colorful:      true,        // Enable color
 		},
 	)
 
@@ -99,14 +99,14 @@ func ServeWebApp() {
 
 	// If needed use log level debug or info. Default set to silent to avoid noisy logs
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger.LogMode(logger.Silent),
+		Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect to database")
 	}
 
 	// Migrate the schema
-	if err := db.AutoMigrate(&models.File{}, &models.User{}, &models.Model{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.RequestTracker{}); err != nil {
+	if err := db.AutoMigrate(&models.File{}, &models.User{}, &models.Model{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.InferenceEvent{}, &models.FileEvent{}, &models.UserEvent{}, &models.Organization{}, &models.Design{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 

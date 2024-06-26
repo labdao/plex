@@ -97,7 +97,7 @@ func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, err
 			"model":   map[string]interface{}{},
 			"inputs":  []map[string]interface{}{},
 			"outputs": []map[string]interface{}{},
-			"state":   job.State,
+			"state":   job.JobStatus,
 			"errMsg":  job.Error,
 		}
 
@@ -375,7 +375,7 @@ func MintNFT(db *gorm.DB, experiment *models.Experiment, metadataCID string) err
 	log.Println("Triggering minting process via Defender Autotask...")
 
 	data := postData{
-		RecipientAddress: experiment.WalletAddress,
+		RecipientAddress: experiment.User.WalletAddress,
 		Cid:              metadataCID,
 	}
 
