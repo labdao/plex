@@ -110,6 +110,15 @@ func ServeWebApp() {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
 	}
 
+	// Insert default organization if it doesn't exist
+	var org models.Organization
+	result := db.FirstOrCreate(&org, models.Organization{Name: "no_org"})
+	if result.Error != nil {
+		log.Printf("Error ensuring default organization exists: %v", result.Error)
+	} else {
+		log.Println("Default organization ensured in database")
+	}
+
 	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
 	log.Printf("Initial STRIPE_WEBHOOK_SECRET_KEY: %s\n", stripeWebhookSecret)
 
