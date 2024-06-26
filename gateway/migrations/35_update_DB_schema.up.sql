@@ -58,23 +58,28 @@ ALTER TABLE models ADD COLUMN id SERIAL PRIMARY KEY;
 ALTER TABLE models ADD COLUMN user_id INT;
 ALTER TABLE models ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
---files pkey is referenced by user_files, job_output_files, and job_input_files and file_tags drop them first before droping pkey
 ALTER TABLE file_tags DROP CONSTRAINT file_tags_file_c_id_fkey;
+
 ALTER TABLE job_input_files DROP CONSTRAINT job_input_files_file_c_id_fkey;
-ALTER TABLE user_files DROP CONSTRAINT fk_user_files_file;
-ALTER TABLE job_output_files DROP CONSTRAINT job_output_files_file_c_id_fkey;
-
 ALTER TABLE job_input_files DROP CONSTRAINT IF EXISTS  fk_job_input_files_file;
-ALTER TABLE job_output_files DROP CONSTRAINT IF EXISTS fk_job_output_files_file;
-
 ALTER TABLE job_input_files RENAME COLUMN file_c_id to file_id;
+ALTER TABLE job_input_files ALTER COLUMN file_id TYPE int USING file_id::int;
+
+ALTER TABLE job_output_files DROP CONSTRAINT job_output_files_file_c_id_fkey;
+ALTER TABLE job_output_files DROP CONSTRAINT IF EXISTS fk_job_output_files_file;
 ALTER TABLE job_output_files RENAME COLUMN file_c_id TO file_id;
+ALTER TABLE job_output_files ALTER COLUMN file_id TYPE int USING file_id::int;
 
-ALTER TABLE job_input_files
-ALTER COLUMN file_id TYPE int USING file_id::int;
 
-ALTER TABLE job_output_files
-ALTER COLUMN file_id TYPE int USING file_id::int;
+ALTER TABLE user_files DROP CONSTRAINT fk_user_files_file;
+ALTER TABLE user_files DROP CONSTRAINT IF EXISTS fk_user_files_wallet_address;
+ALTER TABLE user_files DROP COLUMN IF EXISTS wallet_address;
+ALTER TABLE user_files RENAME COLUMN file_c_id TO file_id;
+ALTER TABLE user_files ALTER COLUMN file_id TYPE int USING file_id::int;
+ALTER TABLE user_files ADD COLUMN user_id INT;
+ALTER TABLE user_files ALTER COLUMN user_id TYPE int USING user_id::int;
+ALTER TABLE user_files ADD PRIMARY KEY (file_id, user_id);
+
 
 ALTER TABLE files DROP CONSTRAINT files_pkey;
 ALTER TABLE files ALTER COLUMN cid DROP NOT NULL;

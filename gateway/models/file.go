@@ -14,7 +14,7 @@ type File struct {
 	OutputFiles    []Job     `gorm:"many2many:job_output_files;foreignKey:ID;joinForeignKey:file_id;inverseJoinForeignKey:job_id"`
 	Tags           []Tag     `gorm:"many2many:file_tags;foreignKey:ID;joinForeignKey:file_id;inverseJoinForeignKey:tag_name"`
 	Public         bool      `gorm:"type:boolean;not null;default:false"`
-	UserFiles      []User    `gorm:"many2many:user_files;foreignKey:ID;joinForeignKey:ID;inverseJoinForeignKey:ID"`
+	UserFiles      []User    `gorm:"many2many:user_files;foreignKey:ID;joinForeignKey:file_id;inverseJoinForeignKey:user_id"`
 	S3URI          string    `gorm:"type:varchar(255)"`
 	CreatedAt      time.Time `gorm:"autoCreateTime"`
 	LastModifiedAt time.Time `gorm:"autoUpdateTime"`

@@ -19,7 +19,7 @@ type User struct {
 	ComputeTally   int          `gorm:"column:compute_tally;default:0" json:"computeTally"`
 	StripeUserID   string       `gorm:"column:stripe_user_id;type:varchar(255)" json:"stripeUserId"`
 	APIKeys        []APIKey     `gorm:"foreignKey:UserID"`
-	UserFiles      []File       `gorm:"many2many:user_files;foreignKey:WalletAddress;joinForeignKey:ID;inverseJoinForeignKey:id"`
+	UserFiles      []File       `gorm:"many2many:user_files;foreignKey:ID;joinForeignKey:user_id;inverseJoinForeignKey:file_id"`
 	OrganizationID uint         `gorm:"column:organization_id"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
