@@ -18,9 +18,6 @@ ALTER TABLE users ADD PRIMARY KEY (id);
 ALTER TABLE users ADD COLUMN organization_id INT;
 ALTER TABLE users ADD FOREIGN KEY (organization_id) REFERENCES organizations(id);
 
-COMMIT;
-
-BEGIN;
 ALTER TABLE experiments DROP COLUMN IF EXISTS experiment_uuid;
 ALTER TABLE experiments DROP COLUMN IF EXISTS wallet_address;
 ALTER TABLE experiments DROP COLUMN IF EXISTS start_time;
@@ -66,6 +63,19 @@ ALTER TABLE file_tags DROP CONSTRAINT file_tags_file_c_id_fkey;
 ALTER TABLE job_input_files DROP CONSTRAINT job_input_files_file_c_id_fkey;
 ALTER TABLE user_files DROP CONSTRAINT fk_user_files_file;
 ALTER TABLE job_output_files DROP CONSTRAINT job_output_files_file_c_id_fkey;
+
+ALTER TABLE job_input_files DROP CONSTRAINT IF EXISTS  fk_job_input_files_file;
+ALTER TABLE job_output_files DROP CONSTRAINT IF EXISTS fk_job_output_files_file;
+
+ALTER TABLE job_input_files RENAME COLUMN file_c_id to file_id;
+ALTER TABLE job_output_files RENAME COLUMN file_c_id TO file_id;
+
+ALTER TABLE job_input_files
+ALTER COLUMN file_id TYPE int USING file_id::int;
+
+ALTER TABLE job_output_files
+ALTER COLUMN file_id TYPE int USING file_id::int;
+
 ALTER TABLE files DROP CONSTRAINT files_pkey;
 ALTER TABLE files ALTER COLUMN cid DROP NOT NULL;
 ALTER TABLE files DROP COLUMN cid;

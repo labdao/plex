@@ -46,6 +46,6 @@ type Job struct {
 	RetryCount     int            `gorm:"type:int;not null;default:0"`
 	Error          string         `gorm:"type:text;default:''"`
 	Inputs         datatypes.JSON `gorm:"type:json"`
-	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;references:ID"`
+	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;joinForeignKey:job_id;References:ID;JoinReferences:file_id"`
 	OutputFiles    []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:ID"`
 }

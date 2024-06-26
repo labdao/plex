@@ -112,7 +112,7 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		if err := db.Where("file_hash = ?", hash).First(&existingFile).Error; err == nil {
 			var userHasFile bool
 			var count int64
-			db.Model(&file).Joins("JOIN user_files ON user_files.file_c_id = files.id").
+			db.Model(&file).Joins("JOIN user_files ON user_files.file_id = files.id").
 				Where("user_files.user_id = ? AND files.id = ?", user.WalletAddress, hash).First(&file).Count(&count)
 			userHasFile = count > 0
 			if userHasFile {
@@ -228,7 +228,7 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.File{}).
-			Joins("LEFT JOIN user_files ON user_files.file_c_id = files.id AND user_files.wallet_address = ?", user.WalletAddress).
+			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.wallet_address = ?", user.WalletAddress).
 			Where("files.public = true OR (files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
 
 		if id := r.URL.Query().Get("id"); id != "" {
