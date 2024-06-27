@@ -28,10 +28,10 @@ export function ModelSelect({ onChange, taskSlug }: ModelSelectProps) {
 
   useEffect(() => {
     const defaultModel = models.find((model) => model.DefaultModel === true);
-    const defaultModelCID = defaultModel?.ID;
+    const defaultModelID = defaultModel?.ID;
 
-    if (defaultModelCID) {
-      dispatch(modelDetailThunk(defaultModelCID));
+    if (defaultModelID) {
+      dispatch(modelDetailThunk(defaultModelID));
     }
   }, [dispatch, models]);
 

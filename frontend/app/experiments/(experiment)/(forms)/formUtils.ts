@@ -23,14 +23,14 @@ export function groupInputs(inputs: any) {
 
 type TransformedJSON = {
   name: string;
-  modelCid: string;
+  modelId: string;
   walletAddress: string;
   scatteringMethod: string;
   kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
 };
 
 export function transformJson(model: any, originalJson: any, walletAddress: string): TransformedJSON {
-  const { name, model: modelCid, ...dynamicKeys } = originalJson;
+  const { name, model: modelId, ...dynamicKeys } = originalJson;
 
   const modelJsonInputs = model.ModelJson.inputs;
 
@@ -53,7 +53,7 @@ export function transformJson(model: any, originalJson: any, walletAddress: stri
   // Return the transformed JSON
   return {
     name: name,
-    modelCid: model.ID,
+    modelId: model.ID,
     walletAddress: walletAddress,
     scatteringMethod: "crossProduct",
     kwargs: kwargs,

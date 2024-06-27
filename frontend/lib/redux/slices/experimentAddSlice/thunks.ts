@@ -7,16 +7,16 @@ import { Kwargs, setExperimentAddError, setExperimentAddID, setExperimentAddLoad
 
 interface ExperimentPayload {
   name: string,
-  modelCid: string,
+  modelId: string,
   scatteringMethod: string,
   kwargs: Kwargs
 }
 
 export const addExperimentThunk = createAppAsyncThunk(
   'experiment/addExperiment',
-  async ({ name, modelCid, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
+  async ({ name, modelId, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
     try {
-      const response = await createExperiment({ name, modelCid, scatteringMethod, kwargs })
+      const response = await createExperiment({ name, modelId, scatteringMethod, kwargs })
       if (response && response.id) {
         dispatch(setExperimentAddSuccess(true))
         dispatch(setExperimentAddID(response.ID))
@@ -39,14 +39,14 @@ export const addExperimentThunk = createAppAsyncThunk(
 
 export const addExperimentWithCheckoutThunk = createAppAsyncThunk(
   'experiment/addExperimentWithCheckout',
-  async ({ modelCid, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
+  async ({ modelId, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
     try {
       dispatch(setExperimentAddError(null));
       dispatch(setStripeCheckoutError(null));
       dispatch(setStripeCheckoutLoading(true));
 
       const checkoutPayload = {
-        modelCid,
+        modelId,
         scatteringMethod,
         kwargs: JSON.stringify(kwargs),
       };
