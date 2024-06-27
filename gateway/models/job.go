@@ -38,7 +38,7 @@ type Job struct {
 	LastModifiedAt time.Time      `gorm:"autoUpdateTime"`
 	ExperimentID   uint           `gorm:"type:int;not null;index"`
 	Experiment     Experiment     `gorm:"foreignKey:ExperimentID"`
-	ModelID        string         `gorm:"type:varchar(255);not null;index"`
+	ModelID        int            `gorm:"type:int;not null;index"`
 	Model          Model          `gorm:"foreignKey:ModelID"`
 	UserID         uint           `gorm:"not null"`
 	User           User           `gorm:"foreignKey:UserID"`

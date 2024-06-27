@@ -56,15 +56,15 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 
 	router.HandleFunc("/checkpoints/{experimentID}/get-data", protected(handlers.GetExperimentCheckpointDataHandler(db))).Methods("GET")
 
-	// router.HandleFunc("/experiments", protected(handlers.AddExperimentHandler(db))).Methods("POST")
-	// router.HandleFunc("/experiments", protected(handlers.ListExperimentsHandler(db))).Methods("GET")
-	// router.HandleFunc("/experiments/{experimentID}", protected(handlers.GetExperimentHandler(db))).Methods("GET")
-	// router.HandleFunc("/experiments/{experimentID}", protected(handlers.UpdateExperimentHandler(db))).Methods("PUT")
-	// router.HandleFunc("/experiments/{experimentID}/add-job", protected(handlers.AddJobToExperimentHandler(db))).Methods("PUT")
+	router.HandleFunc("/experiments", protected(handlers.AddExperimentHandler(db))).Methods("POST")
+	router.HandleFunc("/experiments", protected(handlers.ListExperimentsHandler(db))).Methods("GET")
+	router.HandleFunc("/experiments/{experimentID}", protected(handlers.GetExperimentHandler(db))).Methods("GET")
+	router.HandleFunc("/experiments/{experimentID}", protected(handlers.UpdateExperimentHandler(db))).Methods("PUT")
+	router.HandleFunc("/experiments/{experimentID}/add-job", protected(handlers.AddJobToExperimentHandler(db))).Methods("PUT")
 
-	// router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
-	// // router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
-	// router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
+	router.HandleFunc("/jobs/{jobID}", protected(handlers.GetJobHandler(db))).Methods("GET")
+	// router.HandleFunc("/jobs/{bacalhauJobID}/logs", handlers.StreamJobLogsHandler).Methods("GET")
+	router.HandleFunc("/queue-summary", handlers.GetJobsQueueSummaryHandler(db)).Methods("GET")
 
 	router.HandleFunc("/tags", protected(handlers.AddTagHandler(db))).Methods("POST")
 	router.HandleFunc("/tags", protected(handlers.ListTagsHandler(db))).Methods("GET")
