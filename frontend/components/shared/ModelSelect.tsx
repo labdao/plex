@@ -28,7 +28,7 @@ export function ModelSelect({ onChange, taskSlug }: ModelSelectProps) {
 
   useEffect(() => {
     const defaultModel = models.find((model) => model.DefaultModel === true);
-    const defaultModelCID = defaultModel?.CID;
+    const defaultModelCID = defaultModel?.ID;
 
     if (defaultModelCID) {
       dispatch(modelDetailThunk(defaultModelCID));
@@ -40,7 +40,7 @@ export function ModelSelect({ onChange, taskSlug }: ModelSelectProps) {
   };
 
   return (
-    <Select onValueChange={handleSelectionChange} value={model?.CID}>
+    <Select onValueChange={handleSelectionChange} value={model?.ID}>
       <SelectTrigger className="font-mono text-sm font-bold uppercase rounded-full border-primary hover:bg-primary/10">
         <SelectValue placeholder="Select a model" />
       </SelectTrigger>
@@ -48,7 +48,7 @@ export function ModelSelect({ onChange, taskSlug }: ModelSelectProps) {
         <SelectGroup>
           {models.map((model, index) => {
             return (
-              <SelectItem key={index} value={model?.CID}>
+              <SelectItem key={index} value={model?.ID}>
                 {model.Name}
               </SelectItem>
             );

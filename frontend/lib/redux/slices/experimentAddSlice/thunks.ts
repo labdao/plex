@@ -17,7 +17,7 @@ export const addExperimentThunk = createAppAsyncThunk(
   async ({ name, modelCid, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
     try {
       const response = await createExperiment({ name, modelCid, scatteringMethod, kwargs })
-      if (response && response.cid) {
+      if (response && response.id) {
         dispatch(setExperimentAddSuccess(true))
         dispatch(setExperimentAddID(response.ID))
       } else {

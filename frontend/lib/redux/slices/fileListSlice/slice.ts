@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export interface File {
   Filename: string
-  CID: string
+  ID: string
   Tags: Tag[]
   S3URI: string
 }

@@ -80,7 +80,7 @@ export function generateRerunSchema(inputs: InputType) {
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ModelDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
-    model: model?.CID,
+    model: model?.ID,
     ...inputsToDefaultValues(inputs),
   };
 }

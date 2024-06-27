@@ -10,7 +10,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function ListModelFiles() {
   interface Model {
-    CID: string;
+    ID: string;
     Name: string;
     WalletAddress: string;
   }
@@ -29,12 +29,12 @@ export default function ListModelFiles() {
       header: "Name",
     },
     {
-      accessorKey: "CID",
+      accessorKey: "ID",
       header: "Model ID",
       cell: ({ row }) => {
         return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
+          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("ID")}/`}>
+            {shortenAddressOrCid(row.getValue("ID"))}
           </a>
         );
       },

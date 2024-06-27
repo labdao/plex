@@ -228,8 +228,8 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.File{}).
-			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.wallet_address = ?", user.WalletAddress).
-			Where("files.public = true OR (files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
+			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.user_id = ?", user.ID).
+			Where("files.public = true OR (files.public = false AND user_files.user_id = ?)", user.ID)
 
 		if id := r.URL.Query().Get("id"); id != "" {
 			query = query.Where("files.id = ?", id)
@@ -243,7 +243,7 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("user_files.timestamp <= ?", parsedTime)
+			query = query.Where("user_files.created_at <= ?", parsedTime)
 		}
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
@@ -251,13 +251,13 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("user_files.timestamp >= ?", parsedTime)
+			query = query.Where("user_files.created_at >= ?", parsedTime)
 		}
 
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "files.timestamp desc"
+		defaultSort := "files.created_at desc"
 		sortParam := r.URL.Query().Get("sort")
 		if sortParam != "" {
 			defaultSort = sortParam
@@ -393,7 +393,7 @@ func AddTagsToFile(db *gorm.DB, fileID int, tagNames []string) error {
 
 	var file models.File
 	if err := db.Preload("Tags").Where("id = ?", fileID).First(&file).Error; err != nil {
-		log.Printf("Error finding File with ID %s: %v\n", fileID, err)
+		log.Printf("Error finding File with ID %d: %v\n", fileID, err)
 		return fmt.Errorf("file not found: %v", err)
 	}
 
@@ -417,11 +417,11 @@ func AddTagsToFile(db *gorm.DB, fileID int, tagNames []string) error {
 
 	log.Println("Saving File with new tags to DB")
 	if err := db.Save(&file).Error; err != nil {
-		log.Printf("error saving File with ID %s: %v\n", fileID, err)
+		log.Printf("error saving File with ID %d: %v\n", fileID, err)
 		return fmt.Errorf("error saving file: %v", err)
 	}
 
-	log.Println("File with CID", fileID, "successfully updated with new tags")
+	log.Println("File with ID", fileID, "successfully updated with new tags")
 
 	return nil
 }

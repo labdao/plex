@@ -26,7 +26,7 @@ export default function ListFiles() {
   }
 
   interface File {
-    CID: string;
+    ID: number;
     WalletAddress: string;
     Filename: string;
     Timestamp: string;
@@ -39,15 +39,15 @@ export default function ListFiles() {
       header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
       sortingFn: "alphanumeric",
       cell: ({ row }) => {
-        let cid: string = row.getValue("CID");
-        if (!cid) {
-          cid = "null";
+        let ID: number = row.getValue("ID");
+        if (!ID) {
+          ID = 0;
         }
 
         const handleDownloadClick = async (event: React.MouseEvent<HTMLAnchorElement>) => {
           event.preventDefault();
           const authToken = await getAccessToken();
-          const response = await fetch(`${backendUrl()}/files/${cid}/download`, {
+          const response = await fetch(`${backendUrl()}/files/${ID}/download`, {
             headers: {
               'Authorization': `Bearer ${authToken}`,
             },
@@ -74,9 +74,9 @@ export default function ListFiles() {
               <TruncatedString value={row.getValue("Filename")} trimLength={20} />
             </a>
             <div className="text-xs truncate max-w-[10rem] text-muted-foreground/50">
-              <CopyToClipboard string={cid}>
+              <CopyToClipboard string={ID.toString()}>
                 <span className="cursor-pointer">
-                  File ID: <TruncatedString value={cid} />
+                  File ID: <TruncatedString value={ID.toString()} />
                 </span>
               </CopyToClipboard>
             </div>
@@ -101,20 +101,20 @@ export default function ListFiles() {
       },
     },
     {
-      accessorKey: "CID",
+      accessorKey: "ID",
       header: "File ID",
       cell: ({ row }) => {
-        const cid: string = row.getValue("CID");
-        return <TruncatedString value={row.getValue("CID")} />;
+        const ID: number = row.getValue("ID");
+        return <TruncatedString value={ID.toString()} />;
       },
     },
     {
-      accessorKey: "Timestamp",
+      accessorKey: "CreatedAt",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
       // @TODO: Need sorting added to API endpoint, this just sorts the current page.
       sortingFn: "datetime",
       cell: ({ row }) => {
-        return dayjs(row.getValue("Timestamp")).format("YYYY-MM-DD HH:mm:ss");
+        return dayjs(row.getValue("CreatedAt")).format("YYYY-MM-DD HH:mm:ss");
       },
     },
   ];
@@ -124,6 +124,10 @@ export default function ListFiles() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const pageSize = 50;
+
+  useEffect(() => {
+    console.log("columns = ", columns);
+  }, [columns]);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -167,7 +171,7 @@ export default function ListFiles() {
         }
       />
       <ScrollArea className="bg-white grow w-[calc(100vw-12rem)]">
-        <DataTable columns={columns} data={files} sorting={[{ id: "Timestamp", desc: true }]} loading={loading} />
+        <DataTable columns={columns} data={files} sorting={[{ id: "CreatedAt", desc: true }]} loading={loading} />
         <ScrollBar orientation="horizontal" />
         <ScrollBar orientation="vertical" />
       </ScrollArea>

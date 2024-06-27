@@ -4,7 +4,7 @@ import { saveFileAsync } from "./thunks";
 
 interface FileSliceState {
   filename: string;
-  cid: string; // Content Identifier in IPFS
+  id: string; // Content Identifier in IPFS
   isLoading: boolean;
   error: string | null;
   isUploaded: boolean;
@@ -12,7 +12,7 @@ interface FileSliceState {
 
 const initialState: FileSliceState = {
   filename: "",
-  cid: "",
+  id: "",
   isLoading: false,
   error: null,
   isUploaded: false,
@@ -26,7 +26,7 @@ export const fileAddSlice = createSlice({
       state.filename = action.payload;
     },
     setCidDataSlice: (state, action: PayloadAction<string>) => {
-      state.cid = action.payload;
+      state.id = action.payload;
     },
     setFileError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
@@ -51,7 +51,7 @@ export const fileAddSlice = createSlice({
         state.isLoading = false;
         if (action.payload) {
           console.log("action.payload", action.payload);
-          state.cid = action.payload.cid;
+          state.id = action.payload.id;
           state.filename = action.payload.filename;
         }
         state.isUploaded = true;

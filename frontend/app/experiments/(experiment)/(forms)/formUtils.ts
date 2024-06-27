@@ -53,7 +53,7 @@ export function transformJson(model: any, originalJson: any, walletAddress: stri
   // Return the transformed JSON
   return {
     name: name,
-    modelCid: model.CID,
+    modelCid: model.ID,
     walletAddress: walletAddress,
     scatteringMethod: "crossProduct",
     kwargs: kwargs,

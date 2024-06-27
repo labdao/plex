@@ -102,7 +102,7 @@ func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
 }
 
 func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Where("state = ? AND queue = ?", models.JobStateQueued, queueType).Order("created_at ASC").First(job).Error
+	return db.Where("job_status = ? ", models.JobStateQueued).Order("created_at ASC").First(job).Error
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {

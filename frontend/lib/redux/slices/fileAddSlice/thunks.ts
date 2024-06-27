@@ -7,7 +7,7 @@ interface FilePayload {
   file: File;
   metadata: { [key: string]: any };
   isPublic: boolean;
-  handleSuccess: (cid: string) => void;
+  handleSuccess: (id: string) => void;
 }
 
 export const saveFileAsync = createAppAsyncThunk(
@@ -15,8 +15,8 @@ export const saveFileAsync = createAppAsyncThunk(
   async ({ file, metadata, isPublic, handleSuccess }: FilePayload, { dispatch }) => {
     try {
       const response = await saveFileToServer(file, metadata, isPublic);
-      if (response.cid) {
-        handleSuccess(response.cid);
+      if (response.id) {
+        handleSuccess(response.id);
       } else {
         dispatch(setFileError("Failed to save file."));
       }

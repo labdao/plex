@@ -1,7 +1,7 @@
 import { getAccessToken } from "@privy-io/react-auth"
 import backendUrl from "lib/backendUrl"
 
-export const getModel = async (CID: string): Promise<any> => {
+export const getModel = async (ID: string): Promise<any> => {
   let authToken
   try {
     authToken = await getAccessToken();
@@ -10,7 +10,7 @@ export const getModel = async (CID: string): Promise<any> => {
     throw new Error("Authentication failed")
   }
 
-  const response = await fetch(`${backendUrl()}/models/${CID}`, {
+  const response = await fetch(`${backendUrl()}/models/${ID}`, {
     method: "Get",
     headers: {
       "Authorization": `Bearer ${authToken}`,
@@ -26,8 +26,8 @@ export const getModel = async (CID: string): Promise<any> => {
   return result;
 }
 
-export const patchModel = async (CID: string): Promise<any> => {
-  const response = await fetch(`${backendUrl()}/models/${CID}`, {
+export const patchModel = async (ID: string): Promise<any> => {
+  const response = await fetch(`${backendUrl()}/models/${ID}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
