@@ -12,16 +12,7 @@ export default function ListModelFiles() {
   interface Model {
     ID: string;
     Name: string;
-    WalletAddress: string;
   }
-
-  const shortenAddressOrCid = (addressOrCid: string) => {
-    if (addressOrCid.length) {
-      return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
-    } else {
-      return "";
-    }
-  };
 
   const columns: ColumnDef<Model>[] = [
     {
@@ -34,21 +25,25 @@ export default function ListModelFiles() {
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("ID")}/`}>
-            {shortenAddressOrCid(row.getValue("ID"))}
+            {row.getValue("ID")}
           </a>
         );
       },
     },
     {
-      accessorKey: "WalletAddress",
+      accessorKey: "UserID",
       header: "User",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("WalletAddress"));
+        return row.getValue("UserID");
       },
     },
   ];
 
   const [models, setModels] = useState<Model[]>([]);
+
+  useEffect(() => {
+    console.log("fetched columns", columns);
+  }, [columns]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,6 +60,7 @@ export default function ListModelFiles() {
         }
 
         const data = await response.json();
+        console.log("Fetched models:", data);
         setModels(data);
       } catch (error) {
         console.error("Error fetching models:", error);
