@@ -34,13 +34,13 @@ type Job struct {
 	State         JobState       `gorm:"type:varchar(255);default:'queued'"`
 	Error         string         `gorm:"type:text;default:''"`
 	WalletAddress string         `gorm:"type:varchar(255)"`
-	ToolID        string         `gorm:"type:varchar(255);not null;index"`
-	Tool          Tool           `gorm:"foreignKey:ToolID"`
-	FlowID        uint           `gorm:"type:int;not null;index"`
-	Flow          Flow           `gorm:"foreignKey:FlowID"`
+	ModelID       string         `gorm:"type:varchar(255);not null;index"`
+	Model         Model          `gorm:"foreignKey:ModelID"`
+	ExperimentID  uint           `gorm:"type:int;not null;index"`
+	Experiment    Experiment     `gorm:"foreignKey:ExperimentID"`
 	Inputs        datatypes.JSON `gorm:"type:json"`
-	InputFiles    []DataFile     `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
-	OutputFiles   []DataFile     `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
+	InputFiles    []File         `gorm:"many2many:job_input_files;foreignKey:ID;references:CID"`
+	OutputFiles   []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:CID"`
 	Queue         QueueType      `gorm:"type:varchar(255)"`
 	CreatedAt     time.Time      `gorm:""`
 	StartedAt     time.Time      `gorm:""`

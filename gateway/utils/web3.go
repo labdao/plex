@@ -62,53 +62,53 @@ type Response struct {
 	Status string `json:"status"`
 }
 
-func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
+func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, error) {
 	var jobs []models.Job
-	if err := db.Where("flow_id = ?", flow.ID).Find(&jobs).Error; err != nil {
+	if err := db.Where("experiment_id = ?", experiment.ID).Find(&jobs).Error; err != nil {
 		return "", fmt.Errorf("failed to retrieve jobs: %v", err)
 	}
 
 	metadata := map[string]interface{}{
-		"name":        flow.Name,
+		"name":        experiment.Name,
 		"description": "Research, Reimagined. All Scientists Welcome.",
 		"image":       "",
-		"flow":        []map[string]interface{}{},
+		"experiment":  []map[string]interface{}{},
 	}
 
 	var pngCID string
 
 	for _, job := range jobs {
-		var tool models.Tool
-		if err := db.Where("cid = ?", job.ToolID).First(&tool).Error; err != nil {
-			return "", fmt.Errorf("failed to retrieve tool: %v", err)
+		var model models.Model
+		if err := db.Where("cid = ?", job.ModelID).First(&model).Error; err != nil {
+			return "", fmt.Errorf("failed to retrieve model: %v", err)
 		}
 
-		var inputFiles []models.DataFile
+		var inputFiles []models.File
 		if err := db.Model(&job).Association("InputFiles").Find(&inputFiles); err != nil {
 			return "", fmt.Errorf("failed to retrieve input files: %v", err)
 		}
 
-		var outputFiles []models.DataFile
+		var outputFiles []models.File
 		if err := db.Model(&job).Association("OutputFiles").Find(&outputFiles); err != nil {
 			return "", fmt.Errorf("failed to retrieve output files: %v", err)
 		}
 
 		ioObject := map[string]interface{}{
-			"tool":    map[string]interface{}{},
+			"model":   map[string]interface{}{},
 			"inputs":  []map[string]interface{}{},
 			"outputs": []map[string]interface{}{},
 			"state":   job.State,
 			"errMsg":  job.Error,
 		}
 
-		log.Printf("Pinning tool JSON to IPFS: %s", tool.Name)
-		toolPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(tool.ToolJson), tool.Name)
+		log.Printf("Pinning model JSON to IPFS: %s", model.Name)
+		modelPinataHash, err := pinJSONToPublicIPFS(json.RawMessage(model.ModelJson), model.Name)
 		if err != nil {
-			log.Printf("Failed to pin tool JSON to Pinata: %s. Skipping... Error: %v", tool.Name, err)
+			log.Printf("Failed to pin model JSON to Pinata: %s. Skipping... Error: %v", model.Name, err)
 		} else {
-			log.Printf("Pinned tool JSON to public IPFS with CID: %s", toolPinataHash)
-			ioObject["tool"] = map[string]interface{}{
-				"cid": toolPinataHash,
+			log.Printf("Pinned model JSON to public IPFS with CID: %s", modelPinataHash)
+			ioObject["model"] = map[string]interface{}{
+				"cid": modelPinataHash,
 			}
 		}
 		s3c, err := s3.NewS3Client()
@@ -181,7 +181,7 @@ func BuildTokenMetadata(db *gorm.DB, flow *models.Flow) (string, error) {
 			metadata["image"] = "ipfs://QmQZLrUPxh4WMmzpQGhUYRsMwU2BXfmFa3YAFhFKkRgHTZ"
 		}
 
-		metadata["flow"] = append(metadata["flow"].([]map[string]interface{}), ioObject)
+		metadata["experiment"] = append(metadata["experiment"].([]map[string]interface{}), ioObject)
 	}
 
 	metadataJSON, err := json.Marshal(metadata)
@@ -342,32 +342,32 @@ func pinFileToPublicIPFS(filePath, name string) (string, error) {
 	return "", fmt.Errorf("failed to pin file to Pinata after %d retries", maxRetries)
 }
 
-func GenerateAndStoreRecordCID(db *gorm.DB, flow *models.Flow) (string, error) {
+func GenerateAndStoreRecordCID(db *gorm.DB, experiment *models.Experiment) (string, error) {
 	log.Println("Generating token metadata...")
-	metadataJSON, err := BuildTokenMetadata(db, flow)
+	metadataJSON, err := BuildTokenMetadata(db, experiment)
 	if err != nil {
 		return "", fmt.Errorf("failed to build token metadata: %v", err)
 	}
 	log.Println("Generated token metadata.")
 
 	log.Println("Pinning token metadata to IPFS...")
-	metadataCID, err := pinJSONToPublicIPFS(json.RawMessage(metadataJSON), flow.Name+"_record_metadata.json")
+	metadataCID, err := pinJSONToPublicIPFS(json.RawMessage(metadataJSON), experiment.Name+"_record_metadata.json")
 	if err != nil {
 		return "", fmt.Errorf("failed to pin token metadata to Pinata: %v", err)
 	}
 	log.Printf("Pinned token metadata to public IPFS with CID: %s", metadataCID)
 
-	log.Println("Updating Flow's RecordCID...")
-	flow.RecordCID = metadataCID
-	if err := db.Save(flow).Error; err != nil {
-		return "", fmt.Errorf("failed to update Flow's RecordCID: %v", err)
+	log.Println("Updating Experiment's RecordCID...")
+	experiment.RecordCID = metadataCID
+	if err := db.Save(experiment).Error; err != nil {
+		return "", fmt.Errorf("failed to update Experiment's RecordCID: %v", err)
 	}
-	log.Println("Updated Flow's RecordCID.")
+	log.Println("Updated Experiment's RecordCID.")
 
 	return metadataCID, nil
 }
 
-func MintNFT(db *gorm.DB, flow *models.Flow, metadataCID string) error {
+func MintNFT(db *gorm.DB, experiment *models.Experiment, metadataCID string) error {
 	if autotaskWebhook == "" {
 		return fmt.Errorf("AUTOTASK_WEBHOOK must be set")
 	}
@@ -375,7 +375,7 @@ func MintNFT(db *gorm.DB, flow *models.Flow, metadataCID string) error {
 	log.Println("Triggering minting process via Defender Autotask...")
 
 	data := postData{
-		RecipientAddress: flow.WalletAddress,
+		RecipientAddress: experiment.WalletAddress,
 		Cid:              metadataCID,
 	}
 

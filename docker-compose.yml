@@ -136,13 +136,13 @@ services:
     volumes:
       - stripe-secrets:/var/secrets/stripe
 
-  default-tool-setup:
+  default-model-setup:
     image: "alpine"
     command: >
       sh -exc "
       apk add --no-cache curl jq &&
-      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/colabdesign/colabdesign-gateway.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
-      jq '{\"toolJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/tools/labsay/labsay.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/tools &&
+      jq '{\"modelJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/models/colabdesign/colabdesign-gateway.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/models &&
+      jq '{\"modelJson\": ., \"walletAddress\": \"0xA5B68dbA49cE48d0c1e0f29EA45885b5f83A0BD4\"}' /opt/plex/models/labsay/labsay.json | curl -s -H \"Content-Type: application/json\" -X POST --data-binary @- http://backend:8080/models &&
       sleep infinity"
     volumes:
       - ./:/opt/plex:ro

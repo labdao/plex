@@ -8,7 +8,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppDispatch, Flow, flowListThunk, selectCategorizedFlows, selectFlowList, selectFlowListLoading, selectUserIsAdmin } from "@/lib/redux";
+import { AppDispatch, Experiment, experimentListThunk, selectCategorizedExperiments, selectExperimentList, selectExperimentListLoading, selectUserIsAdmin } from "@/lib/redux";
 
 import Logo from "./Logo";
 import { NavLink } from "./NavItem";
@@ -18,23 +18,22 @@ import { cn } from "@/lib/utils";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { InlineEditExperiment } from "@/components/ui/inline-edit-experiment";
-import { CategorizedFlowNames, FlowName, flowNamesThunk, selectCategorizedFlowNames, selectFlowNames, setCategorizedFlowNames } from "@/lib/redux/slices/flowNamesSlice";
 
 export default function Nav() {
   const { user } = usePrivy();
-  const { flowID } = useParams();
+  const { experimentID } = useParams();
   const dispatch = useDispatch<AppDispatch>();
-  const categorizedFlowNames = useSelector(selectCategorizedFlowNames);
-  const flows = useSelector(selectFlowNames);
-  // const loading = useSelector(selectFlowListLoading);
+  const categorizedExperiments = useSelector(selectCategorizedExperiments);
+  const experiments = useSelector(selectExperimentList);
+  // const loading = useSelector(selectExperimentListLoading);
   const walletAddress = user?.wallet?.address;
   const isAdmin = useSelector(selectUserIsAdmin);
 
   useEffect(() => {
     console.log("walletAddress", walletAddress);
     if (walletAddress) {
-      console.log("dispatching flowNamesThunk");
-      dispatch(flowNamesThunk(walletAddress));
+      console.log("dispatching experimentListThunk");
+      dispatch(experimentListThunk(walletAddress));
     }
   }, [dispatch, walletAddress]);
 
@@ -54,9 +53,9 @@ export default function Nav() {
       </div>
       <ScrollArea className="flex-grow border-b border-border/50">
         <div className="w-48 p-2">
-          {Object.keys(categorizedFlowNames).map((category) => {
-            const flowNamesInCategory = categorizedFlowNames[category as keyof typeof categorizedFlowNames];
-            if (flowNamesInCategory.length > 0) {
+          {Object.keys(categorizedExperiments).map((category) => {
+            const experimentsInCategory = categorizedExperiments[category as keyof typeof categorizedExperiments];
+            if (experimentsInCategory.length > 0) {
               return (
                 <div key={category} className="flex flex-col gap-1 mb-5">
                   <div className="px-3 mb-2 font-mono text-xs font-bold uppercase text-muted-foreground opacity-70">
@@ -65,16 +64,16 @@ export default function Nav() {
                     {category === "last30Days" && "Previous 30 Days"}
                     {category === "older" && "Older"}
                   </div>
-                  {flowNamesInCategory.map((flowName: FlowName) => (
+                  {experimentsInCategory.map((experiment: Experiment) => (
                     <Link
-                      key={flowName.ID}
-                      href={`/experiments/${flowName.ID}`}
+                      key={experiment.ID}
+                      href={`/experiments/${experiment.ID}`}
                       className={cn(
                         "relative group px-3 rounded-full py-2 text-sm truncate hover:bg-muted/50 text-muted-foreground hover:text-foreground",
-                        flowID === flowName.ID.toString() && "text-foreground bg-muted hover:bg-muted"
+                        experimentID === experiment.ID.toString() && "text-foreground bg-muted hover:bg-muted"
                       )}
                     >
-                      <InlineEditExperiment flow={flowName} />
+                      <InlineEditExperiment experiment={experiment} />
                     </Link>
                   ))}
                 </div>

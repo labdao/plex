@@ -13,7 +13,7 @@ on:
     tags:
       - '**'
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools.yml'
       - '.github/workflows/docker.yml'
 
@@ -22,7 +22,7 @@ on:
       - "main"
       - "staging"
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools.yml'
       - '.github/workflows/docker.yml'
 
@@ -48,15 +48,15 @@ jobs:
         ###############################################################
         ################## Add new tools here #########################
         ###############################################################
-        filters: |
-          colabdesign:
-            - 'tools/colabdesign/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
-          labsay:
-            - 'tools/labsay/**'
-            - '.github/workflows/tools.yml'
-            - '.github/workflows/docker.yml'
+        # filters: |
+          # colabdesign:
+          #   - 'models/colabdesign/**'
+          #   - '.github/workflows/tools.yml'
+          #   - '.github/workflows/docker.yml'
+          # labsay:
+          #   - 'models/labsay/**'
+          #   - '.github/workflows/tools.yml'
+          #   - '.github/workflows/docker.yml'
 
 
   tools:

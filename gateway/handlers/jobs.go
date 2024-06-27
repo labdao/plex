@@ -92,8 +92,8 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		// Perform the query using GORM
 		db = db.Debug()
 		result := db.Table("jobs").
-			Select("queue, job_type, state, sum(tools.cpu) as total_cpu, sum(tools.memory) as total_memory_gb, sum(tools.gpu) as total_gpu, count(*) as count").
-			Joins("left join tools on tools.cid = jobs.tool_id").
+			Select("queue, job_type, state, sum(models.cpu) as total_cpu, sum(models.memory) as total_memory_gb, sum(models.gpu) as total_gpu, count(*) as count").
+			Joins("left join models on models.cid = jobs.model_id").
 			Group("queue, job_type, state").
 			Find(&aggregatedResults)
 		fmt.Printf("Aggregated Results: %+v\n", aggregatedResults)

@@ -75,7 +75,7 @@ func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error
 	return nil, nil
 }
 
-func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, toolCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, modelCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -115,7 +115,7 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 			Metadata: map[string]string{
 				"Stripe User ID":    stripeUserID,
 				"Wallet Address":    walletAddress,
-				"Tool CID":          toolCID,
+				"Model CID":         modelCID,
 				"Scattering Method": scatteringMethod,
 				"Kwargs":            kwargs,
 			},
@@ -147,7 +147,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			ToolCID          string `json:"toolCid"`
+			ModelCID         string `json:"modelCid"`
 			ScatteringMethod string `json:"scatteringMethod"`
 			Kwargs           string `json:"kwargs"`
 		}
@@ -156,27 +156,27 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// TODO: pass in tool
+		// TODO: pass in model
 
-		// toolID := r.URL.Query().Get("toolID")
-		// if toolID == "" {
-		// 	utils.SendJSONError(w, "Tool ID not provided", http.StatusBadRequest)
+		// modelID := r.URL.Query().Get("modelID")
+		// if modelID == "" {
+		// 	utils.SendJSONError(w, "Model ID not provided", http.StatusBadRequest)
 		// 	return
 		// }
 
-		// var tool models.Tool
-		// result := db.Where("cid = ?", toolID).First(&tool)
+		// var model models.Model
+		// result := db.Where("cid = ?", modelID).First(&model)
 		// if result.Error != nil {
 		// 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		// 		utils.SendJSONError(w, "Tool not found", http.StatusNotFound)
+		// 		utils.SendJSONError(w, "Model not found", http.StatusNotFound)
 		// 	} else {
-		// 		utils.SendJSONError(w, fmt.Sprintf("Error fetching Tool: %v", result.Error), http.StatusInternalServerError)
+		// 		utils.SendJSONError(w, fmt.Sprintf("Error fetching Model: %v", result.Error), http.StatusInternalServerError)
 		// 	}
 		// 	return
 		// }
 
 		// TODO: modify so we're not passing in hardcoded value
-		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ToolCID, requestData.ScatteringMethod, requestData.Kwargs)
+		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ModelCID, requestData.ScatteringMethod, requestData.Kwargs)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
@@ -224,7 +224,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			walletAddress := paymentIntent.Metadata["Wallet Address"]
-			toolCID := paymentIntent.Metadata["Tool CID"]
+			modelCID := paymentIntent.Metadata["Model CID"]
 			scatteringMethod := paymentIntent.Metadata["Scattering Method"]
 			kwargsRaw := paymentIntent.Metadata["Kwargs"]
 
@@ -241,14 +241,14 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			var tool models.Tool
-			result = db.Where("cid = ?", toolCID).First(&tool)
+			var model models.Model
+			result = db.Where("cid = ?", modelCID).First(&model)
 			if result.Error != nil {
 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-					fmt.Fprintf(os.Stderr, "Tool with CID %s not found\n", toolCID)
+					fmt.Fprintf(os.Stderr, "Model with CID %s not found\n", modelCID)
 					w.WriteHeader(http.StatusNotFound)
 				} else {
-					fmt.Fprintf(os.Stderr, "Error querying tool: %v\n", result.Error)
+					fmt.Fprintf(os.Stderr, "Error querying model: %v\n", result.Error)
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 				return
@@ -262,26 +262,26 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			ioList, err := ipwl.InitializeIo(toolCID, scatteringMethod, kwargs, db)
+			ioList, err := ipwl.InitializeIo(modelCID, scatteringMethod, kwargs, db)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error initializing IO list: %v\n", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 
-			flowUUID := uuid.New().String()
+			experimentUUID := uuid.New().String()
 
-			flow := models.Flow{
-				WalletAddress: user.WalletAddress,
-				Name:          "Flow created by Stripe webhook",
-				StartTime:     time.Now(),
-				FlowUUID:      flowUUID,
-				Public:        false,
+			experiment := models.Experiment{
+				WalletAddress:  user.WalletAddress,
+				Name:           "Experiment created by Stripe webhook",
+				StartTime:      time.Now(),
+				ExperimentUUID: experimentUUID,
+				Public:         false,
 			}
 
-			result = db.Create(&flow)
+			result = db.Create(&experiment)
 			if result.Error != nil {
-				fmt.Fprintf(os.Stderr, "Error creating flow: %v\n", result.Error)
+				fmt.Fprintf(os.Stderr, "Error creating experiment: %v\n", result.Error)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -295,20 +295,20 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				}
 
 				var queue models.QueueType
-				if tool.ToolType == "ray" {
+				if model.ModelType == "ray" {
 					queue = models.QueueTypeRay
 				}
 
 				var jobType models.JobType
-				if tool.ToolType == "ray" {
+				if model.ModelType == "ray" {
 					jobType = models.JobTypeRay
 				} else {
 					jobType = models.JobTypeBacalhau
 				}
 
 				job := models.Job{
-					ToolID:        ioItem.Tool.S3,
-					FlowID:        flow.ID,
+					ModelID:       ioItem.Model.S3,
+					ExperimentID:  experiment.ID,
 					WalletAddress: user.WalletAddress,
 					Inputs:        datatypes.JSON(inputsJSON),
 					Queue:         queue,
@@ -366,20 +366,20 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 						continue
 					}
 					for _, cid := range cidsToAdd {
-						var dataFile models.DataFile
-						result := db.First(&dataFile, "cid = ?", cid)
+						var file models.File
+						result := db.First(&file, "cid = ?", cid)
 						if result.Error != nil {
 							if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-								fmt.Fprintf(os.Stderr, "DataFile with CID %v not found\n", cid)
+								fmt.Fprintf(os.Stderr, "File with CID %v not found\n", cid)
 								w.WriteHeader(http.StatusNotFound)
 								return
 							} else {
-								fmt.Fprintf(os.Stderr, "Error looking up DataFile: %v\n", result.Error)
+								fmt.Fprintf(os.Stderr, "Error looking up File: %v\n", result.Error)
 								w.WriteHeader(http.StatusInternalServerError)
 								return
 							}
 						}
-						job.InputFiles = append(job.InputFiles, dataFile)
+						job.InputFiles = append(job.InputFiles, file)
 					}
 				}
 				result = db.Save(&job)
@@ -390,7 +390,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				}
 			}
 
-			user.ComputeTally += tool.ComputeCost
+			user.ComputeTally += model.ComputeCost
 			result = db.Save(user)
 			if result.Error != nil {
 				fmt.Fprintf(os.Stderr, "Error updating user compute tally: %v\n", result.Error)
@@ -494,17 +494,17 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 // 				return
 // 			}
 
-// 			// Create the flow in your database using the extracted information
-// 			flow := models.Flow{
+// 			// Create the experiment in your database using the extracted information
+// 			experiment := models.Experiment{
 // 				WalletAddress:    walletAddress,
-// 				ToolCID:          toolCID,
+// 				ModelCID:          modelCID,
 // 				ScatteringMethod: scatteringMethod,
 // 				Kwargs:           kwargs,
 // 				// Set other necessary fields
 // 			}
 
-// 			if result := db.Create(&flow); result.Error != nil {
-// 				fmt.Fprintf(os.Stderr, "Failed to save flow: %v\n", result.Error)
+// 			if result := db.Create(&experiment); result.Error != nil {
+// 				fmt.Fprintf(os.Stderr, "Failed to save experiment: %v\n", result.Error)
 // 				w.WriteHeader(http.StatusInternalServerError)
 // 				return
 // 			}

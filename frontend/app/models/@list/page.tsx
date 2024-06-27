@@ -8,8 +8,8 @@ import React, { useEffect, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-export default function ListToolFiles() {
-  interface Tool {
+export default function ListModelFiles() {
+  interface Model {
     CID: string;
     Name: string;
     WalletAddress: string;
@@ -23,14 +23,14 @@ export default function ListToolFiles() {
     }
   };
 
-  const columns: ColumnDef<Tool>[] = [
+  const columns: ColumnDef<Model>[] = [
     {
       accessorKey: "Name",
       header: "Name",
     },
     {
       accessorKey: "CID",
-      header: "Tool ID",
+      header: "Model ID",
       cell: ({ row }) => {
         return (
           <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
@@ -48,13 +48,13 @@ export default function ListToolFiles() {
     },
   ];
 
-  const [tools, setTools] = useState<Tool[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const authToken = await getAccessToken();
-        const response = await fetch(`${backendUrl()}/tools`, {
+        const response = await fetch(`${backendUrl()}/models`, {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
@@ -65,9 +65,9 @@ export default function ListToolFiles() {
         }
 
         const data = await response.json();
-        setTools(data);
+        setModels(data);
       } catch (error) {
-        console.error("Error fetching tools:", error);
+        console.error("Error fetching models:", error);
       }
     };
 
@@ -76,7 +76,7 @@ export default function ListToolFiles() {
 
   return (
     <ScrollArea className="w-full bg-white grow">
-      <DataTable columns={columns} data={tools} /> <ScrollBar orientation="horizontal" />
+      <DataTable columns={columns} data={models} /> <ScrollBar orientation="horizontal" />
       <ScrollBar orientation="vertical" />
     </ScrollArea>
   );

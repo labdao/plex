@@ -5,7 +5,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { AppDispatch, flowDetailThunk, selectFlowDetail, selectFlowDetailError, selectFlowDetailLoading, selectToolDetail } from "@/lib/redux";
+import { AppDispatch, experimentDetailThunk, selectExperimentDetail, selectExperimentDetailError, selectExperimentDetailLoading, selectModelDetail } from "@/lib/redux";
 
 import { aggregateJobStatus } from "../ExperimentStatus";
 import JobsAccordion from "./JobsAccordion";
@@ -15,20 +15,20 @@ dayjs.extend(relativeTime);
 
 export default function ExperimentDetail() {
   const dispatch = useDispatch<AppDispatch>();
-  const flow = useSelector(selectFlowDetail);
-  const tool = useSelector(selectToolDetail);
-  const loading = useSelector(selectFlowDetailLoading);
-  const error = useSelector(selectFlowDetailError);
+  const experiment = useSelector(selectExperimentDetail);
+  const model = useSelector(selectModelDetail);
+  const loading = useSelector(selectExperimentDetailLoading);
+  const error = useSelector(selectExperimentDetailError);
 
-  const status = aggregateJobStatus(flow.Jobs);
+  const status = aggregateJobStatus(experiment.Jobs);
 
-  const experimentID = flow.ID?.toString();
+  const experimentID = experiment.ID?.toString();
 
   useEffect(() => {
     if (["running", "queued"].includes(status.status) && experimentID) {
       const interval = setInterval(() => {
         console.log("Checking for new results");
-        dispatch(flowDetailThunk(experimentID));
+        dispatch(experimentDetailThunk(experimentID));
       }, 15000);
 
       return () => clearInterval(interval);
@@ -37,8 +37,8 @@ export default function ExperimentDetail() {
 
   return (
     <div>
-      {tool?.ToolJson?.checkpointCompatible && <MetricsVisualizer flow={flow} key={flow.ID} />}
-      <JobsAccordion flow={flow} />
+      {model?.ModelJson?.checkpointCompatible && <MetricsVisualizer experiment={experiment} key={experiment.ID} />}
+      <JobsAccordion experiment={experiment} />
     </div>
   );
 }

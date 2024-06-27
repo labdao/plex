@@ -82,10 +82,10 @@
           }
         }
       },
-      "/tools": {
+      "/models": {
         "post": {
-          "operationId": "addTool",
-          "summary": "Add Tool",
+          "operationId": "addModel",
+          "summary": "Add Model",
           "requestBody": {
             "required": true,
             "content": {
@@ -97,13 +97,13 @@
                       "type": "string",
                       "example": "0x1234567890abcdef1234567890abcdef12345678"
                     },
-                    "toolJson": {
+                    "modelJson": {
                       "type": "object"
                     }
                   },
                   "required": [
                     "walletAddress",
-                    "toolJson"
+                    "modelJson"
                   ]
                 }
               }
@@ -111,7 +111,7 @@
           },
           "responses": {
             "201": {
-              "description": "Tool created successfully",
+              "description": "Model created successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -130,7 +130,7 @@
               "description": "Bad request, such as invalid JSON format or missing fields"
             },
             "409": {
-              "description": "Conflict, tool with the same CID already exists"
+              "description": "Conflict, model with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -138,8 +138,8 @@
           }
         },
         "get": {
-          "operationId": "listTools",
-          "summary": "List Tools",
+          "operationId": "listModels",
+          "summary": "List Models",
           "parameters": [
             {
               "name": "cid",
@@ -184,13 +184,13 @@
           ],
           "responses": {
             "200": {
-              "description": "List of tools",
+              "description": "List of models",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Tool"
+                      "$ref": "#/components/schemas/Model"
                     }
                   }
                 }
@@ -202,10 +202,10 @@
           }
         }
       },
-      "/tools/{cid}": {
+      "/models/{cid}": {
         "get": {
-          "operationId": "getToolByCid",
-          "summary": "Get Tool",
+          "operationId": "getModelByCid",
+          "summary": "Get Model",
           "parameters": [
             {
               "name": "cid",
@@ -218,11 +218,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Tool data",
+              "description": "Model data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Tool"
+                    "$ref": "#/components/schemas/Model"
                   }
                 }
               }
@@ -233,10 +233,10 @@
           }
         }
       },
-      "/update-tool/{cid}": {
+      "/update-model/{cid}": {
         "put": {
-          "operationId": "updateTool",
-          "summary": "Update Tool",
+          "operationId": "updateModel",
+          "summary": "Update Model",
           "parameters": [
             {
               "name": "cid",
@@ -245,7 +245,7 @@
               "schema": {
                 "type": "string"
               },
-              "description": "The CID of the tool to update"
+              "description": "The CID of the model to update"
             }
           ],
           "requestBody": {
@@ -257,15 +257,15 @@
                   "properties": {
                     "taskCategory": {
                       "type": "string",
-                      "description": "The new task category for the tool"
+                      "description": "The new task category for the model"
                     },
                     "display": {
                       "type": "boolean",
-                      "description": "Flag indicating whether the tool should be displayed"
+                      "description": "Flag indicating whether the model should be displayed"
                     },
-                    "defaultTool": {
+                    "defaultModel": {
                       "type": "boolean",
-                      "description": "Flag indicating whether the tool is the default tool for its category"
+                      "description": "Flag indicating whether the model is the default model for its category"
                     }
                   },
                   "anyOf": [
@@ -276,7 +276,7 @@
                       "required": ["display"]
                     },
                     {
-                      "required": ["defaultTool"]
+                      "required": ["defaultModel"]
                     }
                   ],
                   "minProperties": 1
@@ -286,7 +286,7 @@
           },
           "responses": {
             "200": {
-              "description": "Tool updated successfully",
+              "description": "Model updated successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -294,7 +294,7 @@
                     "properties": {
                       "message": {
                         "type": "string",
-                        "example": "Tool updated successfully"
+                        "example": "Model updated successfully"
                       }
                     }
                   }
@@ -334,7 +334,7 @@
               }
             },
             "404": {
-              "description": "Tool with the specified CID not found",
+              "description": "Model with the specified CID not found",
               "content": {
                 "application/json": {
                   "schema": {
@@ -342,7 +342,7 @@
                     "properties": {
                       "message": {
                         "type": "string",
-                        "example": "Tool with the specified CID not found"
+                        "example": "Model with the specified CID not found"
                       }
                     }
                   }
@@ -355,10 +355,10 @@
           }
         }
       },
-      "/datafiles": {
+      "/files": {
         "post": {
-          "operationId": "addDataFile",
-          "summary": "Add Data File",
+          "operationId": "addFile",
+          "summary": "Add File",
           "requestBody": {
             "required": true,
             "content": {
@@ -392,7 +392,7 @@
           },
           "responses": {
             "200": {
-              "description": "Data file uploaded successfully",
+              "description": "File uploaded successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -410,7 +410,7 @@
               "description": "Bad request, such as missing fields or parsing error"
             },
             "409": {
-              "description": "Conflict, data file with the same CID already exists"
+              "description": "Conflict, file with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -418,8 +418,8 @@
           }
         },
         "get": {
-          "operationId": "listDataFiles",
-          "summary": "List Data Files",
+          "operationId": "listFiles",
+          "summary": "List Files",
           "parameters": [
             {
               "name": "page",
@@ -491,7 +491,7 @@
           ],
           "responses": {
             "200": {
-              "description": "Paginated list of data files",
+              "description": "Paginated list of files",
               "content": {
                 "application/json": {
                   "schema": {
@@ -500,7 +500,7 @@
                       "data": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/components/schemas/DataFile"
+                          "$ref": "#/components/schemas/File"
                         }
                       },
                       "pagination": {
@@ -531,10 +531,10 @@
           }
         }
       },
-      "/datafiles/{cid}": {
+      "/files/{cid}": {
         "get": {
-          "operationId": "getDataFileByCid",
-          "summary": "Get Data File",
+          "operationId": "getFileByCid",
+          "summary": "Get File",
           "parameters": [
             {
               "name": "cid",
@@ -547,11 +547,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Data file data",
+              "description": "File data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/DataFile"
+                    "$ref": "#/components/schemas/File"
                   }
                 }
               }
@@ -562,10 +562,10 @@
           }
         }
       },
-      "/datafiles/{cid}/download": {
+      "/files/{cid}/download": {
         "get": {
-          "operationId": "downloadDataFile",
-          "summary": "Download Data File",
+          "operationId": "downloadFile",
+          "summary": "Download File",
           "parameters": [
             {
               "name": "cid",
@@ -578,7 +578,7 @@
           ],
           "responses": {
             "200": {
-              "description": "Data file downloaded successfully",
+              "description": "File downloaded successfully",
               "content": {
                 "application/octet-stream": {
                   "schema": {
@@ -600,7 +600,7 @@
               "description": "Bad request, such as missing CID parameter"
             },
             "404": {
-              "description": "Data file not found"
+              "description": "File not found"
             },
             "500": {
               "description": "Internal Server Error"
@@ -608,10 +608,10 @@
           }
         }
       },
-      "/flows": {
+      "/experiments": {
         "post": {
-          "operationId": "addFlow",
-          "summary": "Add Flow",
+          "operationId": "addExperiment",
+          "summary": "Add Experiment",
           "requestBody": {
             "required": true,
             "content": {
@@ -623,7 +623,7 @@
                       "type": "string",
                       "example": "0x1234567890abcdef1234567890abcdef12345678"
                     },
-                    "toolCid": {
+                    "modelCid": {
                       "type": "string",
                       "example": "Qm..."
                     },
@@ -639,7 +639,7 @@
                   },
                   "required": [
                     "walletAddress",
-                    "toolCid",
+                    "modelCid",
                     "scatteringMethod",
                     "name",
                     "kwargs"
@@ -650,7 +650,7 @@
           },
           "responses": {
             "201": {
-              "description": "Flow created successfully",
+              "description": "Experiment created successfully",
               "content": {
                 "application/json": {
                   "schema": {
@@ -668,7 +668,7 @@
               "description": "Bad request, such as missing fields or invalid data"
             },
             "409": {
-              "description": "Conflict, flow with the same CID already exists"
+              "description": "Conflict, experiment with the same CID already exists"
             },
             "500": {
               "description": "Internal Server Error"
@@ -676,8 +676,8 @@
           }
         },
         "get": {
-          "operationId": "listFlows",
-          "summary": "List Flows",
+          "operationId": "listExperiments",
+          "summary": "List Experiments",
           "parameters": [
             {
               "name": "cid",
@@ -706,13 +706,13 @@
           ],
           "responses": {
             "200": {
-              "description": "List of flows",
+              "description": "List of experiments",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Flow"
+                      "$ref": "#/components/schemas/Experiment"
                     }
                   }
                 }
@@ -724,10 +724,10 @@
           }
         }
       },
-      "/flows/{cid}": {
+      "/experiments/{cid}": {
         "get": {
-          "operationId": "getFlowByCid",
-          "summary": "Get Flow",
+          "operationId": "getExperimentByCid",
+          "summary": "Get Experiment",
           "parameters": [
             {
               "name": "cid",
@@ -740,11 +740,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Flow data",
+              "description": "Experiment data",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Flow"
+                    "$ref": "#/components/schemas/Experiment"
                   }
                 }
               }
@@ -755,8 +755,8 @@
           }
         },
         "patch": {
-          "operationId": "updateFlow",
-          "summary": "Update Flow",
+          "operationId": "updateExperiment",
+          "summary": "Update Experiment",
           "parameters": [
             {
               "name": "cid",
@@ -769,11 +769,11 @@
           ],
           "responses": {
             "200": {
-              "description": "Flow updated successfully",
+              "description": "Experiment updated successfully",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Flow"
+                    "$ref": "#/components/schemas/Experiment"
                   }
                 }
               }
@@ -980,7 +980,7 @@
             }
           }
         },
-        "Tool": {
+        "Model": {
           "type": "object",
           "properties": {
             "cid": {
@@ -992,7 +992,7 @@
             "walletAddress": {
               "type": "string"
             },
-            "toolJson": {
+            "modelJson": {
               "type": "object"
             },
             "Container": {
@@ -1020,12 +1020,12 @@
             "TaskCategory": {
               "type": "string"
             },
-            "DefaultTool": {
+            "DefaultModel": {
               "type": "boolean"
             }
           }
         },
-        "DataFile": {
+        "File": {
           "type": "object",
           "properties": {
             "cid": {
@@ -1061,7 +1061,7 @@
             }
           }
         },
-        "Flow": {
+        "Experiment": {
           "type": "object",
           "properties": {
             "cid": {
@@ -1096,28 +1096,28 @@
             "walletAddress": {
               "type": "string"
             },
-            "toolID": {
+            "modelID": {
               "type": "string"
             },
-            "tool": {
-              "$ref": "#/components/schemas/Tool"
+            "model": {
+              "$ref": "#/components/schemas/Model"
             },
-            "flowID": {
+            "experimentID": {
               "type": "string"
             },
-            "flow": {
-              "$ref": "#/components/schemas/Flow"
+            "experiment": {
+              "$ref": "#/components/schemas/Experiment"
             },
             "inputs": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             },
             "outputs": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             }
           }
@@ -1131,10 +1131,10 @@
             "type": {
               "type": "string"
             },
-            "dataFiles": {
+            "files": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/DataFile"
+                "$ref": "#/components/schemas/File"
               }
             }
           }

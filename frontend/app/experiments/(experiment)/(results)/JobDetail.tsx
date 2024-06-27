@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label, LabelDescription } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataFile, JobDetail as JobDetailType, selectToolDetail, ToolDetail, useSelector } from "@/lib/redux";
+import { File, JobDetail as JobDetailType, selectModelDetail, ModelDetail, useSelector } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { groupInputs } from "../(forms)/formUtils";
@@ -26,7 +26,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("raw-files");
 
-  const tool = useSelector(selectToolDetail);
+  const model = useSelector(selectModelDetail);
 
   interface File {
     CID: string;
@@ -94,7 +94,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
         </div>
       </TabsContent>
       <TabsContent value="inputs">
-        <InputList userInputs={job.Inputs} tool={tool} />
+        <InputList userInputs={job.Inputs} model={model} />
       </TabsContent>
 
       {/*
@@ -153,8 +153,8 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
   );
 }
 
-function InputList({ userInputs, tool }: { userInputs: { [key: string]: any }; tool: ToolDetail }) {
-  const groupedInputs = groupInputs(tool.ToolJson.inputs);
+function InputList({ userInputs, model }: { userInputs: { [key: string]: any }; model: ModelDetail }) {
+  const groupedInputs = groupInputs(model.ModelJson.inputs);
   return userInputs ? (
     <>
       {!!groupedInputs?.standard && (
@@ -214,7 +214,7 @@ function FileDownloadLink({
   const handleDownload = async (fileCID: string, filename: string) => {
     try {
       const authToken = await getAccessToken();
-      const response = await fetch(`${backendUrl()}/datafiles/${fileCID}/download`, {
+      const response = await fetch(`${backendUrl()}/files/${fileCID}/download`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -244,12 +244,12 @@ function FileDownloadLink({
   );
 }
 
-function FileList({ files }: { files: DataFile[] }) {
+function FileList({ files }: { files: File[] }) {
   return (
     <div>
       {!!files?.length ? (
         <>
-          {files.map((file: DataFile) => (
+          {files.map((file: File) => (
             <div key={file.CID} className="flex items-center justify-between px-6 py-2 border-b border-border/50 last:border-none">
               <div>
                 <FileDownloadLink filename={file.Filename} fileCID={file.CID} className="text-accent hover:underline">

@@ -4,28 +4,28 @@ import { TruncatedString } from "@/components/shared/TruncatedString";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { FlowDetail } from "@/lib/redux";
+import { ExperimentDetail } from "@/lib/redux";
 
 import { ExperimentUIContext } from "../ExperimentUIContext";
 import JobDetail from "./JobDetail";
 
 interface JobsAccordionProps {
-  flow: FlowDetail;
+  experiment: ExperimentDetail;
 }
 
-export default function JobsAccordion({ flow }: JobsAccordionProps) {
+export default function JobsAccordion({ experiment }: JobsAccordionProps) {
   const { activeJobUUID, setActiveJobUUID } = useContext(ExperimentUIContext);
 
   useEffect(() => {
     if (!activeJobUUID) {
-      setActiveJobUUID(flow.Jobs?.[0]?.RayJobID);
+      setActiveJobUUID(experiment.Jobs?.[0]?.RayJobID);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flow.Jobs]);
+  }, [experiment.Jobs]);
 
   return (
     <Accordion type="single" defaultValue={activeJobUUID} value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[600px]">
-      {[...flow.Jobs]?.sort((a, b) => (a.ID || 0) - (b.ID || 0)).map((job, index) => {
+      {[...experiment.Jobs]?.sort((a, b) => (a.ID || 0) - (b.ID || 0)).map((job, index) => {
         const validStates = ["queued", "running", "failed", "completed"];
         const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
 
@@ -35,7 +35,7 @@ export default function JobsAccordion({ flow }: JobsAccordionProps) {
               <AccordionTrigger className="flex items-center justify-between w-full px-6 py-3 text-left hover:no-underline [&[data-state=open]]:bg-muted">
                 <div className="flex items-center gap-2">
                   <div className="w-30">
-                    <div>run {index + 1}</div>
+                    <div>job {index + 1}</div>
                     <div className="flex gap-1 text-xs text-muted-foreground/70">
                       Job ID: {job.RayJobID ? <TruncatedString value={job.RayJobID} /> : "n/a"}
                     </div>

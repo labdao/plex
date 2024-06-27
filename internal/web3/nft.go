@@ -40,7 +40,7 @@ func buildTokenMetadata(ioPath, imageCid, tokenName string) (string, error) {
 
 	for _, ioEntry := range ioMap {
 		graph := map[string]interface{}{
-			"tool":    ioEntry["tool"],
+			"model":   ioEntry["model"],
 			"inputs":  ioEntry["inputs"],
 			"outputs": ioEntry["outputs"],
 			"state":   ioEntry["state"],

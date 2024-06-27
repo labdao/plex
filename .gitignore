@@ -215,7 +215,7 @@ job-*
 job.yaml
 jobs/*
 
-# Tool manifest
+# Model manifest
 .manifest.json
 
 # Params
@@ -321,15 +321,15 @@ gateway/gorm.db
 *.swp
 *.swo
 
-# Ignore tool specific files
+# Ignore model specific files
 *zinc*
 *AF-*
-tools/tmp*
+models/tmp*
 
 # Ignore docker stuff
 docker/.env.tunnel
 
 
 #
-tools/**/test-runs/
+models/**/test-runs/
 .vscode/

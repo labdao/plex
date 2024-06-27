@@ -13,7 +13,7 @@ on:
     tags:
       - '**'
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools-manifest.yml'
 
   pull_request:
@@ -21,7 +21,7 @@ on:
       - "main"
       - "staging"
     paths:
-      - 'tools/**'
+      - 'models/**'
       - '.github/workflows/tools-manifest.yml'
 
 env:
@@ -51,16 +51,12 @@ jobs:
         ###############################################################
         # Following syntax of topleveldir_configfilename_withoutjson
         filters: |
-          # Toplevel dir after tools_filename_without_json_extension
+          # Toplevel dir after models_filename_without_json_extension
           # this is a workaround to allow multiple config files under same directory
-          # Example if you have a config file under tools/mytool/mytool_config_file.json
+          # Example if you have a config file under models/mymodel/mymodel_config_file.json
           # you would add,
-          # mytool_mytool_config_file:
-          #   - 'tools/mytool/mytool_config_file.json'
-          colabdesign_colabdesign:
-            - 'tools/colabdesign/colabdesign.json'
-          labsay_labsay:
-            - 'tools/labsay/labsay.json'
+          # mymodel_mymodel_config_file:
+          #   - 'models/mymodel/mymodel_config_file.json'
 
   tools:
     needs: changes-tools
@@ -80,7 +76,7 @@ jobs:
 
       - name: Setting tool file path
         run: |
-          echo "TOOL_FILE_PATH=tools/${{ env.TOOL_DIR }}/${{ env.TOOL_FILE }}.json" >> $GITHUB_ENV
+          echo "TOOL_FILE_PATH=models/${{ env.TOOL_DIR }}/${{ env.TOOL_FILE }}.json" >> $GITHUB_ENV
 
       - name: Setting some more tool related envs
         run: |
@@ -141,13 +137,13 @@ jobs:
       matrix:
         backends:
           - env: stg
-            url: 'backend.stg.labdao.xyz:8080/tools'
+            url: 'backend.stg.labdao.xyz:8080/models'
             api_key: ${{ secrets.STG_API_KEY }}
           - env: prod
-            url: 'backend.prod.labdao.xyz:8080/tools'
+            url: 'backend.prod.labdao.xyz:8080/models'
             api_key: ${{ secrets.PROD_API_KEY }}
           - env: lbbprod
-            url: 'backend.lab.bio:8080/tools'
+            url: 'backend.lab.bio:8080/models'
             api_key: ${{ secrets.LBBPROD_API_KEY }}
         tools: "${{ fromJSON(needs.changes-tools.outputs.tools) }}"
     runs-on:

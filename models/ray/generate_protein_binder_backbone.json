@@ -1,0 +1,82 @@
+{
+    "name": "generate_protein_binder_backbone_v0.0",
+    "description": "Simulate a protein complex using ColabFold",
+    "task": "protein folding",
+    "taskCategory": "protein-binder-design",
+    "modelType": "ray",
+    "rayServiceEndpoint": "/generate_protein_binder_backbone",
+    "checkpointCompatible": true,
+    "xAxis": "plddt",
+    "yAxis": "i_pae",
+    "inputs": {
+      "pdb": {
+        "type": "file",
+        "description": "The target protein to design against.",
+        "array": false,
+        "glob": [
+          "*.pdb"
+        ],
+        "default": "",
+        "min": "",
+        "max": "",
+        "example": "my_target_protein.pdb",
+        "grouping": "target",
+        "position": "101",
+        "required": true
+      },
+      "target_sequence": {
+        "type": "string",
+        "description": "The sequence of the target protein",
+        "required": true,
+        "default": "ASISTGGGN",
+        "example": "ASISTGGGN",
+        "grouping": "target",
+        "position": "102"
+      },
+      "binder_sequence": {
+        "type": "string",
+        "description": "The sequence of the binder protein",
+        "required": true,
+        "default": "PTVEAVTLLAKGEKEP",
+        "example": "PTVEAVTLLAKGEKEP",
+        "grouping": "target",
+        "position": "103"
+      },
+      "target_chain": {
+        "type": "string",
+        "description": "The chain of the target protein to design against.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "A",
+        "min": "",
+        "max": "",
+        "example": "A",
+        "grouping": "target",
+        "position": "104",
+        "required": true
+      },
+      "binder_chain": {
+        "type": "string",
+        "description": "The chain of the target protein to design against.",
+        "array": false,
+        "glob": [
+          ""
+        ],
+        "default": "B",
+        "min": "",
+        "max": "",
+        "example": "B",
+        "grouping": "target",
+        "position": "105",
+        "required": true
+      }
+    },
+    "outputs": {
+      "string_message": {
+        "type": "File",
+        "glob": ["*.json"]
+      }
+    }
+}

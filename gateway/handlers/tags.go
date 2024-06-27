@@ -63,7 +63,7 @@ func ListTagsHandler(db *gorm.DB) http.HandlerFunc {
 
 		var tags []models.Tag
 
-		result := db.Preload("DataFiles").Find(&tags)
+		result := db.Preload("Files").Find(&tags)
 		if result.Error != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error fetching tags: %v", result.Error), http.StatusInternalServerError)
 			return

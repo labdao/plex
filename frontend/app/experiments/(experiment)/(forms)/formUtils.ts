@@ -23,22 +23,22 @@ export function groupInputs(inputs: any) {
 
 type TransformedJSON = {
   name: string;
-  toolCid: string;
+  modelCid: string;
   walletAddress: string;
   scatteringMethod: string;
   kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
 };
 
-export function transformJson(tool: any, originalJson: any, walletAddress: string): TransformedJSON {
-  const { name, tool: toolCid, ...dynamicKeys } = originalJson;
+export function transformJson(model: any, originalJson: any, walletAddress: string): TransformedJSON {
+  const { name, model: modelCid, ...dynamicKeys } = originalJson;
 
-  const toolJsonInputs = tool.ToolJson.inputs;
+  const modelJsonInputs = model.ModelJson.inputs;
 
   const kwargs = Object.fromEntries(
     Object.entries(dynamicKeys).map(([key, valueArray]) => {
       // Check if the 'array' property for this key is true
       // @ts-ignore
-      if (toolJsonInputs[key] && toolJsonInputs[key]["array"]) {
+      if (modelJsonInputs[key] && modelJsonInputs[key]["array"]) {
         // Group the entire array as a single element in another array
         // @ts-ignore
         return [key, [valueArray.map((valueObject) => valueObject.value)]];
@@ -53,7 +53,7 @@ export function transformJson(tool: any, originalJson: any, walletAddress: strin
   // Return the transformed JSON
   return {
     name: name,
-    toolCid: tool.CID,
+    modelCid: model.CID,
     walletAddress: walletAddress,
     scatteringMethod: "crossProduct",
     kwargs: kwargs,

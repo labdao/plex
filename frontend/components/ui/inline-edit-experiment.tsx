@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { PencilIcon, CheckIcon } from "lucide-react";
-import { AppDispatch, flowUpdateThunk } from '@/lib/redux';
+import { AppDispatch, experimentUpdateThunk } from '@/lib/redux';
 
-interface Flow {
+interface Experiment {
     ID: number;
     Name: string;
 }
 
 interface InlineEditExperimentProps {
-    flow: Flow;
+    experiment: Experiment;
 }
 
-export const InlineEditExperiment: React.FC<InlineEditExperimentProps> = ({ flow }) => {
+export const InlineEditExperiment: React.FC<InlineEditExperimentProps> = ({ experiment }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(flow.Name);
+  const [name, setName] = useState(experiment.Name);
   const dispatch: AppDispatch = useDispatch();
 
   const handleRename = () => {
-    const action = flowUpdateThunk({
-        flowId: flow.ID.toString(),
+    const action = experimentUpdateThunk({
+        experimentId: experiment.ID.toString(),
         updates: { name }
       });
       dispatch(action);

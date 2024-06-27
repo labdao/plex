@@ -14,14 +14,14 @@ runs:
         fi
       shell: bash
 
-    # - name: Test add Datafile endpoint
+    # - name: Test add File endpoint
     #   run: |
     #     # upload first file
     #     response=$(curl --silent -X POST \
     #                       -F "file=@testdata/ipfs_test/haiku2.txt;filename=haiku2.txt" \
     #                       -F "filename=haiku2.txt" \
     #                       -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-    #                       http://localhost:8080/datafiles)
+    #                       http://localhost:8080/files)
     #     if echo "$response" | jq -e '.cid' > /dev/null; then
     #       echo "File upload test passed"
     #     else
@@ -36,7 +36,7 @@ runs:
     #                       -F "file=@testdata/binding/abl/ZINC000003986735.sdf;filename=ZINC000003986735.sdf" \
     #                       -F "filename=ZINC000003986735.sdf" \
     #                       -F "wallet_address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-    #                       http://localhost:8080/datafiles)
+    #                       http://localhost:8080/files)
     #     if echo "$response" | jq -e '.cid' > /dev/null; then
     #       echo "File upload test passed"
     #     else
@@ -47,15 +47,15 @@ runs:
     #     fi
     #   shell: bash
 
-    # - name: Test List Datafiles Endpoint
+    # - name: Test List Files Endpoint
     #   run: |
-    #     response=$(curl --silent http://localhost:8080/datafiles)
+    #     response=$(curl --silent http://localhost:8080/files)
     #     length=$(echo "$response" | jq 'length')
 
     #     if [ "$length" -eq 2 ]; then
-    #        echo "Datafiles test passed"
+    #        echo "Files test passed"
     #     else
-    #        echo "Datafiles test failed: Expected length of 2 but got '$length'"
+    #        echo "Files test failed: Expected length of 2 but got '$length'"
     #        echo "response was:"
     #        echo "$response"
     #        exit 1
@@ -64,9 +64,9 @@ runs:
 
     # - name: Test add Tool Endpoint
     #   run: |
-    #     TOOL_JSON_CONTENT=$(jq -c . < tools/labsay/labsay.json)
-    #     json_payload="{\"toolJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
-    #     response=$(curl -s -X POST "http://localhost:8080/tools" \
+    #     TOOL_JSON_CONTENT=$(jq -c . < models/labsay/labsay.json)
+    #     json_payload="{\"modelJson\": $TOOL_JSON_CONTENT, \"walletAddress\": \"0xab5801a7d398351b8be11c439e05c5b3259aec9b\"}"
+    #     response=$(curl -s -X POST "http://localhost:8080/models" \
     #            -H "Content-Type: application/json" \
     #            -d "$json_payload")
 
@@ -84,7 +84,7 @@ runs:
 
     # - name: Test list Tools Endpoint
     #   run: |
-    #     response=$(curl --silent http://localhost:8080/tools)
+    #     response=$(curl --silent http://localhost:8080/models)
     #     length=$(echo "$response" | jq 'length')
 
     #     if [ "$length" -gt 1 ]; then
@@ -97,12 +97,12 @@ runs:
     #     fi
     #   shell: bash
 
-    # - name: Test Add Flow Endpoint
+    # - name: Test Add Experiment Endpoint
     #   run: |
     #     payload='{
-    #       "name": "testFlow",
+    #       "name": "testExperiment",
     #       "walletAddress": "0xab5801a7d398351b8be11c439e05c5b3259aec9b",
-    #       "toolCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
+    #       "modelCid": "QmdqS6vbV296BzeahdDiPvXG6DGN2CtXSBuimxU3ChbJTC",
     #       "scatteringMethod": "dotProduct",
     #       "kwargs": {
     #         "file_example": ["QmV1e4ZoBrHuPJ1cqbzhkp9g4trte4N21fGLNrQxQpXgK6/haiku2.txt"],
@@ -111,7 +111,7 @@ runs:
     #       }
     #     }'
 
-    #     response=$(curl -s -X POST "http://localhost:8080/flows" \
+    #     response=$(curl -s -X POST "http://localhost:8080/experiments" \
     #            -H "Content-Type: application/json" \
     #            -d "$payload")
 
@@ -123,9 +123,9 @@ runs:
     #     # Check if the CID exists
     #     if [[ ! -z "$cid_value" && "$cid_value" != "null" ]]; then
     #        echo "$response" | jq -r '.CID'
-    #        echo "Create Flow test passed"
+    #        echo "Create Experiment test passed"
     #     else
-    #        echo "Create Flow test failed: CID not found in the response"
+    #        echo "Create Experiment test failed: CID not found in the response"
     #        echo "response was:"
     #        echo "$response"
     #        exit 1

@@ -12,63 +12,63 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   AppDispatch,
-  createToolThunk,
-  dataFileListThunk,
-  selectAddToolError,
-  selectAddToolJson,
-  selectAddToolLoading,
-  selectAddToolSuccess,
-  setAddToolError,
-  setAddToolJson,
-  setAddToolLoading,
-  setAddToolSuccess,
-  toolListThunk,
+  createModelThunk,
+  fileListThunk,
+  selectAddModelError,
+  selectAddModelJson,
+  selectAddModelLoading,
+  selectAddModelSuccess,
+  setAddModelError,
+  setAddModelJson,
+  setAddModelLoading,
+  setAddModelSuccess,
+  modelListThunk,
 } from "@/lib/redux";
 
-export default function AddTool() {
+export default function AddModel() {
   const [open, setOpen] = React.useState(false);
   const { user } = usePrivy();
   const dispatch = useDispatch<AppDispatch>();
 
   const walletAddress = user?.wallet?.address;
-  const loading = useSelector(selectAddToolLoading);
-  const error = useSelector(selectAddToolError);
-  const toolJson = useSelector(selectAddToolJson);
-  const toolSuccess = useSelector(selectAddToolSuccess);
+  const loading = useSelector(selectAddModelLoading);
+  const error = useSelector(selectAddModelError);
+  const modelJson = useSelector(selectAddModelJson);
+  const modelSuccess = useSelector(selectAddModelSuccess);
 
   useEffect(() => {
-    if (toolSuccess) {
-      dispatch(setAddToolSuccess(false));
-      dispatch(setAddToolJson(""));
+    if (modelSuccess) {
+      dispatch(setAddModelSuccess(false));
+      dispatch(setAddModelJson(""));
       setOpen(false);
       //TODO: Update the list
       return;
     }
-    dispatch(toolListThunk());
-    dispatch(dataFileListThunk({}));
-  }, [toolSuccess, dispatch]);
+    dispatch(modelListThunk());
+    dispatch(fileListThunk({}));
+  }, [modelSuccess, dispatch]);
 
-  const handleToolJsonChange = (toolJsonInput: string) => {
-    dispatch(setAddToolJson(toolJsonInput));
+  const handleModelJsonChange = (modelJsonInput: string) => {
+    dispatch(setAddModelJson(modelJsonInput));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitting tool.json: ", toolJson);
-    dispatch(setAddToolLoading(true));
-    dispatch(setAddToolError(""));
+    console.log("Submitting model.json: ", modelJson);
+    dispatch(setAddModelLoading(true));
+    dispatch(setAddModelError(""));
     try {
-      const toolJsonParsed = JSON.parse(toolJson);
+      const modelJsonParsed = JSON.parse(modelJson);
       if (!walletAddress) {
-        dispatch(setAddToolError("Wallet address missing"));
+        dispatch(setAddModelError("Wallet address missing"));
         return;
       }
-      await dispatch(createToolThunk({ toolJson: toolJsonParsed }));
+      await dispatch(createModelThunk({ modelJson: modelJsonParsed }));
     } catch (error) {
-      console.error("Error creating tool", error);
-      dispatch(setAddToolError("Error creating tool"));
+      console.error("Error creating model", error);
+      dispatch(setAddModelError("Error creating model"));
     }
-    dispatch(setAddToolLoading(false));
+    dispatch(setAddModelLoading(false));
   };
 
   return (
@@ -86,13 +86,13 @@ export default function AddTool() {
             <form onSubmit={handleSubmit}>
               <MantineProvider>
                 <JsonInput
-                  label="Tool Definition"
-                  placeholder="Paste your tool's JSON definition here."
+                  label="Model Definition"
+                  placeholder="Paste your model's JSON definition here."
                   validationError="Invalid JSON"
                   autosize
                   minRows={10}
-                  value={toolJson}
-                  onChange={handleToolJsonChange}
+                  value={modelJson}
+                  onChange={handleModelJsonChange}
                   styles={{
                     input: { width: "100%" },
                   }}

@@ -4,11 +4,11 @@ import { HelpCircleIcon, InfoIcon, PanelRightCloseIcon, PanelRightOpenIcon } fro
 import React, { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { ToolSelect } from "@/components/shared/ToolSelect";
+import { ModelSelect } from "@/components/shared/ModelSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppDispatch, selectToolDetail, selectToolDetailLoading, ToolDetail, toolDetailThunk } from "@/lib/redux";
+import { AppDispatch, selectModelDetail, selectModelDetailLoading, ModelDetail, modelDetailThunk } from "@/lib/redux";
 import { cn } from "@/lib/utils";
 
 import { ExperimentUIContext } from "../ExperimentUIContext";
@@ -29,17 +29,17 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
   const { modelPanelOpen, setModelPanelOpen } = useContext(ExperimentUIContext);
   const [activeTab, setActiveTab] = useState("guide");
   const dispatch = useDispatch<AppDispatch>();
-  const tool = useSelector(selectToolDetail);
-  const toolDetailLoading = useSelector(selectToolDetailLoading);
+  const model = useSelector(selectModelDetail);
+  const modelDetailLoading = useSelector(selectModelDetailLoading);
 
   useEffect(() => {
-    if (!toolDetailLoading) {
+    if (!modelDetailLoading) {
       setModelPanelOpen(Boolean(defaultOpen));
     }
-  }, [toolDetailLoading, defaultOpen, setModelPanelOpen]);
+  }, [modelDetailLoading, defaultOpen, setModelPanelOpen]);
 
-  const handleToolChange = (value: any) => {
-    dispatch(toolDetailThunk(value));
+  const handleModelChange = (value: any) => {
+    dispatch(modelDetailThunk(value));
     setActiveTab("guide");
   };
 
@@ -69,17 +69,17 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
             </Button>
           </div>
           {showSelect ? (
-            <ToolSelect onChange={handleToolChange} taskSlug={task?.slug} />
+            <ModelSelect onChange={handleModelChange} taskSlug={task?.slug} />
           ) : (
             <div className="ml-2 text-xl truncate font-heading">
-              {tool.ToolJson?.author || "unknown"}/{tool.ToolJson?.name}
+              {model.ModelJson?.author || "unknown"}/{model.ModelJson?.name}
             </div>
           )}
         </div>
 
         <div className="flex grow">
           <div className="flex flex-col justify-start h-auto gap-2 p-3">
-            {tool.ToolJson?.guide && (
+            {model.ModelJson?.guide && (
               <Button
                 onClick={() => handleTabChange("guide")}
                 variant="ghost"
@@ -100,8 +100,8 @@ export default function ModelPanel({ task, defaultOpen, showSelect }: ModelInfoP
             
           </div>
           <div className="p-2 mt-2 grow">
-            {tool.ToolJson?.guide && activeTab === "guide" && <ModelGuide tool={tool} />}
-            {tool.ToolJson?.description && activeTab === "info" && <ModelInfo tool={tool} />}
+            {model.ModelJson?.guide && activeTab === "guide" && <ModelGuide model={model} />}
+            {model.ModelJson?.description && activeTab === "info" && <ModelInfo model={model} />}
           </div>
         </div>
       </div>
