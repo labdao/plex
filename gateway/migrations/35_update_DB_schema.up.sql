@@ -10,6 +10,8 @@ ALTER TABLE users ADD COLUMN id SERIAL;
 
 ALTER TABLE api_keys DROP CONSTRAINT IF EXISTS fk_user;
 ALTER TABLE user_files DROP CONSTRAINT IF EXISTS fk_user_files_wallet_address;
+ALTER TABLE user_files DROP CONSTRAINT IF EXISTS fk_user_files_user;
+ALTER TABLE transactions DROP CONSTRAINT IF EXISTS fk_transactions_user;
 ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_user_id_fkey;
 
 ALTER TABLE users DROP CONSTRAINT users_pkey;
@@ -40,7 +42,7 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS last_modified_at TIMESTAMP;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS user_id INT;
 ALTER TABLE jobs ADD FOREIGN KEY (user_id) REFERENCES users(id);
 
---cid is a primary key
+ALTER TABLE jobs DROP CONSTRAINT IF EXISTS fk_jobs_model;
 ALTER TABLE models DROP CONSTRAINT models_pkey;
 ALTER TABLE models DROP COLUMN IF EXISTS cid;
 ALTER TABLE models DROP COLUMN IF EXISTS wallet_address;
