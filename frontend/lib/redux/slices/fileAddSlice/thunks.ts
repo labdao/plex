@@ -1,7 +1,7 @@
 import { createAppAsyncThunk } from "@/lib/redux/createAppAsyncThunk";
 
 import { saveFileToServer } from "./actions";
-import { setCidDataSlice, setFileError, setFilenameDataSlice } from "./dataSlice";
+import { setIdDataSlice, setFileError, setFilenameDataSlice } from "./dataSlice";
 
 interface FilePayload {
   file: File;

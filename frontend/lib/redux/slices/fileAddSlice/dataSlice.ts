@@ -25,7 +25,7 @@ export const fileAddSlice = createSlice({
     setFilenameDataSlice: (state, action: PayloadAction<string>) => {
       state.filename = action.payload;
     },
-    setCidDataSlice: (state, action: PayloadAction<string>) => {
+    setIdDataSlice: (state, action: PayloadAction<string>) => {
       state.id = action.payload;
     },
     setFileError: (state, action: PayloadAction<string | null>) => {
@@ -63,7 +63,7 @@ export const fileAddSlice = createSlice({
   },
 });
 
-export const { setFilenameDataSlice, setCidDataSlice, setFileError, startFileUploadDataSlice, endFileUploadDataSlice, setIsUploadedDataSlice } =
+export const { setFilenameDataSlice, setIdDataSlice, setFileError, startFileUploadDataSlice, endFileUploadDataSlice, setIsUploadedDataSlice } =
   fileAddSlice.actions;
 
 export default fileAddSlice.reducer;

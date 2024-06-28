@@ -185,7 +185,7 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		if err := db.Table("jobs").
 			Select("jobs.id as job_id, models.model_json as model_json, jobs.result_json as result_json").
 			Joins("join experiments on experiments.id = jobs.experiment_id").
-			Joins("join models on models.cid = jobs.model_id").
+			Joins("join models on models.id = jobs.model_id").
 			Where("experiments.id = ?", experimentID).
 			Scan(&experimentListCheckpointsResult).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {

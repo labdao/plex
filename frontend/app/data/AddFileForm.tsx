@@ -12,7 +12,7 @@ import {
   endFileUploadDataSlice,
   fetchUserDataAsync,
   saveFileAsync,
-  selectCID,
+  selectID,
   selectFileError,
   selectFileIsLoading,
   selectDateFileIsUploaded,
