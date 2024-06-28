@@ -126,10 +126,6 @@ export default function ListFiles() {
   const pageSize = 50;
 
   useEffect(() => {
-    console.log("columns = ", columns);
-  }, [columns]);
-
-  useEffect(() => {
     const fetchFiles = async () => {
       setLoading(true);
       try {

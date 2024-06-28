@@ -39,6 +39,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                 {index === 0 && (
                   <span>
                     <span>{inputKey.replaceAll("_", " ")}</span>{" "}
+                    {input?.required && <span className="text-red-500">*</span>}
                     <LabelDescription>
                       {input?.type} {input?.array ? "array" : ""}
                     </LabelDescription>{" "}
@@ -67,7 +68,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                       />
                     )}
                     {input.type === "string" && <Textarea placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
-                    {(input.type === "number" || input.type === "int") && <Input type="number" {...field} />}
+                    {(input.type === "number" || input.type === "int") && <Input type="number" placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
                     {(input.type === "bool" || input.type === "boolean") && (
                       <BooleanInput {...field} checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
                     )}
