@@ -42,10 +42,6 @@ export default function ListModelFiles() {
   const [models, setModels] = useState<Model[]>([]);
 
   useEffect(() => {
-    console.log("fetched columns", columns);
-  }, [columns]);
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         const authToken = await getAccessToken();
