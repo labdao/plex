@@ -244,7 +244,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Where("id = ?", modelID).First(&model)
 			if result.Error != nil {
 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-					fmt.Fprintf(os.Stderr, "Model with ID %d not found\n", modelID)
+					fmt.Fprintf(os.Stderr, "Model with ID %d not found\n", model.ID)
 					w.WriteHeader(http.StatusNotFound)
 				} else {
 					fmt.Fprintf(os.Stderr, "Error querying model: %v\n", result.Error)
