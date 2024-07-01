@@ -341,7 +341,7 @@ func ListModelsHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var models []models.Model
-		if result := query.Preload("User").Find(&models); result.Error != nil {
+		if result := query.Find(&models); result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching models: %v", result.Error), http.StatusInternalServerError)
 			return
 		}

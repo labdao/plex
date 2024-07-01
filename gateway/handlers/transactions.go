@@ -27,7 +27,7 @@ func ListTransactionsHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var transactions []models.Transaction
-		result := db.Preload("User").Where("wallet_address = ?", user.WalletAddress).Find(&transactions)
+		result := db.Where("wallet_address = ?", user.WalletAddress).Find(&transactions)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching Transactions: %v", result.Error), http.StatusInternalServerError)
 			return
