@@ -9,8 +9,7 @@ import (
 type Model struct {
 	ID                 int            `gorm:"primaryKey;autoIncrement"`
 	Name               string         `gorm:"type:text;not null;unique"`
-	WalletAddress      string         `gorm:"not null"`
-	User               User           `gorm:"foreignKey:WalletAddress"`
+	WalletAddress      string         `gorm:"type:varchar(42);not null"`
 	ModelJson          datatypes.JSON `gorm:"type:json"`
 	CreatedAt          time.Time      `gorm:"autoCreateTime"`
 	Display            bool           `gorm:"type:boolean;default:true"`

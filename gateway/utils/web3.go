@@ -375,7 +375,7 @@ func MintNFT(db *gorm.DB, experiment *models.Experiment, metadataCID string) err
 	log.Println("Triggering minting process via Defender Autotask...")
 
 	data := postData{
-		RecipientAddress: experiment.User.WalletAddress,
+		RecipientAddress: experiment.WalletAddress,
 		Cid:              metadataCID,
 	}
 

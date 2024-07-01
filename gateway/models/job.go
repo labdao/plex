@@ -40,8 +40,7 @@ type Job struct {
 	Experiment     Experiment     `gorm:"foreignKey:ExperimentID"`
 	ModelID        int            `gorm:"type:int;not null;index"`
 	Model          Model          `gorm:"foreignKey:ModelID"`
-	WalletAddress  string         `gorm:"not null"`
-	User           User           `gorm:"foreignKey:WalletAddress"`
+	WalletAddress  string         `gorm:"type:varchar(255)"`
 	Public         bool           `gorm:"type:boolean;not null;default:false"`
 	RetryCount     int            `gorm:"type:int;not null;default:0"`
 	Error          string         `gorm:"type:text;default:''"`

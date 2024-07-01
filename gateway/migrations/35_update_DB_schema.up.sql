@@ -40,6 +40,10 @@ ALTER TABLE models DROP COLUMN IF EXISTS timestamp;
 ALTER TABLE models ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;
 ALTER TABLE models ADD COLUMN id SERIAL PRIMARY KEY;
 
+ALTER TABLE models ADD FOREIGN KEY (wallet_address) REFERENCES users(wallet_address);
+ALTER TABLE experiments ADD CONSTRAINT fk_experiments_user FOREIGN KEY (wallet_address) REFERENCES users(wallet_address);
+ALTER TABLE jobs ADD FOREIGN KEY (wallet_address) REFERENCES users(wallet_address);
+
 ALTER TABLE file_tags DROP CONSTRAINT file_tags_file_c_id_fkey;
 ALTER TABLE file_tags DROP CONSTRAINT IF EXISTS fk_file_tags_file;
 ALTER TABLE file_tags RENAME COLUMN file_c_id TO file_id;

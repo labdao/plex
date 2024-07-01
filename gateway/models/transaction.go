@@ -11,5 +11,4 @@ type Transaction struct {
 	WalletAddress string    `gorm:"type:varchar(42);not null" json:"walletAddress"`
 	Description   string    `gorm:"type:text" json:"description"`
 	CreatedAt     time.Time `gorm:""`
-	User          User      `gorm:"foreignKey:WalletAddress;references:WalletAddress"`
 }
