@@ -153,7 +153,7 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		modelEntry := models.Model{
-			UserID:             user.ID,
+			WalletAddress:      user.WalletAddress,
 			Name:               model.Name,
 			ModelJson:          modelJSON,
 			CreatedAt:          time.Now().UTC(),
@@ -332,8 +332,8 @@ func ListModelsHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("name = ?", name)
 		}
 
-		if userId := r.URL.Query().Get("user_id"); userId != "" {
-			query = query.Where("user_id = ?", userId)
+		if walletAddress := r.URL.Query().Get("wallet_address"); walletAddress != "" {
+			query = query.Where("wallet_address = ?", walletAddress)
 		}
 
 		if taskCategory := r.URL.Query().Get("taskCategory"); taskCategory != "" {

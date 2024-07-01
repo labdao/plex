@@ -106,7 +106,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		experiment := models.Experiment{
-			UserID:         user.ID,
+			WalletAddress:  user.WalletAddress,
 			Name:           name,
 			LastModifiedAt: time.Now().UTC(),
 			Public:         false,
@@ -128,12 +128,12 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			job := models.Job{
-				ModelID:      modelId,
-				ExperimentID: experiment.ID,
-				UserID:       user.ID,
-				Inputs:       datatypes.JSON(inputsJSON),
-				CreatedAt:    time.Now().UTC(),
-				Public:       false,
+				ModelID:       modelId,
+				ExperimentID:  experiment.ID,
+				WalletAddress: user.WalletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				CreatedAt:     time.Now().UTC(),
+				Public:        false,
 			}
 
 			result := db.Create(&job)
@@ -269,7 +269,7 @@ func GetExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if !experiment.Public && experiment.UserID != user.ID && !user.Admin {
+		if !experiment.Public && experiment.WalletAddress != user.WalletAddress && !user.Admin {
 			http.Error(w, "Experiment not found or not authorized", http.StatusNotFound)
 			return
 		}
@@ -380,7 +380,7 @@ func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if experiment.UserID != user.ID {
+		if experiment.WalletAddress != user.WalletAddress {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -510,7 +510,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if experiment.UserID != user.ID {
+		if experiment.WalletAddress != user.WalletAddress {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -570,12 +570,12 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			job := models.Job{
-				ModelID:      modelId,
-				ExperimentID: experiment.ID,
-				UserID:       user.ID,
-				Inputs:       datatypes.JSON(inputsJSON),
-				CreatedAt:    time.Now().UTC(),
-				Public:       false,
+				ModelID:       modelId,
+				ExperimentID:  experiment.ID,
+				WalletAddress: user.WalletAddress,
+				Inputs:        datatypes.JSON(inputsJSON),
+				CreatedAt:     time.Now().UTC(),
+				Public:        false,
 			}
 
 			result = db.Create(&job)

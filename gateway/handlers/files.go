@@ -100,12 +100,12 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 
 		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 		file := models.File{
-			FileHash:  hash,
-			UserID:    user.ID,
-			Filename:  filename,
-			CreatedAt: time.Now().UTC(),
-			Public:    isPublic,
-			S3URI:     s3_uri,
+			FileHash:      hash,
+			WalletAddress: user.WalletAddress,
+			Filename:      filename,
+			CreatedAt:     time.Now().UTC(),
+			Public:        isPublic,
+			S3URI:         s3_uri,
 		}
 
 		var existingFile models.File
@@ -113,7 +113,7 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			var userHasFile bool
 			var count int64
 			db.Model(&file).Joins("JOIN user_files ON user_files.file_id = files.id").
-				Where("user_files.user_id = ? AND files.id = ?", user.WalletAddress, hash).First(&file).Count(&count)
+				Where("user_files.wallet_address = ? AND files.id = ?", user.WalletAddress, hash).First(&file).Count(&count)
 			userHasFile = count > 0
 			if userHasFile {
 				utils.SendJSONError(w, "A user file with the same ID already exists", http.StatusConflict)
@@ -228,8 +228,8 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.File{}).
-			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.user_id = ?", user.ID).
-			Where("files.public = true OR (files.public = false AND user_files.user_id = ?)", user.ID)
+			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.wallet_address = ?", user.WalletAddress).
+			Where("files.public = true OR (files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
 
 		if id := r.URL.Query().Get("id"); id != "" {
 			query = query.Where("files.id = ?", id)
@@ -369,7 +369,7 @@ func UpdateFileHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if file.UserID != user.ID {
+		if file.WalletAddress != user.WalletAddress {
 			utils.SendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

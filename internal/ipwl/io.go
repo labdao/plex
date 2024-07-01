@@ -8,13 +8,13 @@ import (
 )
 
 type IO struct {
-	ModelName string                 `json:"modelName"`
-	Inputs    map[string]interface{} `json:"inputs"`
-	Outputs   map[string]interface{} `json:"outputs"`
-	State     string                 `json:"state"`
-	ErrMsg    string                 `json:"errMsg"`
-	UserID    string                 `json:"userId"`
-	RayJobID  string                 `json:"rayJobId"`
+	ModelName     string                 `json:"modelName"`
+	Inputs        map[string]interface{} `json:"inputs"`
+	Outputs       map[string]interface{} `json:"outputs"`
+	State         string                 `json:"state"`
+	ErrMsg        string                 `json:"errMsg"`
+	WalletAddress string                 `json:"walletAddress"`
+	RayJobID      string                 `json:"rayJobId"`
 }
 
 func ReadIOList(filePath string) ([]IO, error) {

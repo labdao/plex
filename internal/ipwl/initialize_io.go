@@ -45,19 +45,19 @@ func InitializeIo(modelID int, scatteringMethod string, inputVectors map[string]
 		return nil, fmt.Errorf("invalid scattering method: %s", scatteringMethod)
 	}
 
-	var userId string
+	var walletAddress string
 
 	if web3.IsValidEthereumAddress(os.Getenv("RECIPIENT_WALLET")) {
-		userId = os.Getenv("RECIPIENT_WALLET")
+		walletAddress = os.Getenv("RECIPIENT_WALLET")
 	} else {
 		fmt.Print("Invalid wallet address detected. Using empty string for user ID.\n")
-		userId = ""
+		walletAddress = ""
 	}
 
 	var ioList []IO
 
 	for _, inputs := range inputsList {
-		io, err := createSingleIo(inputs, model, modelName, userId, inputVectors)
+		io, err := createSingleIo(inputs, model, modelName, walletAddress, inputVectors)
 		if err != nil {
 			return nil, err
 		}
@@ -145,14 +145,14 @@ func crossProductScattering(inputVectors map[string][]interface{}) ([][]interfac
 	return inputsList, nil
 }
 
-func createSingleIo(inputs []interface{}, model Model, modelName string, userId string, inputVectors map[string][]interface{}) (IO, error) {
+func createSingleIo(inputs []interface{}, model Model, modelName string, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
 	io := IO{
-		ModelName: modelName,
-		Inputs:    make(map[string]interface{}),
-		Outputs:   make(map[string]interface{}),
-		State:     "created",
-		ErrMsg:    "",
-		UserID:    userId,
+		ModelName:     modelName,
+		Inputs:        make(map[string]interface{}),
+		Outputs:       make(map[string]interface{}),
+		State:         "created",
+		ErrMsg:        "",
+		WalletAddress: walletAddress,
 	}
 
 	inputKeys := make([]string, 0, len(inputVectors))

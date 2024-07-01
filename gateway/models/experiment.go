@@ -8,7 +8,7 @@ type Experiment struct {
 	Name           string    `gorm:"type:varchar(255);"`
 	Public         bool      `gorm:"type:boolean;not null;default:false"`
 	RecordCID      string    `gorm:"column:record_cid;type:varchar(255);"`
-	UserID         uint      `gorm:"not null"`
-	User           User      `gorm:"foreignKey:UserID"`
+	WalletAddress  string    `gorm:"not null"`
+	User           User      `gorm:"foreignKey:WalletAddress"`
 	LastModifiedAt time.Time `gorm:"autoUpdateTime"`
 }

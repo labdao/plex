@@ -434,12 +434,12 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	}
 
 	file = models.File{
-		FileHash:  hash,
-		UserID:    job.UserID,
-		Filename:  filepath.Base(fileDetail.URI),
-		Tags:      tags,
-		CreatedAt: time.Now().UTC(),
-		S3URI:     fileDetail.URI,
+		FileHash:      hash,
+		WalletAddress: job.WalletAddress,
+		Filename:      filepath.Base(fileDetail.URI),
+		Tags:          tags,
+		CreatedAt:     time.Now().UTC(),
+		S3URI:         fileDetail.URI,
 	}
 
 	if err := db.Create(&file).Error; err != nil {

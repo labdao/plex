@@ -45,7 +45,7 @@ func GetJobHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if !job.Public && job.UserID != user.ID && !user.Admin {
+		if !job.Public && job.WalletAddress != user.WalletAddress && !user.Admin {
 			http.Error(w, "Job not found or not authorized", http.StatusNotFound)
 			return
 		}

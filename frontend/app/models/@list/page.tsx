@@ -31,10 +31,10 @@ export default function ListModelFiles() {
       },
     },
     {
-      accessorKey: "UserID",
+      accessorKey: "WalletAddress",
       header: "User",
       cell: ({ row }) => {
-        return row.getValue("UserID");
+        return row.getValue("WalletAddress");
       },
     },
   ];

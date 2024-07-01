@@ -269,7 +269,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			experiment := models.Experiment{
-				UserID:         user.ID,
+				WalletAddress:  user.WalletAddress,
 				Name:           "Experiment created by Stripe webhook",
 				LastModifiedAt: time.Now().UTC(),
 				Public:         false,
@@ -291,12 +291,12 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				}
 
 				job := models.Job{
-					ModelID:      model.ID,
-					ExperimentID: experiment.ID,
-					UserID:       user.ID,
-					Inputs:       datatypes.JSON(inputsJSON),
-					CreatedAt:    time.Now().UTC(),
-					Public:       false,
+					ModelID:       model.ID,
+					ExperimentID:  experiment.ID,
+					WalletAddress: user.WalletAddress,
+					Inputs:        datatypes.JSON(inputsJSON),
+					CreatedAt:     time.Now().UTC(),
+					Public:        false,
 				}
 
 				result = db.Create(&job)
@@ -466,7 +466,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 // 				ID:          uuid.New().String(),
 // 				Amount:      amount,
 // 				IsDebit:     false, // Assuming payment intents are always credits (money in)
-// 				UserID:      user.WalletAddress,
+// 				WalletAddress:      user.WalletAddress,
 // 				Description: "Stripe payment intent succeeded",
 // 			}
 
