@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS inference_events (
 
 CREATE TABLE IF NOT EXISTS user_events (
     id SERIAL PRIMARY KEY,
-    user_id INT,
+    wallet_address VARCHAR,
     api_key_id INT,
     event_time TIMESTAMP,
     event_type VARCHAR,
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS user_events (
 CREATE TABLE IF NOT EXISTS file_events (
     id SERIAL PRIMARY KEY,
     file_id INT,
-    user_id INT,
+    wallet_address VARCHAR,
     event_time TIMESTAMP,
     event_type VARCHAR,
     FOREIGN KEY (file_id) REFERENCES files(id),
