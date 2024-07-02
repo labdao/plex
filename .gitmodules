@@ -1,0 +1,3 @@
+[submodule "tools/unidock"]
+	path = tools/unidock
+	url = https://github.com/labdao/unidock.git
