@@ -61,9 +61,10 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 
 		if err == gorm.ErrRecordNotFound {
 			newUser := models.User{
-				WalletAddress: requestData.WalletAddress,
-				DID:           did,
-				CreatedAt:     time.Now().UTC(),
+				WalletAddress:  requestData.WalletAddress,
+				DID:            did,
+				CreatedAt:      time.Now().UTC(),
+				OrganizationID: 1,
 			}
 			if result := db.Create(&newUser); result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
@@ -141,14 +142,14 @@ func UpdateUserTier(db *gorm.DB, walletAddress string, threshold int) error {
 	if user.ComputeTally >= threshold && user.Tier != models.TierPaid {
 		user.Tier = models.TierPaid
 
-		if user.StripeUserID == "" {
-			stripeUserID, err := createStripeCustomer(walletAddress)
-			if err != nil {
-				fmt.Printf("Error creating Stripe customer for user with WalletAddress: %s: %v\n", walletAddress, err)
-				return err
-			}
-			user.StripeUserID = stripeUserID
-		}
+		// if user.StripeUserID == "" {
+		// 	stripeUserID, err := createStripeCustomer(walletAddress)
+		// 	if err != nil {
+		// 		fmt.Printf("Error creating Stripe customer for user with WalletAddress: %s: %v\n", walletAddress, err)
+		// 		return err
+		// 	}
+		// 	user.StripeUserID = stripeUserID
+		// }
 
 		if err := db.Save(&user).Error; err != nil {
 			fmt.Printf("Error updating tier for user with WalletAddress: %s: %v\n", walletAddress, err)

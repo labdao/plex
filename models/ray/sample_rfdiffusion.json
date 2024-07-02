@@ -1,5 +1,5 @@
 {
-    "name": "relay_sample_rfdiffusion_both_ipfs_s3_v4",
+    "name": "relay_sample_rfdiffusion_both_ipfs_s3_v5",
     "description": "Sample RFDiffusion model",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
@@ -8,6 +8,8 @@
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
+    "metricsDescription": "*Stability Score:* larger value indicates higher confidence in the predicted local structure\n*Affinity Score:* larger value indicates higher confidence in the predicted interface structure\n*Note:* designs which lie within the green square are recommended for laboratory testing",
+    "computeCost": 10,
     "inputs": {
       "pdb": {
         "type": "file",
@@ -50,12 +52,12 @@
         "min": "",
         "max": "",
         "example": "B",
-        "grouping": "target",
-        "position": "103",
-        "required": true
+        "grouping": "_advanced",
+        "position": "201",
+        "required": false
       },
       "binder_length": {
-        "type": "string",
+        "type": "number",
         "description": "The length of the protein binder that is being designed",
         "array": false,
         "glob": [
@@ -64,18 +66,18 @@
         "default": "85",
         "min": "1",
         "max": "1000",
-        "example": "85",
+        "example": "80",
         "grouping": "_advanced",
-        "position": "201",
+        "position": "202",
         "required": false
       },
       "contig": {
         "type": "string",
         "default": "",
         "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-        "example": "A1-283:B1-6/1/B8-20/22/B43-47",
+        "example": "A10:110/B4:5/x6:8/B9:50/x51:71",
         "grouping": "_advanced",
-        "position": "202",
+        "position": "203",
         "required": false
       },
       "hotspots": {
@@ -90,11 +92,11 @@
         "max": "",
         "example": "A30,A33,A34",
         "grouping": "_advanced",
-        "position": "203",
+        "position": "204",
         "required": false
       },
       "start_residue": {
-        "type": "string",
+        "type": "number",
         "description": "The start residue of the target protein.",
         "array": false,
         "glob": [
@@ -103,13 +105,13 @@
         "default": "5",
         "min": "1",
         "max": "",
-        "example": "5",
+        "example": "1",
         "grouping": "_advanced",
-        "position": "204",
+        "position": "205",
         "required": false
       },
       "end_residue": {
-        "type": "string",
+        "type": "number",
         "description": "The end residue of the target protein.",
         "array": false,
         "glob": [
@@ -118,9 +120,9 @@
         "default": "107",
         "min": "1",
         "max": "",
-        "example": "107",
+        "example": "120",
         "grouping": "_advanced",
-        "position": "205",
+        "position": "206",
         "required": false
       }
     },

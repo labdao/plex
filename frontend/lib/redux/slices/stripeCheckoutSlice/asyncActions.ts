@@ -2,7 +2,7 @@ import { getAccessToken } from "@privy-io/react-auth";
 import backendUrl from "lib/backendUrl";
 
 interface CheckoutPayload {
-  modelCid: string;
+  modelId: string;
   scatteringMethod: string;
   kwargs: string;
 }

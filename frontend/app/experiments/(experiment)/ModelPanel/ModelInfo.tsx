@@ -89,9 +89,9 @@ export default function ModelInfo({ model }: ModelInfoProps) {
             </a>
           </Button>
         )}
-        {model?.CID && (
+        {model?.ID && (
           <Button asChild variant="outline" size="xs">
-            <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${model?.CID}/`} target="_blank">
+            <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${model?.ID}/`} target="_blank">
               <FileJsonIcon /> Manifest
             </a>
           </Button>

@@ -10,18 +10,9 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export default function ListModelFiles() {
   interface Model {
-    CID: string;
+    ID: string;
     Name: string;
-    WalletAddress: string;
   }
-
-  const shortenAddressOrCid = (addressOrCid: string) => {
-    if (addressOrCid.length) {
-      return `${addressOrCid.substring(0, 6)}...${addressOrCid.substring(addressOrCid.length - 4)}`;
-    } else {
-      return "";
-    }
-  };
 
   const columns: ColumnDef<Model>[] = [
     {
@@ -29,12 +20,12 @@ export default function ListModelFiles() {
       header: "Name",
     },
     {
-      accessorKey: "CID",
+      accessorKey: "ID",
       header: "Model ID",
       cell: ({ row }) => {
         return (
-          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("CID")}/`}>
-            {shortenAddressOrCid(row.getValue("CID"))}
+          <a target="_blank" href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${row.getValue("ID")}/`}>
+            {row.getValue("ID")}
           </a>
         );
       },
@@ -43,7 +34,7 @@ export default function ListModelFiles() {
       accessorKey: "WalletAddress",
       header: "User",
       cell: ({ row }) => {
-        return shortenAddressOrCid(row.getValue("WalletAddress"));
+        return row.getValue("WalletAddress");
       },
     },
   ];
@@ -65,6 +56,7 @@ export default function ListModelFiles() {
         }
 
         const data = await response.json();
+        console.log("Fetched models:", data);
         setModels(data);
       } catch (error) {
         console.error("Error fetching models:", error);

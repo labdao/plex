@@ -4,7 +4,7 @@ import backendUrl from "lib/backendUrl"
 import { Kwargs } from "./slice"
 
 export const createExperiment = async (
-    payload: { name: string, modelCid: string, scatteringMethod: string, kwargs: Kwargs }
+    payload: { name: string, modelId: string, scatteringMethod: string, kwargs: Kwargs }
 ): Promise<any> => {
     let authToken
     try {
@@ -31,7 +31,7 @@ export const createExperiment = async (
     return result;
 }
 
-export const addJobToExperiment = async (experimentId: number, payload: { name: string, modelCid: string, scatteringMethod: string, kwargs: Kwargs }): Promise<any> => {
+export const addJobToExperiment = async (experimentId: number, payload: { name: string, modelId: string, scatteringMethod: string, kwargs: Kwargs }): Promise<any> => {
     let authToken;
     try {
       authToken = await getAccessToken()

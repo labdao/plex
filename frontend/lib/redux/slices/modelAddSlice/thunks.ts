@@ -12,7 +12,7 @@ export const createModelThunk = createAppAsyncThunk(
   async ({ modelJson }: ModelPayload, { dispatch }) => {
     try {
       const response = await createModel({ modelJson })
-      if (response && response.cid) {
+      if (response && response.id) {
         dispatch(setAddModelSuccess(true))
       } else {
         console.log('Failed to add model.', response)

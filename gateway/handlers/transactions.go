@@ -27,7 +27,7 @@ func ListTransactionsHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var transactions []models.Transaction
-		result := db.Preload("User").Where("user_id = ?", user.WalletAddress).Find(&transactions)
+		result := db.Where("wallet_address = ?", user.WalletAddress).Find(&transactions)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching Transactions: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -65,13 +65,13 @@ func SummaryTransactionsHandler(db *gorm.DB) http.HandlerFunc {
 		var totalDebits, totalCredits float64
 
 		db.Model(&models.Transaction{}).
-			Where("user_id = ? AND is_debit = ?", user.WalletAddress, true).
+			Where("wallet_address = ? AND is_debit = ?", user.WalletAddress, true).
 			Select("sum(amount)").
 			Row().
 			Scan(&totalDebits)
 
 		db.Model(&models.Transaction{}).
-			Where("user_id = ? AND is_debit = ?", user.WalletAddress, false).
+			Where("wallet_address = ? AND is_debit = ?", user.WalletAddress, false).
 			Select("sum(amount)").
 			Row().
 			Scan(&totalCredits)

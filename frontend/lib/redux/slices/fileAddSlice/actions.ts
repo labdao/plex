@@ -5,7 +5,7 @@ export const saveFileToServer = async (
     file: File,
     metadata: { [key: string]: any },
     isPublic: boolean
-  ): Promise<{ filename: string, cid: string }> => {
+  ): Promise<{ filename: string, id: string }> => {
     const formData = new FormData()
     formData.append('file', file, file.name)
     formData.append('filename', file.name)

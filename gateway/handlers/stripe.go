@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
@@ -75,7 +74,7 @@ func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error
 	return nil, nil
 }
 
-func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, modelCID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, modelID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -115,7 +114,7 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 			Metadata: map[string]string{
 				"Stripe User ID":    stripeUserID,
 				"Wallet Address":    walletAddress,
-				"Model CID":         modelCID,
+				"Model ID":          modelID,
 				"Scattering Method": scatteringMethod,
 				"Kwargs":            kwargs,
 			},
@@ -147,7 +146,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			ModelCID         string `json:"modelCid"`
+			ModelID          string `json:"modelId"`
 			ScatteringMethod string `json:"scatteringMethod"`
 			Kwargs           string `json:"kwargs"`
 		}
@@ -165,7 +164,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		// }
 
 		// var model models.Model
-		// result := db.Where("cid = ?", modelID).First(&model)
+		// result := db.Where("id = ?", modelID).First(&model)
 		// if result.Error != nil {
 		// 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		// 		utils.SendJSONError(w, "Model not found", http.StatusNotFound)
@@ -176,7 +175,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		// }
 
 		// TODO: modify so we're not passing in hardcoded value
-		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ModelCID, requestData.ScatteringMethod, requestData.Kwargs)
+		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ModelID, requestData.ScatteringMethod, requestData.Kwargs)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
@@ -224,7 +223,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			walletAddress := paymentIntent.Metadata["Wallet Address"]
-			modelCID := paymentIntent.Metadata["Model CID"]
+			modelID := paymentIntent.Metadata["Model ID"]
 			scatteringMethod := paymentIntent.Metadata["Scattering Method"]
 			kwargsRaw := paymentIntent.Metadata["Kwargs"]
 
@@ -242,10 +241,10 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			var model models.Model
-			result = db.Where("cid = ?", modelCID).First(&model)
+			result = db.Where("id = ?", modelID).First(&model)
 			if result.Error != nil {
 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-					fmt.Fprintf(os.Stderr, "Model with CID %s not found\n", modelCID)
+					fmt.Fprintf(os.Stderr, "Model with ID %d not found\n", model.ID)
 					w.WriteHeader(http.StatusNotFound)
 				} else {
 					fmt.Fprintf(os.Stderr, "Error querying model: %v\n", result.Error)
@@ -262,20 +261,17 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			ioList, err := ipwl.InitializeIo(modelCID, scatteringMethod, kwargs, db)
+			ioList, err := ipwl.InitializeIo(model.ID, scatteringMethod, kwargs, db)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error initializing IO list: %v\n", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 
-			experimentUUID := uuid.New().String()
-
 			experiment := models.Experiment{
 				WalletAddress:  user.WalletAddress,
 				Name:           "Experiment created by Stripe webhook",
-				StartTime:      time.Now(),
-				ExperimentUUID: experimentUUID,
+				LastModifiedAt: time.Now().UTC(),
 				Public:         false,
 			}
 
@@ -294,27 +290,13 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
-				var queue models.QueueType
-				if model.ModelType == "ray" {
-					queue = models.QueueTypeRay
-				}
-
-				var jobType models.JobType
-				if model.ModelType == "ray" {
-					jobType = models.JobTypeRay
-				} else {
-					jobType = models.JobTypeBacalhau
-				}
-
 				job := models.Job{
-					ModelID:       ioItem.Model.S3,
+					ModelID:       model.ID,
 					ExperimentID:  experiment.ID,
 					WalletAddress: user.WalletAddress,
 					Inputs:        datatypes.JSON(inputsJSON),
-					Queue:         queue,
-					CreatedAt:     time.Now(),
+					CreatedAt:     time.Now().UTC(),
 					Public:        false,
-					JobType:       jobType,
 				}
 
 				result = db.Create(&job)
@@ -324,11 +306,11 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
-				requestTracker := models.RequestTracker{
+				requestTracker := models.InferenceEvent{
 					JobID:      job.ID,
 					RetryCount: 0,
-					State:      models.JobStateQueued,
-					CreatedAt:  time.Now().UTC(),
+					EventTime:  time.Now().UTC(),
+					EventType:  models.EventTypeJobCreated,
 				}
 				if err := db.Create(&requestTracker).Error; err != nil {
 					fmt.Fprintf(os.Stderr, "Error creating request tracker: %v\n", err)
@@ -337,7 +319,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				}
 
 				for _, input := range ioItem.Inputs {
-					var cidsToAdd []string
+					var idsToAdd []string
 					switch v := input.(type) {
 					case string:
 						strInput, ok := input.(string)
@@ -346,8 +328,8 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 						}
 						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 							split := strings.SplitN(strInput, "/", 2)
-							cid := split[0]
-							cidsToAdd = append(cidsToAdd, cid)
+							id := split[0]
+							idsToAdd = append(idsToAdd, id)
 						}
 					case []interface{}:
 						fmt.Println("found slice, checking each for 'Qm' prefix")
@@ -358,19 +340,19 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 							}
 							if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 								split := strings.SplitN(strInput, "/", 2)
-								cid := split[0]
-								cidsToAdd = append(cidsToAdd, cid)
+								id := split[0]
+								idsToAdd = append(idsToAdd, id)
 							}
 						}
 					default:
 						continue
 					}
-					for _, cid := range cidsToAdd {
+					for _, id := range idsToAdd {
 						var file models.File
-						result := db.First(&file, "cid = ?", cid)
+						result := db.First(&file, "id = ?", id)
 						if result.Error != nil {
 							if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-								fmt.Fprintf(os.Stderr, "File with CID %v not found\n", cid)
+								fmt.Fprintf(os.Stderr, "File with ID %v not found\n", id)
 								w.WriteHeader(http.StatusNotFound)
 								return
 							} else {
@@ -484,7 +466,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 // 				ID:          uuid.New().String(),
 // 				Amount:      amount,
 // 				IsDebit:     false, // Assuming payment intents are always credits (money in)
-// 				UserID:      user.WalletAddress,
+// 				WalletAddress:      user.WalletAddress,
 // 				Description: "Stripe payment intent succeeded",
 // 			}
 
@@ -497,7 +479,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 // 			// Create the experiment in your database using the extracted information
 // 			experiment := models.Experiment{
 // 				WalletAddress:    walletAddress,
-// 				ModelCID:          modelCID,
+// 				ModelID:          modelID,
 // 				ScatteringMethod: scatteringMethod,
 // 				Kwargs:           kwargs,
 // 				// Set other necessary fields
