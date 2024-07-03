@@ -48,6 +48,6 @@ type Job struct {
 	Annotations   string         `gorm:"type:varchar(255)"`
 	Public        bool           `gorm:"type:boolean;not null;default:false"`
 	RetryCount    int            `gorm:"type:int;not null;default:0"`
-	JobType       JobType        `gorm:"type:varchar(255);not null;default:'bacalhau'"`
+	JobType       JobType        `gorm:"type:varchar(255);not null;default:'ray'"`
 	ResultJSON    datatypes.JSON `gorm:"type:json"`
 }
