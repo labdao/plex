@@ -151,6 +151,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 				JobType:       jobType,
+				State:         models.JobStateQueued,
 			}
 
 			result := db.Create(&job)
@@ -488,7 +489,7 @@ func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 
 func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Received Post request to add job to a experiment")
+		log.Println("Received Post request to add job to an experiment")
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
@@ -530,7 +531,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		//TODO: think about moving modelID to experiment level instead of job level
+
 		var modelId = experiment.Jobs[0].ModelID
 
 		var model models.Model
@@ -597,6 +598,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				Queue:         queue,
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
+				State:         models.JobStateQueued,
 			}
 
 			result = db.Create(&job)
@@ -665,6 +667,31 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(&requestTracker)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			user.ComputeTally += model.ComputeCost
+			result = db.Save(user)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			thresholdStr := os.Getenv("TIER_THRESHOLD")
+			if thresholdStr == "" {
+				http.Error(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+				return
+			}
+
+			threshold, err := strconv.Atoi(thresholdStr)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			err = UpdateUserTier(db, user.WalletAddress, threshold)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error updating user tier: %v", err), http.StatusInternalServerError)
 				return
 			}
 		}
