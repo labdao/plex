@@ -80,7 +80,7 @@ export function generateRerunSchema(inputs: InputType) {
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ModelDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
-    model: model?.ID,
+    model: model?.s3uri || "s3://convexity/258462036b9903fb51af718933b222b56b6ab49b5235b332b9c60167cddd0256/relay_sample_rfdiffusion_both_ipfs_s3_v6.json",
     ...inputsToDefaultValues(inputs),
   };
 }

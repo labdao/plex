@@ -3,8 +3,12 @@ package ipwl
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/labdao/plex/gateway/models"
+	s3client "github.com/labdao/plex/internal/s3"
 	"gorm.io/gorm"
 )
 
@@ -55,23 +59,50 @@ type Model struct {
 	YAxis                string                 `json:"yAxis"`
 }
 
-func ReadModelConfig(modelID int, db *gorm.DB) (Model, string, error) {
+func ReadModelConfig(modelPath string, db *gorm.DB) (Model, ModelInfo, error) {
 	var ipwlmodel Model
 	var dbModel models.Model
-	var modelName string
+	var modelInfo ModelInfo
 	var err error
 
-	err = db.Where("id = ?", modelID).First(&dbModel).Error
+	s3client, err := s3client.NewS3Client()
 	if err != nil {
-		return ipwlmodel, modelName, fmt.Errorf("failed to get model from database: %w", err)
-	}
-	modelName = dbModel.Name
-
-	// bytes should come from model_json column of model
-	err = json.Unmarshal(dbModel.ModelJson, &ipwlmodel)
-	if err != nil {
-		return ipwlmodel, modelName, fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return ipwlmodel, modelInfo, err
 	}
 
-	return ipwlmodel, modelName, nil
+	err = db.Where("cid = ?", modelPath).First(&dbModel).Error
+	if err != nil {
+		return ipwlmodel, modelInfo, fmt.Errorf("failed to get model from database: %w", err)
+	}
+	modelInfo.S3 = modelPath
+	modelInfo.Name = dbModel.Name
+	bucket, key, err := s3client.GetBucketAndKeyFromURI(dbModel.S3URI)
+	if err != nil {
+		return ipwlmodel, modelInfo, fmt.Errorf("failed to get bucket and key from URI: %w", err)
+	}
+	fileName := filepath.Base(key)
+	err = s3client.DownloadFile(bucket, key, fileName)
+	if err != nil {
+		return ipwlmodel, modelInfo, fmt.Errorf("failed to download file: %w", err)
+	}
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Printf("Failed to open file: %v\n", err)
+	}
+	defer file.Close()
+	defer os.Remove(fileName)
+
+	fmt.Println("File opened successfully")
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return ipwlmodel, modelInfo, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	err = json.Unmarshal(bytes, &ipwlmodel)
+	if err != nil {
+		return ipwlmodel, modelInfo, fmt.Errorf("failed to unmarshal JSON: %w", err)
+	}
+
+	return ipwlmodel, modelInfo, nil
 }

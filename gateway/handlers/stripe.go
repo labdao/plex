@@ -261,7 +261,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			ioList, err := ipwl.InitializeIo(model.ID, scatteringMethod, kwargs, db)
+			ioList, err := ipwl.InitializeIo(model.S3URI, scatteringMethod, kwargs, db)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error initializing IO list: %v\n", err)
 				w.WriteHeader(http.StatusInternalServerError)

@@ -98,7 +98,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(modelId, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(model.S3URI, scatteringMethod, kwargs, db)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -554,7 +554,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(model.ID, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(model.S3URI, scatteringMethod, kwargs, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return

@@ -37,6 +37,11 @@ export default function NewExperimentForm({ task }: { task: any }) {
     };
   }, [dispatch]);
 
+  // Log model details whenever they change
+  useEffect(() => {
+    console.log("Updated model details:", model);
+  }, [model]);
+
   const groupedInputs = groupInputs(model.ModelJson?.inputs);
   const formSchema = generateSchema(model.ModelJson?.inputs);
   const defaultValues = generateDefaultValues(model.ModelJson?.inputs, task, model);
@@ -45,6 +50,14 @@ export default function NewExperimentForm({ task }: { task: any }) {
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
   });
+
+  // Watch all form values
+  const watchedValues = form.watch();
+
+  // Log form values whenever they change
+  useEffect(() => {
+    console.log("Form values updated:", watchedValues);
+  }, [watchedValues]);
 
   // If the model changes, fetch new model details
   useEffect(() => {

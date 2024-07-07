@@ -46,8 +46,9 @@ func handleSingleElementInput(value interface{}) (string, error) {
 	}
 }
 
-func CreateRayJob(modelID int, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	model, _, err := ipwl.ReadModelConfig(modelID, db)
+func CreateRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
+	model, _, err := ipwl.ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +123,9 @@ func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[stri
 	return nil
 }
 
-func SubmitRayJob(modelID int, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	log.Printf("Creating Ray job with inputs: %+v\n", inputs)
-	resp, err := CreateRayJob(modelID, rayJobID, inputs, db)
+func SubmitRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
+	resp, err := CreateRayJob(modelPath, rayJobID, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err

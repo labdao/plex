@@ -114,7 +114,7 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			return
 		}
-
+		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 		var display bool = true
 		var defaultModel bool = false
 
@@ -163,6 +163,7 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			MaxRunningTime:     maxRunningTime,
 			RayServiceEndpoint: model.RayServiceEndpoint,
 			ComputeCost:        model.ComputeCost,
+			S3URI:              s3_uri,
 		}
 
 		result := tx.Create(&modelEntry)

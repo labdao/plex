@@ -5,6 +5,7 @@ export interface ModelDetail {
   WalletAddress: string;
   Name: string;
   DefaultModel: boolean;
+  s3uri?: string;
   ModelJson: {
     inputs: {};
     outputs: {

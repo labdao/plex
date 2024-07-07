@@ -18,4 +18,5 @@ type Model struct {
 	MaxRunningTime     int            `gorm:"type:int;default:2700"`
 	ComputeCost        int            `gorm:"type:int;not null;default:0"`
 	RayServiceEndpoint string         `gorm:"type:varchar(255)"`
+	S3URI              string         `gorm:"type:varchar(255)"`
 }

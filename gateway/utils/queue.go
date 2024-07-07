@@ -232,14 +232,14 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 	for key, value := range jobInputs {
 		inputs[key] = []interface{}{value}
 	}
-	modelID := job.Model.ID
+	modelPath := job.Model.S3URI
 
 	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 	setJobStatusAndID(inferenceEvent, job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(modelID, rayJobID, inputs, db)
+	resp, err := ray.SubmitRayJob(modelPath, rayJobID, inputs, db)
 	if err != nil {
 		return err
 	}

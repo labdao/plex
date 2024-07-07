@@ -15,9 +15,9 @@ var (
 	scatteringMethod string
 )
 
-func InitializeIo(modelID int, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
+func InitializeIo(modelPath string, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
 	// Open the file and load its content
-	model, modelName, err := ReadModelConfig(modelID, db)
+	model, modelInfo, err := ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func InitializeIo(modelID int, scatteringMethod string, inputVectors map[string]
 	var ioList []IO
 
 	for _, inputs := range inputsList {
-		io, err := createSingleIo(inputs, model, modelName, walletAddress, inputVectors)
+		io, err := createSingleIo(inputs, model, modelInfo, walletAddress, inputVectors)
 		if err != nil {
 			return nil, err
 		}
@@ -145,9 +145,9 @@ func crossProductScattering(inputVectors map[string][]interface{}) ([][]interfac
 	return inputsList, nil
 }
 
-func createSingleIo(inputs []interface{}, model Model, modelName string, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
+func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
 	io := IO{
-		ModelName:     modelName,
+		Model:         modelInfo,
 		Inputs:        make(map[string]interface{}),
 		Outputs:       make(map[string]interface{}),
 		State:         "created",
