@@ -5,7 +5,7 @@ export interface ModelDetail {
   WalletAddress: string;
   Name: string;
   DefaultModel: boolean;
-  s3uri?: string;
+  S3URI: string;
   ModelJson: {
     inputs: {};
     outputs: {
@@ -40,6 +40,7 @@ const initialState: ModelDetailSliceState = {
     WalletAddress: "",
     Name: "",
     DefaultModel: false,
+    S3URI: "",
     ModelJson: {
       inputs: {},
       outputs: {},

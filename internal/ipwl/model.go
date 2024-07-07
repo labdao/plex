@@ -70,7 +70,7 @@ func ReadModelConfig(modelPath string, db *gorm.DB) (Model, ModelInfo, error) {
 		return ipwlmodel, modelInfo, err
 	}
 
-	err = db.Where("cid = ?", modelPath).First(&dbModel).Error
+	err = db.Where("s3_uri = ?", modelPath).First(&dbModel).Error
 	if err != nil {
 		return ipwlmodel, modelInfo, fmt.Errorf("failed to get model from database: %w", err)
 	}
