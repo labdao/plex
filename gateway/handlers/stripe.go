@@ -146,7 +146,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var requestData struct {
-			ModelID          string `json:"modelId"`
+			ModelID          string `json:"model"`
 			ScatteringMethod string `json:"scatteringMethod"`
 			Kwargs           string `json:"kwargs"`
 		}
@@ -157,7 +157,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 
 		// TODO: pass in model
 
-		// modelID := r.URL.Query().Get("modelID")
+		// modelID := r.URL.Query().Get("model")
 		// if modelID == "" {
 		// 	utils.SendJSONError(w, "Model ID not provided", http.StatusBadRequest)
 		// 	return
