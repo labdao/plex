@@ -114,7 +114,7 @@ func fetchJobWithModelAndExperimentData(job *models.Job, id uint, db *gorm.DB) e
 }
 
 func fetchLatestInferenceEvent(inferenceEvent *models.InferenceEvent, jobID uint, db *gorm.DB) error {
-	return db.Where("job_id = ?", jobID).Order("created_at DESC").First(inferenceEvent).Error
+	return db.Where("job_id = ?", jobID).Order("event_time DESC").First(inferenceEvent).Error
 }
 
 func processRayJob(jobID uint, db *gorm.DB) error {

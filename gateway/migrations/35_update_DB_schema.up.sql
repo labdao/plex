@@ -10,7 +10,7 @@ ALTER TABLE users ADD COLUMN organization_id INT;
 ALTER TABLE users ADD FOREIGN KEY (organization_id) REFERENCES organizations(id);
 
 ALTER TABLE experiments DROP COLUMN IF EXISTS experiment_uuid;
-ALTER TABLE experiments DROP COLUMN IF EXISTS start_time;
+ALTER TABLE experiments RENAME COLUMN start_time to created_at;
 ALTER TABLE experiments DROP COLUMN IF EXISTS end_time;
 
 ALTER TABLE experiments ADD COLUMN IF NOT EXISTS last_modified_at TIMESTAMP;
