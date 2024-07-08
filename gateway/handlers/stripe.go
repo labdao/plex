@@ -269,10 +269,10 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			experiment := models.Experiment{
-				WalletAddress:  user.WalletAddress,
-				Name:           "Experiment created by Stripe webhook",
-				LastModifiedAt: time.Now().UTC(),
-				Public:         false,
+				WalletAddress: user.WalletAddress,
+				Name:          "Experiment created by Stripe webhook",
+				CreatedAt:     time.Now().UTC(),
+				Public:        false,
 			}
 
 			result = db.Create(&experiment)

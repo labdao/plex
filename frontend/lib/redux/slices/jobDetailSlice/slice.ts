@@ -4,7 +4,7 @@ import { File } from "../fileListSlice/slice";
 
 export interface JobDetail {
   ID: number | null;
-  State: string;
+  JobStatus: string;
   Error: string;
   ModelID: string;
   ExperimentID: string;
@@ -26,7 +26,7 @@ export interface JobDetailSliceState {
 const initialState: JobDetailSliceState = {
   job: {
     ID: null,
-    State: "",
+    JobStatus: "",
     Error: "",
     ModelID: "",
     ExperimentID: "",

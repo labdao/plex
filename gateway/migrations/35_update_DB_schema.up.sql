@@ -13,8 +13,6 @@ ALTER TABLE experiments DROP COLUMN IF EXISTS experiment_uuid;
 ALTER TABLE experiments RENAME COLUMN start_time to created_at;
 ALTER TABLE experiments DROP COLUMN IF EXISTS end_time;
 
-ALTER TABLE experiments ADD COLUMN IF NOT EXISTS last_modified_at TIMESTAMP;
-
 ALTER TABLE jobs DROP COLUMN IF EXISTS queue;
 ALTER TABLE jobs DROP COLUMN IF EXISTS job_type;
 ALTER TABLE jobs DROP COLUMN IF EXISTS result_json;

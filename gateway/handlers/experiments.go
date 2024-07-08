@@ -106,10 +106,10 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		log.Println("Initialized IO List")
 
 		experiment := models.Experiment{
-			WalletAddress:  user.WalletAddress,
-			Name:           name,
-			LastModifiedAt: time.Now().UTC(),
-			Public:         false,
+			WalletAddress: user.WalletAddress,
+			Name:          name,
+			CreatedAt:     time.Now().UTC(),
+			Public:        false,
 		}
 
 		log.Println("Creating Experiment entry")
@@ -316,19 +316,19 @@ func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 
 			for _, field := range requestedFields {
 				switch strings.ToLower(strings.TrimSpace(field)) {
-				case "name", "start_time", "end_time", "experiment_uuid", "public", "record_cid":
+				case "name", "created_at", "experiment_uuid", "public", "record_cid":
 					validFields = append(validFields, strings.ToLower(strings.TrimSpace(field)))
 				}
 			}
 
-			if !utils.Contains(validFields, "start_time") {
-				validFields = append(validFields, "start_time")
+			if !utils.Contains(validFields, "created_at") {
+				validFields = append(validFields, "created_at")
 			}
 
 			query = query.Select(validFields)
 		}
 
-		query = query.Order("start_time DESC")
+		query = query.Order("created_at DESC")
 
 		if fields == "" {
 			query = query.Preload("Jobs")

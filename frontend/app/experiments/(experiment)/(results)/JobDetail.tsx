@@ -64,7 +64,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
       }
     };
 
-    if (job.State === "running") {
+    if (job.JobStatus === "running") {
       fetchData();
       const intervalId = setInterval(fetchData, 5000);
 
@@ -72,7 +72,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     } else {
       fetchData();
     }
-  }, [jobID, job.State]);
+  }, [jobID, job.JobStatus]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
