@@ -83,7 +83,7 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
       <div className="relative flex items-center gap-2">
         <PopoverTrigger asChild>
           <Button className="justify-between p-3 text-base grow" variant="input" role="combobox" aria-expanded={open}>
-            <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/")?.[1] : `Select ${label} file...`}</span>
+            <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/").pop() : `Select ${label} file...`}</span>
           </Button>
         </PopoverTrigger>
         <AddFileForm
