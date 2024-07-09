@@ -646,6 +646,31 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
+
+			user.ComputeTally += model.ComputeCost
+			result = db.Save(user)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			thresholdStr := os.Getenv("TIER_THRESHOLD")
+			if thresholdStr == "" {
+				http.Error(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+				return
+			}
+
+			threshold, err := strconv.Atoi(thresholdStr)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			err = UpdateUserTier(db, user.WalletAddress, threshold)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error updating user tier: %v", err), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
