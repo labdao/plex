@@ -24,6 +24,7 @@ const initialState: ExperimentAddSliceState = {
     WalletAddress: "", 
     Name: "", 
     DefaultModel: false, 
+    S3URI: "",
     ModelJson: { 
       inputs: {}, 
       outputs: {}, 
