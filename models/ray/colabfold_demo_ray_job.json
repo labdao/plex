@@ -1,14 +1,15 @@
 {
-    "name": "relay_sample_rfdiffusion_both_ipfs_s3_v5",
-    "description": "Sample RFDiffusion model",
+    "name": "colabfold_demo_ray_job_v1",
+    "description": "Colabfold demo Ray Job",
     "task": "protein design",
     "taskCategory": "protein-binder-design",
     "modelType": "ray",
-    "rayEndpoint": "/sample_relay_rf_diffusion",
+    "rayEndpoint": "/api/jobs/",
+    "rayJobEntryPoint": "python colabfold.py",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
-    "jobType": "service",
+    "jobType": "job",
     "metricsDescription": "*Stability Score:* larger value indicates higher confidence in the predicted local structure\n*Affinity Score:* larger value indicates higher confidence in the predicted interface structure\n*Note:* designs which lie within the green square are recommended for laboratory testing",
     "computeCost": 10,
     "inputs": {
@@ -34,7 +35,7 @@
         "glob": [
           ""
         ],
-        "default": "A",
+        "default": "",
         "min": "",
         "max": "",
         "example": "A",
@@ -49,7 +50,7 @@
         "glob": [
           ""
         ],
-        "default": "B",
+        "default": "",
         "min": "",
         "max": "",
         "example": "B",
@@ -64,8 +65,8 @@
         "glob": [
           ""
         ],
-        "default": "85",
-        "min": "1",
+        "default": "",
+        "min": "0",
         "max": "1000",
         "example": "80",
         "grouping": "_advanced",
@@ -103,8 +104,8 @@
         "glob": [
           ""
         ],
-        "default": "5",
-        "min": "1",
+        "default": "",
+        "min": "0",
         "max": "",
         "example": "1",
         "grouping": "_advanced",
@@ -118,8 +119,8 @@
         "glob": [
           ""
         ],
-        "default": "107",
-        "min": "1",
+        "default": "",
+        "min": "0",
         "max": "",
         "example": "120",
         "grouping": "_advanced",

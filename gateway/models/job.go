@@ -21,13 +21,6 @@ const (
 	QueueTypeRay QueueType = "ray"
 )
 
-type JobType string
-
-const (
-	JobTypeBacalhau JobType = "bacalhau"
-	JobTypeRay      JobType = "ray"
-)
-
 type Job struct {
 	ID             uint           `gorm:"primaryKey;autoIncrement"`
 	RayJobID       string         `gorm:"type:varchar(255)"`
@@ -47,4 +40,5 @@ type Job struct {
 	Inputs         datatypes.JSON `gorm:"type:json"`
 	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;joinForeignKey:job_id;References:ID;JoinReferences:file_id"`
 	OutputFiles    []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:ID"`
+	JobType        JobType        `gorm:"type:varchar(255);default:'job'"`
 }

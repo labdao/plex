@@ -9,6 +9,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
 	"gorm.io/gorm"
 )
@@ -46,56 +47,73 @@ func handleSingleElementInput(value interface{}) (string, error) {
 	}
 }
 
-func CreateRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
 	model, _, err := ipwl.ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
+	var jsonBytes []byte
+	var rayServiceURL string
+	if job.JobType == models.JobTypeService {
+		// Validate input keys
+		err = validateInputKeys(inputs, model.Inputs)
+		if err != nil {
+			return nil, err
+		}
 
-	// Validate input keys
-	err = validateInputKeys(inputs, model.Inputs)
-	if err != nil {
-		return nil, err
-	}
-
-	adjustedInputs := make(map[string]string)
-	for key, value := range inputs {
-		switch v := value.(type) {
-		case []interface{}:
-			if len(v) == 1 {
-				adjustedInputs[key], err = handleSingleElementInput(v[0])
+		adjustedInputs := make(map[string]string)
+		for key, value := range inputs {
+			switch v := value.(type) {
+			case []interface{}:
+				if len(v) == 1 {
+					adjustedInputs[key], err = handleSingleElementInput(v[0])
+					if err != nil {
+						return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+					}
+				} else {
+					return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
+				}
+			case string, float64, int:
+				adjustedInputs[key], err = handleSingleElementInput(value)
 				if err != nil {
 					return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
 				}
-			} else {
-				return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
+			default:
+				return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
 			}
-		case string, float64, int:
-			adjustedInputs[key], err = handleSingleElementInput(value)
-			if err != nil {
-				return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
-			}
-		default:
-			return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
 		}
+
+		//add rayJobID to inputs
+		fmt.Printf("adding rayJobID to the adjustedInputs: %s\n", rayJobID)
+		adjustedInputs["uuid"] = rayJobID
+
+		// Marshal the inputs to JSON
+		jsonBytes, err := json.Marshal(adjustedInputs)
+		if err != nil {
+			return nil, err
+		}
+
+		log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
+
+		// construct from env var BUCKET ENDPOINT + model.RayEndpoint
+		rayServiceURL = GetRayApiHost() + model.RayEndpoint
+		// Create the HTTP request
+
+	} else if job.JobType == models.JobTypeJob {
+
+		rayServiceURL = GetRayApiHost() + model.RayEndpoint
+		// create json request body
+		reqBody := map[string]interface{}{
+			"entrypoint": model.RayJobEntrypoint,
+			"job_id":     rayJobID,
+		}
+		jsonBytes, err = json.Marshal(reqBody)
+		if err != nil {
+			return nil, err
+		}
+
 	}
-
-	//add rayJobID to inputs
-	fmt.Printf("adding rayJobID to the adjustedInputs: %s\n", rayJobID)
-	adjustedInputs["uuid"] = rayJobID
-
-	// Marshal the inputs to JSON
-	jsonBytes, err := json.Marshal(adjustedInputs)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
-
-	// construct from env var BUCKET ENDPOINT + model.RayServiceEndpoint
-	rayServiceURL := GetRayApiHost() + model.RayServiceEndpoint
-	// Create the HTTP request
 	req, err := http.NewRequest("POST", rayServiceURL, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
@@ -108,7 +126,6 @@ func CreateRayJob(modelPath string, rayJobID string, inputs map[string]interface
 	if err != nil {
 		return nil, err
 	}
-
 	return resp, nil
 }
 
@@ -123,9 +140,9 @@ func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[stri
 	return nil
 }
 
-func SubmitRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
+func SubmitRayJob(job models.Job, modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
 	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
-	resp, err := CreateRayJob(modelPath, rayJobID, inputs, db)
+	resp, err := CreateRayJob(&job, modelPath, rayJobID, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)
 		return nil, err

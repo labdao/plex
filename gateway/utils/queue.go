@@ -239,7 +239,7 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 	setJobStatusAndID(inferenceEvent, job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(modelPath, rayJobID, inputs, db)
+	resp, err := ray.SubmitRayJob(*job, modelPath, rayJobID, inputs, db)
 	if err != nil {
 		return err
 	}

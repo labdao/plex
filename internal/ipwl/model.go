@@ -54,9 +54,11 @@ type Model struct {
 	MaxRunningTime       int                    `json:"maxRunningTime"`
 	ComputeCost          int                    `json:"computeCost"`
 	ModelType            ModelType              `json:"modelType"`
-	RayServiceEndpoint   string                 `json:"rayServiceEndpoint"`
+	RayEndpoint          string                 `json:"rayEndpoint"`
+	RayJobEntrypoint     string                 `json:"rayJobEntrypoint"`
 	XAxis                string                 `json:"xAxis"`
 	YAxis                string                 `json:"yAxis"`
+	JobType              models.JobType         `json:"jobType"`
 }
 
 func ReadModelConfig(modelPath string, db *gorm.DB) (Model, ModelInfo, error) {

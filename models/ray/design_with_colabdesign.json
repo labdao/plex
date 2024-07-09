@@ -8,10 +8,11 @@
     "task": "protein design",
     "taskCategory": "protein-binder-design",
     "modelType": "ray",
-    "rayServiceEndpoint": "/design_with_colabdesign",
+    "rayEndpoint": "/design_with_colabdesign",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
+    "jobType": "service",
     "metricsDescription": "*Stability Score:* larger value indicates higher confidence in the predicted local structure\n*Affinity Score:* larger value indicates higher confidence in the predicted interface structure\n*Note:* designs which lie within the green square are recommended for laboratory testing",
     "computeCost": 10,
     "inputs": {

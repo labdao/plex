@@ -134,6 +134,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				Inputs:        datatypes.JSON(inputsJSON),
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
+				JobType:       model.JobType,
 			}
 
 			result := db.Create(&job)
