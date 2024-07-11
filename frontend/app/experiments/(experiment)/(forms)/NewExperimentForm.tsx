@@ -66,33 +66,33 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
-
+  
     if (!walletAddress) {
       console.error("Wallet address missing");
       return;
     }
-
+  
     const transformedPayload = transformJson(model, values, walletAddress);
     console.log("Submitting Payload:", transformedPayload);
-
+  
     try {
-      if (userTier === 'Paid') {
-        await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
+      const result = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
+      if (result.checkout) {
+        // User needs to subscribe, redirect to checkout
+        window.location.href = result.checkout.url;
+      } else if (result && result.ID) {
+        // Experiment was created successfully
+        console.log("Experiment created", result);
+        router.push(`/experiments/${result.ID}`, { scroll: false });
+        dispatch(experimentListThunk(walletAddress));
+        toast.success("Experiment started successfully");
       } else {
-        const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
-        if (response && response.ID) {
-          console.log("Experiment created", response);
-          console.log(response.ID);
-          router.push(`/experiments/${response.ID}`, { scroll: false });
-          dispatch(experimentListThunk(walletAddress));
-          toast.success("Experiment started successfully");
-        } else {
-          console.log("Something went wrong", response);
-        }
+        console.log("Something went wrong", result);
+        toast.error("Failed to start experiment");
       }
     } catch (error) {
-      console.error("Failed to create experiment", error);
-      // Handle error, maybe show message to user
+      console.error("Failed to process experiment request", error);
+      toast.error("Failed to process experiment request");
     }
   }
 
