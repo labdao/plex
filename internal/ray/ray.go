@@ -41,6 +41,8 @@ func handleSingleElementInput(value interface{}) (string, error) {
 	case float64, int, int64:
 		// Convert numeric values to string
 		return fmt.Sprintf("%v", v), nil
+	case nil:
+		return "", nil
 	default:
 		return "", fmt.Errorf("unsupported type: %T", v)
 	}
@@ -59,23 +61,29 @@ func CreateRayJob(modelPath string, rayJobID string, inputs map[string]interface
 		return nil, err
 	}
 
-	adjustedInputs := make(map[string]string)
+	adjustedInputs := make(map[string]interface{})
 	for key, value := range inputs {
 		switch v := value.(type) {
 		case []interface{}:
 			if len(v) == 1 {
-				adjustedInputs[key], err = handleSingleElementInput(v[0])
-				if err != nil {
-					return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+				if v[0] == nil {
+					adjustedInputs[key] = nil
+				} else {
+					adjustedValue, err := handleSingleElementInput(v[0])
+					if err != nil {
+						return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+					}
+					adjustedInputs[key] = adjustedValue
 				}
 			} else {
 				return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
 			}
-		case string, float64, int:
-			adjustedInputs[key], err = handleSingleElementInput(value)
+		case string, float64, int, nil:
+			adjustedValue, err := handleSingleElementInput(value)
 			if err != nil {
 				return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
 			}
+			adjustedInputs[key] = adjustedValue
 		default:
 			return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
 		}
