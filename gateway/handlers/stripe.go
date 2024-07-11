@@ -68,12 +68,14 @@ func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.Checkout
 		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(priceID),
-				Quantity: stripe.Int64(1),
+				Price: stripe.String(priceID),
 			},
 		},
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(0), // No trial period
+			TrialPeriodDays: stripe.Int64(7),
+			Metadata: map[string]string{
+				"Wallet Address": walletAddress,
+			},
 		},
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		SuccessURL:         stripe.String(frontendURL + "/subscription-success"),
@@ -235,7 +237,11 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			user.SubscriptionStatus = string(subscription.Status)
+			if subscription.Status == "trialing" || subscription.Status == "active" {
+				user.SubscriptionStatus = "active"
+			} else {
+				user.SubscriptionStatus = string(subscription.Status)
+			}
 			user.SubscriptionID = subscription.ID
 			result = db.Save(&user)
 			if result.Error != nil {
@@ -244,7 +250,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("Subscription %s for user %s updated to %s\n", subscription.ID, walletAddress, subscription.Status)
+			fmt.Printf("Subscription %s for user %s updated to %s\n", subscription.ID, walletAddress, user.SubscriptionStatus)
 
 		case "customer.subscription.trial_will_end":
 			// Handle trial ending soon (e.g., send notification to user)
