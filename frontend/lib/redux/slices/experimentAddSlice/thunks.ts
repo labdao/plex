@@ -39,7 +39,7 @@ export const addExperimentThunk = createAppAsyncThunk(
 
 export const addExperimentWithCheckoutThunk = createAppAsyncThunk(
   'experiment/addExperimentWithCheckout',
-  async ({ name, modelId, scatteringMethod, kwargs }: ExperimentPayload, { dispatch, getState }) => {
+  async (payload: ExperimentPayload, { dispatch, getState }) => {
     try {
       dispatch(setExperimentAddError(null));
       dispatch(setStripeCheckoutError(null));
@@ -49,7 +49,7 @@ export const addExperimentWithCheckoutThunk = createAppAsyncThunk(
 
       if (subscriptionStatus === 'active') {
         // User is subscribed, directly add the experiment
-        return dispatch(addExperimentThunk({ name, modelId, scatteringMethod, kwargs })).unwrap();
+        return dispatch(addExperimentThunk(payload)).unwrap();
       } else {
         // User is not subscribed, initiate checkout process
         dispatch(setStripeCheckoutLoading(true));
