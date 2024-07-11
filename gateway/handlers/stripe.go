@@ -530,14 +530,22 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 // }
 
 func RecordUsage(stripeCustomerID string, usage int64) error {
+	err := setupStripeClient()
+	if err != nil {
+		return fmt.Errorf("failed to set up Stripe client: %v", err)
+	}
+
 	params := &stripe.BillingMeterEventParams{
-		EventName: stripe.String("usage_recorded"),
+		EventName: stripe.String("compute_units"),
 		Payload: map[string]string{
 			"value":              strconv.FormatInt(usage, 10),
 			"stripe_customer_id": stripeCustomerID,
 		},
 		Identifier: stripe.String(fmt.Sprintf("usage-%d", time.Now().Unix())),
 	}
-	_, err := meterevent.New(params)
-	return err
+	_, err = meterevent.New(params)
+	if err != nil {
+		return fmt.Errorf("failed to record usage: %v", err)
+	}
+	return nil
 }
