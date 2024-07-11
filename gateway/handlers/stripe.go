@@ -74,7 +74,7 @@ func getCustomerPaymentMethod(stripeUserID string) (*stripe.PaymentMethod, error
 	return nil, nil
 }
 
-func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, modelID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID, walletAddress, modelID, scatteringMethod, kwargs string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
@@ -85,24 +85,27 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 		frontendURL = "http://localhost:3000"
 	}
 
-	priceParams := &stripe.PriceParams{
-		UnitAmount: stripe.Int64(int64(computeCost * 10)),
-		Currency:   stripe.String(string(stripe.CurrencyUSD)),
-		Product:    stripe.String(os.Getenv("STRIPE_PRODUCT_ID")),
+	productID := os.Getenv("STRIPE_PRODUCT_ID")
+	if productID == "" {
+		return nil, errors.New("STRIPE_PRODUCT_ID environment variable not set")
 	}
-	price, err := price.New(priceParams)
+
+	priceID := os.Getenv("STRIPE_PRICE_ID")
+	if priceID == "" {
+		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
+	}
+
+	priceObj, err := price.Get(priceID, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error fetching price: %v", err)
 	}
 
 	params := &stripe.CheckoutSessionParams{
-		Customer: stripe.String(stripeUserID),
-		// TODO: success url needs to be accessible to user, not just the backend
-		// SuccessURL: stripe.String(frontendURL),
-		SuccessURL: stripe.String("http://localhost:3000"),
+		Customer:   stripe.String(stripeUserID),
+		SuccessURL: stripe.String(frontendURL),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(price.ID),
+				Price:    stripe.String(priceObj.ID),
 				Quantity: stripe.Int64(1),
 				AdjustableQuantity: &stripe.CheckoutSessionLineItemAdjustableQuantityParams{
 					Enabled: stripe.Bool(false),
@@ -112,7 +115,6 @@ func createCheckoutSession(stripeUserID string, computeCost int, walletAddress, 
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
 			Metadata: map[string]string{
-				"Stripe User ID":    stripeUserID,
 				"Wallet Address":    walletAddress,
 				"Model ID":          modelID,
 				"Scattering Method": scatteringMethod,
@@ -175,7 +177,7 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 		// }
 
 		// TODO: modify so we're not passing in hardcoded value
-		session, err := createCheckoutSession(user.StripeUserID, 10, user.WalletAddress, requestData.ModelID, requestData.ScatteringMethod, requestData.Kwargs)
+		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress, requestData.ModelID, requestData.ScatteringMethod, requestData.Kwargs)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
@@ -410,93 +412,3 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 	}
 }
-
-// func StripeFullfillmentHandler(db *gorm.DB) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		payload, err := ioutil.ReadAll(r.Body)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "Error reading request body: %v\n", err)
-// 			w.WriteHeader(http.StatusServiceUnavailable)
-// 			return
-// 		}
-
-// 		endpointSecret := os.Getenv("STRIPE_WEBHOOK_SECRET_KEY")
-
-// 		event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
-// 		if err != nil {
-// 			fmt.Fprintf(os.Stderr, "Error verifying webhook signature: %v\n", err)
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		switch event.Type {
-// 		case "payment_intent.succeeded":
-// 			var paymentIntent stripe.PaymentIntent
-// 			err := json.Unmarshal(event.Data.Raw, &paymentIntent)
-// 			if err != nil {
-// 				fmt.Fprintf(os.Stderr, "Error parsing payment intent: %v\n", err)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			walletAddress, ok := paymentIntent.Metadata["walletAddress"]
-// 			if !ok {
-// 				fmt.Fprintf(os.Stderr, "Wallet address not found in payment intent metadata\n")
-// 				w.WriteHeader(http.StatusBadRequest)
-// 				return
-// 			}
-
-// 			var user models.User
-// 			result := db.Where("wallet_address ILIKE ?", walletAddress).First(&user)
-// 			if result.Error != nil {
-// 				if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 					fmt.Fprintf(os.Stderr, "User with wallet address %s not found\n", walletAddress)
-// 					w.WriteHeader(http.StatusNotFound)
-// 				} else {
-// 					fmt.Fprintf(os.Stderr, "Error querying user: %v\n", result.Error)
-// 					w.WriteHeader(http.StatusInternalServerError)
-// 				}
-// 				return
-// 			}
-
-// 			// Convert Stripe amount (in cents) to a float64 representation
-// 			amount := float64(paymentIntent.Amount) / 100.0
-
-// 			transaction := models.Transaction{
-// 				ID:          uuid.New().String(),
-// 				Amount:      amount,
-// 				IsDebit:     false, // Assuming payment intents are always credits (money in)
-// 				WalletAddress:      user.WalletAddress,
-// 				Description: "Stripe payment intent succeeded",
-// 			}
-
-// 			if result := db.Create(&transaction); result.Error != nil {
-// 				fmt.Fprintf(os.Stderr, "Failed to save transaction: %v\n", result.Error)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			// Create the experiment in your database using the extracted information
-// 			experiment := models.Experiment{
-// 				WalletAddress:    walletAddress,
-// 				ModelID:          modelID,
-// 				ScatteringMethod: scatteringMethod,
-// 				Kwargs:           kwargs,
-// 				// Set other necessary fields
-// 			}
-
-// 			if result := db.Create(&experiment); result.Error != nil {
-// 				fmt.Fprintf(os.Stderr, "Failed to save experiment: %v\n", result.Error)
-// 				w.WriteHeader(http.StatusInternalServerError)
-// 				return
-// 			}
-
-// 			fmt.Printf("PaymentIntent succeeded, Amount: %v, WalletAddress: %v\n", paymentIntent.Amount, walletAddress)
-
-// 		default:
-// 			fmt.Fprintf(os.Stderr, "Unhandled event type: %s\n", event.Type)
-// 		}
-
-// 		w.WriteHeader(http.StatusOK)
-// 	}
-// }
