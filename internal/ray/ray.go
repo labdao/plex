@@ -27,6 +27,16 @@ func GetRayApiHost() string {
 	}
 }
 
+func GetRayJobApiHost() string {
+	// For colabfold local testing set this env var to http://colabfold-service:<PORT>
+	rayApiHost, exists := os.LookupEnv("RAY_JOB_API_HOST")
+	if exists {
+		return rayApiHost
+	} else {
+		return "localhost:8265" // Default Ray API host
+	}
+}
+
 // Prevents race conditions with Ray Client
 func GetRayClient() *http.Client {
 	once.Do(func() {
@@ -102,7 +112,7 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 
 	} else if job.JobType == models.JobTypeJob {
 
-		rayServiceURL = GetRayApiHost() + model.RayEndpoint
+		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
 		// create json request body
 		reqBody := map[string]interface{}{
 			"entrypoint": model.RayJobEntrypoint,
@@ -127,6 +137,82 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 		return nil, err
 	}
 	return resp, nil
+}
+
+func GetRayJobStatus(rayJobID string) (string, error) {
+	rayServiceURL := GetRayJobApiHost() + "/api/jobs/" + rayJobID
+	req, err := http.NewRequest("GET", rayServiceURL, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request to the Ray service
+	client := GetRayClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	return resp.Status, nil
+}
+
+// func GetRayJobResponseFromS3(rayJobID string) (string, error) {
+// 	rayServiceURL := GetRayJobApiHost() + "/api/jobs/" + rayJobID + "/response"
+// 	req, err := http.NewRequest("GET", rayServiceURL, nil)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	req.Header.Set("Content-Type", "application/json")
+
+// 	// Send the request to the Ray service
+// 	client := GetRayClient()
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	defer resp.Body.Close()
+// 	return resp.Status, nil
+// }
+
+func JobIsRunning(rayJobID string) bool {
+	status, err := GetRayJobStatus(rayJobID)
+	if err != nil {
+		return false
+	}
+	return status == "RUNNING"
+}
+
+func JobIsPending(rayJobID string) bool {
+	status, err := GetRayJobStatus(rayJobID)
+	if err != nil {
+		return false
+	}
+	return status == "PENDING"
+}
+
+func JobSucceeded(rayJobID string) bool {
+	status, err := GetRayJobStatus(rayJobID)
+	if err != nil {
+		return false
+	}
+	return status == "SUCCEEDED"
+}
+
+func JobFailed(rayJobID string) bool {
+	status, err := GetRayJobStatus(rayJobID)
+	if err != nil {
+		return false
+	}
+	return status == "FAILED"
+}
+
+func JobStopped(rayJobID string) bool {
+	status, err := GetRayJobStatus(rayJobID)
+	if err != nil {
+		return false
+	}
+	return status == "STOPPED"
 }
 
 func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[string]ipwl.ModelInput) error {

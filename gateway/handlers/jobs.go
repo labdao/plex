@@ -112,7 +112,7 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 				TotalGpu:      data.TotalGpu,
 			}
 
-			if data.State == models.JobStateQueued {
+			if data.State == models.JobStatePending {
 				summary.Ray.Queued = jobSummary
 			} else if data.State == models.JobStateRunning {
 				summary.Ray.Running = jobSummary
