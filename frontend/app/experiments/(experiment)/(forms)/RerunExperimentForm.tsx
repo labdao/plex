@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form } from "@/components/ui/form";
-import { AppDispatch, experimentDetailThunk, experimentListThunk, selectExperimentDetail, selectModelDetail } from "@/lib/redux";
+import { AppDispatch, addExperimentWithCheckoutThunk, experimentDetailThunk, experimentListThunk, refreshUserDataThunk, selectExperimentDetail, selectModelDetail, selectIsUserSubscribed, selectUserTier } from "@/lib/redux";
 import { addJobToExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 
@@ -29,14 +29,16 @@ export default function RerunExperimentForm() {
 
   const model = useSelector(selectModelDetail);
   const experiment = useSelector(selectExperimentDetail);
+  const userTier = useSelector(selectUserTier);
+  const isUserSubscribed = useSelector(selectIsUserSubscribed);
 
   const lastJob = experiment?.Jobs?.[experiment?.Jobs?.length - 1];
 
   const walletAddress = user?.wallet?.address;
 
   const groupedInputs = groupInputs(model.ModelJson?.inputs);
-  const formSchema = generateRerunSchema(model.ModelJson?.inputs);
-  const defaultValues = generateValues(lastJob?.Inputs);
+  const formSchema = generateRerunSchema(model.ModelJson?.inputs, lastJob?.Inputs);
+  const defaultValues = generateValues(model.ModelJson?.inputs, lastJob?.Inputs);
   const experimentID = experiment?.ID || 0;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -46,29 +48,44 @@ export default function RerunExperimentForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
-
+  
     if (!walletAddress) {
       console.error("Wallet address missing");
       return;
     }
+  
     const transformedPayload = transformJson(model, values, walletAddress);
-
     console.log("Submitting Payload:", transformedPayload);
+  
     try {
-      const response = await addJobToExperiment(experimentID, transformedPayload);
-      console.log("Response from addJobToExperiment", response);
-      if (response && response.ID) {
-        console.log("Experiment created", response);
-        console.log(response.ID);
-        dispatch(experimentDetailThunk(response.ID));
-        dispatch(experimentListThunk(walletAddress));
-        toast.success("Experiment started successfully");
+      if (userTier === 'Free' || (userTier === 'Paid' && isUserSubscribed)) {
+        const response = await addJobToExperiment(experimentID, transformedPayload);
+        if (response && response.ID) {
+          console.log("Job added to experiment", response);
+          dispatch(experimentDetailThunk(response.ID));
+          dispatch(experimentListThunk(walletAddress));
+          toast.success("Job added to experiment successfully");
+        } else {
+          console.log("Something went wrong", response);
+          toast.error("Failed to add job to experiment");
+        }
+      } else if (userTier === 'Paid' && !isUserSubscribed) {
+        const checkoutResponse = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
+        if (checkoutResponse.checkout) {
+          window.location.href = checkoutResponse.checkout.url;
+        } else {
+          console.log("Something went wrong with checkout", checkoutResponse);
+          toast.error("Failed to initiate subscription process");
+        }
       } else {
-        console.log("Something went wrong", response);
+        console.error("Invalid user tier");
+        toast.error("Unable to process request due to invalid user tier");
       }
+  
+      await dispatch(refreshUserDataThunk());
     } catch (error) {
-      console.error("Failed to create experiment", error);
-      // Handle error, maybe show message to user
+      console.error("Failed to add job to experiment", error);
+      toast.error("Failed to add job to experiment");
     }
   }
 
