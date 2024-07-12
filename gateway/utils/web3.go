@@ -97,7 +97,7 @@ func BuildTokenMetadata(db *gorm.DB, experiment *models.Experiment) (string, err
 			"model":   map[string]interface{}{},
 			"inputs":  []map[string]interface{}{},
 			"outputs": []map[string]interface{}{},
-			"state":   job.State,
+			"state":   job.JobStatus,
 			"errMsg":  job.Error,
 		}
 

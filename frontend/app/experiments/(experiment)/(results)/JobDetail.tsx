@@ -29,7 +29,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
   const model = useSelector(selectModelDetail);
 
   interface File {
-    CID: string;
+    ID: string;
     Filename: string;
     Tags: Tag[];
   }
@@ -64,7 +64,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
       }
     };
 
-    if (job.State === "running") {
+    if (job.JobStatus === "running") {
       fetchData();
       const intervalId = setInterval(fetchData, 5000);
 
@@ -72,7 +72,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
     } else {
       fetchData();
     }
-  }, [jobID, job.State]);
+  }, [jobID, job.JobStatus]);
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full @container">
@@ -114,7 +114,7 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKey: string }) {
   const fileInfo = input?.type === "file" ? value?.split("/") : [];
   const filename = fileInfo?.[1] || "";
-  const fileCID = fileInfo?.[0] || "";
+  const fileID = fileInfo?.[0] || "";
 
   return (
     <div className="px-6 py-2 border-b border-border/50 ">
@@ -131,7 +131,7 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
           {input?.type === "file" ? (
             <>
               {value ? (
-                <FileDownloadLink filename={filename} fileCID={fileCID} className="text-accent hover:underline">
+                <FileDownloadLink filename={filename} fileID={fileID} className="text-accent hover:underline">
                   {filename}
                 </FileDownloadLink>
               ) : (
@@ -201,20 +201,20 @@ function InputList({ userInputs, model }: { userInputs: { [key: string]: any }; 
 }
 
 function FileDownloadLink({
-  fileCID,
+  fileID,
   filename,
   children,
   className,
 }: {
   filename: string;
-  fileCID: string;
+  fileID: string;
   children: React.ReactNode;
   className?: string;
 }) {
-  const handleDownload = async (fileCID: string, filename: string) => {
+  const handleDownload = async (fileID: string, filename: string) => {
     try {
       const authToken = await getAccessToken();
-      const response = await fetch(`${backendUrl()}/files/${fileCID}/download`, {
+      const response = await fetch(`${backendUrl()}/files/${fileID}/download`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -238,7 +238,7 @@ function FileDownloadLink({
   };
 
   return (
-    <a target="#" onClick={() => handleDownload(fileCID, filename)} className={cn("cursor-pointer", className)}>
+    <a target="#" onClick={() => handleDownload(fileID, filename)} className={cn("cursor-pointer", className)}>
       {children}
     </a>
   );
@@ -250,20 +250,20 @@ function FileList({ files }: { files: File[] }) {
       {!!files?.length ? (
         <>
           {files.map((file: File) => (
-            <div key={file.CID} className="flex items-center justify-between px-6 py-2 border-b border-border/50 last:border-none">
+            <div key={file.ID} className="flex items-center justify-between px-6 py-2 border-b border-border/50 last:border-none">
               <div>
-                <FileDownloadLink filename={file.Filename} fileCID={file.CID} className="text-accent hover:underline">
+                <FileDownloadLink filename={file.Filename} fileID={file.ID} className="text-accent hover:underline">
                   <TruncatedString value={file.Filename} trimLength={30} />
                 </FileDownloadLink>
                 <div className="opacity-70 text-muted-foreground">
-                  <CopyToClipboard string={file.CID}>
-                    File ID: <TruncatedString value={file.CID} />
+                  <CopyToClipboard string={file.ID}>
+                    File ID: <TruncatedString value={file.ID} />
                   </CopyToClipboard>
                 </div>
               </div>
               {/* @TODO: Add Filesize */}
               <Button size="icon" variant="outline" asChild>
-                <FileDownloadLink filename={file.Filename} fileCID={file.CID}>
+                <FileDownloadLink filename={file.Filename} fileID={file.ID}>
                   <DownloadIcon />
                 </FileDownloadLink>
               </Button>

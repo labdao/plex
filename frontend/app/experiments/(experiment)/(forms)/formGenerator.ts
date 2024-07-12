@@ -71,22 +71,89 @@ export function generateSchema(inputs: InputType) {
   });
 }
 
-export function generateRerunSchema(inputs: InputType) {
-  return z.object({
-    ...inputsToSchema(inputs),
-  });
+
+export function generateRerunSchema(inputs: InputType = {}, jobInputs: any = {}) {
+  const schema: { [key: string]: z.ZodArray<z.ZodObject<{ value: z.ZodTypeAny }>> } = {};
+
+  for (const key in inputs) {
+    const input = inputs[key] || {}; // Default to an empty object if input is null/undefined
+    const originalValue = jobInputs[key]; // Job inputs are likely not nested in an array
+
+    let valueSchema: z.ZodTypeAny;
+
+    switch (input.type) {
+      case "File":
+      case "file":
+        valueSchema = z.string().min(input.required ? 1 : 0, { message: "File is required" });
+        break;
+      case "string":
+        valueSchema = input.required
+          ? z.string().min(1, { message: "Field is required" })
+          : z.string().optional().default(originalValue as string || "");
+        break;
+      case "int":
+      case "number":
+        const min = Number.isFinite(parseInt(input.min)) ? parseInt(input.min) : Number.MIN_SAFE_INTEGER;
+        const max = Number.isFinite(parseInt(input.max)) ? parseInt(input.max) : Number.MAX_SAFE_INTEGER;
+        valueSchema = input.required
+          ? z.coerce.number().int().min(min).max(max)
+          : z.union([z.coerce.number().int().min(min).max(max), z.null()]).optional().default(originalValue as number | null ?? null);
+        break;
+      case "bool":
+      case "boolean":
+        valueSchema = z.boolean().optional().default(originalValue as boolean ?? false);
+        break;
+      default:
+        // Default case, treat as optional string
+        valueSchema = z.string().optional().default(originalValue as string || "");
+    }
+
+    schema[key] = z.array(z.object({ value: valueSchema }));
+  }
+
+  console.log("Generated schema:", schema); // Add this for debugging
+
+  return z.object(schema).optional().default({});
 }
 
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ModelDetail) {
   return {
     name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
-    model: model?.CID,
+    model: model?.S3URI,
     ...inputsToDefaultValues(inputs),
   };
 }
 
-export function generateValues(inputs: InputType) {
-  return {
-    ...inputsToValues(inputs),
-  };
+export function generateValues(inputs: InputType = {}, jobInputs: any = {}) {
+  const values: { [key: string]: { value: string | number | boolean | null }[] } = {};
+
+  for (const key in inputs) {
+    const input = inputs[key] || {}; // Default to an empty object if input is null/undefined
+    const originalValue = jobInputs[key]; // Job inputs are likely not nested in an array
+
+    let value: string | number | boolean | null;
+
+    switch (input.type) {
+      case "string":
+        value = (originalValue as string) || "";
+        break;
+      case "int":
+      case "number":
+        value = (originalValue as number) ?? null;
+        break;
+      case "bool":
+      case "boolean":
+        value = (originalValue as boolean) ?? false;
+        break;
+      default:
+        // For other types (including file), use the original value or null
+        value = originalValue ?? null;
+    }
+
+    values[key] = [{ value }];
+  }
+
+  console.log("Generated values:", values); // Add this for debugging
+
+  return values;
 }

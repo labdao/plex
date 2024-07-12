@@ -61,9 +61,10 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 
 		if err == gorm.ErrRecordNotFound {
 			newUser := models.User{
-				WalletAddress: requestData.WalletAddress,
-				DID:           did,
-				CreatedAt:     time.Now().UTC(),
+				WalletAddress:  requestData.WalletAddress,
+				DID:            did,
+				CreatedAt:      time.Now().UTC(),
+				OrganizationID: 1,
 			}
 			if result := db.Create(&newUser); result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
@@ -106,29 +107,22 @@ func GetUserHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		response := struct {
-			WalletAddress string      `json:"walletAddress"`
-			DID           string      `json:"did"`
-			IsAdmin       bool        `json:"isAdmin"`
-			Tier          models.Tier `json:"tier"`
+			WalletAddress      string      `json:"walletAddress"`
+			DID                string      `json:"did"`
+			IsAdmin            bool        `json:"isAdmin"`
+			Tier               models.Tier `json:"tier"`
+			SubscriptionStatus string      `json:"subscriptionStatus"`
 		}{
-			WalletAddress: user.WalletAddress,
-			DID:           user.DID,
-			IsAdmin:       user.Admin,
-			Tier:          user.Tier,
+			WalletAddress:      user.WalletAddress,
+			DID:                user.DID,
+			IsAdmin:            user.Admin,
+			Tier:               user.Tier,
+			SubscriptionStatus: user.SubscriptionStatus,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
 	}
-}
-
-func getTier(db *gorm.DB, walletAddress string) (models.Tier, error) {
-	var user models.User
-	err := db.Where("wallet_address = ?", walletAddress).First(&user).Error
-	if err != nil {
-		return models.TierFree, err
-	}
-	return user.Tier, nil
 }
 
 func UpdateUserTier(db *gorm.DB, walletAddress string, threshold int) error {

@@ -12,14 +12,37 @@ type ModelInfo struct {
 	S3   string `json:"s3"`
 }
 
+type NullableMap map[string]interface{}
+
+func (nm *NullableMap) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*nm = nil
+		return nil
+	}
+	m := make(map[string]interface{})
+	err := json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+	*nm = m
+	return nil
+}
+
+func (nm NullableMap) MarshalJSON() ([]byte, error) {
+	if nm == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(map[string]interface{}(nm))
+}
+
 type IO struct {
-	Model    ModelInfo              `json:"model"`
-	Inputs   map[string]interface{} `json:"inputs"`
-	Outputs  map[string]interface{} `json:"outputs"`
-	State    string                 `json:"state"`
-	ErrMsg   string                 `json:"errMsg"`
-	UserID   string                 `json:"userId"`
-	RayJobID string                 `json:"rayJobId"`
+	Model         ModelInfo   `json:"modelInfo"`
+	Inputs        NullableMap `json:"inputs"`
+	Outputs       NullableMap `json:"outputs"`
+	State         string      `json:"state"`
+	ErrMsg        string      `json:"errMsg"`
+	WalletAddress string      `json:"walletAddress"`
+	RayJobID      string      `json:"rayJobId"`
 }
 
 func ReadIOList(filePath string) ([]IO, error) {

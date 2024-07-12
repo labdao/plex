@@ -12,7 +12,7 @@ import {
   endFileUploadDataSlice,
   fetchUserDataAsync,
   saveFileAsync,
-  selectCID,
+  selectID,
   selectFileError,
   selectFileIsLoading,
   selectDateFileIsUploaded,
@@ -26,7 +26,7 @@ import {
 
 interface AddFileFormProps {
   trigger: React.ReactNode;
-  onUpload?: (cid: string) => void;
+  onUpload?: (id: string) => void;
   accept?: string;
 }
 
@@ -51,11 +51,11 @@ export default function AddFileForm({ trigger, onUpload, accept }: AddFileFormPr
     }
   };
 
-  const handleSuccess = (cid: string) => {
+  const handleSuccess = (id: string) => {
     setOpen(false);
     if (onUpload) {
-      console.log("handleSuccess", cid);
-      onUpload(cid);
+      console.log("handleSuccess", id);
+      onUpload(id);
     }
   };
 

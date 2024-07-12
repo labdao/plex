@@ -11,13 +11,11 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/s3"
-
 	"gorm.io/gorm"
 )
 
@@ -116,16 +114,7 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			utils.SendJSONError(w, fmt.Sprintf("Error uploading to bucket: %v", err), http.StatusInternalServerError)
 			return
 		}
-
 		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
-
-		var modelGpu int
-		if model.GpuBool {
-			modelGpu = 1
-		} else {
-			modelGpu = 0
-		}
-
 		var display bool = true
 		var defaultModel bool = false
 
@@ -157,42 +146,32 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 				return
 			}
 		}
+		var user models.User
+		if err := db.Where("wallet_address = ?", walletAddress).First(&user).Error; err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error fetching user: %v", err), http.StatusInternalServerError)
+			return
+		}
 
 		modelEntry := models.Model{
-			CID:                hash,
-			WalletAddress:      walletAddress,
+			WalletAddress:      user.WalletAddress,
 			Name:               model.Name,
 			ModelJson:          modelJSON,
-			Container:          model.DockerPull,
-			Memory:             0,
-			Cpu:                0,
-			Gpu:                modelGpu,
-			Network:            model.NetworkBool,
-			Timestamp:          time.Now().UTC(),
+			CreatedAt:          time.Now().UTC(),
 			Display:            display,
 			TaskCategory:       taskCategory,
 			DefaultModel:       defaultModel,
 			MaxRunningTime:     maxRunningTime,
-			ModelType:          string(model.ModelType),
 			RayServiceEndpoint: model.RayServiceEndpoint,
 			ComputeCost:        model.ComputeCost,
 			S3URI:              s3_uri,
-		}
-
-		if model.MemoryGB != nil {
-			modelEntry.Memory = *model.MemoryGB
-		}
-
-		if model.Cpu != nil {
-			modelEntry.Cpu = *model.Cpu
 		}
 
 		result := tx.Create(&modelEntry)
 		if result.Error != nil {
 			tx.Rollback()
 			if utils.IsDuplicateKeyError(result.Error) {
-				// http.Error(w, "A model with the same CID already exists", http.StatusConflict)
-				utils.SendJSONError(w, "A model with the same CID already exists", http.StatusConflict)
+				// http.Error(w, "A model with the same ID already exists", http.StatusConflict)
+				utils.SendJSONError(w, "This model already exists", http.StatusConflict)
 			} else {
 				// http.Error(w, fmt.Sprintf("Error creating model entity: %v", result.Error), http.StatusInternalServerError)
 				utils.SendJSONError(w, fmt.Sprintf("Error creating model entity: %v", result.Error), http.StatusInternalServerError)
@@ -207,7 +186,7 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		utils.SendJSONResponseWithCID(w, modelEntry.CID)
+		utils.SendJSONResponseWithID(w, modelEntry.ID)
 	}
 }
 
@@ -227,9 +206,9 @@ func UpdateModelHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
@@ -277,7 +256,7 @@ func UpdateModelHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		result := tx.Model(&models.Model{}).Where("cid = ?", cid).Updates(updateData)
+		result := tx.Model(&models.Model{}).Where("id = ?", id).Updates(updateData)
 
 		if result.Error != nil {
 			tx.Rollback()
@@ -287,7 +266,7 @@ func UpdateModelHandler(db *gorm.DB) http.HandlerFunc {
 
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			utils.SendJSONError(w, "Model with the specified CID not found", http.StatusNotFound)
+			utils.SendJSONError(w, "Model with the specified ID not found", http.StatusNotFound)
 			return
 		}
 
@@ -308,14 +287,14 @@ func GetModelHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var model models.Model
-		result := db.Where("cid = ?", cid).First(&model)
+		result := db.Where("id = ?", id).First(&model)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching model: %v", result.Error), http.StatusInternalServerError)
 			return
@@ -346,15 +325,15 @@ func ListModelsHandler(db *gorm.DB) http.HandlerFunc {
 			query = query.Where("display = ?", true)
 		}
 
-		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("cid = ?", cid)
+		if id := r.URL.Query().Get("id"); id != "" {
+			query = query.Where("id = ?", id)
 		}
 
 		if name := r.URL.Query().Get("name"); name != "" {
 			query = query.Where("name = ?", name)
 		}
 
-		if walletAddress := r.URL.Query().Get("walletAddress"); walletAddress != "" {
+		if walletAddress := r.URL.Query().Get("wallet_address"); walletAddress != "" {
 			query = query.Where("wallet_address = ?", walletAddress)
 		}
 

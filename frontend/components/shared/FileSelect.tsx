@@ -14,14 +14,14 @@ import { fileListThunk } from "@/lib/redux/slices/fileListSlice/thunks";
 import { cn } from "@/lib/utils";
 
 interface File {
-  CID: string;
+  ID: string;
   Filename: string;
   S3URI: string;
 }
 
 interface FileFilters {
   filename?: string;
-  cid?: string;
+  id?: string;
 }
 
 interface FileSelectProps {
@@ -48,7 +48,7 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
   let filters: FileFilters = useMemo(() => ({}), []);
 
   if (searchTerm && cidPattern.test(searchTerm)) {
-    filters.cid = searchTerm;
+    filters.id = searchTerm;
     filters.filename = filenameFilter;
   } else {
     filters.filename = searchTerm ? `%${searchTerm}%` : filenameFilter;
@@ -69,11 +69,11 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
 
   const getFileValue = (file: File): string => `${file?.S3URI}`;
 
-  const handleUpload = async (cid: string) => {
-    // Since we only know the cid and not the filename after upload,
+  const handleUpload = async (id: string) => {
+    // Since we only know the id and not the filename after upload,
     // search for the file and set the input value from what we find
-    const files = await listFiles({ page: 1, pageSize: 10, filters: { cid: cid, filename: filenameFilter } });
-    if (files?.data?.length && files?.data?.[0]?.CID === cid) {
+    const files = await listFiles({ page: 1, pageSize: 10, filters: { id: id, filename: filenameFilter } });
+    if (files?.data?.length && files?.data?.[0]?.ID === id) {
       onValueChange(getFileValue(files?.data[0]));
     }
   };
@@ -83,7 +83,7 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
       <div className="relative flex items-center gap-2">
         <PopoverTrigger asChild>
           <Button className="justify-between p-3 text-base grow" variant="input" role="combobox" aria-expanded={open}>
-            <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/")?.[1] : `Select ${label} file...`}</span>
+            <span className={cn(!value && "text-muted-foreground")}>{value ? value.split("/").pop() : `Select ${label} file...`}</span>
           </Button>
         </PopoverTrigger>
         <AddFileForm
@@ -105,7 +105,7 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
           <CommandGroup>
             {files.map((file) => (
               <CommandItem
-                key={file.CID}
+                key={file.ID}
                 value={getFileValue(file)}
                 onSelect={() => {
                   onValueChange(getFileValue(file) === value ? "" : getFileValue(file));

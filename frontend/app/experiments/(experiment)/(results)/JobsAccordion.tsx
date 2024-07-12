@@ -27,7 +27,7 @@ export default function JobsAccordion({ experiment }: JobsAccordionProps) {
     <Accordion type="single" defaultValue={activeJobUUID} value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[600px]">
       {[...experiment.Jobs]?.sort((a, b) => (a.ID || 0) - (b.ID || 0)).map((job, index) => {
         const validStates = ["queued", "running", "failed", "completed"];
-        const status = (validStates.includes(job.State) ? job.State : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
+        const status = (validStates.includes(job.JobStatus) ? job.JobStatus : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
 
         return (
           <AccordionItem value={job.RayJobID} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>
@@ -41,7 +41,7 @@ export default function JobsAccordion({ experiment }: JobsAccordionProps) {
                     </div>
                   </div>
                   <Badge status={status} variant="outline">
-                    {job.State}
+                    {job.JobStatus}
                   </Badge>
                 </div>
               </AccordionTrigger>

@@ -82,16 +82,6 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		//TODO_PR#970 commenting precomputeCID part for now
-		// precomputedCID, err := ipfs.PrecomputeCID(tempFile.Name())
-		// if err != nil {
-		// 	utils.SendJSONError(w, fmt.Sprintf("Error precomputing CID: %v", err), http.StatusInternalServerError)
-		// 	return
-		// }
-
-		//generate a uuid and call it precomputedCID
-		// precomputedCID := uuid.New().String()
-
 		hash, err := utils.GenerateFileHash(tempFile.Name())
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error generating hash: %v", err), http.StatusInternalServerError)
@@ -108,40 +98,25 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		// cid, err := ipfs.WrapAndPinFile(tempFile.Name())
-		// if err != nil {
-		// 	utils.SendJSONError(w, "Error pinning file to IPFS", http.StatusInternalServerError)
-		// 	return
-		// }
-
-		// // TODO: determine why there is a discrepancy
-		// // remove logs when resolved
-		// log.Println("--------------------")
-		// if precomputedCID != cid {
-		// 	log.Printf("Precomputed CID (%s) and pinned CID (%s) do NOT match", precomputedCID, cid)
-		// } else {
-		// 	log.Printf("Precomputed CID (%s) and pinned CID (%s) match", precomputedCID, cid)
-		// }
-		// log.Println("--------------------")
 		s3_uri := fmt.Sprintf("s3://%s/%s", bucketName, objectKey)
 		file := models.File{
-			CID:           hash,
-			WalletAddress: walletAddress,
+			FileHash:      hash,
+			WalletAddress: user.WalletAddress,
 			Filename:      filename,
-			Timestamp:     time.Now().UTC(),
+			CreatedAt:     time.Now().UTC(),
 			Public:        isPublic,
 			S3URI:         s3_uri,
 		}
 
 		var existingFile models.File
-		if err := db.Where("cid = ?", hash).First(&existingFile).Error; err == nil {
+		if err := db.Where("file_hash = ?", hash).First(&existingFile).Error; err == nil {
 			var userHasFile bool
 			var count int64
-			db.Model(&file).Joins("JOIN user_files ON user_files.c_id = files.cid").
-				Where("user_files.wallet_address = ? AND files.cid = ?", user.WalletAddress, hash).First(&file).Count(&count)
+			db.Model(&file).Joins("JOIN user_files ON user_files.file_id = files.id").
+				Where("user_files.wallet_address = ? AND files.id = ?", user.WalletAddress, hash).First(&file).Count(&count)
 			userHasFile = count > 0
 			if userHasFile {
-				utils.SendJSONError(w, "A user file with the same CID already exists", http.StatusConflict)
+				utils.SendJSONError(w, "A user file with the same ID already exists", http.StatusConflict)
 				return
 			} else {
 				if err := db.Model(&user).Association("UserFiles").Append(&existingFile); err != nil {
@@ -180,7 +155,7 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 			return
 		}
 
-		utils.SendJSONResponseWithCID(w, file.CID)
+		utils.SendJSONResponseWithID(w, file.ID)
 	}
 }
 
@@ -198,21 +173,21 @@ func GetFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var file models.File
-		result := db.Preload("Tags").Where("cid = ?", cid).First(&file)
+		result := db.Preload("Tags").Where("id = ?", id).First(&file)
 		if result.Error != nil {
 			http.Error(w, fmt.Sprintf("Error fetching file: %v", result.Error), http.StatusInternalServerError)
 			return
 		}
 
 		var userAssociatedWithFile bool
-		db.Model(&user).Association("UserFiles").Find(&file, models.File{CID: cid})
+		db.Model(&user).Association("UserFiles").Find(&file, models.File{ID: file.ID})
 		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
 
 		if !userAssociatedWithFile && !file.Public {
@@ -253,11 +228,11 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 		offset := (page - 1) * pageSize
 
 		query := db.Model(&models.File{}).
-			Joins("LEFT JOIN user_files ON user_files.file_c_id = files.cid AND user_files.wallet_address = ?", user.WalletAddress).
+			Joins("LEFT JOIN user_files ON user_files.file_id = files.id AND user_files.wallet_address = ?", user.WalletAddress).
 			Where("files.public = true OR (files.public = false AND user_files.wallet_address = ?)", user.WalletAddress)
 
-		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("files.cid = ?", cid)
+		if id := r.URL.Query().Get("id"); id != "" {
+			query = query.Where("files.id = ?", id)
 		}
 		if filename := r.URL.Query().Get("filename"); filename != "" {
 			query = query.Where("files.filename LIKE ?", "%"+filename+"%")
@@ -268,7 +243,7 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("user_files.timestamp <= ?", parsedTime)
+			query = query.Where("user_files.created_at <= ?", parsedTime)
 		}
 		if tsAfter := r.URL.Query().Get("tsAfter"); tsAfter != "" {
 			parsedTime, err := time.Parse(time.RFC3339, tsAfter)
@@ -276,13 +251,13 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, "Invalid timestamp format, use RFC3339 format", http.StatusBadRequest)
 				return
 			}
-			query = query.Where("user_files.timestamp >= ?", parsedTime)
+			query = query.Where("user_files.created_at >= ?", parsedTime)
 		}
 
 		var totalCount int64
 		query.Count(&totalCount)
 
-		defaultSort := "files.timestamp desc"
+		defaultSort := "files.created_at desc"
 		sortParam := r.URL.Query().Get("sort")
 		if sortParam != "" {
 			defaultSort = sortParam
@@ -318,9 +293,9 @@ func ListFilesHandler(db *gorm.DB) http.HandlerFunc {
 func DownloadFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
@@ -331,13 +306,13 @@ func DownloadFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		var file models.File
-		if err := db.Where("cid = ?", cid).First(&file).Error; err != nil {
+		if err := db.Where("id = ?", id).First(&file).Error; err != nil {
 			utils.SendJSONError(w, "File not found", http.StatusNotFound)
 			return
 		}
 
 		var userAssociatedWithFile bool
-		db.Model(&user).Association("UserFiles").Find(&file, models.File{CID: cid})
+		db.Model(&user).Association("UserFiles").Find(&file, models.File{ID: file.ID})
 		userAssociatedWithFile = !errors.Is(db.Error, gorm.ErrRecordNotFound)
 
 		if !userAssociatedWithFile && !file.Public {
@@ -377,14 +352,14 @@ func UpdateFileHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		vars := mux.Vars(r)
-		cid := vars["cid"]
-		if cid == "" {
-			utils.SendJSONError(w, "Missing CID parameter", http.StatusBadRequest)
+		id := vars["id"]
+		if id == "" {
+			utils.SendJSONError(w, "Missing ID parameter", http.StatusBadRequest)
 			return
 		}
 
 		var file models.File
-		result := db.Where("cid = ? AND public = false", cid).First(&file)
+		result := db.Where("id = ? AND public = false", id).First(&file)
 		if result.Error != nil {
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 				utils.SendJSONError(w, "File not found or already public", http.StatusNotFound)
@@ -413,12 +388,12 @@ func UpdateFileHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func AddTagsToFile(db *gorm.DB, fileCID string, tagNames []string) error {
-	log.Println("Starting AddTagsToFile for File with CID:", fileCID)
+func AddTagsToFile(db *gorm.DB, fileID int, tagNames []string) error {
+	log.Println("Starting AddTagsToFile for File with ID:", fileID)
 
 	var file models.File
-	if err := db.Preload("Tags").Where("cid = ?", fileCID).First(&file).Error; err != nil {
-		log.Printf("Error finding File with CID %s: %v\n", fileCID, err)
+	if err := db.Preload("Tags").Where("id = ?", fileID).First(&file).Error; err != nil {
+		log.Printf("Error finding File with ID %d: %v\n", fileID, err)
 		return fmt.Errorf("file not found: %v", err)
 	}
 
@@ -442,11 +417,11 @@ func AddTagsToFile(db *gorm.DB, fileCID string, tagNames []string) error {
 
 	log.Println("Saving File with new tags to DB")
 	if err := db.Save(&file).Error; err != nil {
-		log.Printf("error saving File with CID %s: %v\n", fileCID, err)
+		log.Printf("error saving File with ID %d: %v\n", fileID, err)
 		return fmt.Errorf("error saving file: %v", err)
 	}
 
-	log.Println("File with CID", fileCID, "successfully updated with new tags")
+	log.Println("File with ID", fileID, "successfully updated with new tags")
 
 	return nil
 }

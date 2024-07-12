@@ -1,10 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface ModelDetail {
-  CID: string;
+  ID: string;
   WalletAddress: string;
   Name: string;
   DefaultModel: boolean;
+  S3URI: string;
   ModelJson: {
     inputs: {};
     outputs: {
@@ -35,10 +36,11 @@ export interface ModelDetailSliceState {
 
 const initialState: ModelDetailSliceState = {
   model: {
-    CID: "",
+    ID: "",
     WalletAddress: "",
     Name: "",
     DefaultModel: false,
+    S3URI: "",
     ModelJson: {
       inputs: {},
       outputs: {},

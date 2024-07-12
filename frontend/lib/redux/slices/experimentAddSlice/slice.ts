@@ -20,10 +20,11 @@ const initialState: ExperimentAddSliceState = {
   ID: null,
   name: "",
   model: { 
-    CID: "", 
+    ID: "", 
     WalletAddress: "", 
     Name: "", 
     DefaultModel: false, 
+    S3URI: "",
     ModelJson: { 
       inputs: {}, 
       outputs: {}, 

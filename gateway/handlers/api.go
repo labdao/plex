@@ -51,12 +51,19 @@ func AddAPIKeyHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		// get user id with wallet address
+		var user models.User
+		if err := db.Where("wallet_address = ?", walletAddress).First(&user).Error; err != nil {
+			utils.SendJSONError(w, "Failed to get user: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		apiKey := models.APIKey{
 			Key:       apiKeyString,
 			Scope:     models.ScopeReadWrite, // default scope is read-write
 			CreatedAt: time.Now().UTC(),
 			ExpiresAt: time.Now().UTC().Add(30 * 24 * time.Hour), // default expiration time is 30 days
-			UserID:    walletAddress,
+			UserID:    user.WalletAddress,
 		}
 
 		result := db.Create(&apiKey)
@@ -85,7 +92,7 @@ func ListAPIKeysHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var apiKeys []models.APIKey
-		if err := db.Where("user_id = ?", user.WalletAddress).Find(&apiKeys).Error; err != nil {
+		if err := db.Where("wallet_address = ?", user.WalletAddress).Find(&apiKeys).Error; err != nil {
 			utils.SendJSONError(w, "Failed to get API keys: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

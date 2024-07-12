@@ -182,10 +182,13 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		experimentID := vars["experimentID"]
 
 		var experimentListCheckpointsResult []ExperimentListCheckpointsResult
+
 		if err := db.Table("jobs").
-			Select("jobs.id as job_id, models.model_json as model_json, jobs.result_json as result_json").
-			Joins("join experiments on experiments.id = jobs.experiment_id").
-			Joins("join models on models.cid = jobs.model_id").
+			Select("jobs.id as job_id, models.model_json as model_json, inference_events.output_json as result_json").
+			Joins("JOIN (SELECT job_id, MAX(event_time) as max_created_at FROM inference_events GROUP BY job_id) as latest_events ON latest_events.job_id = jobs.id").
+			Joins("JOIN inference_events ON inference_events.job_id = latest_events.job_id AND inference_events.event_time = latest_events.max_created_at").
+			Joins("JOIN experiments ON experiments.id = jobs.experiment_id").
+			Joins("JOIN models ON models.id = jobs.model_id").
 			Where("experiments.id = ?", experimentID).
 			Scan(&experimentListCheckpointsResult).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -195,6 +198,23 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 			}
 			return
 		}
+		// var experimentListCheckpointsResult []ExperimentListCheckpointsResult
+
+		// if err := db.Table("jobs").
+		// 	Select("jobs.id as job_id, models.model_json as model_json, inference_events.result_json as result_json").
+		// 	Joins("join (select job_id, max(event_time) as max_created_at from inference_events group by job_id) as latest_events on latest_events.job_id = inference_events.job_id and latest_events.max_created_at = inference_events.created_at").
+		// 	Joins("JOIN inference_events ON inference_events.job_id = latest_events.job_id AND inference_events.event_time = latest_events.max_created_at").
+		// 	Joins("join experiments on experiments.id = jobs.experiment_id").
+		// 	Joins("join models on models.id = jobs.model_id").
+		// 	Where("experiments.id = ?", experimentID).
+		// 	Scan(&experimentListCheckpointsResult).Error; err != nil {
+		// 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 		http.Error(w, "No jobs found for the given experiment", http.StatusNotFound)
+		// 	} else {
+		// 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		// 	}
+		// 	return
+		// }
 
 		var allPlotData []models.ScatterPlotData
 

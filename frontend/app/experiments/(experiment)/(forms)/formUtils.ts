@@ -23,14 +23,14 @@ export function groupInputs(inputs: any) {
 
 type TransformedJSON = {
   name: string;
-  modelCid: string;
+  modelId: string;
   walletAddress: string;
   scatteringMethod: string;
   kwargs: { [key: string]: any[] }; // Define the type for kwargs where each key is an array
 };
 
 export function transformJson(model: any, originalJson: any, walletAddress: string): TransformedJSON {
-  const { name, model: modelCid, ...dynamicKeys } = originalJson;
+  const { name, model: modelId, ...dynamicKeys } = originalJson;
 
   const modelJsonInputs = model.ModelJson.inputs;
 
@@ -43,9 +43,17 @@ export function transformJson(model: any, originalJson: any, walletAddress: stri
         // @ts-ignore
         return [key, [valueArray.map((valueObject) => valueObject.value)]];
       } else {
-        // Process normally
+        // Process normally but check if the field is optional and the value is 0
         // @ts-ignore
-        return [key, valueArray.map((valueObject) => valueObject.value)];
+        const isOptional = !modelJsonInputs[key]["required"];
+        // @ts-ignore
+        const value = valueArray.map((valueObject) => {
+          if (isOptional && valueObject.value === 0) {
+            return null;
+          }
+          return valueObject.value;
+        });
+        return [key, value];
       }
     })
   );
@@ -53,7 +61,7 @@ export function transformJson(model: any, originalJson: any, walletAddress: stri
   // Return the transformed JSON
   return {
     name: name,
-    modelCid: model.CID,
+    modelId: model.ID,
     walletAddress: walletAddress,
     scatteringMethod: "crossProduct",
     kwargs: kwargs,

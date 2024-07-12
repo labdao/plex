@@ -21,3 +21,15 @@ export const fetchUserDataAsync = createAppAsyncThunk(
     return result;
   }
 )
+
+export const refreshUserDataThunk = createAppAsyncThunk(
+  'user/refreshUserData',
+  async (_, { dispatch }) => {
+    try {
+      await dispatch(fetchUserDataAsync()).unwrap();
+    } catch (error) {
+      console.error('Failed to refresh user data: ', error);
+      throw error;
+    }
+  }
+)

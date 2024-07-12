@@ -12,9 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
@@ -47,15 +45,15 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var modelCid string
-		err = json.Unmarshal(requestData["modelCid"], &modelCid)
-		if err != nil || modelCid == "" {
-			utils.SendJSONError(w, "Invalid or missing Model CID", http.StatusBadRequest)
+		var modelId int
+		err = json.Unmarshal(requestData["modelId"], &modelId)
+		if err != nil || modelId == 0 {
+			utils.SendJSONError(w, "Invalid or missing Model ID", http.StatusBadRequest)
 			return
 		}
 
 		var model models.Model
-		result := db.Where("cid = ?", modelCid).First(&model)
+		result := db.Where("id = ?", modelId).First(&model)
 		if result.Error != nil {
 			log.Printf("Error fetching Model: %v\n", result.Error)
 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -100,21 +98,18 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(modelCid, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(model.S3URI, scatteringMethod, kwargs, db)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
 		}
 		log.Println("Initialized IO List")
 
-		experimentUUID := uuid.New().String()
-
 		experiment := models.Experiment{
-			WalletAddress:  user.WalletAddress,
-			Name:           name,
-			StartTime:      time.Now().UTC(),
-			ExperimentUUID: experimentUUID,
-			Public:         false,
+			WalletAddress: user.WalletAddress,
+			Name:          name,
+			CreatedAt:     time.Now().UTC(),
+			Public:        false,
 		}
 
 		log.Println("Creating Experiment entry")
@@ -131,26 +126,14 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
 				return
 			}
-			var queue models.QueueType
-			if model.ModelType == "ray" {
-				queue = models.QueueTypeRay
-			}
-			// TODO: consolidate below with the above checks.
-			var jobType models.JobType
-			if model.ModelType == "ray" {
-				jobType = models.JobTypeRay
-			} else {
-				jobType = models.JobTypeBacalhau
-			}
+
 			job := models.Job{
-				ModelID:       ioItem.Model.S3,
+				ModelID:       modelId,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
-				Queue:         queue,
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
-				JobType:       jobType,
 			}
 
 			result := db.Create(&job)
@@ -160,7 +143,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			for _, input := range ioItem.Inputs {
-				var cidsToAdd []string
+				var idsToAdd []string
 				switch v := input.(type) {
 				case string:
 					strInput, ok := input.(string)
@@ -169,8 +152,8 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					}
 					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 						split := strings.SplitN(strInput, "/", 2)
-						cid := split[0]
-						cidsToAdd = append(cidsToAdd, cid)
+						id := split[0]
+						idsToAdd = append(idsToAdd, id)
 					}
 				case []interface{}:
 					fmt.Println("found slice, checking each for 'Qm' prefix")
@@ -181,19 +164,19 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 						}
 						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 							split := strings.SplitN(strInput, "/", 2)
-							cid := split[0]
-							cidsToAdd = append(cidsToAdd, cid)
+							id := split[0]
+							idsToAdd = append(idsToAdd, id)
 						}
 					}
 				default:
 					continue
 				}
-				for _, cid := range cidsToAdd {
+				for _, id := range idsToAdd {
 					var file models.File
-					result := db.First(&file, "cid = ?", cid)
+					result := db.First(&file, "id = ?", id)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							utils.SendJSONError(w, fmt.Sprintf("File with CID %v not found", cid), http.StatusInternalServerError)
+							utils.SendJSONError(w, fmt.Sprintf("File with ID %v not found", id), http.StatusInternalServerError)
 							return
 						} else {
 							utils.SendJSONError(w, fmt.Sprintf("Error looking up File: %v", result.Error), http.StatusInternalServerError)
@@ -208,15 +191,16 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating Job entity with input data: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
-			requestTracker := models.RequestTracker{
+			inferenceEvent := models.InferenceEvent{
 				JobID:      job.ID,
 				RetryCount: 0,
-				CreatedAt:  time.Now().UTC(),
+				EventTime:  time.Now().UTC(),
+				EventType:  models.EventTypeJobCreated,
 			}
 
-			result = db.Save(&requestTracker)
+			result = db.Save(&inferenceEvent)
 			if result.Error != nil {
-				utils.SendJSONError(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
+				utils.SendJSONError(w, fmt.Sprintf("Error creating InferenceEvent entity: %v", result.Error), http.StatusInternalServerError)
 				return
 			}
 
@@ -243,6 +227,14 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			if err != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating user tier: %v", err), http.StatusInternalServerError)
 				return
+			}
+
+			if user.SubscriptionStatus == "active" {
+				err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
+				if err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -313,8 +305,8 @@ func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 
 		query := db.Model(&models.Experiment{}).Where("wallet_address = ?", user.WalletAddress)
 
-		if cid := r.URL.Query().Get("cid"); cid != "" {
-			query = query.Where("cid = ?", cid)
+		if id := r.URL.Query().Get("id"); id != "" {
+			query = query.Where("id = ?", id)
 		}
 
 		if name := r.URL.Query().Get("name"); name != "" {
@@ -332,19 +324,19 @@ func ListExperimentsHandler(db *gorm.DB) http.HandlerFunc {
 
 			for _, field := range requestedFields {
 				switch strings.ToLower(strings.TrimSpace(field)) {
-				case "name", "start_time", "end_time", "experiment_uuid", "public", "record_cid":
+				case "name", "created_at", "experiment_uuid", "public", "record_cid":
 					validFields = append(validFields, strings.ToLower(strings.TrimSpace(field)))
 				}
 			}
 
-			if !utils.Contains(validFields, "start_time") {
-				validFields = append(validFields, "start_time")
+			if !utils.Contains(validFields, "created_at") {
+				validFields = append(validFields, "created_at")
 			}
 
 			query = query.Select(validFields)
 		}
 
-		query = query.Order("start_time DESC")
+		query = query.Order("created_at DESC")
 
 		if fields == "" {
 			query = query.Preload("Jobs")
@@ -449,12 +441,12 @@ func UpdateExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					return
 				}
 
-				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_input_files").Select("file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+				if result := db.Model(&models.File{}).Where("id IN (?)", db.Table("job_input_files").Select("file_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating input Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
 
-				if result := db.Model(&models.File{}).Where("cid IN (?)", db.Table("job_output_files").Select("file_c_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
+				if result := db.Model(&models.File{}).Where("id IN (?)", db.Table("job_output_files").Select("file_id").Where("job_id = ?", job.ID)).Updates(models.File{Public: experiment.Public}); result.Error != nil {
 					http.Error(w, fmt.Sprintf("Error updating output Files: %v", result.Error), http.StatusInternalServerError)
 					return
 				}
@@ -534,7 +526,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		var modelId = experiment.Jobs[0].ModelID
 
 		var model models.Model
-		result := db.Where("cid = ?", modelId).First(&model)
+		result := db.Where("id = ?", modelId).First(&model)
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
 				http.Error(w, "Model not found", http.StatusNotFound)
@@ -570,7 +562,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		ioList, err := ipwl.InitializeIo(model.CID, scatteringMethod, kwargs, db)
+		ioList, err := ipwl.InitializeIo(model.S3URI, scatteringMethod, kwargs, db)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error while transforming validated JSON: %v", err), http.StatusInternalServerError)
 			return
@@ -584,17 +576,12 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("Error transforming job inputs: %v", err), http.StatusInternalServerError)
 				return
 			}
-			var queue models.QueueType
-			if model.ModelType == "ray" {
-				queue = models.QueueTypeRay
-			}
 
 			job := models.Job{
-				ModelID:       ioItem.Model.S3,
+				ModelID:       modelId,
 				ExperimentID:  experiment.ID,
 				WalletAddress: user.WalletAddress,
 				Inputs:        datatypes.JSON(inputsJSON),
-				Queue:         queue,
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
 			}
@@ -615,8 +602,8 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 					}
 					if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 						split := strings.SplitN(strInput, "/", 2)
-						cid := split[0]
-						cidsToAdd = append(cidsToAdd, cid)
+						id := split[0]
+						cidsToAdd = append(cidsToAdd, id)
 					}
 				case []interface{}:
 					fmt.Println("found slice, checking each for 'Qm' prefix")
@@ -627,19 +614,19 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 						}
 						if strings.HasPrefix(strInput, "Qm") && strings.Contains(strInput, "/") {
 							split := strings.SplitN(strInput, "/", 2)
-							cid := split[0]
-							cidsToAdd = append(cidsToAdd, cid)
+							id := split[0]
+							cidsToAdd = append(cidsToAdd, id)
 						}
 					}
 				default:
 					continue
 				}
-				for _, cid := range cidsToAdd {
+				for _, id := range cidsToAdd {
 					var file models.File
-					result := db.First(&file, "cid = ?", cid)
+					result := db.First(&file, "id = ?", id)
 					if result.Error != nil {
 						if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-							http.Error(w, fmt.Sprintf("File with CID %v not found", cid), http.StatusInternalServerError)
+							http.Error(w, fmt.Sprintf("File with CID %v not found", id), http.StatusInternalServerError)
 							return
 						} else {
 							http.Error(w, fmt.Sprintf("Error looking up File: %v", result.Error), http.StatusInternalServerError)
@@ -655,17 +642,50 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			requestTracker := models.RequestTracker{
+			inferenceEvent := models.InferenceEvent{
 				JobID:      job.ID,
 				RetryCount: 0,
-				State:      models.JobStateQueued,
-				CreatedAt:  time.Now().UTC(),
+				EventTime:  time.Now().UTC(),
+				EventType:  models.EventTypeJobCreated,
 			}
 
-			result = db.Save(&requestTracker)
+			result = db.Save(&inferenceEvent)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error creating RequestTracker entity: %v", result.Error), http.StatusInternalServerError)
 				return
+			}
+
+			user.ComputeTally += model.ComputeCost
+			result = db.Save(user)
+			if result.Error != nil {
+				http.Error(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
+				return
+			}
+
+			thresholdStr := os.Getenv("TIER_THRESHOLD")
+			if thresholdStr == "" {
+				http.Error(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+				return
+			}
+
+			threshold, err := strconv.Atoi(thresholdStr)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			err = UpdateUserTier(db, user.WalletAddress, threshold)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error updating user tier: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			if user.SubscriptionStatus == "active" {
+				err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
+				if err != nil {
+					utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
+					return
+				}
 			}
 		}
 
