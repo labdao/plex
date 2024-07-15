@@ -129,15 +129,13 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Bacalhau job %v was stopped", job.RayJobID), db)
 	} else if ray.JobSucceeded(job.RayJobID) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.RayJobID)
-		var latestInferenceEvent models.InferenceEvent
-		err = fetchLatestInferenceEvent(&latestInferenceEvent, jobID, db)
 		body := GetRayJobResponseFromS3(&job, db)
 		rayJobResponse, err := UnmarshalRayJobResponse([]byte(body))
 		if err != nil {
 			fmt.Println("Error unmarshalling result JSON:", err)
 			return err
 		}
-		completeRayJobAndAddFiles(&latestInferenceEvent, &job, []byte(body), rayJobResponse, db)
+		completeRayJobAndAddFiles(&job, []byte(body), rayJobResponse, db)
 	} else {
 		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.RayJobID, job.JobStatus)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", job.JobStatus), db)
@@ -157,7 +155,7 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) string {
 		log.Printf("Error fetching experiment UUID: %v", result.Error)
 	}
 	bucketName := os.Getenv("BUCKET_NAME")
-	key := fmt.Sprintf("%s/%s/response.json", experiment.ExperimentUUID, jobUUID)
+	key := fmt.Sprintf("%s/%s_response.json", experiment.ExperimentUUID, jobUUID)
 	fileName := filepath.Base(key)
 	var s3 s3client.S3Client
 	err := s3.DownloadFile(bucketName, key, fileName)
@@ -203,12 +201,12 @@ func setJobStatus(job *models.Job, state models.JobState, errorMessage string, d
 		EventMessage: errorMessage,
 	}
 
-	err := db.Save(inferenceEvent).Error
+	err := db.Save(&inferenceEvent).Error
 	if err != nil {
 		return err
 	}
 
-	err = db.Save(job).Error
+	err = db.Save(&job).Error
 	if err != nil {
 		return err
 	}
@@ -229,7 +227,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 			}
 		}
 		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
-		time.Sleep(1 * time.Second) // Wait for some time before the next cycle
+		time.Sleep(10 * time.Second) // Wait for some time before the next cycle
 	}
 }
 
@@ -273,7 +271,7 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 	}
 
 	if job.RayJobID == "" {
-		if err := submitRayJobAndUpdateID(&job, &inferenceEvent, db); err != nil {
+		if err := submitRayJobAndUpdateID(&job, db); err != nil {
 			return err
 		}
 	}
@@ -358,7 +356,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 	return string(prettyJSON), nil
 }
 
-func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEvent, db *gorm.DB) error {
+func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	log.Println("Preparing to submit job to Ray service")
 	var jobInputs map[string]interface{}
 	if err := json.Unmarshal(job.Inputs, &jobInputs); err != nil {
@@ -373,7 +371,8 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
 	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
-	setJobStatusAndID(inferenceEvent, job, models.JobStateRunning, rayJobID, "", db)
+	createInferenceEvent(job.ID, models.JobStateRunning, rayJobID, 0, db)
+	setJobStatusAndID(job, models.JobStateRunning, rayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
 	resp, err := ray.SubmitRayJob(*job, modelPath, rayJobID, inputs, db)
 	if err != nil {
@@ -385,7 +384,7 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 		log.Fatalf("Error reading response body: %v", err)
 	}
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode == http.StatusOK && job.JobType == models.JobTypeService {
 		var rayJobResponse models.RayJobResponse
 		rayJobResponse, err = UnmarshalRayJobResponse([]byte(body))
 		if err != nil {
@@ -400,14 +399,17 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 		}
 
 		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
-		completeRayJobAndAddFiles(inferenceEvent, job, body, rayJobResponse, db)
-	} else {
-		inferenceEvent.JobStatus = models.JobStateFailed
-		inferenceEvent.ResponseCode = resp.StatusCode
-		inferenceEvent.EventType = models.EventTypeJobFailed
-		inferenceEvent.EventMessage = string(body)
-		inferenceEvent.EventTime = time.Now().UTC()
-		err = db.Save(inferenceEvent).Error
+		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
+	} else if resp.StatusCode != http.StatusOK {
+		newInferenceEvent := models.InferenceEvent{
+			JobID:        job.ID,
+			JobStatus:    models.JobStateFailed,
+			ResponseCode: resp.StatusCode,
+			EventType:    models.EventTypeJobFailed,
+			EventMessage: string(body),
+			EventTime:    time.Now().UTC(),
+		}
+		err = db.Save(&newInferenceEvent).Error
 		if err != nil {
 			return err
 		}
@@ -440,7 +442,7 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 				return err
 			}
 
-			return submitRayJobAndUpdateID(job, &newInferenceEvent, db)
+			return submitRayJobAndUpdateID(job, db)
 		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < maxRetryCountFor500 {
 			job.RetryCount = job.RetryCount + 1
 			job.JobStatus = models.JobStatePending
@@ -465,7 +467,7 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 			log.Printf("Retry after %v due to server error (500)", delay)
 			time.Sleep(delay)
 
-			return submitRayJobAndUpdateID(job, &newInferenceEvent, db)
+			return submitRayJobAndUpdateID(job, db)
 		} else {
 			var latestInferenceEvent models.InferenceEvent
 			err = fetchLatestInferenceEvent(&latestInferenceEvent, job.ID, db)
@@ -487,43 +489,50 @@ func submitRayJobAndUpdateID(job *models.Job, inferenceEvent *models.InferenceEv
 	if err != nil {
 		return err
 	}
-	err = db.Save(inferenceEvent).Error
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func setJobStatusAndID(inferenceEvent *models.InferenceEvent, job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
-	inferenceEvent.RayJobID = rayJobID
-	inferenceEvent.JobStatus = state
-	inferenceEvent.EventTime = time.Now().UTC()
-	inferenceEvent.EventType = models.EventTypeJobStarted
-	err := db.Save(inferenceEvent).Error
-	if err != nil {
-		return err
-	}
-
+func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
 	job.JobStatus = state
 	job.StartedAt = time.Now().UTC()
 	job.Error = errorMessage
 	job.RayJobID = rayJobID
-	err = db.Save(job).Error
+	err := db.Save(&job).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func completeRayJobAndAddFiles(inferenceEvent *models.InferenceEvent, job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
+func createInferenceEvent(jobID uint, state models.JobState, rayJobID string, retryCount int, db *gorm.DB) error {
+	newInferenceEvent := models.InferenceEvent{
+		JobID:      jobID,
+		JobStatus:  state,
+		RayJobID:   rayJobID,
+		RetryCount: retryCount,
+		EventTime:  time.Now().UTC(),
+		EventType:  models.EventTypeJobStarted,
+	}
+	err := db.Save(&newInferenceEvent).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-	//TODO_PR#970: the files are getting uploaded with the path from responseJSON for now. Need to change this to use the CID
-	inferenceEvent.EventTime = time.Now().UTC()
-	inferenceEvent.EventType = models.EventTypeJobCompleted
-	inferenceEvent.JobStatus = models.JobStateSucceeded
-	inferenceEvent.ResponseCode = http.StatusOK
-	inferenceEvent.OutputJson = body
+func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.RayJobResponse, db *gorm.DB) error {
 
+	newInferenceEvent := models.InferenceEvent{
+		JobID:        job.ID,
+		EventTime:    time.Now().UTC(),
+		EventType:    models.EventTypeJobCompleted,
+		JobStatus:    models.JobStateSucceeded,
+		ResponseCode: http.StatusOK,
+		OutputJson:   body,
+	}
+	if err := db.Save(&newInferenceEvent).Error; err != nil {
+		return fmt.Errorf("failed to save InferenceEvent: %v", err)
+	}
 	job.JobStatus = models.JobStateSucceeded
 	job.CompletedAt = time.Now().UTC()
 

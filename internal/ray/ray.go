@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -58,7 +59,6 @@ func handleSingleElementInput(value interface{}) (string, error) {
 }
 
 func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
 	model, _, err := ipwl.ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
@@ -113,10 +113,18 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 	} else if job.JobType == models.JobTypeJob {
 
 		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
+
+		runtimeEnv := map[string]interface{}{
+			"env_vars": map[string]string{
+				"REQUEST_UUID": rayJobID,
+			},
+		}
 		// create json request body
 		reqBody := map[string]interface{}{
-			"entrypoint": model.RayJobEntrypoint,
-			"job_id":     rayJobID,
+			"entrypoint":    model.RayJobEntrypoint,
+			"job_id":        rayJobID,
+			"submission_id": rayJobID,
+			"runtime_env":   runtimeEnv,
 		}
 		jsonBytes, err = json.Marshal(reqBody)
 		if err != nil {
@@ -154,7 +162,21 @@ func GetRayJobStatus(rayJobID string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	return resp.Status, nil
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	log.Printf("Ray job status response: %s\n", string(body))
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		log.Fatalf("Error parsing JSON: %s", err)
+	}
+
+	status, ok := data["status"]
+	if !ok {
+		log.Fatal("Status field not found")
+	}
+	return status.(string), nil
 }
 
 // func GetRayJobResponseFromS3(rayJobID string) (string, error) {

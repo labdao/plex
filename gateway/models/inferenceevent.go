@@ -23,7 +23,7 @@ type InferenceEvent struct {
 	InputJson    datatypes.JSON `gorm:"type:json"`
 	OutputJson   datatypes.JSON `gorm:"type:json"`
 	RetryCount   int            `gorm:"not null"`
-	JobStatus    JobState       `gorm:"type:varchar(255);default:'queued'"`
+	JobStatus    JobState       `gorm:"type:varchar(255);default:'PENDING'"`
 	ResponseCode int            `gorm:"type:int"`
 	EventTime    time.Time      `gorm:""`
 	EventMessage string         `gorm:"type:text"`
