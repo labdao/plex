@@ -22,5 +22,5 @@ type User struct {
 	OrganizationID     uint         `gorm:"column:organization_id"`
 	Organization       Organization `gorm:"foreignKey:OrganizationID"`
 	SubscriptionStatus string       `gorm:"column:subscription_status;type:varchar(255)" json:"subscriptionStatus"`
-	SubscriptionID     string       `gorm:"column:subscription_id;type:varchar(255);unique" json:"subscriptionId"`
+	SubscriptionID     *string      `gorm:"column:subscription_id;type:varchar(255);unique" json:"subscriptionId"`
 }

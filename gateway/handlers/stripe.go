@@ -178,7 +178,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				user.SubscriptionStatus = string(subscription.Status)
 			}
-			user.SubscriptionID = subscription.ID
+			user.SubscriptionID = &subscription.ID
 			result = db.Save(&user)
 			if result.Error != nil {
 				fmt.Fprintf(os.Stderr, "Error updating user subscription status: %v\n", result.Error)
