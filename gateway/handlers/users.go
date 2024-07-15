@@ -73,7 +73,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 				CreatedAt:      time.Now().UTC(),
 				OrganizationID: 1,
 				StripeUserID:   stripeUserID,
-				SubscriptionID: nil
+				SubscriptionID: nil,
 			}
 			if result := db.Create(&newUser); result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating user: %v", result.Error), http.StatusInternalServerError)
