@@ -109,8 +109,8 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
-		fmt.Printf("Job %v , %v has missing Bacalhau Job, failing Job\n", job.ID, job.RayJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v not found", job.RayJobID), db)
+		fmt.Printf("Job %v , %v has missing Ray Job, failing Job\n", job.ID, job.RayJobID)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Ray job %v not found", job.RayJobID), db)
 	} else if err != nil {
 		return err
 	}
@@ -123,10 +123,10 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return nil
 	} else if ray.JobFailed(job.RayJobID) {
 		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.RayJobID)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Bacalhau job %v failed", job.RayJobID), db)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Ray job %v failed", job.RayJobID), db)
 	} else if ray.JobStopped(job.RayJobID) {
 		fmt.Printf("Job %v , %v was stopped, updating status and adding output files\n", job.ID, job.RayJobID)
-		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Bacalhau job %v was stopped", job.RayJobID), db)
+		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Ray job %v was stopped", job.RayJobID), db)
 	} else if ray.JobSucceeded(job.RayJobID) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.RayJobID)
 		body := GetRayJobResponseFromS3(&job, db)
@@ -137,8 +137,8 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		}
 		completeRayJobAndAddFiles(&job, []byte(body), rayJobResponse, db)
 	} else {
-		fmt.Printf("Job %v , %v had unexpected Bacalhau state %v, marking as failed\n", job.ID, job.RayJobID, job.JobStatus)
-		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Bacalhau state %v", job.JobStatus), db)
+		fmt.Printf("Job %v , %v had unexpected Ray state %v, marking as failed\n", job.ID, job.RayJobID, job.JobStatus)
+		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Ray state %v", job.JobStatus), db)
 	}
 	return nil
 }
