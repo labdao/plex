@@ -78,8 +78,8 @@ func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.Checkout
 			},
 		},
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		SuccessURL:         stripe.String(frontendURL + "/subscription-success"),
-		CancelURL:          stripe.String(frontendURL + "/subscription-canceled"),
+		SuccessURL:         stripe.String(frontendURL + "/checkout/success"),
+		CancelURL:          stripe.String(frontendURL + "/checkout/cancel"),
 		Metadata: map[string]string{
 			"Wallet Address": walletAddress,
 		},
