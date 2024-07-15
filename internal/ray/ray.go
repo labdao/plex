@@ -264,6 +264,12 @@ func SubmitRayJob(job models.Job, modelPath string, rayJobID string, inputs map[
 		return nil, err
 	}
 
-	log.Printf("Ray job finished with response status: %s\n", resp.Status)
-	return resp, nil
+	if job.JobType == models.JobTypeService {
+		log.Printf("Ray job finished with response status: %s\n", resp.Status)
+		return resp, nil
+	} else if job.JobType == models.JobTypeJob {
+		log.Printf("Ray job submitted with response status: %s\n", resp.Status)
+		return resp, nil
+	}
+	return nil, fmt.Errorf("unsupported job type: %s", job.JobType)
 }
