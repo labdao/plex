@@ -155,7 +155,8 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) string {
 		log.Printf("Error fetching experiment UUID: %v", result.Error)
 	}
 	bucketName := os.Getenv("BUCKET_NAME")
-	key := fmt.Sprintf("%s/%s_response.json", experiment.ExperimentUUID, jobUUID)
+	//TODO-LAB-1491: change this later to exp uuid/ job uuid
+	key := fmt.Sprintf("%s/%s_response.json", jobUUID, jobUUID)
 	fileName := filepath.Base(key)
 	var s3 s3client.S3Client
 	err := s3.DownloadFile(bucketName, key, fileName)
@@ -271,6 +272,12 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 	}
 
 	if job.RayJobID == "" {
+		rayJobID := uuid.New().String()
+		log.Printf("Here is the UUID for the job: %v\n", rayJobID)
+		job.RayJobID = rayJobID
+		if err := db.Save(&job).Error; err != nil {
+			return err
+		}
 		if err := submitRayJobAndUpdateID(&job, db); err != nil {
 			return err
 		}
@@ -368,13 +375,11 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	modelPath := job.Model.S3URI
 
-	rayJobID := uuid.New().String()
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-	log.Printf("Here is the UUID for the job: %v\n", rayJobID)
-	createInferenceEvent(job.ID, models.JobStateRunning, rayJobID, 0, db)
-	setJobStatusAndID(job, models.JobStateRunning, rayJobID, "", db)
+	createInferenceEvent(job.ID, models.JobStateRunning, job.RayJobID, 0, db)
+	setJobStatusAndID(job, models.JobStateRunning, job.RayJobID, "", db)
 	log.Printf("setting job %v to running\n", job.ID)
-	resp, err := ray.SubmitRayJob(*job, modelPath, rayJobID, inputs, db)
+	resp, err := ray.SubmitRayJob(*job, modelPath, job.RayJobID, inputs, db)
 	if err != nil {
 		return err
 	}
