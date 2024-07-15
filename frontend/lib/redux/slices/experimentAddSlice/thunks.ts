@@ -1,4 +1,4 @@
-import { setStripeCheckoutError, setStripeCheckoutLoading, setStripeCheckoutSuccess, setStripeCheckoutUrl } from '@/lib/redux'
+import { setStripeCheckoutError, setStripeCheckoutLoading, setStripeCheckoutSuccess, setStripeCheckoutUrl, selectUserSubscriptionStatus } from '@/lib/redux'
 import { createAppAsyncThunk } from '@/lib/redux/createAppAsyncThunk'
 
 import { getCheckoutURL } from '../stripeCheckoutSlice/asyncActions'
@@ -39,31 +39,34 @@ export const addExperimentThunk = createAppAsyncThunk(
 
 export const addExperimentWithCheckoutThunk = createAppAsyncThunk(
   'experiment/addExperimentWithCheckout',
-  async ({ modelId, scatteringMethod, kwargs }: ExperimentPayload, { dispatch }) => {
+  async (payload: ExperimentPayload, { dispatch, getState }) => {
     try {
       dispatch(setExperimentAddError(null));
       dispatch(setStripeCheckoutError(null));
-      dispatch(setStripeCheckoutLoading(true));
+      
+      const state = getState();
+      const subscriptionStatus = selectUserSubscriptionStatus(state);
 
-      const checkoutPayload = {
-        modelId,
-        scatteringMethod,
-        kwargs: JSON.stringify(kwargs),
-      };
-      const checkoutResponse = await getCheckoutURL(checkoutPayload);
-      dispatch(setStripeCheckoutSuccess(true));
-      dispatch(setStripeCheckoutUrl(checkoutResponse));
-      dispatch(setStripeCheckoutLoading(false));
-
-      return { checkout: checkoutResponse };
+      if (subscriptionStatus === 'active') {
+        // User is subscribed, directly add the experiment
+        return dispatch(addExperimentThunk(payload)).unwrap();
+      } else {
+        // User is not subscribed, initiate checkout process
+        dispatch(setStripeCheckoutLoading(true));
+        const checkoutResponse = await getCheckoutURL();
+        dispatch(setStripeCheckoutSuccess(true));
+        dispatch(setStripeCheckoutUrl(checkoutResponse));
+        dispatch(setStripeCheckoutLoading(false));
+        return { checkout: checkoutResponse };
+      }
     } catch (error: unknown) {
-      console.log('Failed to add experiment with checkout.', error);
+      console.log('Failed to process experiment request.', error);
       if (error instanceof Error) {
         dispatch(setExperimentAddError(error.message));
         dispatch(setStripeCheckoutError(error.message));
       } else {
-        dispatch(setExperimentAddError('Failed to add experiment with checkout.'));
-        dispatch(setStripeCheckoutError('Failed to add experiment with checkout.'));
+        dispatch(setExperimentAddError('Failed to process experiment request.'));
+        dispatch(setStripeCheckoutError('Failed to process experiment request.'));
       }
       dispatch(setStripeCheckoutLoading(false));
       dispatch(setExperimentAddLoading(false));

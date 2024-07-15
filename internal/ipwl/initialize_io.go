@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 
 	"github.com/labdao/plex/internal/web3"
 	"gorm.io/gorm"
@@ -16,19 +17,16 @@ var (
 )
 
 func InitializeIo(modelPath string, scatteringMethod string, inputVectors map[string][]interface{}, db *gorm.DB) ([]IO, error) {
-	// Open the file and load its content
 	model, modelInfo, err := ReadModelConfig(modelPath, db)
 	if err != nil {
 		return nil, err
 	}
 
-	// Validate input keys
 	err = validateInputKeys(inputVectors, model.Inputs)
 	if err != nil {
 		return nil, err
 	}
 
-	// Handle scattering methods and create the ist
 	var inputsList [][]interface{}
 	switch scatteringMethod {
 	case "dotProduct":
@@ -145,6 +143,36 @@ func crossProductScattering(inputVectors map[string][]interface{}) ([][]interfac
 	return inputsList, nil
 }
 
+// func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
+// 	io := IO{
+// 		Model:         modelInfo,
+// 		Inputs:        make(NullableMap),
+// 		Outputs:       make(NullableMap),
+// 		State:         "created",
+// 		ErrMsg:        "",
+// 		WalletAddress: walletAddress,
+// 	}
+
+// 	inputKeys := make([]string, 0, len(inputVectors))
+// 	for k := range inputVectors {
+// 		inputKeys = append(inputKeys, k)
+// 	}
+
+// 	// Sort the inputKeys slice to ensure a consistent order
+// 	sort.Strings(inputKeys)
+
+// 	for i, inputValue := range inputs {
+// 		inputKey := inputKeys[i]
+// 		io.Inputs[inputKey] = inputValue
+// 	}
+
+// 	for outputKey, outputValue := range model.Outputs {
+// 		io.Outputs[outputKey] = outputValue
+// 	}
+
+// 	return io, nil
+// }
+
 func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
 	io := IO{
 		Model:         modelInfo,
@@ -165,7 +193,7 @@ func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, wall
 
 	for i, inputValue := range inputs {
 		inputKey := inputKeys[i]
-		io.Inputs[inputKey] = inputValue
+		io.Inputs[inputKey] = processInputValue(inputValue, model.Inputs[inputKey].Type)
 	}
 
 	for outputKey, outputValue := range model.Outputs {
@@ -173,4 +201,41 @@ func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, wall
 	}
 
 	return io, nil
+}
+
+func processInputValue(value interface{}, expectedType string) interface{} {
+	switch v := value.(type) {
+	case string:
+		if v == "" {
+			return nil
+		}
+		switch expectedType {
+		case "number":
+			if intVal, err := strconv.Atoi(v); err == nil {
+				return intVal
+			}
+			if floatVal, err := strconv.ParseFloat(v, 64); err == nil {
+				return floatVal
+			}
+		case "boolean":
+			if boolVal, err := strconv.ParseBool(v); err == nil {
+				return boolVal
+			}
+		}
+		return v
+	case float64:
+		if expectedType == "number" {
+			return v
+		}
+	case int:
+		if expectedType == "number" {
+			return v
+		}
+	case bool:
+		if expectedType == "boolean" {
+			return v
+		}
+	}
+	// If the type doesn't match the expected type, return nil
+	return nil
 }

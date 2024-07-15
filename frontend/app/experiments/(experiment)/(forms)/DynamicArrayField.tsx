@@ -68,7 +68,17 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                       />
                     )}
                     {input.type === "string" && <Textarea placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
-                    {(input.type === "number" || input.type === "int") && <Input type="number" placeholder={input.example ? `e.g. ${input.example}` : ""} {...field} />}
+                    {(input.type === "number" || input.type === "int") && (
+                      <Input 
+                        type="number" 
+                        placeholder={input.example ? `e.g. ${input.example}` : ""} 
+                        {...field} 
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value === "" ? null : Number(value));
+                        }}
+                      />
+                    )}
                     {(input.type === "bool" || input.type === "boolean") && (
                       <BooleanInput {...field} checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
                     )}

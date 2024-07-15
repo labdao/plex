@@ -7,7 +7,7 @@ interface CheckoutPayload {
   kwargs: string;
 }
 
-export const getCheckoutURL = async (payload: CheckoutPayload): Promise<any> => {
+export const getCheckoutURL = async (): Promise<any> => {
   let authToken;
   try {
     authToken = await getAccessToken();
@@ -22,7 +22,6 @@ export const getCheckoutURL = async (payload: CheckoutPayload): Promise<any> => 
       Authorization: `Bearer ${authToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

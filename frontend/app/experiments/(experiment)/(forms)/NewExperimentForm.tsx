@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, resetModelDetail, resetModelList, selectModelDetail, selectUserTier, stripeCheckoutThunk } from "@/lib/redux";
+import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, refreshUserDataThunk, resetModelDetail, resetModelList, selectIsUserSubscribed, selectModelDetail, selectUserTier } from "@/lib/redux";
 import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
@@ -29,6 +29,11 @@ export default function NewExperimentForm({ task }: { task: any }) {
   const model = useSelector(selectModelDetail);
   const walletAddress = user?.wallet?.address;
   const userTier = useSelector(selectUserTier);
+  const isUserSubscribed = useSelector(selectIsUserSubscribed);
+
+  useEffect(() => {
+    dispatch(refreshUserDataThunk());
+  }, [dispatch]);
 
   useEffect(() => {
     return () => {
@@ -66,36 +71,68 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);
-
+  
     if (!walletAddress) {
       console.error("Wallet address missing");
       return;
     }
-
+  
     const transformedPayload = transformJson(model, values, walletAddress);
     console.log("Submitting Payload:", transformedPayload);
-
+  
     try {
-      if (userTier === 'Paid') {
-        await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
-      } else {
+      if (userTier === 'Free') {
+        // For free tier users, directly create the experiment regardless of subscription status
         const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
         if (response && response.ID) {
           console.log("Experiment created", response);
-          console.log(response.ID);
           router.push(`/experiments/${response.ID}`, { scroll: false });
           dispatch(experimentListThunk(walletAddress));
           toast.success("Experiment started successfully");
         } else {
           console.log("Something went wrong", response);
+          toast.error("Failed to start experiment");
         }
+      } else if (userTier === 'Paid') {
+        if (isUserSubscribed) {
+          // Paid tier user with active subscription (including trial), directly create the experiment
+          const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
+          if (response && response.ID) {
+            console.log("Experiment created", response);
+            router.push(`/experiments/${response.ID}`, { scroll: false });
+            dispatch(experimentListThunk(walletAddress));
+            toast.success("Experiment started successfully");
+          } else {
+            console.log("Something went wrong", response);
+            toast.error("Failed to start experiment");
+          }
+        } else {
+          // Paid tier user without active subscription, initiate checkout process
+          const result = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
+          if (result.checkout) {
+            // User needs to subscribe, redirect to checkout
+            window.location.href = result.checkout.url;
+          } else if (result && result.ID) {
+            // Experiment was created successfully (this case might not occur for non-subscribed users)
+            console.log("Experiment created", result);
+            router.push(`/experiments/${result.ID}`, { scroll: false });
+            dispatch(experimentListThunk(walletAddress));
+            toast.success("Experiment started successfully");
+          } else {
+            console.log("Something went wrong", result);
+            toast.error("Failed to start experiment");
+          }
+        }
+      } else {
+        console.error("Invalid user tier");
+        toast.error("Unable to process request due to invalid user tier");
       }
+      await dispatch(refreshUserDataThunk());
     } catch (error) {
-      console.error("Failed to create experiment", error);
-      // Handle error, maybe show message to user
+      console.error("Failed to process experiment request", error);
+      toast.error("Failed to process experiment request");
     }
   }
-
 
   return (
     <>

@@ -1,4 +1,6 @@
-FROM golang:1.20-buster as builder
+ARG BACALHAU_VERSION=1.2.0
+
+FROM golang:1.20-buster AS builder
 
 # Install deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,12 +15,11 @@ WORKDIR /app/
 # RUN CGO_ENABLED=1 go build -race -o /go/bin/plex
 RUN CGO_ENABLED=0 go build -o /go/bin/plex
 
-ARG BACALHAU_VERSION=1.2.0
 ARG NEXT_PUBLIC_PRIVY_APP_ID
 ARG PRIVY_PUBLIC_KEY
 
 # For bacalhau cli
-FROM ghcr.io/bacalhau-project/bacalhau:v${BACALHAU_VERSION:-1.2.0} as bacalhau
+FROM ghcr.io/bacalhau-project/bacalhau:v$BACALHAU_VERSION AS bacalhau
 
 FROM busybox:1.31.1-glibc
 

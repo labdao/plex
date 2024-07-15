@@ -8,7 +8,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AppDispatch, Experiment, experimentListThunk, selectCategorizedExperiments, selectExperimentList, selectExperimentListLoading, selectUserIsAdmin } from "@/lib/redux";
+import { AppDispatch, Experiment, experimentListThunk, selectCategorizedExperiments, selectExperimentList, selectExperimentListLoading, selectUserIsAdmin, selectUserSubscriptionStatus } from "@/lib/redux";
 
 import Logo from "./Logo";
 import { NavLink } from "./NavItem";
@@ -28,6 +28,7 @@ export default function Nav() {
   // const loading = useSelector(selectExperimentListLoading);
   const walletAddress = user?.wallet?.address;
   const isAdmin = useSelector(selectUserIsAdmin);
+  const subscriptionStatus = useSelector(selectUserSubscriptionStatus);
 
   useEffect(() => {
     console.log("walletAddress", walletAddress);
@@ -42,7 +43,11 @@ export default function Nav() {
       <Link href="/" className="flex items-center h-12 gap-2 p-2 text-lg font-bold uppercase font-heading whitespace-nowrap">
         <Logo className="w-auto h-6 text-primary" />
         Lab.Bio
-        {isAdmin && <sup className="text-xs text-primary">Admin</sup>}
+        {isAdmin ? (
+          <sup className="text-xs text-primary">Admin</sup>
+        ) : subscriptionStatus === 'active' ? (
+          <sup className="text-xs text-secondary">Subscriber</sup>
+        ) : null}
       </Link>
       <div className="px-2 py-2">
         <Button asChild color="primary" size="sm" className="w-full">

@@ -75,13 +75,9 @@ type Summary struct {
 }
 
 type AggregatedData struct {
-	QueueType     models.QueueType `gorm:"column:queue"`
-	State         models.JobState  `gorm:"column:state"`
-	TotalCpu      float64
-	TotalMemoryGb int
-	TotalGpu      int
-	Count         int
-	JobType       models.JobType `gorm:"column:job_type"`
+	JobStatus models.JobState `gorm:"column:job_status"`
+	Count     int
+	JobType   models.JobType `gorm:"column:job_type"`
 }
 
 func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
@@ -92,9 +88,9 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		// Perform the query using GORM
 		db = db.Debug()
 		result := db.Table("jobs").
-			Select("queue, job_type, state, sum(models.cpu) as total_cpu, sum(models.memory) as total_memory_gb, sum(models.gpu) as total_gpu, count(*) as count").
+			Select("jobs.job_type, jobs.job_status, count(*) as count").
 			Joins("left join models on models.id = jobs.model_id").
-			Group("queue, job_type, state").
+			Group("jobs.job_type, jobs.job_status").
 			Find(&aggregatedResults)
 		fmt.Printf("Aggregated Results: %+v\n", aggregatedResults)
 
@@ -106,15 +102,12 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		// Compile results into summary
 		for _, data := range aggregatedResults {
 			jobSummary := JobSummary{
-				Count:         data.Count,
-				TotalCpu:      data.TotalCpu,
-				TotalMemoryGb: data.TotalMemoryGb,
-				TotalGpu:      data.TotalGpu,
+				Count: data.Count,
 			}
 
-			if data.State == models.JobStatePending {
+			if data.JobStatus == models.JobStatePending {
 				summary.Ray.Queued = jobSummary
-			} else if data.State == models.JobStateRunning {
+			} else if data.JobStatus == models.JobStateRunning {
 				summary.Ray.Running = jobSummary
 			}
 
