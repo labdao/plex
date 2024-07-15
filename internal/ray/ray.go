@@ -24,7 +24,7 @@ func GetRayApiHost() string {
 	if exists {
 		return rayApiHost
 	} else {
-		return "localhost:8000" // Default Ray API host
+		return "http://localhost:8000" // Default Ray API host
 	}
 }
 
@@ -34,7 +34,7 @@ func GetRayJobApiHost() string {
 	if exists {
 		return rayApiHost
 	} else {
-		return "localhost:8265" // Default Ray API host
+		return "http://localhost:8265" // Default Ray API host
 	}
 }
 
