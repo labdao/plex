@@ -30,7 +30,12 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		return response, err
 	}
 
-	responseData := rawData["response"].(map[string]interface{})
+	var responseData map[string]interface{}
+	if _, ok := rawData["response"]; !ok {
+		responseData = rawData
+	} else {
+		responseData = rawData["response"].(map[string]interface{})
+	}
 
 	response.UUID = responseData["uuid"].(string)
 	if pdbData, ok := responseData["pdb"].(map[string]interface{}); ok {
