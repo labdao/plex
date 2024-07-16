@@ -129,13 +129,13 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Ray job %v was stopped", job.RayJobID), db)
 	} else if ray.JobSucceeded(job.RayJobID) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.RayJobID)
-		body := GetRayJobResponseFromS3(&job, db)
-		rayJobResponse, err := UnmarshalRayJobResponse([]byte(body))
+		bytes := GetRayJobResponseFromS3(&job, db)
+		rayJobResponse, err := UnmarshalRayJobResponse(bytes)
 		if err != nil {
 			fmt.Println("Error unmarshalling result JSON:", err)
 			return err
 		}
-		completeRayJobAndAddFiles(&job, []byte(body), rayJobResponse, db)
+		completeRayJobAndAddFiles(&job, bytes, rayJobResponse, db)
 	} else {
 		fmt.Printf("Job %v , %v had unexpected Ray state %v, marking as failed\n", job.ID, job.RayJobID, job.JobStatus)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("unexpected Ray state %v", job.JobStatus), db)
@@ -143,7 +143,7 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 	return nil
 }
 
-func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) string {
+func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) []byte {
 	// get job uuid and experiment uuid using rayjobid
 	// s3 download file experiment uuid/job uuid/response.json
 	// return response.json
@@ -158,8 +158,12 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) string {
 	//TODO-LAB-1491: change this later to exp uuid/ job uuid
 	key := fmt.Sprintf("%s/%s_response.json", jobUUID, jobUUID)
 	fileName := filepath.Base(key)
-	var s3 s3client.S3Client
-	err := s3.DownloadFile(bucketName, key, fileName)
+	s3client, err := s3client.NewS3Client()
+	if err != nil {
+		log.Printf("Error creating S3 client")
+	}
+
+	err = s3client.DownloadFile(bucketName, key, fileName)
 	if err != nil {
 		log.Printf("Error streaming file to response: %v\n", err)
 	}
@@ -169,13 +173,12 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) string {
 	}
 	defer file.Close()
 	defer os.Remove(fileName)
-	var body string
-	err = json.NewDecoder(file).Decode(&body)
+	bytes, err := io.ReadAll(file)
 	if err != nil {
-		log.Printf("Failed to decode response body: %v\n", err)
+		log.Printf("Failed to read file: %v\n", err)
 	}
-	return body
 
+	return bytes
 }
 
 func setJobStatus(job *models.Job, state models.JobState, errorMessage string, db *gorm.DB) error {
@@ -237,7 +240,7 @@ func fetchRunningJobsWithModelData(jobs *[]models.Job, db *gorm.DB) error {
 }
 
 func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Where("job_status = ? ", models.JobStatePending).Order("created_at ASC").First(job).Error
+	return db.Where("job_status = ? ", models.JobStateQueued).Order("created_at ASC").First(job).Error
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {
@@ -271,10 +274,11 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	if job.RayJobID == "" {
+	if job.RayJobID == "" && job.JobStatus == models.JobStateQueued {
 		rayJobID := uuid.New().String()
 		log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 		job.RayJobID = rayJobID
+		job.JobStatus = models.JobStatePending
 		if err := db.Save(&job).Error; err != nil {
 			return err
 		}
@@ -294,7 +298,12 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 		return response, err
 	}
 
-	responseData := rawData["response"].(map[string]interface{})
+	var responseData map[string]interface{}
+	if _, ok := rawData["response"]; !ok {
+		responseData = rawData
+	} else {
+		responseData = rawData["response"].(map[string]interface{})
+	}
 
 	response.UUID = responseData["uuid"].(string)
 	if pdbData, ok := responseData["pdb"].(map[string]interface{}); ok {
@@ -534,12 +543,16 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 		JobStatus:    models.JobStateSucceeded,
 		ResponseCode: http.StatusOK,
 		OutputJson:   body,
+		RayJobID:     job.RayJobID,
 	}
 	if err := db.Save(&newInferenceEvent).Error; err != nil {
 		return fmt.Errorf("failed to save InferenceEvent: %v", err)
 	}
 	job.JobStatus = models.JobStateSucceeded
 	job.CompletedAt = time.Now().UTC()
+	if err := db.Save(&job).Error; err != nil {
+		return fmt.Errorf("failed to save Job: %v", err)
+	}
 
 	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range resultJSON.Files {

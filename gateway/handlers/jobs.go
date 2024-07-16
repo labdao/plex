@@ -67,6 +67,7 @@ type JobSummary struct {
 
 type QueueSummary struct {
 	Queued  JobSummary `json:"queued"`
+	Pending JobSummary `json:"pending"`
 	Running JobSummary `json:"running"`
 }
 
@@ -106,9 +107,11 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 			}
 
 			if data.JobStatus == models.JobStatePending {
-				summary.Ray.Queued = jobSummary
+				summary.Ray.Pending = jobSummary
 			} else if data.JobStatus == models.JobStateRunning {
 				summary.Ray.Running = jobSummary
+			} else if data.JobStatus == models.JobStateQueued {
+				summary.Ray.Queued = jobSummary
 			}
 
 		}
