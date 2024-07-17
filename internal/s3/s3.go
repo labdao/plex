@@ -49,11 +49,15 @@ func NewS3Client() (*S3Client, error) {
 			Region: aws.String(region),
 		})
 		if err != nil {
+			fmt.Println("Error creating session for S3 client:")
+			fmt.Println(err)
 			return nil, err
 		}
 	}
 
 	if err != nil {
+		fmt.Println("Error creating session for S3 client:")
+		fmt.Println(err)
 		return nil, err
 	}
 

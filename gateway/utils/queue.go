@@ -476,11 +476,13 @@ func hashS3Object(URI string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error creating S3 client: %w", err)
 	}
+	fmt.Printf("Created S3 Client. Parsing S3 URI: %s\n", URI)
 	bucket, key, err := s3client.GetBucketAndKeyFromURI(URI)
 	if err != nil {
 		return "", fmt.Errorf("error parsing S3 URI: %w", err)
 	}
-
+	fmt.Printf("Parsed S3 URI. Bucket: %s, Key: %s\n", bucket, key)
+	fmt.Printf("Creating AWS session\n")
 	sess, err := session.NewSession(&aws.Config{
 		Region:           aws.String(region),
 		Endpoint:         aws.String(bucketEndpoint),
@@ -490,10 +492,11 @@ func hashS3Object(URI string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error creating AWS session: %w", err)
 	}
+	fmt.Printf("Created AWS session. Creating S3 service client\n")
 
 	// Create an S3 service client
 	svc := s3.New(sess)
-
+	fmt.Printf("Created S3 service client. Getting object\n")
 	// Get the object
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
@@ -503,13 +506,13 @@ func hashS3Object(URI string) (string, error) {
 		return "", fmt.Errorf("failed to get S3 object: %w", err)
 	}
 	defer resp.Body.Close()
-
+	fmt.Printf("Got object. Hashing object\n")
 	// Initialize hasher and hash the key
 	hasher := sha256.New()
 	if _, err := hasher.Write([]byte(key)); err != nil {
 		return "", fmt.Errorf("failed to hash key: %w", err)
 	}
-
+	fmt.Printf("Hashed key. Hashing file contents\n")
 	// Read and hash the contents of the object
 	if _, err := io.Copy(hasher, resp.Body); err != nil {
 		return "", fmt.Errorf("failed to hash file contents: %w", err)
@@ -517,5 +520,6 @@ func hashS3Object(URI string) (string, error) {
 
 	// Compute the final hash
 	hashBytes := hasher.Sum(nil)
+	fmt.Printf("Hashed file contents. Returning hash\n")
 	return hex.EncodeToString(hashBytes), nil
 }
