@@ -146,7 +146,7 @@ func ServeWebApp() {
 
 	mux := server.NewServer(db, s3Client)
 
-	maxWorkers := utils.GetEnvAsInt("MAX_WORKERS", 1)
+	maxWorkers := utils.GetEnvAsInt("MAX_WORKERS", 4)
 
 	// Start queue watcher in a separate goroutine
 	go func() {
