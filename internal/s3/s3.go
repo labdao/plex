@@ -19,7 +19,7 @@ type S3Client struct {
 	Client *s3.S3
 }
 
-func NewS3Client() (*S3Client, error) {
+func NewS3Client(checkpoint ...bool) (*S3Client, error) {
 	region := os.Getenv("AWS_REGION")
 	endpoint := os.Getenv("BUCKET_ENDPOINT")
 	useSSL := os.Getenv("USE_SSL") == "true"
@@ -27,12 +27,25 @@ func NewS3Client() (*S3Client, error) {
 	var sess *session.Session
 	var err error
 
+	var presignedURLEndpoint string
+
+	forCheckpoint := false
+	if len(checkpoint) > 0 {
+		forCheckpoint = checkpoint[0]
+	}
+	//below change only for checkpoints
+	if forCheckpoint && endpoint == "http://object-store:9000" {
+		presignedURLEndpoint = "http://localhost:9000"
+	} else {
+		presignedURLEndpoint = endpoint
+	}
+
 	if endpoint != "" {
 		fmt.Println("Configuring S3 client for local development")
 		sessOpts := session.Options{
 			Config: aws.Config{
 				Region:           aws.String(region),
-				Endpoint:         aws.String(endpoint),
+				Endpoint:         aws.String(presignedURLEndpoint),
 				S3ForcePathStyle: aws.Bool(true),
 				DisableSSL:       aws.Bool(!useSSL),
 				Credentials: credentials.NewStaticCredentials(

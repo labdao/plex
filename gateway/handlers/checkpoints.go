@@ -114,7 +114,7 @@ func fetchJobScatterPlotData(experimentListCheckpointsResult ExperimentListCheck
 			return nil, fmt.Errorf("xAxis or yAxis value not found in the result JSON")
 		}
 
-		s3client, err := s3client.NewS3Client()
+		s3client, err := s3client.NewS3Client(true)
 		if err != nil {
 			return nil, err
 		}
