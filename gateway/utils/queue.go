@@ -9,7 +9,6 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -17,8 +16,6 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/models"
@@ -467,43 +464,28 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 }
 
 func hashS3Object(URI string) (string, error) {
-	// Load the AWS configuration
-	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
-	region := os.Getenv("AWS_REGION")
-	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
 	s3client, err := s3client.NewS3Client()
 	if err != nil {
 		return "", fmt.Errorf("error creating S3 client: %w", err)
 	}
 	fmt.Printf("Created S3 Client. Parsing S3 URI: %s\n", URI)
-	bucket, key, err := s3client.GetBucketAndKeyFromURI(URI)
+	var bucket, key string
+	bucket, key, err = s3client.GetBucketAndKeyFromURI(URI)
 	if err != nil {
 		return "", fmt.Errorf("error parsing S3 URI: %w", err)
 	}
 	fmt.Printf("Parsed S3 URI. Bucket: %s, Key: %s\n", bucket, key)
-	fmt.Printf("Creating AWS session\n")
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	})
-	if err != nil {
-		return "", fmt.Errorf("error creating AWS session: %w", err)
-	}
-	fmt.Printf("Created AWS session. Creating S3 service client\n")
-
-	// Create an S3 service client
-	svc := s3.New(sess)
-	fmt.Printf("Created S3 service client. Getting object\n")
+	fmt.Printf("Getting object\n")
 	// Get the object
-	resp, err := svc.GetObject(&s3.GetObjectInput{
+	var resp *s3.GetObjectOutput
+	resp, err = s3client.Client.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to get S3 object: %w", err)
+	} else {
+		fmt.Printf("skipped the error block")
 	}
 	defer resp.Body.Close()
 	fmt.Printf("Got object. Hashing object\n")
@@ -514,7 +496,7 @@ func hashS3Object(URI string) (string, error) {
 	}
 	fmt.Printf("Hashed key. Hashing file contents\n")
 	// Read and hash the contents of the object
-	if _, err := io.Copy(hasher, resp.Body); err != nil {
+	if _, err = io.Copy(hasher, resp.Body); err != nil {
 		return "", fmt.Errorf("failed to hash file contents: %w", err)
 	}
 
