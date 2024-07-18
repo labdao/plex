@@ -16,8 +16,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	s3client "github.com/labdao/plex/internal/s3"
 )
@@ -93,33 +91,7 @@ type ExperimentListCheckpointsResult struct {
 }
 
 func fetchJobScatterPlotData(experimentListCheckpointsResult ExperimentListCheckpointsResult, db *gorm.DB) ([]models.ScatterPlotData, error) {
-	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
 	bucketName := os.Getenv("BUCKET_NAME")
-	region := os.Getenv("AWS_REGION")
-	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
-
-	var presignedURLEndpoint string
-
-	// Check if the bucket endpoint is the local development endpoint
-	if bucketEndpoint == "http://object-store:9000" {
-		presignedURLEndpoint = "http://localhost:9000"
-	} else {
-		presignedURLEndpoint = bucketEndpoint
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String(region),
-		Endpoint:         aws.String(presignedURLEndpoint),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	svc := s3.New(sess)
-
 	var ModelJson ipwl.Model
 	if err := json.Unmarshal(experimentListCheckpointsResult.ModelJson, &ModelJson); err != nil {
 		return nil, err
@@ -127,11 +99,9 @@ func fetchJobScatterPlotData(experimentListCheckpointsResult ExperimentListCheck
 
 	xAxis := ModelJson.XAxis
 	yAxis := ModelJson.YAxis
-
-	var resultJSON models.RayJobResponse
 	// Unmarshal the result JSON from the job only when job.ResultJSON is not empty
 	if string(experimentListCheckpointsResult.JobResultJson) != "" {
-		resultJSON, err = UnmarshalRayJobResponse([]byte(experimentListCheckpointsResult.JobResultJson))
+		resultJSON, err := UnmarshalRayJobResponse([]byte(experimentListCheckpointsResult.JobResultJson))
 		if err != nil {
 			fmt.Println("Error unmarshalling result JSON:", err)
 			return nil, err
@@ -155,7 +125,7 @@ func fetchJobScatterPlotData(experimentListCheckpointsResult ExperimentListCheck
 		}
 		pdbFileName := filepath.Base(key)
 
-		req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+		req, _ := s3client.Client.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(bucketName),
 			Key:    aws.String(key),
 		})
