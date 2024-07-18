@@ -142,17 +142,17 @@ func AddFileHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 				utils.SendJSONError(w, fmt.Sprintf("Error associating file with user: %v", err), http.StatusInternalServerError)
 				return
 			}
-		}
 
-		var uploadedTag models.Tag
-		if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
-			utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
-			return
-		}
+			var uploadedTag models.Tag
+			if err := db.Where("name = ?", "uploaded").First(&uploadedTag).Error; err != nil {
+				utils.SendJSONError(w, "Tag 'uploaded' not found", http.StatusInternalServerError)
+				return
+			}
 
-		if err := db.Model(&file).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error adding tag to file: %v", err), http.StatusInternalServerError)
-			return
+			if err := db.Model(&file).Association("Tags").Append([]models.Tag{uploadedTag}); err != nil {
+				utils.SendJSONError(w, fmt.Sprintf("Error adding tag to file: %v", err), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		utils.SendJSONResponseWithID(w, file.ID)
