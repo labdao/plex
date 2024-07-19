@@ -101,13 +101,13 @@ export default function ModelInfo({ model }: ModelInfoProps) {
             </a>
           </Button>
         )}
-        {model?.ID && (
+        {/* {model?.ID && (
           <Button asChild variant="outline" size="xs">
-            <a href={`${process.env.NEXT_PUBLIC_IPFS_GATEWAY_ENDPOINT}${model?.ID}/`} target="_blank">
+            <a href={`${model?.S3URI}/`} target="_blank">
               <FileJsonIcon /> Manifest
             </a>
           </Button>
-        )}
+        )} */}
       </div>
       {/*outputs && (
           <CardContent className="border-t">
