@@ -132,7 +132,6 @@ func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[stri
 }
 
 func SubmitRayJob(modelPath string, rayJobID string, inputs map[string]interface{}, db *gorm.DB) (*http.Response, error) {
-	log.Printf("Creating Ray job with modelPath: %s and inputs: %+v\n", modelPath, inputs)
 	resp, err := CreateRayJob(modelPath, rayJobID, inputs, db)
 	if err != nil {
 		log.Printf("Error creating Ray job: %v\n", err)

@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"encoding/json"
@@ -23,16 +24,12 @@ import (
 type RayQueue struct {
 	db         *gorm.DB
 	maxWorkers int
-	jobChan    chan models.Job
-	errChan    chan error
 }
 
 func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
 		maxWorkers: maxWorkers,
-		jobChan:    make(chan models.Job, maxWorkers),
-		errChan:    make(chan error, maxWorkers),
 	}
 }
 
@@ -47,54 +44,67 @@ func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev t
 	return time.Duration(delay)
 }
 
+var once sync.Once
+
 func StartJobQueues(db *gorm.DB, maxWorkers int) error {
-	rq := NewRayQueue(db, maxWorkers)
-	rq.StartWorkers()
-
-	go rq.ProcessJobQueue(models.QueueTypeRay)
-
-	for err := range rq.errChan {
-		if err != nil {
-			return err
-		}
-	}
-
+	once.Do(func() {
+		rq := NewRayQueue(db, maxWorkers)
+		rq.StartWorkers()
+	})
 	return nil
 }
 
 func (rq *RayQueue) StartWorkers() {
 	for i := 0; i < rq.maxWorkers; i++ {
-		go rq.worker()
+		go func(workerID int) {
+			fmt.Printf("Starting worker %d\n", workerID)
+			rq.worker()
+		}(i)
 	}
 }
 
 func (rq *RayQueue) worker() {
-	for job := range rq.jobChan {
-		err := processRayJob(job.ID, rq.db)
-		if err != nil {
-			rq.errChan <- err
-		}
-	}
-}
-
-func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
 	for {
 		var job models.Job
-		err := fetchOldestQueuedJob(&job, queueType, rq.db)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			time.Sleep(5 * time.Second)
+		err := fetchAndMarkOldestQueuedJobAsProcessing(&job, models.QueueTypeRay, rq.db)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			fmt.Printf("Error fetching job: %v\n", err)
+			time.Sleep(10 * time.Second)
 			continue
-		} else if err != nil {
-			rq.errChan <- err
-			return
 		}
 
-		rq.jobChan <- job
+		// Process the job
+		if err = processRayJob(job.ID, rq.db); err != nil {
+			fmt.Printf("Error processing job: %v\n", err)
+		}
+		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
 	}
 }
 
-func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Where("job_status = ? ", models.JobStateQueued).Order("created_at ASC").First(job).Error
+func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := tx.Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	job.JobStatus = models.JobStatePending
+	if err := tx.Save(job).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {

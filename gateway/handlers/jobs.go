@@ -77,7 +77,7 @@ type Summary struct {
 type AggregatedData struct {
 	JobStatus models.JobState `gorm:"column:job_status"`
 	Count     int
-	JobType   models.JobType `gorm:"column:job_type"`
+	// JobType   models.JobType `gorm:"column:job_type"`
 }
 
 func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
@@ -86,11 +86,12 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		var aggregatedResults []AggregatedData
 
 		// Perform the query using GORM
+		// add job type here to group by jobTypeJob and jobTypeService when incorporating ray jobs
 		db = db.Debug()
 		result := db.Table("jobs").
-			Select("jobs.job_type, jobs.job_status, count(*) as count").
+			Select("jobs.job_status, count(*) as count").
 			Joins("left join models on models.id = jobs.model_id").
-			Group("jobs.job_type, jobs.job_status").
+			Group("jobs.job_status").
 			Find(&aggregatedResults)
 		fmt.Printf("Aggregated Results: %+v\n", aggregatedResults)
 
