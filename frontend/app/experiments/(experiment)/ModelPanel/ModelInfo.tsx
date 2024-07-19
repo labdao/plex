@@ -5,6 +5,8 @@ import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { ModelDetail } from "@/lib/redux";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 interface ModelInfoProps {
   model: ModelDetail;
@@ -68,13 +70,23 @@ export default function ModelInfo({ model }: ModelInfoProps) {
       <div className="text-left uppercase font-heading">About Model</div>
       <div>{renderDescriptionParagraphs(description)}</div>
       <div className="flex flex-wrap gap-2 mt-4">
-        <Button asChild variant="outline" size="xs">
-          <a href={process.env.NEXT_PUBLIC_DEMO_URL} target="_blank">
-            <FileLineChart />
-            Example Result
-          </a>
-        </Button>
-
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button asChild variant="outline" size="xs">
+                <span>
+                  <FileLineChart />
+                  Example Result
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-xs">
+                <p className="font-mono">Coming Soon!</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         {github && (
           <Button asChild variant="outline" size="xs">
             <a href={github} target="_blank">
