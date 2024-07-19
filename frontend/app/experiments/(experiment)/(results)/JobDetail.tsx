@@ -113,8 +113,8 @@ export default function JobDetail({ jobID }: JobDetailProps) {
 
 function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKey: string }) {
   const fileInfo = input?.type === "file" ? value?.split("/") : [];
-  const filename = fileInfo?.[1] || "";
-  const fileID = fileInfo?.[0] || "";
+  const filename = fileInfo?.[4] || "";
+  // const fileID = fileInfo?.[0] || "";
 
   return (
     <div className="px-6 py-2 border-b border-border/50 ">
@@ -131,9 +131,9 @@ function InputInfo({ input, value, inputKey }: { input: any; value: any; inputKe
           {input?.type === "file" ? (
             <>
               {value ? (
-                <FileDownloadLink filename={filename} fileID={fileID} className="text-accent hover:underline">
-                  {filename}
-                </FileDownloadLink>
+                // <FileDownloadLink filename={filename} fileID={fileID} className="text-accent hover:underline">
+                  filename
+                // </FileDownloadLink>
               ) : (
                 <span className="text-muted-foreground">None</span>
               )}
