@@ -26,6 +26,15 @@ type RayQueue struct {
 	maxWorkers int
 }
 
+type WorkerState struct {
+	ID         int
+	Busy       bool
+	CurrentJob *models.Job
+	LastActive time.Time
+}
+
+var workerStates []*WorkerState
+
 func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
@@ -55,19 +64,24 @@ func StartJobQueues(db *gorm.DB, maxWorkers int) error {
 }
 
 func (rq *RayQueue) StartWorkers() {
+	workerStates = make([]*WorkerState, rq.maxWorkers) // initialize the slice based on maxWorkers
 	for i := 0; i < rq.maxWorkers; i++ {
+		workerStates[i] = &WorkerState{ID: i} // initialize each worker state
 		go func(workerID int) {
 			fmt.Printf("Starting worker %d\n", workerID)
-			rq.worker()
+			rq.worker(workerID)
 		}(i)
 	}
 }
 
-func (rq *RayQueue) worker() {
+func (rq *RayQueue) worker(workerID int) {
+	state := workerStates[workerID]
 	for {
 		var job models.Job
 		err := fetchAndMarkOldestQueuedJobAsProcessing(&job, models.QueueTypeRay, rq.db)
 		if err != nil {
+			state.Busy = false
+			state.CurrentJob = nil
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				time.Sleep(10 * time.Second)
 				continue
@@ -77,12 +91,24 @@ func (rq *RayQueue) worker() {
 			continue
 		}
 
+		state.Busy = true
+		state.CurrentJob = &job
+		state.LastActive = time.Now()
+
 		// Process the job
 		if err = processRayJob(job.ID, rq.db); err != nil {
 			fmt.Printf("Error processing job: %v\n", err)
 		}
+
+		state.Busy = false
+		state.CurrentJob = nil
 		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
 	}
+}
+
+func GetWorkerSummary(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(workerStates)
 }
 
 func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, queueType models.QueueType, db *gorm.DB) error {

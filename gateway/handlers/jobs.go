@@ -119,3 +119,7 @@ func GetJobsQueueSummaryHandler(db *gorm.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(summary)
 	}
 }
+
+func GetWorkerSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	utils.GetWorkerSummary(w, r)
+}
