@@ -29,7 +29,7 @@ type RayQueue struct {
 type WorkerState struct {
 	ID         int
 	Busy       bool
-	CurrentJob *models.Job
+	CurrentJob uint
 	LastActive time.Time
 }
 
@@ -77,11 +77,16 @@ func (rq *RayQueue) StartWorkers() {
 func (rq *RayQueue) worker(workerID int) {
 	state := workerStates[workerID]
 	for {
+		// TEMP FIX: Marking dangling jobs to stopped after an hr. This wont be needed once we move to ray jobs
+		err := fetchAndMarkOldestRunningJobAsStopped(rq.db)
+		if err != nil {
+			fmt.Printf("Error marking dangling jobs to stopped: %v\n", err)
+		}
 		var job models.Job
-		err := fetchAndMarkOldestQueuedJobAsProcessing(&job, models.QueueTypeRay, rq.db)
+		err = fetchAndMarkOldestQueuedJobAsPending(&job, models.QueueTypeRay, rq.db)
 		if err != nil {
 			state.Busy = false
-			state.CurrentJob = nil
+			state.CurrentJob = 0
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				time.Sleep(10 * time.Second)
 				continue
@@ -92,7 +97,7 @@ func (rq *RayQueue) worker(workerID int) {
 		}
 
 		state.Busy = true
-		state.CurrentJob = &job
+		state.CurrentJob = job.ID
 		state.LastActive = time.Now()
 
 		// Process the job
@@ -101,7 +106,7 @@ func (rq *RayQueue) worker(workerID int) {
 		}
 
 		state.Busy = false
-		state.CurrentJob = nil
+		state.CurrentJob = 0
 		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
 	}
 }
@@ -111,7 +116,25 @@ func GetWorkerSummary(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(workerStates)
 }
 
-func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+func fetchAndMarkOldestRunningJobAsStopped(db *gorm.DB) error {
+	var job models.Job
+	err := db.Where("job_status = ?", models.JobStateRunning).Order("started_at ASC").First(&job).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
+	}
+
+	if time.Since(job.StartedAt) > 1*time.Hour {
+		job.JobStatus = models.JobStateStopped
+		return db.Save(&job).Error
+	}
+
+	return nil
+}
+
+func fetchAndMarkOldestQueuedJobAsPending(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {

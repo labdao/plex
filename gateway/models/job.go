@@ -14,6 +14,7 @@ const (
 	JobStateRunning   JobState = "running"
 	JobStateFailed    JobState = "failed"
 	JobStateCompleted JobState = "completed"
+	JobStateStopped   JobState = "stopped"
 )
 
 type QueueType string
