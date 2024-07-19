@@ -229,13 +229,13 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			if user.SubscriptionStatus == "active" {
-				err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
-				if err != nil {
-					utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
-					return
-				}
-			}
+			// if user.SubscriptionStatus == "active" {
+			// 	err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
+			// 	if err != nil {
+			// 		utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// }
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(experiment); err != nil {
@@ -680,13 +680,13 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			if user.SubscriptionStatus == "active" {
-				err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
-				if err != nil {
-					utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
-					return
-				}
-			}
+			// if user.SubscriptionStatus == "active" {
+			// 	err = RecordUsage(user.StripeUserID, int64(model.ComputeCost))
+			// 	if err != nil {
+			// 		utils.SendJSONError(w, fmt.Sprintf("Error recording usage: %v", err), http.StatusInternalServerError)
+			// 		return
+			// 	}
+			// }
 		}
 
 		w.Header().Set("Content-Type", "application/json")
