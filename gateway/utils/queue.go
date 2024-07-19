@@ -19,6 +19,7 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RayQueue struct {
@@ -29,7 +30,7 @@ type RayQueue struct {
 type WorkerState struct {
 	ID         int
 	Busy       bool
-	CurrentJob uint
+	CurrentJob *uint
 	LastActive time.Time
 }
 
@@ -86,7 +87,7 @@ func (rq *RayQueue) worker(workerID int) {
 		err = fetchAndMarkOldestQueuedJobAsPending(&job, models.QueueTypeRay, rq.db)
 		if err != nil {
 			state.Busy = false
-			state.CurrentJob = 0
+			state.CurrentJob = nil
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				time.Sleep(10 * time.Second)
 				continue
@@ -97,7 +98,7 @@ func (rq *RayQueue) worker(workerID int) {
 		}
 
 		state.Busy = true
-		state.CurrentJob = job.ID
+		state.CurrentJob = &job.ID
 		state.LastActive = time.Now()
 
 		// Process the job
@@ -106,7 +107,7 @@ func (rq *RayQueue) worker(workerID int) {
 		}
 
 		state.Busy = false
-		state.CurrentJob = 0
+		state.CurrentJob = nil
 		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
 	}
 }
@@ -135,25 +136,16 @@ func fetchAndMarkOldestRunningJobAsStopped(db *gorm.DB) error {
 }
 
 func fetchAndMarkOldestQueuedJobAsPending(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	tx := db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
+			return err
 		}
-	}()
-
-	if err := tx.Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	job.JobStatus = models.JobStatePending
-	if err := tx.Save(job).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+		job.JobStatus = models.JobStatePending
+		if err := tx.Save(job).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {
