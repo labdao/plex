@@ -213,6 +213,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 		"pdb":    response.PDB,
 		"files":  response.Files,
 		"scores": response.Scores,
+		"points": response.Points,
 	}
 
 	prettyJSON, err := json.MarshalIndent(result, "", "    ")
