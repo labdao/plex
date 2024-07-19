@@ -11,7 +11,7 @@ const LogViewer = ({ rayJobID }: { rayJobID: string }) => {
 
   useEffect(() => {
     if (rayJobID) {
-      setLogs(`Connecting to stream with Bacalhau Job Id ${rayJobID}`);
+      setLogs(`Logging feature coming soon...`);
 
       let formattedBackendUrl = backendUrl().replace("http://", "").replace("https://", "");
       let wsProtocol = backendUrl().startsWith("https://") ? "wss" : "ws";
