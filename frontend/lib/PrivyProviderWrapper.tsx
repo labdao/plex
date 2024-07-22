@@ -22,32 +22,20 @@ export default function PrivyProviderWrapper({
         console.log('Login successful, user:', user);
         setUser(user);
         setAuthenticated(true);
-
+    
         const walletAddress = user.wallet?.address;
         if (!walletAddress) {
             console.error('No wallet address found for user:', user);
-            // Handle the error appropriately, maybe show an error message to the user
             return;
         }
-
+    
         try {
-            // First, try to fetch the user data
-            await dispatch(fetchUserDataAsync()).unwrap();
-            console.log('Existing user found, reloading page');
+            // This will create the user if they don't exist, or return existing user data
+            const userData = await dispatch(saveUserAsync({ walletAddress })).unwrap();
+            console.log('User data saved/retrieved:', userData);
             window.location.reload();
         } catch (error) {
-            console.log('User not found, creating new user');
-            try {
-                // If user not found, create a new user
-                await dispatch(saveUserAsync({ walletAddress })).unwrap();
-                console.log('New user created, fetching user data');
-                await dispatch(fetchUserDataAsync()).unwrap();
-                console.log('User data fetched successfully, reloading page');
-                window.location.reload();
-            } catch (saveError) {
-                console.error('Error creating or fetching new user:', saveError);
-                // Handle the error appropriately, maybe show an error message to the user
-            }
+            console.error('Error saving/retrieving user data:', error);
         }
     }, [dispatch]);
 
