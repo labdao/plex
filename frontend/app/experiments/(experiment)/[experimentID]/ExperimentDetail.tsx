@@ -117,7 +117,7 @@ export default function ExperimentDetail() {
               <div className="opacity-70">
                 Started by <TruncatedString value={experiment.WalletAddress} trimLength={4} />{" "}
                 <span className="text-muted-foreground" suppressHydrationWarning>
-                  {dayjs().to(dayjs(experiment.StartTime))}
+                  {dayjs().to(dayjs(experiment.CreatedAt))}
                 </span>
               </div>
               <div className="opacity-50">
@@ -137,7 +137,7 @@ export default function ExperimentDetail() {
             <div className="space-y-2 font-mono text-sm uppercase pl-7">
               <div>
                 <strong>Queued: </strong>
-                {dayjs(experiment.StartTime).format("YYYY-MM-DD HH:mm:ss")}
+                {dayjs(experiment.CreatedAt).format("YYYY-MM-DD HH:mm:ss")}
               </div>
               {/*@TODO: Endtime currently doesn't show a correct datetime and Runtime is missing
                 <div>
