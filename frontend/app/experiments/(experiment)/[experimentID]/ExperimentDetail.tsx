@@ -87,7 +87,8 @@ export default function ExperimentDetail() {
               </div>
               <div className="flex justify-end space-x-2 ">
                 {userWalletAddress === experiment.WalletAddress && (
-                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || experiment.Public}>
+                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={true}>
+                  {/* <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || experiment.Public}> */}
                     {updateLoading || isDelaying ? (
                       <>
                         <Dna className="w-4 h-4 ml-2 animate-spin" />
@@ -116,7 +117,7 @@ export default function ExperimentDetail() {
               <div className="opacity-70">
                 Started by <TruncatedString value={experiment.WalletAddress} trimLength={4} />{" "}
                 <span className="text-muted-foreground" suppressHydrationWarning>
-                  {dayjs().to(dayjs(experiment.StartTime))}
+                  {dayjs().to(dayjs(experiment.CreatedAt))}
                 </span>
               </div>
               <div className="opacity-50">
@@ -136,7 +137,7 @@ export default function ExperimentDetail() {
             <div className="space-y-2 font-mono text-sm uppercase pl-7">
               <div>
                 <strong>Queued: </strong>
-                {dayjs(experiment.StartTime).format("YYYY-MM-DD HH:mm:ss")}
+                {dayjs(experiment.CreatedAt).format("YYYY-MM-DD HH:mm:ss")}
               </div>
               {/*@TODO: Endtime currently doesn't show a correct datetime and Runtime is missing
                 <div>

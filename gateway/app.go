@@ -105,6 +105,15 @@ func ServeWebApp() {
 		panic("failed to connect to database")
 	}
 
+	// Configure connection pool
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("failed to configure database connection pool")
+	}
+	sqlDB.SetMaxIdleConns(10)           // Set the maximum number of idle connections
+	sqlDB.SetMaxOpenConns(25)           // Set the maximum number of open connections
+	sqlDB.SetConnMaxLifetime(time.Hour) // Connections are recycled every hour
+
 	// Migrate the schema
 	if err := db.AutoMigrate(&models.File{}, &models.User{}, &models.Model{}, &models.Job{}, &models.Tag{}, &models.Transaction{}, &models.InferenceEvent{}, &models.FileEvent{}, &models.UserEvent{}, &models.Organization{}, &models.Design{}); err != nil {
 		panic(fmt.Sprintf("failed to migrate database: %v", err))
