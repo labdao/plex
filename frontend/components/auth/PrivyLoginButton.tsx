@@ -17,7 +17,7 @@ const PrivyLoginButton = (props: ButtonProps) => {
 
   //This component must remain mounted wherever you use it for the callback to fire correctly
   const { login } = useLogin({
-    onComplete: (user, isNewUser, wasAlreadyAuthenticated) => {
+    onComplete: async (user, isNewUser, wasAlreadyAuthenticated) => {
       const walletAddress = user?.wallet?.address;
       const chainId = user?.wallet?.chainId;
 
@@ -47,7 +47,13 @@ const PrivyLoginButton = (props: ButtonProps) => {
       } else {
         console.log("User authenticated");
       }
-      dispatch(saveUserAsync({ walletAddress }));
+
+      try {
+        await dispatch(saveUserAsync({ walletAddress })).unwrap();
+        sessionStorage.setItem('isFirstLogin', 'true');
+      } catch (error) {
+        console.error("Failed to save user:", error);
+      }
     },
     onError: (error) => {
       console.log("onError callback triggered", error);
