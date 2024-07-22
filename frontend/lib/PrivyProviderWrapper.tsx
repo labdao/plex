@@ -1,12 +1,12 @@
 'use client';
 
 import { PrivyProvider, User } from '@privy-io/react-auth';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { optimismSepolia } from 'viem/chains'
 import { useDispatch } from 'react-redux';
 
 import { PrivyAuthContext } from './PrivyContext';
-import { fetchUserDataAsync } from './redux';
+import { fetchUserDataAsync, saveUserAsync } from './redux';
 import { ReduxDispatch } from '@/lib/redux/store';
 
 export default function PrivyProviderWrapper({
@@ -18,30 +18,30 @@ export default function PrivyProviderWrapper({
     const [authenticated, setAuthenticated] = useState<boolean>(false);
     const dispatch = useDispatch<ReduxDispatch>();
 
-    useEffect(() => {
-        // Check if this is a fresh login
-        const isFirstLogin = sessionStorage.getItem('isFirstLogin') === 'true';
-        if (isFirstLogin) {
-            sessionStorage.removeItem('isFirstLogin');
-            dispatch(fetchUserDataAsync())
-                .unwrap()
-                .then(() => {
-                    // Use window.location.reload() instead of router.reload()
-                    window.location.reload();
-                })
-                .catch((error: string) => {
-                    console.error('Error fetching user data:', error);
-                    // Handle error (e.g., show an error message to the user)
-                });
-        }
-    }, [dispatch]);
-
-    const handleLogin = (user: User) => {
+    const handleLogin = useCallback(async (user: User) => {
+        console.log('Login successful, user:', user);
         setUser(user);
         setAuthenticated(true);
-        // Set the first login flag
-        sessionStorage.setItem('isFirstLogin', 'true');
-    }
+
+        try {
+            // First, try to fetch the user data
+            await dispatch(fetchUserDataAsync()).unwrap();
+            console.log('Existing user found, reloading page');
+            window.location.reload();
+        } catch (error) {
+            console.log('User not found, creating new user');
+            try {
+                // If user not found, create a new user
+                await dispatch(saveUserAsync({ walletAddress: user.wallet.address })).unwrap();
+                console.log('New user created, fetching user data');
+                await dispatch(fetchUserDataAsync()).unwrap();
+                console.log('User data fetched successfully, reloading page');
+                window.location.reload();
+            } catch (saveError) {
+                console.error('Error creating or fetching new user:', saveError);
+            }
+        }
+    }, [dispatch]);
 
     return (
         <PrivyAuthContext.Provider value={{ user, authenticated }}>
