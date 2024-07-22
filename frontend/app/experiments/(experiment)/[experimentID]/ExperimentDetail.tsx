@@ -87,7 +87,8 @@ export default function ExperimentDetail() {
               </div>
               <div className="flex justify-end space-x-2 ">
                 {userWalletAddress === experiment.WalletAddress && (
-                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || experiment.Public}>
+                  <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={true}>
+                  {/* <Button variant="outline" className="text-sm" onClick={handlePublish} disabled={updateLoading || experiment.Public}> */}
                     {updateLoading || isDelaying ? (
                       <>
                         <Dna className="w-4 h-4 ml-2 animate-spin" />
