@@ -32,20 +32,12 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("Received request to create user: WalletAddress: %s\n", requestData.WalletAddress)
+		fmt.Printf("Received request to create/get user: WalletAddress: %s\n", requestData.WalletAddress)
 
 		isValidAddress := web3.IsValidEthereumAddress(requestData.WalletAddress)
 		if !isValidAddress {
 			utils.SendJSONError(w, "Invalid wallet address", http.StatusBadRequest)
 			fmt.Println("Invalid wallet address:", requestData.WalletAddress)
-			return
-		}
-
-		var existingUser models.User
-		err := db.Where("wallet_address = ?", requestData.WalletAddress).First(&existingUser).Error
-		if err != nil && err != gorm.ErrRecordNotFound {
-			utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
-			fmt.Println("Database error:", err)
 			return
 		}
 
@@ -60,6 +52,7 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 		err = db.Where("wallet_address = ?", requestData.WalletAddress).First(&user).Error
 
 		if err == gorm.ErrRecordNotFound {
+			// User doesn't exist, create a new one
 			stripeUserID, err := createStripeCustomer(requestData.WalletAddress)
 			if err != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error creating Stripe customer: %v", err), http.StatusInternalServerError)
@@ -81,14 +74,13 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 			fmt.Printf("Successfully created user with WalletAddress: %s and StripeUserID: %s\n", newUser.WalletAddress, newUser.StripeUserID)
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(newUser)
+			user = newUser // Set user to newUser for consistent response
 		} else if err != nil {
 			utils.SendJSONError(w, "Database error", http.StatusInternalServerError)
 			fmt.Println("Database error:", err)
 			return
 		} else {
+			// User already exists, update DID if necessary
 			if user.DID == "" {
 				user.DID = did
 				if err := db.Save(&user).Error; err != nil {
@@ -100,10 +92,30 @@ func AddUserHandler(db *gorm.DB) http.HandlerFunc {
 			} else {
 				fmt.Printf("User already exists with WalletAddress: %s and has a DID\n", user.WalletAddress)
 			}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(user)
 		}
+
+		// Prepare response
+		response := struct {
+			WalletAddress      string      `json:"walletAddress"`
+			DID                string      `json:"did"`
+			IsAdmin            bool        `json:"isAdmin"`
+			Tier               models.Tier `json:"tier"`
+			SubscriptionStatus string      `json:"subscriptionStatus"`
+		}{
+			WalletAddress:      user.WalletAddress,
+			DID:                user.DID,
+			IsAdmin:            user.Admin,
+			Tier:               user.Tier,
+			SubscriptionStatus: user.SubscriptionStatus,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err == gorm.ErrRecordNotFound {
+			w.WriteHeader(http.StatusCreated)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		json.NewEncoder(w).Encode(response)
 	}
 }
 
