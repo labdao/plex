@@ -1,5 +1,5 @@
 {
-    "name": "colabfold-v1.8",
+    "name": "relay-colabfold-v1.8",
     "description": "Simulate a protein complex using ColabFold",
     "task": "protein folding",
     "taskCategory": "protein-binder-design",
@@ -8,7 +8,7 @@
     "xAxis": "plddt",
     "yAxis": "i_pae",
     "jobType": "service",
-    "rayEndpoint": "/simulate_protein_complex",
+    "rayEndpoint": "/relay_simulate_protein_complex",
     "computeCost": 10,
     "inputs": {
       "binder_sequence": {

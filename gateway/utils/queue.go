@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -12,36 +11,38 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
-	"encoding/hex"
 	"encoding/json"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
 	s3client "github.com/labdao/plex/internal/s3"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RayQueue struct {
 	db         *gorm.DB
 	maxWorkers int
-	jobChan    chan models.Job
-	errChan    chan error
 }
+
+type WorkerState struct {
+	ID         int
+	Busy       bool
+	CurrentJob *uint
+	LastActive time.Time
+}
+
+var workerStates []*WorkerState
 
 func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
 		maxWorkers: maxWorkers,
-		jobChan:    make(chan models.Job, maxWorkers),
-		errChan:    make(chan error, maxWorkers),
 	}
 }
 
@@ -56,50 +57,85 @@ func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev t
 	return time.Duration(delay)
 }
 
+var once sync.Once
+
 func StartJobQueues(db *gorm.DB, maxWorkers int) error {
-	rq := NewRayQueue(db, maxWorkers)
-	rq.StartWorkers()
-
-	go rq.ProcessJobQueue(models.QueueTypeRay)
-
-	for err := range rq.errChan {
-		if err != nil {
-			return err
-		}
-	}
-
+	once.Do(func() {
+		rq := NewRayQueue(db, maxWorkers)
+		rq.StartWorkers()
+	})
 	return nil
 }
 
 func (rq *RayQueue) StartWorkers() {
+	workerStates = make([]*WorkerState, rq.maxWorkers) // initialize the slice based on maxWorkers
 	for i := 0; i < rq.maxWorkers; i++ {
-		go rq.worker()
+		workerStates[i] = &WorkerState{ID: i} // initialize each worker state
+		go func(workerID int) {
+			fmt.Printf("Starting worker %d\n", workerID)
+			rq.worker(workerID)
+		}(i)
 	}
 }
 
-func (rq *RayQueue) worker() {
-	for job := range rq.jobChan {
-		err := processRayJob(job.ID, rq.db)
-		if err != nil {
-			rq.errChan <- err
-		}
-	}
-}
-
-func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
+func (rq *RayQueue) worker(workerID int) {
+	state := workerStates[workerID]
 	for {
+		// TEMP FIX: Marking dangling jobs to stopped after an hr. This wont be needed once we move to ray jobs
+		err := fetchAndMarkOldestRunningJobAsStopped(rq.db)
+		if err != nil {
+			fmt.Printf("Error marking dangling jobs to stopped: %v\n", err)
+		}
 		var job models.Job
-		err := fetchOldestQueuedJob(&job, queueType, rq.db)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			time.Sleep(5 * time.Second)
+		err = fetchAndMarkOldestQueuedJobAsPending(&job, models.QueueTypeRay, rq.db)
+		if err != nil {
+			state.Busy = false
+			state.CurrentJob = nil
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			fmt.Printf("Error fetching job: %v\n", err)
+			time.Sleep(10 * time.Second)
 			continue
-		} else if err != nil {
-			rq.errChan <- err
-			return
 		}
 
-		rq.jobChan <- job
+		state.Busy = true
+		state.CurrentJob = &job.ID
+		state.LastActive = time.Now()
+
+		// Process the job
+		if err = processRayJob(job.ID, rq.db); err != nil {
+			fmt.Printf("Error processing job: %v\n", err)
+		}
+
+		state.Busy = false
+		state.CurrentJob = nil
+		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
 	}
+}
+
+func GetWorkerSummary(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(workerStates)
+}
+
+func fetchAndMarkOldestRunningJobAsStopped(db *gorm.DB) error {
+	var job models.Job
+	err := db.Where("job_status = ?", models.JobStateRunning).Order("started_at ASC").First(&job).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
+	}
+
+	if time.Since(job.StartedAt) > 1*time.Hour {
+		job.JobStatus = models.JobStateStopped
+		return db.Save(&job).Error
+	}
+
+	return nil
 }
 
 func checkRunningJob(jobID uint, db *gorm.DB) error {
@@ -239,8 +275,17 @@ func fetchRunningJobsWithModelData(jobs *[]models.Job, db *gorm.DB) error {
 	return db.Preload("Model").Where("job_status = ?", models.JobStateRunning).Where("job_type", models.JobTypeJob).Find(jobs).Error
 }
 
-func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Where("job_status = ? ", models.JobStateQueued).Order("created_at ASC").First(job).Error
+func fetchAndMarkOldestQueuedJobAsPending(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
+			return err
+		}
+		job.JobStatus = models.JobStatePending
+		if err := tx.Save(job).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {
@@ -414,6 +459,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 		fmt.Printf("Parsed Ray job response:\n%s\n", prettyJSON)
 		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
+		fmt.Printf("Job %v completed and added files to DB\n", job.ID)
 	} else if resp.StatusCode != http.StatusOK {
 		newInferenceEvent := models.InferenceEvent{
 			JobID:        job.ID,
@@ -499,7 +545,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	}
 	fmt.Printf("Job had id %v\n", job.ID)
 	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
-	err = db.Save(job).Error
+	err = db.Save(&job).Error
 	if err != nil {
 		return err
 	}
@@ -554,13 +600,16 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 		return fmt.Errorf("failed to save Job: %v", err)
 	}
 
+	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
 	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range resultJSON.Files {
+		fmt.Printf("AddFileToDB for file: %s, Key: %s\n", fileDetail.URI, key)
 		if err := addFileToDB(job, fileDetail, key, db); err != nil {
 			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
 		}
 	}
 
+	fmt.Printf("Adding PDB file to DB\n %v\n", resultJSON.PDB)
 	// Special handling for PDB as it's a common file across many jobs
 	if err := addFileToDB(job, resultJSON.PDB, "pdb", db); err != nil {
 		return fmt.Errorf("failed to add PDB file to database: %v", err)
@@ -591,13 +640,8 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 		{Name: "generated", Type: "autogenerated"},
 	}
 
-	hash, err := hashS3Object(fileDetail.URI)
-	if err != nil {
-		return fmt.Errorf("error hashing S3 object: %v", err)
-	}
-
+	fmt.Printf("Creating new File record for %s \n", fileDetail.URI)
 	file = models.File{
-		FileHash:      hash,
 		WalletAddress: job.WalletAddress,
 		Filename:      filepath.Base(fileDetail.URI),
 		Tags:          tags,
@@ -616,58 +660,4 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	}
 
 	return nil
-}
-
-func hashS3Object(URI string) (string, error) {
-	// Load the AWS configuration
-	bucketEndpoint := os.Getenv("BUCKET_ENDPOINT")
-	region := os.Getenv("AWS_REGION")
-	accessKeyID := os.Getenv("BUCKET_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("BUCKET_SECRET_ACCESS_KEY")
-	s3client, err := s3client.NewS3Client()
-	if err != nil {
-		return "", fmt.Errorf("error creating S3 client: %w", err)
-	}
-	bucket, key, err := s3client.GetBucketAndKeyFromURI(URI)
-	if err != nil {
-		return "", fmt.Errorf("error parsing S3 URI: %w", err)
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Region:           aws.String(region),
-		Endpoint:         aws.String(bucketEndpoint),
-		S3ForcePathStyle: aws.Bool(true),
-		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-	})
-	if err != nil {
-		return "", fmt.Errorf("error creating AWS session: %w", err)
-	}
-
-	// Create an S3 service client
-	svc := s3.New(sess)
-
-	// Get the object
-	resp, err := svc.GetObject(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to get S3 object: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Initialize hasher and hash the key
-	hasher := sha256.New()
-	if _, err := hasher.Write([]byte(key)); err != nil {
-		return "", fmt.Errorf("failed to hash key: %w", err)
-	}
-
-	// Read and hash the contents of the object
-	if _, err := io.Copy(hasher, resp.Body); err != nil {
-		return "", fmt.Errorf("failed to hash file contents: %w", err)
-	}
-
-	// Compute the final hash
-	hashBytes := hasher.Sum(nil)
-	return hex.EncodeToString(hashBytes), nil
 }
