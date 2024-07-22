@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon, RefreshCcwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -45,6 +45,12 @@ export default function RerunExperimentForm() {
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
   });
+
+  useEffect(() => {
+    if (model && lastJob) {
+      form.reset(generateValues(model.ModelJson?.inputs, lastJob?.Inputs));
+    }
+  }, [model, lastJob, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("===== Form Submitted =====", values);

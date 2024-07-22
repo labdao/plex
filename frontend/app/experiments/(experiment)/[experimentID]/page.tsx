@@ -35,9 +35,9 @@ export default function Layout({ params }: ExperimentDetailProps) {
   }, [dispatch, experimentID]);
 
   useEffect(() => {
-    if (!!experiment.Jobs?.length) {
-      //Update redux with the model stored in the experiment rather than making a separate request
-      dispatch(setModelDetail(experiment.Jobs?.[0]?.Model));
+    if (experiment?.Jobs?.length) {
+      // Update redux with the model stored in the experiment rather than making a separate request
+      dispatch(setModelDetail(experiment.Jobs[0].Model));
     }
   }, [dispatch, experiment.Jobs]);
 
