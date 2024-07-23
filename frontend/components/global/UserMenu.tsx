@@ -111,7 +111,7 @@ export default function UserMenu() {
                 Log Out
               </DropdownMenuItem>
 
-              <TransactionSummaryInfo className="mt-2" />
+              {/* <TransactionSummaryInfo className="mt-2" /> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </>
