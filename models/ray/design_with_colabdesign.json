@@ -22,7 +22,7 @@
         "glob": [
           "*.pdb"
         ],
-        "default": "",
+        "default": "s3://labdao-testeks/97e5c46dea2cb5244e26e2f1ccfe7547c840ecdeb4d965399017347dc0aada50/6aru.pdb",
         "min": "",
         "max": "",
         "example": "my_target_protein.pdb",
@@ -37,7 +37,7 @@
         "glob": [
           ""
         ],
-        "default": "",
+        "default": "A357",
         "min": "",
         "max": "",
         "example": "A",
