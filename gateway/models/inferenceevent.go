@@ -8,13 +8,16 @@ import (
 
 // event type can only be certain string values
 const (
-	EventTypeJobCreated   = "job_created"
-	EventTypeJobStarted   = "job_started"
-	EventTypeJobCompleted = "job_completed"
-	EventTypeJobFailed    = "job_failed"
-	EventTypeJobCancelled = "job_cancelled"
+	EventTypeJobQueued     = "job_queued"
+	EventTypeJobProcessing = "job_processing"
+	EventTypeJobPending    = "job_pending"
+	EventTypeJobRunning    = "job_running"
+	EventTypeJobStopped    = "job_stopped"
+	EventTypeJobSucceeded  = "job_succeeded"
+	EventTypeJobFailed     = "job_failed"
 )
 
+// retry default 0?
 type InferenceEvent struct {
 	ID           uint           `gorm:"primaryKey;autoIncrement"`
 	JobID        uint           `gorm:"not null"`
@@ -23,7 +26,7 @@ type InferenceEvent struct {
 	InputJson    datatypes.JSON `gorm:"type:json"`
 	OutputJson   datatypes.JSON `gorm:"type:json"`
 	RetryCount   int            `gorm:"not null"`
-	JobStatus    JobState       `gorm:"type:varchar(255);default:'PENDING'"`
+	JobStatus    JobState       `gorm:"type:varchar(255);default:'QUEUED'"`
 	ResponseCode int            `gorm:"type:int"`
 	EventTime    time.Time      `gorm:""`
 	EventMessage string         `gorm:"type:text"`

@@ -9,12 +9,13 @@ import (
 type JobState string
 
 const (
-	JobStateQueued    JobState = "QUEUED"
-	JobStatePending   JobState = "PENDING"
-	JobStateRunning   JobState = "RUNNING"
-	JobStateStopped   JobState = "STOPPED"
-	JobStateSucceeded JobState = "SUCCEEDED"
-	JobStateFailed    JobState = "FAILED"
+	JobStateQueued     JobState = "QUEUED"
+	JobStateProcessing JobState = "PROCESSING"
+	JobStatePending    JobState = "PENDING"
+	JobStateRunning    JobState = "RUNNING"
+	JobStateStopped    JobState = "STOPPED"
+	JobStateSucceeded  JobState = "SUCCEEDED"
+	JobStateFailed     JobState = "FAILED"
 )
 
 type QueueType string

@@ -86,7 +86,7 @@ func (rq *RayQueue) worker(workerID int) {
 			fmt.Printf("Error marking dangling jobs to stopped: %v\n", err)
 		}
 		var job models.Job
-		err = fetchAndMarkOldestQueuedJobAsPending(&job, models.QueueTypeRay, rq.db)
+		err = fetchAndMarkOldestQueuedJobAsProcessing(&job, models.QueueTypeRay, rq.db)
 		if err != nil {
 			state.Busy = false
 			state.CurrentJob = nil
@@ -219,32 +219,9 @@ func setJobStatus(job *models.Job, state models.JobState, errorMessage string, d
 	job.JobStatus = state
 	job.Error = errorMessage
 
-	var eventType string
+	createInferenceEvent(job.ID, state, job.RayJobID, job.RetryCount, db)
 
-	if state == models.JobStateFailed {
-		eventType = models.EventTypeJobFailed
-	} else if state == models.JobStateSucceeded {
-		eventType = models.EventTypeJobCompleted
-	} else if state == models.JobStateRunning {
-		eventType = models.EventTypeJobStarted
-	} else if state == models.JobStatePending {
-		eventType = models.EventTypeJobCreated
-	}
-
-	inferenceEvent := models.InferenceEvent{
-		JobID:        job.ID,
-		JobStatus:    state,
-		EventTime:    time.Now().UTC(),
-		EventType:    eventType,
-		EventMessage: errorMessage,
-	}
-
-	err := db.Save(&inferenceEvent).Error
-	if err != nil {
-		return err
-	}
-
-	err = db.Save(&job).Error
+	err := db.Save(&job).Error
 	if err != nil {
 		return err
 	}
@@ -273,15 +250,29 @@ func fetchRunningJobsWithModelData(jobs *[]models.Job, db *gorm.DB) error {
 	return db.Preload("Model").Where("job_status = ?", models.JobStateRunning).Where("job_type", models.JobTypeJob).Find(jobs).Error
 }
 
-func fetchAndMarkOldestQueuedJobAsPending(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
 			return err
 		}
-		job.JobStatus = models.JobStatePending
+
+		job.JobStatus = models.JobStateProcessing
 		if err := tx.Save(job).Error; err != nil {
 			return err
 		}
+
+		inferenceEvent := models.InferenceEvent{
+			JobID:      job.ID,
+			RayJobID:   job.RayJobID,
+			RetryCount: job.RetryCount,
+			JobStatus:  models.JobStateProcessing,
+			EventTime:  time.Now().UTC(),
+			EventType:  models.EventTypeJobProcessing,
+		}
+		if err := tx.Save(&inferenceEvent).Error; err != nil {
+			return err
+		}
+
 		return nil
 	})
 }
@@ -306,18 +297,12 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	var inferenceEvent models.InferenceEvent
-	err = fetchLatestInferenceEvent(&inferenceEvent, jobID, db)
-	if err != nil {
-		return err
-	}
-
 	var ModelJson ipwl.Model
 	if err := json.Unmarshal(job.Model.ModelJson, &ModelJson); err != nil {
 		return err
 	}
 
-	if job.RayJobID == "" && job.JobStatus == models.JobStateQueued {
+	if job.RayJobID == "" && job.JobStatus == models.JobStateProcessing {
 		rayJobID := uuid.New().String()
 		log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 		job.RayJobID = rayJobID
@@ -325,6 +310,7 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		if err := db.Save(&job).Error; err != nil {
 			return err
 		}
+		createInferenceEvent(job.ID, models.JobStatePending, job.RayJobID, 0, db)
 		if err := submitRayJobAndUpdateID(&job, db); err != nil {
 			return err
 		}
@@ -459,18 +445,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 		completeRayJobAndAddFiles(job, body, rayJobResponse, db)
 		fmt.Printf("Job %v completed and added files to DB\n", job.ID)
 	} else if resp.StatusCode != http.StatusOK {
-		newInferenceEvent := models.InferenceEvent{
-			JobID:        job.ID,
-			JobStatus:    models.JobStateFailed,
-			ResponseCode: resp.StatusCode,
-			EventType:    models.EventTypeJobFailed,
-			EventMessage: string(body),
-			EventTime:    time.Now().UTC(),
-		}
-		err = db.Save(&newInferenceEvent).Error
-		if err != nil {
-			return err
-		}
+		createInferenceEvent(job.ID, models.JobStateFailed, job.RayJobID, 0, db)
 		// 504 - no retry, 404 - immediate retry once, 500 - exponential back off and retry twice
 		// TBD retry count and delay
 		if resp.StatusCode == http.StatusGatewayTimeout {
@@ -483,42 +458,22 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 			return nil
 		} else if (resp.StatusCode == http.StatusNotFound) && job.RetryCount < maxRetryCountFor404 {
 			job.RetryCount = job.RetryCount + 1
-			job.JobStatus = models.JobStatePending
+			job.JobStatus = models.JobStateProcessing
 			err = db.Save(job).Error
 			if err != nil {
 				return err
 			}
-			newInferenceEvent := models.InferenceEvent{
-				JobID:      job.ID,
-				JobStatus:  models.JobStatePending,
-				RetryCount: job.RetryCount,
-				EventTime:  time.Now().UTC(),
-				EventType:  models.EventTypeJobCreated,
-			}
-			err = db.Save(&newInferenceEvent).Error
-			if err != nil {
-				return err
-			}
+			createInferenceEvent(job.ID, models.JobStateProcessing, job.RayJobID, job.RetryCount, db)
 
 			return submitRayJobAndUpdateID(job, db)
 		} else if (resp.StatusCode == http.StatusInternalServerError) && job.RetryCount < maxRetryCountFor500 {
 			job.RetryCount = job.RetryCount + 1
-			job.JobStatus = models.JobStatePending
+			job.JobStatus = models.JobStateProcessing
 			err = db.Save(job).Error
 			if err != nil {
 				return err
 			}
-			newInferenceEvent := models.InferenceEvent{
-				JobID:      job.ID,
-				JobStatus:  models.JobStatePending,
-				RetryCount: job.RetryCount,
-				EventTime:  time.Now().UTC(),
-				EventType:  models.EventTypeJobCreated,
-			}
-			err = db.Save(&newInferenceEvent).Error
-			if err != nil {
-				return err
-			}
+			createInferenceEvent(job.ID, models.JobStateProcessing, job.RayJobID, job.RetryCount, db)
 			// Calculate delay with exponential backoff and randomness
 			delay := getRandomDelay(job.RetryCount, 2*time.Second, 1.2, 500*time.Millisecond)
 
@@ -563,13 +518,31 @@ func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, 
 }
 
 func createInferenceEvent(jobID uint, state models.JobState, rayJobID string, retryCount int, db *gorm.DB) error {
+	var eventType string
+	if state == models.JobStateQueued {
+		eventType = models.EventTypeJobQueued
+	} else if state == models.JobStateProcessing {
+		eventType = models.EventTypeJobProcessing
+	} else if state == models.JobStatePending {
+		eventType = models.EventTypeJobPending
+	} else if state == models.JobStateRunning {
+		eventType = models.EventTypeJobRunning
+	} else if state == models.JobStateStopped {
+		eventType = models.EventTypeJobStopped
+	} else if state == models.JobStateSucceeded {
+		eventType = models.EventTypeJobSucceeded
+	} else if state == models.JobStateFailed {
+		eventType = models.EventTypeJobFailed
+	} else {
+		return fmt.Errorf("unknown state")
+	}
 	newInferenceEvent := models.InferenceEvent{
 		JobID:      jobID,
-		JobStatus:  state,
 		RayJobID:   rayJobID,
 		RetryCount: retryCount,
+		JobStatus:  state,
 		EventTime:  time.Now().UTC(),
-		EventType:  models.EventTypeJobStarted,
+		EventType:  eventType,
 	}
 	err := db.Save(&newInferenceEvent).Error
 	if err != nil {
@@ -583,7 +556,7 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 	newInferenceEvent := models.InferenceEvent{
 		JobID:        job.ID,
 		EventTime:    time.Now().UTC(),
-		EventType:    models.EventTypeJobCompleted,
+		EventType:    models.EventTypeJobSucceeded,
 		JobStatus:    models.JobStateSucceeded,
 		ResponseCode: http.StatusOK,
 		OutputJson:   body,
