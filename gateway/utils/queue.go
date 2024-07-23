@@ -445,6 +445,19 @@ func completeRayJobAndAddFiles(inferenceEvent *models.InferenceEvent, job *model
 	job.JobStatus = models.JobStateCompleted
 	job.CompletedAt = time.Now().UTC()
 
+	var user models.User
+	if err := db.First(&user, "wallet_address = ?", job.WalletAddress).Error; err != nil {
+		return fmt.Errorf("error fetching user: %v", err)
+	}
+
+	if user.SubscriptionStatus == "active" {
+		points := resultJSON.Points
+		err := RecordUsage(user.StripeUserID, int64(points))
+		if err != nil {
+			return fmt.Errorf("error recording usage: %v", err)
+		}
+	}
+
 	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
 	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range resultJSON.Files {
