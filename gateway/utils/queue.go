@@ -213,6 +213,10 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
+	if points, ok := responseData["points"].(float64); ok {
+		response.Points = int(points)
+	}
+
 	// Function to recursively process map entries
 	var processMap func(string, interface{})
 	processMap = func(prefix string, value interface{}) {
@@ -245,7 +249,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 
 	// Initialize the recursive processing with an empty prefix
 	for key, value := range responseData {
-		if key == "uuid" || key == "pdb" {
+		if key == "uuid" || key == "pdb" || key == "points" {
 			continue // Skip already processed or special handled fields
 		}
 		processMap(key, value)
@@ -260,6 +264,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 		"pdb":    response.PDB,
 		"files":  response.Files,
 		"scores": response.Scores,
+		"points": response.Points,
 	}
 
 	prettyJSON, err := json.MarshalIndent(result, "", "    ")
@@ -439,6 +444,19 @@ func completeRayJobAndAddFiles(inferenceEvent *models.InferenceEvent, job *model
 
 	job.JobStatus = models.JobStateCompleted
 	job.CompletedAt = time.Now().UTC()
+
+	var user models.User
+	if err := db.First(&user, "wallet_address = ?", job.WalletAddress).Error; err != nil {
+		return fmt.Errorf("error fetching user: %v", err)
+	}
+
+	if user.SubscriptionStatus == "active" {
+		points := resultJSON.Points
+		err := RecordUsage(user.StripeUserID, int64(points))
+		if err != nil {
+			return fmt.Errorf("error recording usage: %v", err)
+		}
+	}
 
 	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
 	// Iterate over all files in the RayJobResponse
