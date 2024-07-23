@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { fetchUserDataAsync } from "./thunks";
+import { fetchUserDataAsync, saveUserAsync } from "./thunks";
 
 interface UserState {
   error: string | null;
@@ -35,13 +35,21 @@ export const userSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchUserDataAsync.fulfilled, (state, action) => {
-      state.walletAddress = action.payload.walletAddress;
-      state.did = action.payload.did;
-      state.tier = action.payload.tier;
-      state.isAdmin = action.payload.isAdmin;
-      state.subscriptionStatus = action.payload.subscriptionStatus;
-    });
+    builder
+      .addCase(fetchUserDataAsync.fulfilled, (state, action) => {
+        state.walletAddress = action.payload.walletAddress;
+        state.did = action.payload.did;
+        state.tier = action.payload.tier;
+        state.isAdmin = action.payload.isAdmin;
+        state.subscriptionStatus = action.payload.subscriptionStatus;
+      })
+      .addCase(saveUserAsync.fulfilled, (state, action) => {
+        state.walletAddress = action.payload.walletAddress;
+        state.did = action.payload.did;
+        state.tier = action.payload.tier;
+        state.isAdmin = action.payload.isAdmin;
+        state.subscriptionStatus = action.payload.subscriptionStatus;
+      });
   }
 });
 

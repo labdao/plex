@@ -4,7 +4,7 @@ import backendUrl from "lib/backendUrl"
 
 export const setError = createAction<string | null>('user/setError')
 
-export const saveUserDataToServer = async (walletAddress: string): Promise<{ walletAddress: string }> => {
+export const saveUserDataToServer = async (walletAddress: string): Promise<{ walletAddress: string; did: string; tier: 'Free' | 'Paid' | null; isAdmin: boolean; subscriptionStatus: 'active' | 'inactive' | null }> => {
   let authToken;
   try {
     authToken = await getAccessToken()
@@ -36,8 +36,14 @@ export const saveUserDataToServer = async (walletAddress: string): Promise<{ wal
   }
 
   const result = await response.json()
-  console.log('result', result)
-  return result;
+  console.log('User data saved/retrieved:', result)
+  return {
+    walletAddress: result.walletAddress,
+    did: result.did,
+    tier: result.tier === 0 ? 'Free' : result.tier === 1 ? 'Paid' : null,
+    isAdmin: result.isAdmin,
+    subscriptionStatus: result.subscriptionStatus
+  };
 }
 
 export const fetchUserData = async (): Promise<{ walletAddress: string; did: string; tier: 'Free' | 'Paid' | null; isAdmin: boolean; subscriptionStatus: 'active' | 'inactive' | null }> => {

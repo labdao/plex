@@ -118,7 +118,7 @@ export function generateRerunSchema(inputs: InputType = {}, jobInputs: any = {})
 
 export function generateDefaultValues(inputs: InputType, task: { slug: string }, model: ModelDetail) {
   return {
-    name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-mm-ss")}`,
+    name: `${task?.slug}-${dayjs().format("YYYY-MM-DD-HH-mm-ss")}`,
     model: model?.S3URI,
     ...inputsToDefaultValues(inputs),
   };
