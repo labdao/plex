@@ -38,7 +38,7 @@ const StripeCheckoutButton = (props: ButtonProps) => {
       <AlertDialog open={loading}>
         <AlertDialogContent className="text-center">
           <PageLoader className="py-0" />
-          <h4>Sending you to Stripe to add credits</h4>
+          <h4>Sending you to Stripe for subscription</h4>
         </AlertDialogContent>
       </AlertDialog>
       <Comp onClick={handleCheckout} {...props}>

@@ -23,6 +23,16 @@ const nextConfig = {
         destination: "/experiments/new/protein-binder-design",
         permanent: false,
       },
+      {
+        source: "/checkout/success",
+        destination: "/experiments/new/protein-binder-design",
+        permanent: false,
+      },
+      {
+        source: "/checkout/cancel",
+        destination: "/experiments/new/protein-binder-design",
+        permanent: false,
+      },
     ];
   },
 };

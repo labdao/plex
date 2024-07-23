@@ -7,7 +7,7 @@ export interface ExperimentDetail {
   Jobs: JobDetail[];
   Name: string;
   WalletAddress: string;
-  StartTime: string;
+  CreatedAt: string;
   EndTime: string;
   Public: boolean;
   RecordCID: string;
@@ -26,7 +26,7 @@ const initialState: ExperimentDetailSliceState = {
     Jobs: [], 
     Name: "", 
     WalletAddress: "", 
-    StartTime: "", 
+    CreatedAt: "", 
     EndTime: "", 
     Public: false,
     RecordCID: "",

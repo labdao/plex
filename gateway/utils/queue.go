@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"encoding/json"
@@ -18,21 +19,27 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RayQueue struct {
 	db         *gorm.DB
 	maxWorkers int
-	jobChan    chan models.Job
-	errChan    chan error
 }
+
+type WorkerState struct {
+	ID         int
+	Busy       bool
+	CurrentJob *uint
+	LastActive time.Time
+}
+
+var workerStates []*WorkerState
 
 func NewRayQueue(db *gorm.DB, maxWorkers int) *RayQueue {
 	return &RayQueue{
 		db:         db,
 		maxWorkers: maxWorkers,
-		jobChan:    make(chan models.Job, maxWorkers),
-		errChan:    make(chan error, maxWorkers),
 	}
 }
 
@@ -47,54 +54,98 @@ func getRandomDelay(retryCount int, base time.Duration, factor float64, stdDev t
 	return time.Duration(delay)
 }
 
+var once sync.Once
+
 func StartJobQueues(db *gorm.DB, maxWorkers int) error {
-	rq := NewRayQueue(db, maxWorkers)
-	rq.StartWorkers()
+	once.Do(func() {
+		rq := NewRayQueue(db, maxWorkers)
+		rq.StartWorkers()
+	})
+	return nil
+}
 
-	go rq.ProcessJobQueue(models.QueueTypeRay)
+func (rq *RayQueue) StartWorkers() {
+	workerStates = make([]*WorkerState, rq.maxWorkers) // initialize the slice based on maxWorkers
+	for i := 0; i < rq.maxWorkers; i++ {
+		workerStates[i] = &WorkerState{ID: i} // initialize each worker state
+		go func(workerID int) {
+			fmt.Printf("Starting worker %d\n", workerID)
+			rq.worker(workerID)
+		}(i)
+	}
+}
 
-	for err := range rq.errChan {
+func (rq *RayQueue) worker(workerID int) {
+	state := workerStates[workerID]
+	for {
+		// TEMP FIX: Marking dangling jobs to stopped after an hr. This wont be needed once we move to ray jobs
+		err := fetchAndMarkOldestRunningJobAsStopped(rq.db)
 		if err != nil {
-			return err
+			fmt.Printf("Error marking dangling jobs to stopped: %v\n", err)
 		}
+		var job models.Job
+		err = fetchAndMarkOldestQueuedJobAsPending(&job, models.QueueTypeRay, rq.db)
+		if err != nil {
+			state.Busy = false
+			state.CurrentJob = nil
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			fmt.Printf("Error fetching job: %v\n", err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+
+		state.Busy = true
+		state.CurrentJob = &job.ID
+		state.LastActive = time.Now()
+
+		// Process the job
+		if err = processRayJob(job.ID, rq.db); err != nil {
+			fmt.Printf("Error processing job: %v\n", err)
+		}
+
+		state.Busy = false
+		state.CurrentJob = nil
+		time.Sleep(5 * time.Second) // Even after processing a job, sleep for a bit
+	}
+}
+
+func GetWorkerSummary(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(workerStates)
+}
+
+func fetchAndMarkOldestRunningJobAsStopped(db *gorm.DB) error {
+	var job models.Job
+	err := db.Where("job_status = ?", models.JobStateRunning).Order("started_at ASC").First(&job).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil
+		}
+		return err
+	}
+
+	if time.Since(job.StartedAt) > 1*time.Hour {
+		job.JobStatus = models.JobStateStopped
+		return db.Save(&job).Error
 	}
 
 	return nil
 }
 
-func (rq *RayQueue) StartWorkers() {
-	for i := 0; i < rq.maxWorkers; i++ {
-		go rq.worker()
-	}
-}
-
-func (rq *RayQueue) worker() {
-	for job := range rq.jobChan {
-		err := processRayJob(job.ID, rq.db)
-		if err != nil {
-			rq.errChan <- err
+func fetchAndMarkOldestQueuedJobAsPending(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
+			return err
 		}
-	}
-}
-
-func (rq *RayQueue) ProcessJobQueue(queueType models.QueueType) {
-	for {
-		var job models.Job
-		err := fetchOldestQueuedJob(&job, queueType, rq.db)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			time.Sleep(5 * time.Second)
-			continue
-		} else if err != nil {
-			rq.errChan <- err
-			return
+		job.JobStatus = models.JobStatePending
+		if err := tx.Save(job).Error; err != nil {
+			return err
 		}
-
-		rq.jobChan <- job
-	}
-}
-
-func fetchOldestQueuedJob(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
-	return db.Where("job_status = ? ", models.JobStateQueued).Order("created_at ASC").First(job).Error
+		return nil
+	})
 }
 
 // func fetchJobWithModelData(job *models.Job, id uint, db *gorm.DB) error {
@@ -162,6 +213,10 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 	response.Scores = make(map[string]float64)
 	response.Files = make(map[string]models.FileDetail)
 
+	if points, ok := responseData["points"].(float64); ok {
+		response.Points = int(points)
+	}
+
 	// Function to recursively process map entries
 	var processMap func(string, interface{})
 	processMap = func(prefix string, value interface{}) {
@@ -194,7 +249,7 @@ func UnmarshalRayJobResponse(data []byte) (models.RayJobResponse, error) {
 
 	// Initialize the recursive processing with an empty prefix
 	for key, value := range responseData {
-		if key == "uuid" || key == "pdb" {
+		if key == "uuid" || key == "pdb" || key == "points" {
 			continue // Skip already processed or special handled fields
 		}
 		processMap(key, value)
@@ -209,6 +264,7 @@ func PrettyPrintRayJobResponse(response models.RayJobResponse) (string, error) {
 		"pdb":    response.PDB,
 		"files":  response.Files,
 		"scores": response.Scores,
+		"points": response.Points,
 	}
 
 	prettyJSON, err := json.MarshalIndent(result, "", "    ")
@@ -388,6 +444,19 @@ func completeRayJobAndAddFiles(inferenceEvent *models.InferenceEvent, job *model
 
 	job.JobStatus = models.JobStateCompleted
 	job.CompletedAt = time.Now().UTC()
+
+	var user models.User
+	if err := db.First(&user, "wallet_address = ?", job.WalletAddress).Error; err != nil {
+		return fmt.Errorf("error fetching user: %v", err)
+	}
+
+	if user.SubscriptionStatus == "active" {
+		points := resultJSON.Points
+		err := RecordUsage(user.StripeUserID, int64(points))
+		if err != nil {
+			return fmt.Errorf("error recording usage: %v", err)
+		}
+	}
 
 	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
 	// Iterate over all files in the RayJobResponse

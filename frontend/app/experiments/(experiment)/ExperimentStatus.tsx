@@ -6,10 +6,10 @@ export function aggregateJobStatus(jobs: JobDetail[]) {
   let status;
   let label;
   const totalJobs = jobs.length;
-  const queuedJobs = jobs.filter((job) => job.Status === "queued").length;
-  const runningJobs = jobs.filter((job) => job.Status === "running").length;
-  const failedJobs = jobs.filter((job) => job.Status === "failed").length;
-  const completedJobs = jobs.filter((job) => job.Status === "completed").length;
+  const queuedJobs = jobs.filter((job) => job.JobStatus === "queued").length;
+  const runningJobs = jobs.filter((job) => job.JobStatus === "running").length;
+  const failedJobs = jobs.filter((job) => job.JobStatus === "failed").length;
+  const completedJobs = jobs.filter((job) => job.JobStatus === "completed").length;
 
   //These statuses may be deprecated
   const errorJobs = jobs.filter((job) => job.Status === "error").length;
