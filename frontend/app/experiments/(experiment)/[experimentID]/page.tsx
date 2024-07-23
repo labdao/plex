@@ -53,7 +53,7 @@ export default function Layout({ params }: ExperimentDetailProps) {
     <>
       <ProtectedComponent method="hide" message="Log in to continue">
         <Breadcrumbs items={breadcrumbItems} />
-        <TransactionSummaryInfo className="px-4 rounded-b-none" />
+        {/* <TransactionSummaryInfo className="px-4 rounded-b-none" /> */}
         <div className="flex flex-col-reverse min-h-screen lg:flex-row">
           <div className="max-w-4xl p-2 mx-auto space-y-3 shrink-0 grow basis-2/3">
             <ExperimentDetail />
