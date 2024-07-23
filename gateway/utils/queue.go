@@ -33,8 +33,7 @@ type RayQueue struct {
 type WorkerState struct {
 	ID         int
 	Busy       bool
-	CurrentJob *uint
-	LastActive time.Time
+	CurrentJob *string
 }
 
 var workerStates []*WorkerState
@@ -101,8 +100,7 @@ func (rq *RayQueue) worker(workerID int) {
 		}
 
 		state.Busy = true
-		state.CurrentJob = &job.ID
-		state.LastActive = time.Now()
+		state.CurrentJob = &job.RayJobID
 
 		// Process the job
 		if err = processRayJob(job.ID, rq.db); err != nil {
