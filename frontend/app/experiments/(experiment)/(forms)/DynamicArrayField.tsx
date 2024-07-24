@@ -1,5 +1,3 @@
-"use client";
-
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import React from "react";
 import { useFieldArray, UseFormReturn } from "react-hook-form";
@@ -25,6 +23,10 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
   });
 
   const hasError = form.formState.errors?.[inputKey];
+
+  const handleFileChange = (value: string) => {
+    form.setValue(inputKey, value, { shouldValidate: true, shouldDirty: true });
+  };
 
   return (
     <div className="relative pb-6 space-y-0 border-b">
@@ -61,7 +63,7 @@ export function DynamicArrayField({ input, inputKey, form }: DynamicFieldProps) 
                   <>
                     {(input.type === "File" || input.type === "file") && (
                       <FileSelect
-                        onValueChange={field.onChange}
+                        onChange={handleFileChange}
                         value={field.value}
                         globPatterns={input.glob}
                         label={input.glob && `${input.glob.join(", ")}`}

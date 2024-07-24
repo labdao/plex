@@ -1,4 +1,3 @@
-"use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePrivy } from "@privy-io/react-auth";
 import { ChevronsUpDownIcon } from "lucide-react";
@@ -15,7 +14,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experimentListThunk, refreshUserDataThunk, resetModelDetail, resetModelList, selectIsUserSubscribed, selectModelDetail, selectUserTier } from "@/lib/redux";
-import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
@@ -42,11 +40,6 @@ export default function NewExperimentForm({ task }: { task: any }) {
     };
   }, [dispatch]);
 
-  // Log model details whenever they change
-  useEffect(() => {
-    console.log("Updated model details:", model);
-  }, [model]);
-
   const groupedInputs = groupInputs(model.ModelJson?.inputs);
   const formSchema = generateSchema(model.ModelJson?.inputs);
   const defaultValues = generateDefaultValues(model.ModelJson?.inputs, task, model);
@@ -54,17 +47,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues,
+    mode: 'onSubmit',  // This ensures validation only happens on submit
   });
 
-  // Watch all form values
-  const watchedValues = form.watch();
-
-  // Log form values whenever they change
-  useEffect(() => {
-    console.log("Form values updated:", watchedValues);
-  }, [watchedValues]);
-
-  // If the model changes, fetch new model details
   useEffect(() => {
     form.reset(generateDefaultValues(model.ModelJson?.inputs, task, model));
   }, [model, form, task]);
@@ -82,7 +67,6 @@ export default function NewExperimentForm({ task }: { task: any }) {
   
     try {
       if (userTier === 'Free') {
-        // For free tier users, directly create the experiment regardless of subscription status
         const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
         if (response && response.ID) {
           console.log("Experiment created", response);
@@ -95,7 +79,6 @@ export default function NewExperimentForm({ task }: { task: any }) {
         }
       } else if (userTier === 'Paid') {
         if (isUserSubscribed) {
-          // Paid tier user with active subscription (including trial), directly create the experiment
           const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
           if (response && response.ID) {
             console.log("Experiment created", response);
@@ -107,13 +90,10 @@ export default function NewExperimentForm({ task }: { task: any }) {
             toast.error("Failed to start experiment");
           }
         } else {
-          // Paid tier user without active subscription, initiate checkout process
           const result = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
           if (result.checkout) {
-            // User needs to subscribe, redirect to checkout
             window.location.href = result.checkout.url;
           } else if (result && result.ID) {
-            // Experiment was created successfully (this case might not occur for non-subscribed users)
             console.log("Experiment created", result);
             router.push(`/experiments/${result.ID}`, { scroll: false });
             dispatch(experimentListThunk(walletAddress));
@@ -137,7 +117,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+        <form onSubmit={form.handleSubmit((values) => onSubmit(values))} noValidate>
           <Card className="mb-2">
             <CardContent>
               <div className="flex items-center gap-1">

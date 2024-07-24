@@ -1,12 +1,10 @@
-"use client";
-
 import { UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import AddFileForm from "@/app/data/AddFileForm";
 import { Button } from "@/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandSeparator } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { listFiles } from "@/lib/redux/slices/fileListSlice/asyncActions";
 import { selectFileList, selectFileListPagination } from "@/lib/redux/slices/fileListSlice/selectors";
@@ -25,13 +23,13 @@ interface FileFilters {
 }
 
 interface FileSelectProps {
-  onValueChange: (value: string) => void;
+  onChange: (value: string) => void;
   value: string;
   label: string;
   globPatterns?: string[];
 }
 
-export function FileSelect({ onValueChange, value, label, globPatterns }: FileSelectProps) {
+export function FileSelect({ onChange, value, label, globPatterns }: FileSelectProps) {
   const dispatch = useDispatch();
   const files = useSelector(selectFileList);
   const pagination = useSelector(selectFileListPagination);
@@ -70,11 +68,9 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
   const getFileValue = (file: File): string => `${file?.S3URI}`;
 
   const handleUpload = async (id: string) => {
-    // Since we only know the id and not the filename after upload,
-    // search for the file and set the input value from what we find
     const files = await listFiles({ page: 1, pageSize: 10, filters: { id: id, filename: filenameFilter } });
-    if (files?.data?.length && files?.data?.[0]?.ID === id) {
-      onValueChange(getFileValue(files?.data[0]));
+    if (files?.data?.length && files?.data[0]?.ID === id) {
+      onChange(getFileValue(files.data[0]));  // This will update the form value
     }
   };
 
@@ -108,7 +104,7 @@ export function FileSelect({ onValueChange, value, label, globPatterns }: FileSe
                 key={file.ID}
                 value={getFileValue(file)}
                 onSelect={() => {
-                  onValueChange(getFileValue(file) === value ? "" : getFileValue(file));
+                  onChange(getFileValue(file) === value ? "" : getFileValue(file));
                   setOpen(false);
                 }}
               >
