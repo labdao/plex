@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/labdao/plex/gateway/models"
@@ -216,7 +217,7 @@ func JobIsRunning(rayJobID string) bool {
 	if err != nil {
 		return false
 	}
-	return status == "RUNNING"
+	return strings.ToLower(status) == string(models.JobStateRunning)
 }
 
 func JobIsPending(rayJobID string) bool {
@@ -224,7 +225,7 @@ func JobIsPending(rayJobID string) bool {
 	if err != nil {
 		return false
 	}
-	return status == "PENDING"
+	return strings.ToLower(status) == string(models.JobStatePending)
 }
 
 func JobSucceeded(rayJobID string) bool {
@@ -232,7 +233,7 @@ func JobSucceeded(rayJobID string) bool {
 	if err != nil {
 		return false
 	}
-	return status == "SUCCEEDED"
+	return strings.ToLower(status) == string(models.JobStateSucceeded)
 }
 
 func JobFailed(rayJobID string) bool {
@@ -240,7 +241,7 @@ func JobFailed(rayJobID string) bool {
 	if err != nil {
 		return false
 	}
-	return status == "FAILED"
+	return strings.ToLower(status) == string(models.JobStateFailed)
 }
 
 func JobStopped(rayJobID string) bool {
@@ -248,7 +249,7 @@ func JobStopped(rayJobID string) bool {
 	if err != nil {
 		return false
 	}
-	return status == "STOPPED"
+	return strings.ToLower(status) == string(models.JobStateStopped)
 }
 
 func validateInputKeys(inputVectors map[string]interface{}, modelInputs map[string]ipwl.ModelInput) error {
