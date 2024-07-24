@@ -24,16 +24,16 @@ export default function ExperimentDetail() {
 
   const experimentID = experiment.ID?.toString();
 
-  useEffect(() => {
-    if (["running", "queued"].includes(status.status) && experimentID) {
-      const interval = setInterval(() => {
-        console.log("Checking for new results");
-        dispatch(experimentDetailThunk(experimentID));
-      }, 15000);
+  // useEffect(() => {
+  //   if (["running", "queued"].includes(status.status) && experimentID) {
+  //     const interval = setInterval(() => {
+  //       console.log("Checking for new results");
+  //       dispatch(experimentDetailThunk(experimentID));
+  //     }, 15000);
 
-      return () => clearInterval(interval);
-    }
-  }, [dispatch, experimentID, status]);
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [dispatch, experimentID, status]);
 
   return (
     <div>
