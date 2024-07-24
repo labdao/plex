@@ -121,10 +121,16 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 	} else if job.JobType == models.JobTypeJob {
 
 		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
-
+		// find pdb from inputs
+		pdb, ok := inputs["pdb"].([]interface{})[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("pdb not found in inputs")
+		}
 		runtimeEnv := map[string]interface{}{
 			"env_vars": map[string]string{
 				"REQUEST_UUID": rayJobID,
+				"PDB":          pdb,
+				"TARGET_CHAIN": "A",
 			},
 		}
 		// create json request body

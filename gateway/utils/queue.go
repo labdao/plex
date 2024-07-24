@@ -191,6 +191,7 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) []byte {
 	bucketName := os.Getenv("BUCKET_NAME")
 	//TODO-LAB-1491: change this later to exp uuid/ job uuid
 	key := fmt.Sprintf("%s/%s_response.json", jobUUID, jobUUID)
+	fmt.Printf("Downloading file from S3 with key: %s\n", key)
 	fileName := filepath.Base(key)
 	s3client, err := s3client.NewS3Client()
 	if err != nil {
