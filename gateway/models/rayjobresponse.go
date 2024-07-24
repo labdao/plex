@@ -5,6 +5,7 @@ type RayJobResponse struct {
 	PDB    FileDetail            `json:"pdb"`
 	Scores map[string]float64    `json:"-"`
 	Files  map[string]FileDetail `json:"-"`
+	Points int                   `json:"points"`
 }
 
 type FileDetail struct {
