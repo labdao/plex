@@ -9,13 +9,13 @@ import (
 type JobState string
 
 const (
-	JobStateQueued     JobState = "QUEUED"
-	JobStateProcessing JobState = "PROCESSING"
-	JobStatePending    JobState = "PENDING"
-	JobStateRunning    JobState = "RUNNING"
-	JobStateStopped    JobState = "STOPPED"
-	JobStateSucceeded  JobState = "SUCCEEDED"
-	JobStateFailed     JobState = "FAILED"
+	JobStateQueued     JobState = "queued"
+	JobStateProcessing JobState = "processing"
+	JobStatePending    JobState = "pending"
+	JobStateRunning    JobState = "running"
+	JobStateStopped    JobState = "stopped"
+	JobStateSucceeded  JobState = "succeeded"
+	JobStateFailed     JobState = "failed"
 )
 
 type QueueType string
@@ -27,7 +27,7 @@ const (
 type Job struct {
 	ID             uint           `gorm:"primaryKey;autoIncrement"`
 	RayJobID       string         `gorm:"type:varchar(255)"`
-	JobStatus      JobState       `gorm:"type:varchar(255);default:'QUEUED'"`
+	JobStatus      JobState       `gorm:"type:varchar(255);default:'queued'"`
 	CreatedAt      time.Time      `gorm:""`
 	StartedAt      time.Time      `gorm:""`
 	CompletedAt    time.Time      `gorm:""`
