@@ -79,7 +79,7 @@
         "type": "string",
         "default": "",
         "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-        "example": "A10:110/B4:5/x6:8/B9:50/x51:71",
+        "example": "A10:110/B4:5/x6:6/B9:50/x51:51",
         "grouping": "_advanced",
         "position": "201",
         "required": false
