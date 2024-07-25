@@ -86,7 +86,7 @@
       },
       "target_start_residue": {
         "type": "number",
-        "description": "The start residue of the target protein.",
+        "description": "Use to crop the target chain. Integer index defining the firt residue of a cropped section on the target chain.",
         "array": false,
         "glob": [
           ""
@@ -101,7 +101,7 @@
       },
       "target_end_residue": {
         "type": "number",
-        "description": "The end residue of the target protein.",
+        "description": "Use to crop the target chain. Integer index defining the last residue of a cropped section on the target chain.",
         "array": false,
         "glob": [
           ""
