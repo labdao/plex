@@ -32,7 +32,7 @@
       },
       "target_chain": {
         "type": "string",
-        "description": "Chain ID of the target protein in the pdb file.",
+        "description": "Chain ID of the target protein in the pdb file. Assuming A as ID unless provided otherwise.",
         "array": false,
         "glob": [
           ""
