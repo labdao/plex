@@ -78,8 +78,8 @@
       "expert_prompt_for_refined_binder_design": {
         "type": "string",
         "default": "",
-        "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
-        "example": "A10:110/B4:5/x6:6/B9:50/x51:51",
+        "description": "Use to crop and scaffold protein chains, and define binder regions for free design. To scaffold, specify the chain ID followed by a range of residue indices. For free design, write x followed by the number of residues to design. The prompt overrides other GUI inputs.",
+        "example": "A10:110/B4:5/x6/B9:50/x51",
         "grouping": "_advanced",
         "position": "201",
         "required": false
