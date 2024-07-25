@@ -32,7 +32,7 @@
       },
       "target_chain": {
         "type": "string",
-        "description": "The chain of the target protein to design against.",
+        "description": "Chain ID of the target protein in the pdb file.",
         "array": false,
         "glob": [
           ""
