@@ -17,7 +17,7 @@
     "inputs": {
       "pdb": {
         "type": "file",
-        "description": "The target protein to design against.",
+        "description": "pdb file with target to design against.",
         "array": false,
         "glob": [
           "*.pdb"
@@ -37,7 +37,7 @@
         "glob": [
           ""
         ],
-        "default": "",
+        "default": "A",
         "min": "",
         "max": "",
         "example": "A",
@@ -45,9 +45,9 @@
         "position": "102",
         "required": true
       },
-      "binder_chain": {
+      "hotspots": {
         "type": "string",
-        "description": "The chain of the target protein to design against.",
+        "description": "The residues that should be in contact with the binder. e.g. A30,A33,A34",
         "array": false,
         "glob": [
           ""
@@ -55,9 +55,9 @@
         "default": "",
         "min": "",
         "max": "",
-        "example": "B",
-        "grouping": "_advanced",
-        "position": "201",
+        "example": "A30, A33, A34",
+        "grouping": "target",
+        "position": "103",
         "required": false
       },
       "binder_length": {
@@ -71,8 +71,8 @@
         "min": "0",
         "max": "1000",
         "example": "80",
-        "grouping": "_advanced",
-        "position": "202",
+        "grouping": "target",
+        "position": "104",
         "required": false
       },
       "contig": {
@@ -81,22 +81,7 @@
         "description": "The complete prompt or 'contig' passed to the diffusion model. This overrides other GUI inputs.",
         "example": "A10:110/B4:5/x6:8/B9:50/x51:71",
         "grouping": "_advanced",
-        "position": "203",
-        "required": false
-      },
-      "hotspots": {
-        "type": "string",
-        "description": "The residues that should be in contact with the binder. e.g. A30,A33,A34",
-        "array": false,
-        "glob": [
-          ""
-        ],
-        "default": "",
-        "min": "",
-        "max": "",
-        "example": "A30,A33,A34",
-        "grouping": "_advanced",
-        "position": "204",
+        "position": "201",
         "required": false
       },
       "start_residue": {
@@ -109,9 +94,9 @@
         "default": "",
         "min": "0",
         "max": "",
-        "example": "1",
+        "example": "20",
         "grouping": "_advanced",
-        "position": "205",
+        "position": "202",
         "required": false
       },
       "end_residue": {
@@ -126,7 +111,7 @@
         "max": "",
         "example": "120",
         "grouping": "_advanced",
-        "position": "206",
+        "position": "203",
         "required": false
       }
     },
