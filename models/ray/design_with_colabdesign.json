@@ -62,7 +62,7 @@
       },
       "binder_length": {
         "type": "number",
-        "description": "The length of the protein binder that is being designed",
+        "description": "Use to set the length of the protein binder design.",
         "array": false,
         "glob": [
           ""
