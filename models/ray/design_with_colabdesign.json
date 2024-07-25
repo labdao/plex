@@ -17,7 +17,7 @@
     "inputs": {
       "pdb": {
         "type": "file",
-        "description": "pdb file with target to design against.",
+        "description": "PDB file with target protein to design against.",
         "array": false,
         "glob": [
           "*.pdb"
@@ -32,7 +32,7 @@
       },
       "target_chain": {
         "type": "string",
-        "description": "Chain ID of the target protein in the pdb file. Assuming A as target chain ID unless provided otherwise.",
+        "description": "Chain ID of the relevant target protein in the PDB file. Assuming A as target chain ID unless provided otherwise.",
         "array": false,
         "glob": [
           ""
@@ -47,7 +47,7 @@
       },
       "target_hotspots": {
         "type": "string",
-        "description": "List of target residues that should be in contact with the binder, e.g. A30, A33, A34.",
+        "description": "List of target residues that should be in contact with the generated binder, e.g. A30, A33, A34.",
         "array": false,
         "glob": [
           ""
@@ -62,7 +62,7 @@
       },
       "binder_length": {
         "type": "number",
-        "description": "Use to set the length of the protein binder design.",
+        "description": "The length of the generated protein binder candidates.",
         "array": false,
         "glob": [
           ""
@@ -75,18 +75,9 @@
         "position": "104",
         "required": false
       },
-      "expert_prompt_for_refined_binder_design": {
-        "type": "string",
-        "default": "",
-        "description": "Use to crop and scaffold protein chains, and define binder regions for free design. To scaffold, specify the chain ID followed by a range of residue indices. For free design, write x followed by the number of residues to design. The prompt overrides other GUI inputs.",
-        "example": "A10:110/B4:5/x6/B9:50/x51",
-        "grouping": "_advanced",
-        "position": "201",
-        "required": false
-      },
       "target_start_residue": {
         "type": "number",
-        "description": "Use to crop the target chain. Integer index defining the firt residue of a cropped section on the target chain.",
+        "description": "Use this setting to crop the target chain for faster binder generation. Integer index defining the first residue of a cropped section on the target chain.",
         "array": false,
         "glob": [
           ""
@@ -96,12 +87,12 @@
         "max": "",
         "example": "20",
         "grouping": "_advanced",
-        "position": "202",
+        "position": "201",
         "required": false
       },
       "target_end_residue": {
         "type": "number",
-        "description": "Use to crop the target chain. Integer index defining the last residue of a cropped section on the target chain.",
+        "description": "Use this setting to crop the target chain for faster binder generation. Integer index defining the last residue of a cropped section on the target chain.",
         "array": false,
         "glob": [
           ""
@@ -110,6 +101,15 @@
         "min": "0",
         "max": "",
         "example": "120",
+        "grouping": "_advanced",
+        "position": "202",
+        "required": false
+      },
+      "expert_prompt_for_refined_binder_design": {
+        "type": "string",
+        "default": "",
+        "description": "Use this setting for advanced prompts to crop and scaffold protein chains. For motif scaffolding, specify the chain ID of the motif followed by a range of residue indices. For free design, write x followed by the number of residues to generate. The prompt overrides all other GUI inputs.",
+        "example": "A10:110/B4:5/x6/B9:50/x51",
         "grouping": "_advanced",
         "position": "203",
         "required": false
