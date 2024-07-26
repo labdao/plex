@@ -192,24 +192,6 @@ func GetRayJobStatus(rayJobID string) (string, error) {
 	return status.(string), nil
 }
 
-// func GetRayJobResponseFromS3(rayJobID string) (string, error) {
-// 	rayServiceURL := GetRayJobApiHost() + "/api/jobs/" + rayJobID + "/response"
-// 	req, err := http.NewRequest("GET", rayServiceURL, nil)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	// Send the request to the Ray service
-// 	client := GetRayClient()
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	defer resp.Body.Close()
-// 	return resp.Status, nil
-// }
-
 func JobIsRunning(rayJobID string) bool {
 	status, err := GetRayJobStatus(rayJobID)
 	if err != nil {
