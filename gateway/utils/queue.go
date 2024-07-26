@@ -149,11 +149,11 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return err
 	}
 
-	if ray.JobIsRunning(job.RayJobID) {
-		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.RayJobID)
+	if ray.JobIsPending(job.RayJobID) {
+		fmt.Printf("Job %v , %v is still in pending state nothing to do\n", job.ID, job.RayJobID)
 		return nil
-	} else if ray.JobIsPending(job.RayJobID) {
-		fmt.Printf("Job %v , %v is still in bid accepted nothing to do\n", job.ID, job.RayJobID)
+	} else if ray.JobIsRunning(job.RayJobID) {
+		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.RayJobID)
 		return nil
 	} else if ray.JobFailed(job.RayJobID) {
 		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.RayJobID)

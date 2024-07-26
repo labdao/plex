@@ -68,45 +68,45 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 	}
 	var jsonBytes []byte
 	var rayServiceURL string
-	if job.JobType == models.JobTypeService {
-		// Validate input keys
-		err = validateInputKeys(inputs, model.Inputs)
-		if err != nil {
-			return nil, err
-		}
 
-		adjustedInputs := make(map[string]interface{})
-		for key, value := range inputs {
-			switch v := value.(type) {
-			case []interface{}:
-				if len(v) == 1 {
-					if v[0] == nil {
-						adjustedInputs[key] = nil
-					} else {
-						adjustedValue, err := handleSingleElementInput(v[0])
-						if err != nil {
-							return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
-						}
-						adjustedInputs[key] = adjustedValue
-					}
+	// Validate input keys
+	err = validateInputKeys(inputs, model.Inputs)
+	if err != nil {
+		return nil, err
+	}
+
+	adjustedInputs := make(map[string]interface{})
+	for key, value := range inputs {
+		switch v := value.(type) {
+		case []interface{}:
+			if len(v) == 1 {
+				if v[0] == nil {
+					adjustedInputs[key] = nil
 				} else {
-					return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
+					adjustedValue, err := handleSingleElementInput(v[0])
+					if err != nil {
+						return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+					}
+					adjustedInputs[key] = adjustedValue
 				}
-			case string, float64, int, nil:
-				adjustedValue, err := handleSingleElementInput(value)
-				if err != nil {
-					return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
-				}
-				adjustedInputs[key] = adjustedValue
-			default:
-				return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
+			} else {
+				return nil, fmt.Errorf("expected a single-element slice for key %s, got: %v", key, v)
 			}
+		case string, float64, int, nil:
+			adjustedValue, err := handleSingleElementInput(value)
+			if err != nil {
+				return nil, fmt.Errorf("invalid input for key %s: %v", key, err)
+			}
+			adjustedInputs[key] = adjustedValue
+		default:
+			return nil, fmt.Errorf("unsupported type for key %s: %T", key, value)
 		}
+	}
+	//add rayJobID to inputs
+	fmt.Printf("adding rayJobID to the adjustedInputs: %s\n", rayJobID)
+	adjustedInputs["uuid"] = rayJobID
 
-		//add rayJobID to inputs
-		fmt.Printf("adding rayJobID to the adjustedInputs: %s\n", rayJobID)
-		adjustedInputs["uuid"] = rayJobID
-
+	if job.JobType == models.JobTypeService {
 		// Marshal the inputs to JSON
 		jsonBytes, err := json.Marshal(adjustedInputs)
 		if err != nil {
@@ -115,29 +115,26 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 
 		log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
 
-		// construct from env var BUCKET ENDPOINT + model.RayEndpoint
 		rayServiceURL = GetRayApiHost() + model.RayEndpoint
 		// Create the HTTP request
 
 	} else if job.JobType == models.JobTypeJob {
+		inputsJSON, err := json.Marshal(adjustedInputs)
+		if err != nil {
+			return nil, err
+		}
 
 		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
-		// find pdb from inputs
-		pdb, ok := inputs["pdb"].([]interface{})[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("pdb not found in inputs")
-		}
 		runtimeEnv := map[string]interface{}{
 			"env_vars": map[string]string{
-				"REQUEST_UUID": rayJobID,
-				"PDB":          pdb,
-				"TARGET_CHAIN": "A",
+				"REQUEST_UUID":   rayJobID,
+				"RAY_JOB_INPUTS": string(inputsJSON),
 			},
 		}
-		// create json request body
+
+		// Create the request body for the Ray job
 		reqBody := map[string]interface{}{
 			"entrypoint":    model.RayJobEntrypoint,
-			"job_id":        rayJobID,
 			"submission_id": rayJobID,
 			"runtime_env":   runtimeEnv,
 		}
@@ -145,6 +142,7 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 		if err != nil {
 			return nil, err
 		}
+		log.Printf("Submitting Ray job with payload: %s\n", string(jsonBytes))
 
 	}
 	req, err := http.NewRequest("POST", rayServiceURL, bytes.NewBuffer(jsonBytes))
