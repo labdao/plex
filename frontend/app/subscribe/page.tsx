@@ -12,23 +12,13 @@ import { PageLoader } from "@/components/shared/PageLoader";
 import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 
 export default function SubscribePage() {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const checkoutUrl = useSelector(selectStripeCheckoutUrl);
   const loading = useSelector(selectStripeCheckoutLoading);
   const error = useSelector(selectStripeCheckoutError);
   const { user } = usePrivy();
   const router = useRouter();
-
-  // Mock function to simulate fetching wallet address, replace this with actual logic
-  useEffect(() => {
-    const fetchWalletAddress = async () => {
-      // Replace with actual logic to fetch wallet address
-      const address = "0x1234...abcd"; // Example wallet address
-      setWalletAddress(address);
-    };
-    fetchWalletAddress();
-  }, []);
+  const walletAddress = user?.wallet?.address;
 
   useEffect(() => {
     if (checkoutUrl) {
