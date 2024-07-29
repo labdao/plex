@@ -1,12 +1,24 @@
 "use client";
 
+import { usePrivy } from "@privy-io/react-auth";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+import { AppDispatch, selectStripeCheckoutError, selectStripeCheckoutLoading, selectStripeCheckoutUrl, stripeCheckoutThunk } from "@/lib/redux";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { PageLoader } from "@/components/shared/PageLoader";
+import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 
 export default function SubscribePage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const checkoutUrl = useSelector(selectStripeCheckoutUrl);
+  const loading = useSelector(selectStripeCheckoutLoading);
+  const error = useSelector(selectStripeCheckoutError);
+  const { user } = usePrivy();
+  const router = useRouter();
 
   // Mock function to simulate fetching wallet address, replace this with actual logic
   useEffect(() => {
@@ -17,6 +29,19 @@ export default function SubscribePage() {
     };
     fetchWalletAddress();
   }, []);
+
+  useEffect(() => {
+    if (checkoutUrl) {
+      window.location.assign(checkoutUrl);
+    }
+    if (error) {
+      toast.error(error);
+    }
+  }, [checkoutUrl, error]);
+
+  const handleCheckout = async () => {
+    dispatch(stripeCheckoutThunk());
+  };
 
   if (!walletAddress) {
     return <div>Loading...</div>; // Show a loading state while fetching wallet address
@@ -57,16 +82,17 @@ export default function SubscribePage() {
           X$ per month
         </p>
         <div className="px-2 py-2 w-full">
-          <Button asChild color="primary" size="sm" className="w-full font-bold">
-            <Link href="/subscribe/payment">
-              Start now
-            </Link>
+          <Button color="primary" size="sm" className="w-full font-bold" onClick={handleCheckout}>
+            Start now
           </Button>
         </div>
-
-
       </div>
+      <AlertDialog open={loading}>
+        <AlertDialogContent className="text-center">
+          <PageLoader className="py-0" />
+          <h4>Sending you to Stripe for subscription</h4>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-  
 }
