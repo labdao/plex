@@ -176,8 +176,8 @@ func crossProductScattering(inputVectors map[string][]interface{}) ([][]interfac
 func createSingleIo(inputs []interface{}, model Model, modelInfo ModelInfo, walletAddress string, inputVectors map[string][]interface{}) (IO, error) {
 	io := IO{
 		Model:         modelInfo,
-		Inputs:        make(NullableMap),
-		Outputs:       make(NullableMap),
+		Inputs:        make(map[string]interface{}),
+		Outputs:       make(map[string]interface{}),
 		State:         "created",
 		ErrMsg:        "",
 		WalletAddress: walletAddress,

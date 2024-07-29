@@ -7,32 +7,32 @@ export function aggregateJobStatus(jobs: JobDetail[]) {
   let label;
   const totalJobs = jobs.length;
   const queuedJobs = jobs.filter((job) => job.JobStatus === "queued").length;
+  const processingJobs = jobs.filter((job) => job.JobStatus === "processing").length;
+  const pendingJobs = jobs.filter((job) => job.JobStatus === "pending").length;
   const runningJobs = jobs.filter((job) => job.JobStatus === "running").length;
   const failedJobs = jobs.filter((job) => job.JobStatus === "failed").length;
-  const completedJobs = jobs.filter((job) => job.JobStatus === "completed").length;
+  const succeededJobs = jobs.filter((job) => job.JobStatus === "succeeded").length;
+  const stoppedJobs = jobs.filter((job) => job.JobStatus === "stopped").length;
 
-  //These statuses may be deprecated
-  const errorJobs = jobs.filter((job) => job.Status === "error").length;
-  const newJobs = jobs.filter((job) => job.Status === "new").length;
-
-  const pendingJobs = queuedJobs + runningJobs + newJobs;
+  const progressingJobs = queuedJobs + runningJobs + processingJobs + pendingJobs;
+  const unsuccessfulJobs = failedJobs + stoppedJobs;
 
   if (totalJobs === 0) {
     status = "unknown";
     label = "Status unknown";
-  } else if (totalJobs === completedJobs) {
-    status = "completed";
+  } else if (totalJobs === succeededJobs) {
+    status = "succeeded";
     label = "All runs completed successfully";
-  } else if (failedJobs === totalJobs || errorJobs === totalJobs) {
+  } else if (unsuccessfulJobs === totalJobs) {
     status = "failed";
-    label = "All runs failed";
-  } else if (queuedJobs === totalJobs || newJobs === totalJobs) {
+    label = "All runs failed or stopped";
+  } else if (queuedJobs === totalJobs || processingJobs === totalJobs || pendingJobs === totalJobs) {
     status = "queued";
     label = "Waiting to start";
-  } else if (pendingJobs > 0) {
+  } else if (progressingJobs > 0) {
     status = "running";
     label = "Running";
-  } else if (failedJobs + errorJobs > 0) {
+  } else if (failedJobs + stoppedJobs > 0) {
     status = "partial-failure";
     label = "Some runs completed successfully";
   } else {
@@ -44,9 +44,9 @@ export function aggregateJobStatus(jobs: JobDetail[]) {
     status,
     label,
     totalJobs,
-    pendingJobs,
-    failedJobs,
-    completedJobs,
+    progressingJobs,
+    unsuccessfulJobs,
+    succeededJobs,
   };
 }
 
@@ -59,7 +59,7 @@ export function JobStatusIcon({ size = 12, status }: JobStatusIconProps) {
   return (
     <span className={cn("relative z-0", (status === "queued" || status === "running") && "animate-pulse")}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" width={size} height={size} fill="none">
-        {(status === "failed" || status === "partial-failure" || status === "completed" || status === "unknown") && (
+        {(status === "failed" || status === "partial-failure" || status === "succeeded" || status === "unknown") && (
           <circle cx={6} cy={6} r={6} fill={`url(#${status})`} />
         )}
         {status === "queued" && (
@@ -106,7 +106,7 @@ interface ExperimentStatusProps {
 }
 
 export function ExperimentStatus({ jobs, className }: ExperimentStatusProps) {
-  const { status, label, pendingJobs, failedJobs, completedJobs } = aggregateJobStatus(jobs);
+  const { status, label, progressingJobs, unsuccessfulJobs, succeededJobs } = aggregateJobStatus(jobs);
   return (
     <>
       <TooltipProvider>
@@ -119,9 +119,9 @@ export function ExperimentStatus({ jobs, className }: ExperimentStatusProps) {
           <TooltipContent>
             <div className="text-xs">
               <p className="mb-1 font-mono uppercase">{label}</p>
-              {pendingJobs > 0 && <p>{pendingJobs} pending</p>}
-              <p>{completedJobs} complete</p>
-              <p>{failedJobs} failed</p>
+              {progressingJobs > 0 && <p>{progressingJobs} pending</p>}
+              <p>{succeededJobs} complete</p>
+              <p>{unsuccessfulJobs} failed</p>
             </div>
           </TooltipContent>
         </Tooltip>

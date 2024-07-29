@@ -20,9 +20,12 @@ const badgeVariants = cva(
       },
       status: {
         queued: "bg-gray-400/20",
+        processing: "bg-gray-400/20",
+        pending: "bg-gray-400/20",
         running: "bg-sky-500/20",
-        completed: "bg-green-600/20",
+        succeeded: "bg-green-600/20",
         failed: "bg-destructive/20",
+        stopped: "bg-destructive/20",
         "partial-failure": "bg-amber-500/20",
         unknown: "bg-gray-400/20",
       },
@@ -30,7 +33,7 @@ const badgeVariants = cva(
     compoundVariants: [
       {
         variant: "outline",
-        status: ["queued", "running", "completed", "failed", "partial-failure", "unknown"],
+        status: ["queued", "processing", "pending", "running", "failed", "succeeded", "stopped", "partial-failure", "unknown"],
         class: "bg-transparent",
       },
       {
@@ -40,17 +43,32 @@ const badgeVariants = cva(
       },
       {
         variant: "outline",
+        status: "processing",
+        class: "border-gray-400 text-gray-400",
+      },
+      {
+        variant: "outline",
+        status: "pending",
+        class: "border-gray-400 text-gray-400",
+      },
+      {
+        variant: "outline",
         status: "running",
         class: "border-sky-500 text-sky-500",
       },
       {
         variant: "outline",
-        status: "completed",
+        status: "succeeded",
         class: "border-green-600 text-green-600",
       },
       {
         variant: "outline",
         status: "failed",
+        class: "border-destructive text-destructive",
+      },
+      {
+        variant: "outline",
+        status: "stopped",
         class: "border-destructive text-destructive",
       },
       {

@@ -9,25 +9,19 @@ import (
 type JobState string
 
 const (
-	JobStateQueued    JobState = "queued"
-	JobStatePending   JobState = "pending"
-	JobStateRunning   JobState = "running"
-	JobStateFailed    JobState = "failed"
-	JobStateCompleted JobState = "completed"
-	JobStateStopped   JobState = "stopped"
+	JobStateQueued     JobState = "queued"
+	JobStateProcessing JobState = "processing"
+	JobStatePending    JobState = "pending"
+	JobStateRunning    JobState = "running"
+	JobStateStopped    JobState = "stopped"
+	JobStateSucceeded  JobState = "succeeded"
+	JobStateFailed     JobState = "failed"
 )
 
 type QueueType string
 
 const (
 	QueueTypeRay QueueType = "ray"
-)
-
-type JobType string
-
-const (
-	JobTypeBacalhau JobType = "bacalhau"
-	JobTypeRay      JobType = "ray"
 )
 
 type Job struct {
@@ -49,4 +43,5 @@ type Job struct {
 	Inputs         datatypes.JSON `gorm:"type:json"`
 	InputFiles     []File         `gorm:"many2many:job_input_files;foreignKey:ID;joinForeignKey:job_id;References:ID;JoinReferences:file_id"`
 	OutputFiles    []File         `gorm:"many2many:job_output_files;foreignKey:ID;references:ID"`
+	JobType        JobType        `gorm:"type:varchar(255);default:'job'"`
 }

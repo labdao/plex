@@ -4,10 +4,11 @@
     "task": "protein folding",
     "taskCategory": "protein-binder-design",
     "modelType": "ray",
-    "rayServiceEndpoint": "/generate_protein_binder_backbone",
+    "rayEndpoint": "/generate_protein_binder_backbone",
     "checkpointCompatible": true,
     "xAxis": "plddt",
     "yAxis": "i_pae",
+    "jobType": "service",
     "inputs": {
       "pdb": {
         "type": "file",

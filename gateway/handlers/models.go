@@ -132,6 +132,13 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		} else {
 			maxRunningTime = model.MaxRunningTime
 		}
+
+		var jobType models.JobType
+		if model.JobType == "service" {
+			jobType = models.JobTypeService
+		} else {
+			jobType = models.JobTypeJob
+		}
 		// Start transaction
 		tx := db.Begin()
 
@@ -153,17 +160,18 @@ func AddModelHandler(db *gorm.DB, s3c *s3.S3Client) http.HandlerFunc {
 		}
 
 		modelEntry := models.Model{
-			WalletAddress:      user.WalletAddress,
-			Name:               model.Name,
-			ModelJson:          modelJSON,
-			CreatedAt:          time.Now().UTC(),
-			Display:            display,
-			TaskCategory:       taskCategory,
-			DefaultModel:       defaultModel,
-			MaxRunningTime:     maxRunningTime,
-			RayServiceEndpoint: model.RayServiceEndpoint,
-			ComputeCost:        model.ComputeCost,
-			S3URI:              s3_uri,
+			WalletAddress:  user.WalletAddress,
+			Name:           model.Name,
+			ModelJson:      modelJSON,
+			CreatedAt:      time.Now().UTC(),
+			Display:        display,
+			TaskCategory:   taskCategory,
+			DefaultModel:   defaultModel,
+			MaxRunningTime: maxRunningTime,
+			RayEndpoint:    model.RayEndpoint,
+			ComputeCost:    model.ComputeCost,
+			S3URI:          s3_uri,
+			JobType:        jobType,
 		}
 
 		result := tx.Create(&modelEntry)

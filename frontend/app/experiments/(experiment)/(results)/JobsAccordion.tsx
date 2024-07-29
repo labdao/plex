@@ -26,8 +26,8 @@ export default function JobsAccordion({ experiment }: JobsAccordionProps) {
   return (
     <Accordion type="single" defaultValue={activeJobUUID} value={activeJobUUID} onValueChange={setActiveJobUUID} className="min-h-[600px]">
       {[...experiment.Jobs]?.sort((a, b) => (a.ID || 0) - (b.ID || 0)).map((job, index) => {
-        const validStates = ["queued", "running", "failed", "completed"];
-        const status = (validStates.includes(job.JobStatus) ? job.JobStatus : "unknown") as "queued" | "running" | "failed" | "completed" | "unknown";
+        const validStates = ["queued", "processing", "pending", "running", "failed", "succeeded", "stopped"];
+        const status = (validStates.includes(job.JobStatus) ? job.JobStatus : "unknown") as "queued" | "processing" | "pending" | "running" | "failed" | "succeeded" | "stopped" | "unknown";
 
         return (
           <AccordionItem value={job.RayJobID} className="border-0 [&[data-state=open]>div]:shadow-lg" key={job.ID}>

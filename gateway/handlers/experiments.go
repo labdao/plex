@@ -134,6 +134,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				Inputs:        datatypes.JSON(inputsJSON),
 				CreatedAt:     time.Now().UTC(),
 				Public:        false,
+				JobType:       model.JobType,
 			}
 
 			result := db.Create(&job)
@@ -195,7 +196,7 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				JobID:      job.ID,
 				RetryCount: 0,
 				EventTime:  time.Now().UTC(),
-				EventType:  models.EventTypeJobCreated,
+				EventType:  models.EventTypeJobQueued,
 			}
 
 			result = db.Save(&inferenceEvent)
@@ -638,7 +639,7 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 				JobID:      job.ID,
 				RetryCount: 0,
 				EventTime:  time.Now().UTC(),
-				EventType:  models.EventTypeJobCreated,
+				EventType:  models.EventTypeJobQueued,
 			}
 
 			result = db.Save(&inferenceEvent)

@@ -167,6 +167,17 @@ func ServeWebApp() {
 		}
 	}()
 
+	go func() {
+		for {
+			if err := utils.MonitorRunningJobs(db); err != nil {
+				fmt.Printf("unexpected error monitoring running jobs: %v\n", err)
+				time.Sleep(10 * time.Second) // wait for 5 seconds before retrying
+			} else {
+				break // exit the loop if no error (optional based on your use case)
+			}
+		}
+	}()
+
 	// Start the server with CORS middleware
 	fmt.Println("Server started on http://localhost:8080")
 	http.ListenAndServe(":8080", corsMiddleware.Handler(mux))
