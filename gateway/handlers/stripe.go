@@ -46,15 +46,10 @@ func createStripeCustomer(walletAddress string) (string, error) {
 	return customer.ID, nil
 }
 
-func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
-	}
-
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
 	}
 
 	priceID := os.Getenv("STRIPE_PRICE_ID")
@@ -77,8 +72,8 @@ func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.Checkout
 			},
 		},
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		SuccessURL:         stripe.String(frontendURL + "/checkout/success"),
-		CancelURL:          stripe.String(frontendURL + "/checkout/cancel"),
+		SuccessURL:         stripe.String(successURL),
+		CancelURL:          stripe.String(cancelURL),
 		Metadata: map[string]string{
 			"Wallet Address": walletAddress,
 		},
@@ -119,7 +114,17 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress)
+		var requestBody struct {
+			SuccessURL string `json:"success_url"`
+			CancelURL  string `json:"cancel_url"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			utils.SendJSONError(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress, requestBody.SuccessURL, requestBody.CancelURL)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
