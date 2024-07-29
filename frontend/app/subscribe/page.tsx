@@ -5,46 +5,28 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
-import { AppDispatch, selectStripeCheckoutError, selectStripeCheckoutLoading, selectStripeCheckoutUrl, stripeCheckoutThunk } from "@/lib/redux";
-import { Button } from "@/components/ui/button";
+import {
+  AppDispatch,
+  selectStripeCheckoutError,
+  selectStripeCheckoutLoading,
+} from "@/lib/redux";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
-import { PageLoader } from "@/components/shared/PageLoader";
-import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
+import StripeCheckoutButton from "@/components/payment/StripeCheckoutButton";
 
 export default function SubscribePage() {
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
-  const checkoutUrl = useSelector(selectStripeCheckoutUrl);
-  const loading = useSelector(selectStripeCheckoutLoading);
   const error = useSelector(selectStripeCheckoutError);
   const { user } = usePrivy();
-  const router = useRouter();
-
-  // Mock function to simulate fetching wallet address, replace this with actual logic
-  useEffect(() => {
-    const fetchWalletAddress = async () => {
-      // Replace with actual logic to fetch wallet address
-      const address = "0x1234...abcd"; // Example wallet address
-      setWalletAddress(address);
-    };
-    fetchWalletAddress();
-  }, []);
+  const walletAddress = user?.wallet?.address;
 
   useEffect(() => {
-    if (checkoutUrl) {
-      window.location.assign(checkoutUrl);
-    }
     if (error) {
       toast.error(error);
     }
-  }, [checkoutUrl, error]);
-
-  const handleCheckout = async () => {
-    dispatch(stripeCheckoutThunk());
-  };
+  }, [error]);
 
   if (!walletAddress) {
-    return <div>Loading...</div>; // Show a loading state while fetching wallet address
+    return <div>Loading...</div>;
   }
 
   return (
@@ -82,17 +64,11 @@ export default function SubscribePage() {
           X$ per month
         </p>
         <div className="px-2 py-2 w-full">
-          <Button color="primary" size="sm" className="w-full font-bold" onClick={handleCheckout}>
+          <StripeCheckoutButton color="primary" size="sm" className="w-full font-bold">
             Start now
-          </Button>
+          </StripeCheckoutButton>
         </div>
       </div>
-      <AlertDialog open={loading}>
-        <AlertDialogContent className="text-center">
-          <PageLoader className="py-0" />
-          <h4>Sending you to Stripe for subscription</h4>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
