@@ -15,6 +15,7 @@ import (
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
+	"github.com/stripe/stripe-go/v78/subscription"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/gorm"
 )
@@ -89,6 +90,16 @@ func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.Checkout
 	}
 
 	return session, nil
+}
+
+func cancelStripeSubscription(subscriptionID string) error {
+	err := setupStripeClient()
+	if err != nil {
+		return err
+	}
+
+	_, err = subscription.Cancel(subscriptionID, nil)
+	return err
 }
 
 func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
@@ -200,5 +211,38 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func StripeCancelSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.SubscriptionID == nil {
+			utils.SendJSONError(w, "User does not have an active subscription", http.StatusBadRequest)
+			return
+		}
+
+		err := cancelStripeSubscription(*user.SubscriptionID)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error canceling subscription: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		user.SubscriptionStatus = "canceled"
+		user.SubscriptionID = nil
+		result := db.Save(&user)
+		if result.Error != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error updating user subscription status: %v", result.Error), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Subscription canceled successfully"})
 	}
 }

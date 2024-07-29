@@ -89,6 +89,12 @@ export default function UserMenu() {
               )}
 
               <DropdownMenuItem asChild>
+                <Link href="/subscribe">
+                  <CreditCardIcon size={20} className="mr-1" />
+                  Subscribe
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/api">
                   <Code2Icon size={20} className="mr-1" />
                   API Keys
