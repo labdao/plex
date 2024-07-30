@@ -13,6 +13,7 @@ export default function ManageSubscription() {
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const cancelSubscription = async () => {
@@ -66,14 +67,21 @@ export default function ManageSubscription() {
         const data = await response.json();
         if (!data.isSubscribed) {
           router.replace("/subscribe");
+        } else {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     };
 
     checkSubscriptionStatus();
   }, [router]);
 
-  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   if (!walletAddress) {
     return <div>Loading...</div>;
   }
@@ -123,7 +131,7 @@ export default function ManageSubscription() {
               <button
                 className="px-4 py-2 border rounded-md"
                 style={{ borderColor: '#000000', color: '#808080' }}
-                onClick={cancelSubscription}
+                onClick={() => setIsDialogOpen(true)}
                 >
                 Cancel Subscription
             </button>
@@ -163,17 +171,14 @@ export default function ManageSubscription() {
     <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
     <AlertDialogOverlay />
     <AlertDialogContent>
-    <AlertDialogHeader>
-        <h2>Are you sure?</h2>
-    </AlertDialogHeader>
     <AlertDialog>
-        Do you really want to cancel your subscription? This action cannot be undone.
+        Are you sure you want to cancel your subscription? You can resubscribe at any time to continue enjoying our services.
     </AlertDialog>
     <AlertDialogFooter>
-        <button onClick={() => setIsDialogOpen(false)} className="px-4 py-2 border rounded-md" style={{ borderColor: '#000000', color: '#808080' }}>
+        <button onClick={() => setIsDialogOpen(false)} className="px-4 py-2 border rounded-md" style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}>
         No, Keep Subscription
         </button>
-        <button onClick={cancelSubscription} className="px-4 py-2 border rounded-md" style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}>
+        <button onClick={cancelSubscription} className="px-4 py-2 border rounded-md" style={{ borderColor: '#000000', color: '#808080' }}>
         Yes, Cancel Subscription
         </button>
     </AlertDialogFooter>

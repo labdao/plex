@@ -22,6 +22,7 @@ export default function SubscribePage() {
   const walletAddress = user?.wallet?.address;
 
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkSubscriptionStatus = async () => {
@@ -44,7 +45,11 @@ export default function SubscribePage() {
         const data = await response.json();
         if (data.isSubscribed) {
           router.replace("/subscription/manage");
+        } else {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
     };
 
@@ -57,7 +62,7 @@ export default function SubscribePage() {
     }
   }, [error]);
 
-  if (!walletAddress) {
+  if (!walletAddress || loading) {
     return <div>Loading...</div>;
   }
 
