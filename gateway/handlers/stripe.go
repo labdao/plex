@@ -219,6 +219,91 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.SubscriptionID == nil {
+			utils.SendJSONError(w, "User does not have an active subscription", http.StatusBadRequest)
+			return
+		}
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		subscription, err := subscription.Get(*user.SubscriptionID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting subscription: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Extract and format the useful information
+		subscriptionInfo := map[string]interface{}{
+			"id":                   subscription.ID,
+			"status":               subscription.Status,
+			"current_period_start": subscription.CurrentPeriodStart,
+			"current_period_end":   subscription.CurrentPeriodEnd,
+			"billing_cycle_anchor": subscription.BillingCycleAnchor,
+			"collection_method":    subscription.CollectionMethod,
+			"customer_id":          subscription.Customer.ID,
+			"plan_id":              subscription.Items.Data[0].Plan.ID,
+			"plan_amount":          subscription.Items.Data[0].Plan.Amount,
+			"plan_currency":        subscription.Items.Data[0].Plan.Currency,
+			"plan_interval":        subscription.Items.Data[0].Plan.Interval,
+			"product_name":         subscription.Items.Data[0].Plan.Product.Name,
+			"product_description":  subscription.Items.Data[0].Plan.Product.Description,
+			"product_metadata":     subscription.Items.Data[0].Plan.Product.Metadata,
+			"invoice_amount_due":   subscription.LatestInvoice.AmountDue,
+			"invoice_amount_paid":  subscription.LatestInvoice.AmountPaid,
+			"invoice_url":          subscription.LatestInvoice.HostedInvoiceURL,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(subscriptionInfo)
+	}
+}
+
+func StripeCheckSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.SubscriptionID == nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": false})
+			return
+		}
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		subscription, err := subscription.Get(*user.SubscriptionID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting subscription: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		isSubscribed := subscription.Status == "active" || subscription.Status == "trialing"
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": isSubscribed})
+	}
+}
+
 func StripeCancelSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
