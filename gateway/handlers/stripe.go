@@ -13,10 +13,10 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/stripe/stripe-go/v76/product"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
+	"github.com/stripe/stripe-go/v78/product"
 	"github.com/stripe/stripe-go/v78/subscription"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/gorm"
@@ -255,8 +255,7 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 		item := subscription.Items.Data[0]
 		plan := item.Plan
 
-		productClient := product.Client{}
-		product, err := productClient.Get(plan.Product.ID, nil)
+		product, err := product.Get(plan.Product.ID, nil)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error getting product: %v", err), http.StatusInternalServerError)
 			return
