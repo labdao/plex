@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
+	"github.com/stripe/stripe-go/v76/product"
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
@@ -245,29 +247,43 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Extract and format the useful information
-		subscriptionInfo := map[string]interface{}{
-			"id":                   subscription.ID,
+		if len(subscription.Items.Data) == 0 {
+			utils.SendJSONError(w, "No subscription items found", http.StatusInternalServerError)
+			return
+		}
+
+		item := subscription.Items.Data[0]
+		plan := item.Plan
+
+		productClient := product.Client{}
+		product, err := productClient.Get(plan.Product.ID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting product: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Mock credit usage and overage charge values (Replace these with actual values from your implementation)
+		includedCredits := 100
+		usedCredits := 50
+		overageCharge := 0.10 // Example: $0.10 per credit over the limit
+
+		// Prepare the response
+		response := map[string]interface{}{
+			"plan_name":            product.Name,
+			"plan_amount":          float64(plan.Amount) / 100, // Stripe amounts are in cents
+			"plan_currency":        plan.Currency,
+			"plan_interval":        plan.Interval,
+			"current_period_start": time.Unix(subscription.CurrentPeriodStart, 0),
+			"current_period_end":   time.Unix(subscription.CurrentPeriodEnd, 0),
+			"next_due":             time.Unix(subscription.CurrentPeriodEnd, 0).Format("2006-01-02"),
 			"status":               subscription.Status,
-			"current_period_start": subscription.CurrentPeriodStart,
-			"current_period_end":   subscription.CurrentPeriodEnd,
-			"billing_cycle_anchor": subscription.BillingCycleAnchor,
-			"collection_method":    subscription.CollectionMethod,
-			"customer_id":          subscription.Customer.ID,
-			"plan_id":              subscription.Items.Data[0].Plan.ID,
-			"plan_amount":          subscription.Items.Data[0].Plan.Amount,
-			"plan_currency":        subscription.Items.Data[0].Plan.Currency,
-			"plan_interval":        subscription.Items.Data[0].Plan.Interval,
-			"product_name":         subscription.Items.Data[0].Plan.Product.Name,
-			"product_description":  subscription.Items.Data[0].Plan.Product.Description,
-			"product_metadata":     subscription.Items.Data[0].Plan.Product.Metadata,
-			"invoice_amount_due":   subscription.LatestInvoice.AmountDue,
-			"invoice_amount_paid":  subscription.LatestInvoice.AmountPaid,
-			"invoice_url":          subscription.LatestInvoice.HostedInvoiceURL,
+			"included_credits":     includedCredits,
+			"used_credits":         usedCredits,
+			"overage_charge":       overageCharge,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(subscriptionInfo)
+		json.NewEncoder(w).Encode(response)
 	}
 }
 
