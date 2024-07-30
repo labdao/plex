@@ -298,25 +298,8 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 			fmt.Println("Tiers not configured properly")
 		}
 
-		// Parse included credits and overage charge from product metadata
-		// includedCredits := 100 // Default value
-		// if val, ok := product.Metadata["included_credits"]; ok {
-		// 	includedCredits, err = strconv.Atoi(val)
-		// 	if err != nil {
-		// 		includedCredits = 100 // Default value if parsing fails
-		// 	}
-		// }
-
-		// overageCharge = 0.10 // Default value
-		// if val, ok := product.Metadata["overage_charge"]; ok {
-		// 	overageCharge, err = strconv.ParseFloat(val, 64)
-		// 	if err != nil {
-		// 		overageCharge = 0.10 // Default value if parsing fails
-		// 	}
-		// }
-
 		// Fetch used credits
-		usedCredits, err := fetchUsedCredits(user.StripeUserID, "compute_units")
+		usedCredits, err := fetchUsedCredits(user.StripeUserID, "compute_units", subscription)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error getting usage records: %v", err), http.StatusInternalServerError)
 			return
@@ -342,7 +325,7 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func fetchUsedCredits(stripeCustomerID string, eventName string) (int, error) {
+func fetchUsedCredits(stripeCustomerID string, eventName string, subscription *stripe.Subscription) (int, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return 0, fmt.Errorf("failed to set up Stripe client: %v", err)
@@ -353,14 +336,9 @@ func fetchUsedCredits(stripeCustomerID string, eventName string) (int, error) {
 		return 0, err
 	}
 
-	fmt.Printf("meter ID: %v\n", meterID)
-
-	// Set the start time to the beginning of the current month
-	startTime := time.Now().AddDate(0, -1, 0)
-	startTime = time.Date(startTime.Year(), startTime.Month(), 1, 0, 0, 0, 0, time.UTC)
-
-	// Set the end time to the beginning of the next day after the current day
-	endTime := time.Now().AddDate(0, 0, 1)
+	startTime := time.Unix(subscription.CurrentPeriodStart, 0)
+	startTime = time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, time.UTC)
+	endTime := time.Unix(subscription.CurrentPeriodEnd, 0)
 	endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, time.UTC)
 
 	fmt.Printf("Fetching usage records from %v to %v\n", startTime, endTime)
