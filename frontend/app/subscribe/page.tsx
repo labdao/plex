@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
+import backendUrl from "@/lib/backendUrl";
+import { getAccessToken } from "@privy-io/react-auth";
 import {
   AppDispatch,
   selectStripeCheckoutError,
@@ -18,6 +20,36 @@ export default function SubscribePage() {
   const error = useSelector(selectStripeCheckoutError);
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address;
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      let authToken;
+      try {
+        authToken = await getAccessToken();
+      } catch (error) {
+        console.log("Failed to get access token: ", error);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl()}/stripe/subscription/check-subscription`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isSubscribed) {
+          router.replace("/subscription/manage");
+        }
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [router]);
 
   useEffect(() => {
     if (error) {
@@ -39,7 +71,7 @@ export default function SubscribePage() {
         actions={null}
       />
       <div className="flex flex-col items-center justify-between w-[706px] h-[469px] p-4 bg-white rounded-lg shadow-lg mx-auto my-6">
-        <h3 className="text-center font-heading" style={{ fontSize: '29px', lineHeight: '43.2px', letterSpacing: '0.5px', color: '#000000' }}>
+        <h3 className="text-center font-heading" style={{ fontSize: '29px', lineHeight: '43.2px', letterSpacing: '0.5px', color: '#000000'}}>
           Become a lab.bio subscriber
         </h3>
         <ul className="space-y-4 w-full font-heading" style={{ fontSize: '16px', lineHeight: '28px', letterSpacing: '0.3px', color: '#000000' }}>

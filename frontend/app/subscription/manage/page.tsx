@@ -1,47 +1,77 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
 import { toast } from "sonner";
 import { getAccessToken } from "@privy-io/react-auth";
 import { AlertDialog, AlertDialogContent, AlertDialogOverlay, AlertDialogHeader, AlertDialogFooter, AlertDialogCancel } from "@/components/ui/alert-dialog";
-import { useState } from "react";
 import backendUrl from "lib/backendUrl";
+import { useRouter } from "next/navigation";
 
 export default function ManageSubscription() {
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const router = useRouter();
 
   const cancelSubscription = async () => {
     try {
-        let authToken;
-        try {
-            authToken = await getAccessToken();
-        } catch (error) {
-            console.log("Failed to get access token: ", error);
-            throw new Error("Authentication failed");
-        }
-        const response = await fetch(`${backendUrl()}/stripe/subscription/cancel`, {
-            method: "POST",
-            headers: {
-            Authorization: `Bearer ${authToken}`, // Ensure you have access token
-            "Content-Type": "application/json",
-            },
-        });
-    
-        if (!response.ok) {
-            throw new Error("Failed to cancel subscription");
-        }
-    
-        const data = await response.json();
-        toast.success(data.message);
+      let authToken;
+      try {
+        authToken = await getAccessToken();
+      } catch (error) {
+        console.log("Failed to get access token: ", error);
+        throw new Error("Authentication failed");
+      }
+      const response = await fetch(`${backendUrl()}/stripe/subscription/cancel`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`, // Ensure you have access token
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to cancel subscription");
+      }
+
+      const data = await response.json();
+      toast.success(data.message);
+      router.replace("/subscribe"); // Redirect to the subscribe page after canceling
     } catch (error) {
-    console.error("Error cancelling subscription", error);
-    toast.error("Failed to cancel subscription");
+      console.error("Error cancelling subscription", error);
+      toast.error("Failed to cancel subscription");
     }
   };
+
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      let authToken;
+      try {
+        authToken = await getAccessToken();
+      } catch (error) {
+        console.log("Failed to get access token: ", error);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl()}/stripe/subscription/check-subscription`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.isSubscribed) {
+          router.replace("/subscribe");
+        }
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [router]);
 
   
   if (!walletAddress) {
