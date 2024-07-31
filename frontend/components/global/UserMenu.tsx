@@ -51,7 +51,7 @@ export default function UserMenu() {
         return;
       }
 
-      const response = await fetch(`${backendUrl()}/stripe/subscription/check-subscription`, {
+      const response = await fetch(`${backendUrl()}/stripe/subscription/check`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
           "Content-Type": "application/json",

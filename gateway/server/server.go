@@ -76,8 +76,9 @@ func NewServer(db *gorm.DB, s3c *s3.S3Client) *mux.Router {
 	router.HandleFunc("/stripe", handlers.StripeFulfillmentHandler(db)).Methods("POST")
 	router.HandleFunc("/stripe/checkout", protected(handlers.StripeCreateCheckoutSessionHandler(db))).Methods("POST")
 	router.HandleFunc("/stripe/subscription", protected(handlers.StripeGetSubscriptionHandler(db))).Methods("GET")
-	router.HandleFunc("/stripe/subscription/check-subscription", protected(handlers.StripeCheckSubscriptionHandler(db))).Methods("GET")
+	router.HandleFunc("/stripe/subscription/check", protected(handlers.StripeCheckSubscriptionHandler(db))).Methods("GET")
 	router.HandleFunc("/stripe/subscription/cancel", protected(handlers.StripeCancelSubscriptionHandler(db))).Methods("POST")
+	router.HandleFunc("/stripe/billing-portal", protected(handlers.StripeCreateBillingPortalSessionHandler(db))).Methods("POST")
 	router.HandleFunc("/transactions", protected(handlers.ListTransactionsHandler(db))).Methods("GET")
 	router.HandleFunc("/transactions-summary", protected(handlers.SummaryTransactionsHandler(db))).Methods("GET")
 

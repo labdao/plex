@@ -16,6 +16,7 @@ import (
 	"github.com/stripe/stripe-go/v78"
 	"github.com/stripe/stripe-go/v78/billing/meter"
 	"github.com/stripe/stripe-go/v78/billing/metereventsummary"
+	billingportal "github.com/stripe/stripe-go/v78/billingportal/session"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
 	"github.com/stripe/stripe-go/v78/price"
@@ -452,5 +453,53 @@ func StripeCancelSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"message": "Subscription canceled successfully"})
+	}
+}
+
+func createBillingPortalSession(stripeCustomerID, returnURL string) (*stripe.BillingPortalSession, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return nil, err
+	}
+
+	params := &stripe.BillingPortalSessionParams{
+		Customer:  stripe.String(stripeCustomerID),
+		ReturnURL: stripe.String(returnURL),
+	}
+
+	portalSession, err := billingportal.New(params)
+	if err != nil {
+		return nil, err
+	}
+
+	return portalSession, nil
+}
+
+func StripeCreateBillingPortalSessionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		var requestBody struct {
+			ReturnURL string `json:"return_url"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			utils.SendJSONError(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		portalSession, err := createBillingPortalSession(user.StripeUserID, requestBody.ReturnURL)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error creating billing portal session: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"url": portalSession.URL})
 	}
 }

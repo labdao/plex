@@ -56,7 +56,7 @@ interface SubscriptionDetails {
         const data = await response.json();
         toast.success(data.message);
         router.replace("/subscribe"); // Redirect to the subscribe page after canceling
-      } catch (error) {
+      } catch (error) {/stripe/subscription/check
         console.error("Error cancelling subscription", error);
         toast.error("Failed to cancel subscription");
       }
