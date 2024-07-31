@@ -69,7 +69,7 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 	})
 
 	// Default to no trial
-	trialPeriodDays := int64(0)
+	trialPeriodDays := int64(7) // Default trial period to 7 days if eligible
 
 	for subscriptions.Next() {
 		sub := subscriptions.Subscription()
@@ -90,7 +90,6 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 			},
 		},
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(trialPeriodDays),
 			Metadata: map[string]string{
 				"Wallet Address": walletAddress,
 			},
@@ -101,6 +100,11 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 		Metadata: map[string]string{
 			"Wallet Address": walletAddress,
 		},
+	}
+
+	// Only set trial period days if it is greater than 0
+	if trialPeriodDays > 0 {
+		params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialPeriodDays)
 	}
 
 	session, err := session.New(params)
