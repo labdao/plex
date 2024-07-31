@@ -61,6 +61,40 @@ interface SubscriptionDetails {
         toast.error("Failed to cancel subscription");
       }
     };
+
+    const editBilling = async () => {
+      try {
+        let authToken;
+        try {
+          authToken = await getAccessToken();
+        } catch (error) {
+          console.log("Failed to get access token: ", error);
+          throw new Error("Authentication failed");
+        }
+    
+        const response = await fetch(`${backendUrl()}/stripe/billing-portal`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            returnURL: window.location.href, // Return to current page after managing billing
+          }),
+        });
+    
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url; // Redirect to the Stripe billing portal
+        } else {
+          throw new Error("Failed to create billing portal session");
+        }
+      } catch (error) {
+        console.error("Error redirecting to billing portal", error);
+        toast.error("Failed to open billing portal");
+      }
+    };
+    
   
     useEffect(() => {
       const fetchSubscriptionDetails = async () => {
@@ -181,7 +215,14 @@ interface SubscriptionDetails {
                  </div>
                </div>
                <div className="flex justify-between mt-6">
-                 <button className="px-4 py-2 border rounded-md" style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}>Edit Billing</button>
+               <button
+                  className="px-4 py-2 border rounded-md"
+                  style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}
+                  onClick={editBilling}  // Wire the editBilling function here
+                >
+                  Edit Billing
+                </button>
+
                  <button
                    className="px-4 py-2 border rounded-md"
                    style={{ borderColor: '#000000', color: '#808080' }}
