@@ -63,6 +63,24 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
 	}
 
+	// Check if user has already had a trial
+	subscriptions := subscription.List(&stripe.SubscriptionListParams{
+		Customer: stripe.String(stripeUserID),
+	})
+
+	// Default to no trial
+	trialPeriodDays := int64(0)
+
+	for subscriptions.Next() {
+		sub := subscriptions.Subscription()
+
+		// If any subscription was trialing before, don't offer another trial
+		if sub.Status == "trialing" || sub.Status == "active" {
+			trialPeriodDays = 0
+			break
+		}
+	}
+
 	params := &stripe.CheckoutSessionParams{
 		Customer: stripe.String(stripeUserID),
 		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
@@ -72,7 +90,7 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 			},
 		},
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(7),
+			TrialPeriodDays: stripe.Int64(trialPeriodDays),
 			Metadata: map[string]string{
 				"Wallet Address": walletAddress,
 			},
@@ -277,6 +295,7 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 
 		var includedCredits int
 		var overageCharge float64
+		var flatFee float64
 		tiers := make([]map[string]interface{}, 0)
 
 		if priceDetails.TiersMode == "graduated" && len(priceDetails.Tiers) > 0 {
@@ -294,9 +313,13 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 				if len(priceDetails.Tiers) > 1 {
 					overageCharge = float64(priceDetails.Tiers[1].UnitAmountDecimal) / 100
 				}
+				flatFee = float64(priceDetails.Tiers[0].FlatAmount) / 100 // Set the flat fee
 			}
+		} else if priceDetails.UnitAmount != 0 {
+			// Handle non-tiered flat pricing
+			flatFee = float64(priceDetails.UnitAmount) / 100
 		} else {
-			fmt.Println("Tiers not configured properly")
+			fmt.Println("Tiers or flat pricing not configured properly")
 		}
 
 		// Fetch used credits
@@ -309,13 +332,13 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 		// Prepare the response
 		response := map[string]interface{}{
 			"plan_name":            product.Name,
-			"plan_amount":          float64(priceDetails.UnitAmount) / 100, // Stripe amounts are in cents
+			"plan_amount":          flatFee, // Use the calculated flat fee
 			"plan_currency":        priceDetails.Currency,
 			"plan_interval":        plan.Interval,
 			"current_period_start": time.Unix(subscription.CurrentPeriodStart, 0),
 			"current_period_end":   time.Unix(subscription.CurrentPeriodEnd, 0),
 			"next_due":             time.Unix(subscription.CurrentPeriodEnd, 0).Format("2006-01-02"),
-			"status":               subscription.Status,
+			"status":               subscription.Status, // This will reflect 'trialing', 'canceled', 'active', etc.
 			"included_credits":     includedCredits,
 			"used_credits":         usedCredits,
 			"overage_charge":       overageCharge,
@@ -456,25 +479,6 @@ func StripeCancelSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-func createBillingPortalSession(stripeCustomerID, returnURL string) (*stripe.BillingPortalSession, error) {
-	err := setupStripeClient()
-	if err != nil {
-		return nil, err
-	}
-
-	params := &stripe.BillingPortalSessionParams{
-		Customer:  stripe.String(stripeCustomerID),
-		ReturnURL: stripe.String(returnURL),
-	}
-
-	portalSession, err := billingportal.New(params)
-	if err != nil {
-		return nil, err
-	}
-
-	return portalSession, nil
-}
-
 func StripeCreateBillingPortalSessionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
@@ -484,22 +488,38 @@ func StripeCreateBillingPortalSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var requestBody struct {
-			ReturnURL string `json:"return_url"`
+		if user.StripeUserID == "" {
+			utils.SendJSONError(w, "User does not have a Stripe Customer ID", http.StatusBadRequest)
+			return
 		}
-		err := json.NewDecoder(r.Body).Decode(&requestBody)
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var requestBody struct {
+			ReturnURL string `json:"returnURL"`
+		}
+		err = json.NewDecoder(r.Body).Decode(&requestBody)
 		if err != nil {
 			utils.SendJSONError(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		portalSession, err := createBillingPortalSession(user.StripeUserID, requestBody.ReturnURL)
+		params := &stripe.BillingPortalSessionParams{
+			Customer:  stripe.String(user.StripeUserID),
+			ReturnURL: stripe.String(requestBody.ReturnURL),
+		}
+
+		session, err := billingportal.New(params)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating billing portal session: %v", err), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"url": portalSession.URL})
+		json.NewEncoder(w).Encode(map[string]string{"url": session.URL})
 	}
 }
