@@ -111,16 +111,6 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 	return session, nil
 }
 
-func cancelStripeSubscription(subscriptionID string) error {
-	err := setupStripeClient()
-	if err != nil {
-		return err
-	}
-
-	_, err = subscription.Cancel(subscriptionID, nil)
-	return err
-}
-
 func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
@@ -338,10 +328,11 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 			"current_period_start": time.Unix(subscription.CurrentPeriodStart, 0),
 			"current_period_end":   time.Unix(subscription.CurrentPeriodEnd, 0),
 			"next_due":             time.Unix(subscription.CurrentPeriodEnd, 0).Format("2006-01-02"),
-			"status":               subscription.Status, // This will reflect 'trialing', 'canceled', 'active', etc.
+			"status":               subscription.Status,
 			"included_credits":     includedCredits,
 			"used_credits":         usedCredits,
 			"overage_charge":       overageCharge,
+			"cancel_at_period_end": subscription.CancelAtPeriodEnd,
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -443,39 +434,6 @@ func StripeCheckSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 		isSubscribed := subscription.Status == "active" || subscription.Status == "trialing"
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": isSubscribed})
-	}
-}
-
-func StripeCancelSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctxUser := r.Context().Value(middleware.UserContextKey)
-		user, ok := ctxUser.(*models.User)
-		if !ok {
-			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
-			return
-		}
-
-		if user.SubscriptionID == nil {
-			utils.SendJSONError(w, "User does not have an active subscription", http.StatusBadRequest)
-			return
-		}
-
-		err := cancelStripeSubscription(*user.SubscriptionID)
-		if err != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error canceling subscription: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		user.SubscriptionStatus = "canceled"
-		user.SubscriptionID = nil
-		result := db.Save(&user)
-		if result.Error != nil {
-			utils.SendJSONError(w, fmt.Sprintf("Error updating user subscription status: %v", result.Error), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"message": "Subscription canceled successfully"})
 	}
 }
 
