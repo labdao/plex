@@ -233,6 +233,77 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
+func StripeGetPlanDetailsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Fetch the default price ID from environment variables
+		priceID := os.Getenv("STRIPE_PRICE_ID")
+		if priceID == "" {
+			utils.SendJSONError(w, "STRIPE_PRICE_ID environment variable not set", http.StatusInternalServerError)
+			return
+		}
+
+		priceParams := &stripe.PriceParams{
+			Expand: []*string{stripe.String("tiers")},
+		}
+
+		// Get the price details
+		priceDetails, err := price.Get(priceID, priceParams)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting price details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Get the associated product details
+		productDetails, err := product.Get(priceDetails.Product.ID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting product details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var flatFee float64
+		tiers := make([]map[string]interface{}, 0)
+
+		if priceDetails.TiersMode == "graduated" && len(priceDetails.Tiers) > 0 {
+			for _, tier := range priceDetails.Tiers {
+				tierInfo := map[string]interface{}{
+					"up_to":       tier.UpTo,
+					"unit_amount": tier.UnitAmountDecimal / 100, // Using UnitAmountDecimal for precision
+				}
+				tiers = append(tiers, tierInfo)
+			}
+
+			// Set included credits and overage charge based on tiers
+			if len(tiers) > 0 {
+				flatFee = float64(priceDetails.Tiers[0].FlatAmount) / 100 // Set the flat fee
+			}
+		} else if priceDetails.UnitAmount != 0 {
+			// Handle non-tiered flat pricing
+			flatFee = float64(priceDetails.UnitAmount) / 100
+		} else {
+			fmt.Println("Tiers or flat pricing not configured properly")
+		}
+
+		// Prepare the response
+		response := map[string]interface{}{
+			"plan_name":        productDetails.Name,
+			"plan_amount":      flatFee,
+			"plan_currency":    priceDetails.Currency,
+			"plan_interval":    priceDetails.Recurring.Interval,
+			"included_credits": 500,  // Replace with your logic
+			"overage_charge":   0.01, // Replace with your logic
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
 func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctxUser := r.Context().Value(middleware.UserContextKey)
