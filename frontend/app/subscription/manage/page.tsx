@@ -187,23 +187,36 @@ export default function ManageSubscription() {
               )}
             </div>
             <div className="flex justify-between mt-6 space-x-4">
-              <button
-                className="px-3 py-1 border rounded-md font-mono text-black uppercase tracking-wider"
-                style={{ borderColor: '#6BDBAD', fontSize: '12px'}}
-                onClick={handleSubscriptionAction}
-              >
-                {showRenewalInfo ? 'Edit Billing' : 'Auto Renew'}
-              </button> 
-              <button
-                className={`px-3 py-1 border rounded-md font-mono uppercase tracking-wider ${
-                  showRenewalInfo ? 'text-gray-500' : 'text-black'
-                }`}
-                style={{ fontSize: '12px', borderColor: showRenewalInfo ? '#000000' : '#6BDBAD' }}
-                onClick={handleSubscriptionAction}
-              >
-                {showRenewalInfo ? 'Cancel Subscription' : 'Subscribe Again'}
-              </button>
+              {showRenewalInfo ? (
+                <>
+                  <button
+                    className="px-3 py-1 border rounded-md font-mono text-black uppercase tracking-wider"
+                    style={{ borderColor: '#6BDBAD', fontSize: '12px' }}
+                    onClick={handleSubscriptionAction}
+                  >
+                    Modify Payment Method
+                  </button>
+                  <button
+                    className="px-3 py-1 border rounded-md font-mono text-gray-500 uppercase tracking-wider"
+                    style={{ fontSize: '12px', borderColor: '#000000' }}
+                    onClick={handleSubscriptionAction}
+                  >
+                    Cancel Subscription
+                  </button>
+                </>
+              ) : (
+                <div className="flex justify-center w-full">
+                  <button
+                    className="px-3 py-1 border rounded-md font-mono text-black uppercase tracking-wider"
+                    style={{ borderColor: '#6BDBAD', fontSize: '12px' }}
+                    onClick={handleSubscriptionAction}
+                  >
+                    Renew Plan
+                  </button>
+                </div>
+              )}
             </div>
+
 
           </div>
         </div>
