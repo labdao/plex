@@ -56,7 +56,7 @@ interface SubscriptionDetails {
         const data = await response.json();
         toast.success(data.message);
         router.replace("/subscribe"); // Redirect to the subscribe page after canceling
-      } catch (error) {/stripe/subscription/check
+      } catch (error) {
         console.error("Error cancelling subscription", error);
         toast.error("Failed to cancel subscription");
       }
@@ -97,7 +97,7 @@ interface SubscriptionDetails {
           return;
         }
   
-        const response = await fetch(`${backendUrl()}/stripe/subscription/check-subscription`, {
+        const response = await fetch(`${backendUrl()}/stripe/subscription/check`, {
           headers: {
             Authorization: `Bearer ${authToken}`,
             "Content-Type": "application/json",
