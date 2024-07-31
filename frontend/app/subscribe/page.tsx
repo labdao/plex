@@ -1,68 +1,92 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
-import backendUrl from "@/lib/backendUrl";
-import { getAccessToken } from "@privy-io/react-auth";
-import {
-  AppDispatch,
-  selectStripeCheckoutError,
-  selectStripeCheckoutLoading,
-} from "@/lib/redux";
 import { Breadcrumbs } from "@/components/global/Breadcrumbs";
+import { toast } from "sonner";
+import { getAccessToken } from "@privy-io/react-auth";
+import backendUrl from "lib/backendUrl";
+import { useRouter } from "next/navigation";
+import getPlanTemplate, { PlanDetail } from "lib/planTemplate";
 import StripeCheckoutButton from "@/components/payment/StripeCheckoutButton";
 
+interface PlanDetails {
+  plan_name: string;
+  plan_amount: number;
+  plan_currency: string;
+  plan_interval: string;
+  included_credits: number;
+  overage_charge: number;
+}
+
 export default function SubscribePage() {
-  const dispatch = useDispatch<AppDispatch>();
-  const error = useSelector(selectStripeCheckoutError);
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address;
-
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [planDetails, setPlanDetails] = useState<PlanDetails | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const checkSubscriptionStatus = async () => {
-      let authToken;
+    const fetchPlanDetails = async () => {
       try {
-        authToken = await getAccessToken();
-      } catch (error) {
-        console.log("Failed to get access token: ", error);
-        return;
-      }
+        const authToken = await getAccessToken();
+        const response = await fetch(`${backendUrl()}/stripe/plan-details`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      const response = await fetch(`${backendUrl()}/stripe/subscription/check`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isSubscribed) {
-          router.replace("/subscription/manage");
+        if (response.ok) {
+          const data: PlanDetails = await response.json();
+          setPlanDetails(data);
+          setLoading(false);
         } else {
+          console.error("Failed to fetch plan details. Response not OK.");
           setLoading(false);
         }
-      } else {
+      } catch (error) {
+        console.error("Failed to fetch plan details:", error);
         setLoading(false);
       }
     };
 
-    checkSubscriptionStatus();
-  }, [router]);
+    const checkSubscriptionStatus = async () => {
+      try {
+        const authToken = await getAccessToken();
 
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
+        const response = await fetch(`${backendUrl()}/stripe/subscription/check`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.isSubscribed) {
+            router.replace("/subscription/manage");
+          } else {
+            fetchPlanDetails();
+          }
+        } else {
+          console.error("Failed to check subscription status. Response not OK.");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Failed to check subscription status:", error);
+        setLoading(false);
+      }
+    };
+
+    if (walletAddress) {
+      checkSubscriptionStatus();
+    } else {
+      console.log("Waiting for wallet address...");
     }
-  }, [error]);
+  }, [router, walletAddress]);
 
-  if (!walletAddress || loading) {
+  if (loading || !walletAddress || !planDetails) {
     return <div>Loading...</div>;
   }
 
@@ -75,30 +99,24 @@ export default function SubscribePage() {
         ]}
         actions={null}
       />
-      <div className="flex flex-col items-center justify-between w-[706px] h-[469px] p-4 bg-white rounded-lg shadow-lg mx-auto my-6">
+      <div className="flex flex-col items-center justify-between w-[706px] h-[400px] p-4 bg-white rounded-lg shadow-lg mx-auto my-6">
         <h3 className="text-center font-heading" style={{ fontSize: '29px', lineHeight: '43.2px', letterSpacing: '0.5px', color: '#000000'}}>
           Become a lab.bio subscriber
         </h3>
-        <ul className="space-y-4 w-full font-heading" style={{ fontSize: '16px', lineHeight: '28px', letterSpacing: '0.3px', color: '#000000' }}>
-          <li className="flex items-center">
-            <span className="mr-2 text-black">✓</span>
-            <span>Access x# of computation credits (about x number per x number)</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-black">✓</span>
-            <span>Additional charges information Additional charges information</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-black">✓</span>
-            <span>Additional charges information Additional charges information</span>
-          </li>
-          <li className="flex items-center">
-            <span className="mr-2 text-black">✓</span>
-            <span>Cancel subscription any time</span>
-          </li>
-        </ul>
+        <div className="text-sm  text-gray-600 space-y-4 font-heading" style={{ fontSize: '16px', lineHeight: '28px', letterSpacing: '0.3px', color: '#000000' }}>
+          {getPlanTemplate().details.map((detail: PlanDetail, index: number) => (
+            <div key={index} className="flex items-start">
+              <span className="mr-2 text-black">✓</span>
+              <span>{detail.description
+                .replace('{{includedCredits}}', planDetails.included_credits.toString())
+                .replace('{{numMolecules}}', (planDetails.included_credits / 10).toString()) // Example calculation
+                .replace('{{overageCharge}}', planDetails.overage_charge.toString())
+              }</span>
+            </div>
+          ))}
+        </div>
         <p className="mt-4 text-center font-heading" style={{ fontSize: '24px', lineHeight: '30px', letterSpacing: '0.14px', color: '#000000', fontWeight: '500' }}>
-          X$ per month
+          ${planDetails.plan_amount} / month
         </p>
         <div className="px-2 py-2 w-full">
           <StripeCheckoutButton color="primary" size="sm" className="w-full font-bold">
