@@ -99,11 +99,11 @@ export default function SubscribePage() {
         ]}
         actions={null}
       />
-      <div className="flex flex-col items-center justify-between w-[706px] h-[400px] p-4 bg-white rounded-lg shadow-lg mx-auto my-6">
-        <h3 className="text-center font-heading" style={{ fontSize: '29px', lineHeight: '43.2px', letterSpacing: '0.5px', color: '#000000'}}>
+      <div className="flex flex-col items-center justify-between w-[706px] h-[400px] p-8 bg-white rounded-lg shadow-lg mx-auto my-6">
+        <h3 className="text-center font-heading" style={{ fontSize: '33px', fontWeight: 500, lineHeight: '43.2px', letterSpacing: '0.5px', color: '#000000'}}>
           Become a lab.bio subscriber
         </h3>
-        <div className="text-sm  text-gray-600 space-y-4 font-heading" style={{ fontSize: '16px', lineHeight: '28px', letterSpacing: '0.3px', color: '#000000' }}>
+        <div className="text-sm  text-gray-600 space-y-4 font-mono" style={{ fontSize: '15px', lineHeight: '25px', letterSpacing: '0.3px', color: '#000000' }}>
           {getPlanTemplate().details.map((detail: PlanDetail, index: number) => (
             <div key={index} className="flex items-start">
               <span className="mr-2 text-black">✓</span>

@@ -28,7 +28,6 @@ interface SubscriptionDetails {
 export default function ManageSubscription() {
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address;
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null);
   const router = useRouter();
@@ -136,10 +135,11 @@ export default function ManageSubscription() {
       />
       <div className="flex justify-between space-x-6 mx-auto my-6">
         <div className="flex flex-col space-y-6">
-          <div className="w-96 p-6 bg-white rounded-lg shadow-lg">
-            <h3 className="text-2xl font-bold font-heading text-black mb-4">Usage Details</h3>
-            <div className="text-sm text-gray-600 space-y-4 font-heading">
-              <div className="flex justify-between">
+          <div className="w-[450px] p-6 bg-white rounded-lg shadow-lg">
+            <h3 className=" font-heading text-black">Usage Details</h3>
+            <br/>
+            <div className="text-sm text-gray-600 space-y-1.5 font-mono">
+              <div className="flex justify-between ">
                 <span style={{ color: '#808080' }}>Used / Included credits</span>
                 <span style={{ color: '#000000' }}>
                   {subscriptionDetails.used_credits} / {subscriptionDetails.included_credits} credits
@@ -153,9 +153,9 @@ export default function ManageSubscription() {
               </div>
             </div>
           </div>
-          <div className="w-96 p-6 bg-white rounded-lg shadow-lg font-heading">
-            <h3 className="text-2xl font-bold text-black mb-4">Billing & Payment</h3>
-            <div className="text-sm text-gray-600 space-y-4">
+          <div className="w-[450px] p-6 bg-white rounded-lg shadow-lg font-heading">
+            <h3 className="font-heading text-black">Billing & Payment</h3><br/>
+            <div className="text-sm text-gray-600 space-y-1.5 font-mono">
               <div className="flex justify-between">
                 <span style={{ color: '#808080' }}>Cost until {subscriptionDetails.next_due}</span>
                 <span style={{ color: '#000000' }}>
@@ -186,32 +186,35 @@ export default function ManageSubscription() {
                 </div>
               )}
             </div>
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-between mt-6 space-x-4">
               <button
-                className="px-4 py-2 border rounded-md"
-                style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}
-                onClick={handleSubscriptionAction}  // Wire the editBilling function here
+                className="px-3 py-1 border rounded-md font-mono text-black uppercase tracking-wider"
+                style={{ borderColor: '#6BDBAD', fontSize: '12px'}}
+                onClick={handleSubscriptionAction}
               >
                 {showRenewalInfo ? 'Edit Billing' : 'Auto Renew'}
+              </button> 
+              <button
+                className={`px-3 py-1 border rounded-md font-mono uppercase tracking-wider ${
+                  showRenewalInfo ? 'text-gray-500' : 'text-black'
+                }`}
+                style={{ fontSize: '12px', borderColor: showRenewalInfo ? '#000000' : '#6BDBAD' }}
+                onClick={handleSubscriptionAction}
+              >
+                {showRenewalInfo ? 'Cancel Subscription' : 'Subscribe Again'}
               </button>
-                <button
-                  className="px-4 py-2 border rounded-md"
-                  style={{ borderColor: '#000000', color: '#808080' }}
-                  onClick={handleSubscriptionAction}  // Point this to billing portal as well
-                >
-                  {showRenewalInfo ? 'Cancel Subscription' : 'Subscribe Again'}
-                </button>
             </div>
+
           </div>
         </div>
         <div className="w-96 p-6 bg-white rounded-lg shadow-lg">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-2xl font-bold font-heading text-black">Your Plan</h3>
+            <h3 className="text-xl font-bold font-heading text-black">Your Plan</h3>
             <div className="flex items-center border border-green-600 rounded-full px-2 py-1">
               <span className="text-green-600 text-sm font-medium lowercase">{subscriptionDetails.status}</span>
             </div>
           </div>
-          <div className="text-sm text-gray-600 space-y-4 font-heading" style={{ color: '#000000' }}>
+          <div className="text-sm text-gray-600 space-y-4 font-mono" style={{ color: '#000000' }}>
             {getPlanTemplate().details.map((detail: PlanDetail, index: number) => (
               <div key={index} className="flex items-start">
                 <span className="mr-2 text-black">✓</span>
@@ -224,7 +227,7 @@ export default function ManageSubscription() {
             ))}
           </div>
           <br />
-            <div className="text-sm text-gray-600 mb-4 font-heading" style={{ color: '#808080' }}>
+            <div className="text-sm text-gray-600 mb-4 font-mono" style={{ color: '#808080' }}>
               <span>Your trial ends on {new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}. After the trial ends, your plan will {isTrialingButNotRenewing ? 'not renew.' : 'continue with the selected subscription.'}</span>
             </div>
         </div>
@@ -232,22 +235,6 @@ export default function ManageSubscription() {
       <div className="absolute top-0 left-0 p-4 bg-white border-b border-gray-300 w-full flex justify-between items-center">
         <div className="text-gray-600 font-bold uppercase">Subscription/{walletAddress}</div>
       </div>
-      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <AlertDialogOverlay />
-        <AlertDialogContent>
-          <AlertDialog>
-            Are you sure you want to cancel your subscription? You can resubscribe at any time to continue enjoying our services.
-          </AlertDialog>
-          <AlertDialogFooter>
-            <button onClick={() => setIsDialogOpen(false)} className="px-4 py-2 border rounded-md" style={{ borderColor: '#6BDBAD', color: '#6BDBAD' }}>
-              No, Keep Subscription
-            </button>
-            <button onClick={handleSubscriptionAction} className="px-4 py-2 border rounded-md" style={{ borderColor: '#000000', color: '#808080' }}>
-              Yes, Cancel Subscription
-            </button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
