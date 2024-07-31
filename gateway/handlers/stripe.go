@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/labdao/plex/gateway/middleware"
@@ -124,13 +123,13 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		thresholdStr := os.Getenv("TIER_THRESHOLD")
-		threshold, _ := strconv.Atoi(thresholdStr)
+		// thresholdStr := os.Getenv("TIER_THRESHOLD")
+		// threshold, _ := strconv.Atoi(thresholdStr)
 
-		if user.ComputeTally < threshold || user.SubscriptionStatus == "active" {
-			utils.SendJSONError(w, "User does not need a subscription at this time", http.StatusBadRequest)
-			return
-		}
+		// if user.ComputeTally < threshold || user.SubscriptionStatus == "active" {
+		// 	utils.SendJSONError(w, "User does not need a subscription at this time", http.StatusBadRequest)
+		// 	return
+		// }
 
 		var requestBody struct {
 			SuccessURL string `json:"success_url"`
