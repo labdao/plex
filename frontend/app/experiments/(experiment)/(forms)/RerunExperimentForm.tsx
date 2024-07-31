@@ -76,13 +76,8 @@ export default function RerunExperimentForm() {
           toast.error("Failed to add job to experiment");
         }
       } else if (userTier === 'Paid' && !isUserSubscribed) {
-        const checkoutResponse = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
-        if (checkoutResponse.checkout) {
-          window.location.href = checkoutResponse.checkout.url;
-        } else {
-          console.log("Something went wrong with checkout", checkoutResponse);
-          toast.error("Failed to initiate subscription process");
-        }
+        console.log('Redirecting...');
+        router.push('/subscribe');
       } else {
         console.error("Invalid user tier");
         toast.error("Unable to process request due to invalid user tier");

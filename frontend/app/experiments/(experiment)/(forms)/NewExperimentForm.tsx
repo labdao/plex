@@ -108,6 +108,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
           }
         } else {
           // Paid tier user without active subscription, redirect to subscription page
+          console.log('Redirecting...');
           router.push('/subscribe');
         }
       } else {
