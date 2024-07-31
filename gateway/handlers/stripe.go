@@ -13,10 +13,13 @@ import (
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
-	"github.com/stripe/stripe-go/v76/product"
 	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/billing/meter"
+	"github.com/stripe/stripe-go/v78/billing/metereventsummary"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
+	"github.com/stripe/stripe-go/v78/price"
+	"github.com/stripe/stripe-go/v78/product"
 	"github.com/stripe/stripe-go/v78/subscription"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/gorm"
@@ -255,23 +258,58 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 		item := subscription.Items.Data[0]
 		plan := item.Plan
 
-		productClient := product.Client{}
-		product, err := productClient.Get(plan.Product.ID, nil)
+		product, err := product.Get(plan.Product.ID, nil)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error getting product: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-		// Mock credit usage and overage charge values (Replace these with actual values from your implementation)
-		includedCredits := 100
-		usedCredits := 50
-		overageCharge := 0.10 // Example: $0.10 per credit over the limit
+		// Fetch price details
+		priceParams := &stripe.PriceParams{
+			Expand: []*string{stripe.String("tiers")},
+		}
+		priceDetails, err := price.Get(plan.ID, priceParams)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting price details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var includedCredits int
+		var overageCharge float64
+		tiers := make([]map[string]interface{}, 0)
+
+		if priceDetails.TiersMode == "graduated" && len(priceDetails.Tiers) > 0 {
+			for _, tier := range priceDetails.Tiers {
+				tierInfo := map[string]interface{}{
+					"up_to":       tier.UpTo,
+					"unit_amount": tier.UnitAmountDecimal / 100, // Using UnitAmountDecimal for precision
+				}
+				tiers = append(tiers, tierInfo)
+			}
+
+			// Set included credits and overage charge based on tiers
+			if len(tiers) > 0 {
+				includedCredits = int(priceDetails.Tiers[0].UpTo)
+				if len(priceDetails.Tiers) > 1 {
+					overageCharge = float64(priceDetails.Tiers[1].UnitAmountDecimal) / 100
+				}
+			}
+		} else {
+			fmt.Println("Tiers not configured properly")
+		}
+
+		// Fetch used credits
+		usedCredits, err := fetchUsedCredits(user.StripeUserID, "compute_units", subscription)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting usage records: %v", err), http.StatusInternalServerError)
+			return
+		}
 
 		// Prepare the response
 		response := map[string]interface{}{
 			"plan_name":            product.Name,
-			"plan_amount":          float64(plan.Amount) / 100, // Stripe amounts are in cents
-			"plan_currency":        plan.Currency,
+			"plan_amount":          float64(priceDetails.UnitAmount) / 100, // Stripe amounts are in cents
+			"plan_currency":        priceDetails.Currency,
 			"plan_interval":        plan.Interval,
 			"current_period_start": time.Unix(subscription.CurrentPeriodStart, 0),
 			"current_period_end":   time.Unix(subscription.CurrentPeriodEnd, 0),
@@ -285,6 +323,70 @@ func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+func fetchUsedCredits(stripeCustomerID string, eventName string, subscription *stripe.Subscription) (int, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return 0, fmt.Errorf("failed to set up Stripe client: %v", err)
+	}
+
+	meterID, err := fetchMeterIDByEventName(eventName)
+	if err != nil {
+		return 0, err
+	}
+
+	startTime := time.Unix(subscription.CurrentPeriodStart, 0)
+	startTime = time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, time.UTC)
+	endTime := time.Unix(subscription.CurrentPeriodEnd, 0)
+	endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, time.UTC)
+
+	fmt.Printf("Fetching usage records from %v to %v\n", startTime, endTime)
+
+	params := &stripe.BillingMeterEventSummaryListParams{
+		Customer:            stripe.String(stripeCustomerID),
+		StartTime:           stripe.Int64(startTime.Unix()),
+		EndTime:             stripe.Int64(endTime.Unix()),
+		ValueGroupingWindow: stripe.String("day"), // Aggregate by day
+		ID:                  stripe.String(meterID),
+	}
+
+	iterator := metereventsummary.List(params)
+
+	usedCredits := 0
+	for iterator.Next() {
+		summary := iterator.BillingMeterEventSummary()
+		if summary == nil {
+			fmt.Println("Empty summary, skipping...")
+			continue
+		}
+		fmt.Printf("Aggregated value on %v: %v\n", time.Unix(summary.StartTime, 0), summary.AggregatedValue)
+		usedCredits += int(summary.AggregatedValue)
+	}
+
+	if err := iterator.Err(); err != nil {
+		return 0, fmt.Errorf("error getting usage records: %v", err)
+	}
+
+	return usedCredits, nil
+}
+
+func fetchMeterIDByEventName(eventName string) (string, error) {
+	params := &stripe.BillingMeterListParams{}
+	iterator := meter.List(params)
+
+	for iterator.Next() {
+		m := iterator.BillingMeter()
+		if m.EventName == eventName {
+			return m.ID, nil
+		}
+	}
+
+	if err := iterator.Err(); err != nil {
+		return "", fmt.Errorf("error listing billing meters: %v", err)
+	}
+
+	return "", fmt.Errorf("meter with event name '%s' not found", eventName)
 }
 
 func StripeCheckSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
