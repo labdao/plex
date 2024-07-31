@@ -175,7 +175,7 @@ export default function ManageSubscription() {
                   <div className="flex justify-between">
                     <span style={{ color: '#808080' }}>Plan amount</span>
                     <span style={{ color: '#000000' }}>
-                      $5 + overage charges{/* TODO: should be changed to the dynamic value */}
+                    ${subscriptionDetails.plan_amount} + overage charges
                     </span>
                   </div>
                 </>
