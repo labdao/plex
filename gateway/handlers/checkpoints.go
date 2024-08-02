@@ -158,10 +158,15 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 
 		var experimentListCheckpointsResult []ExperimentListCheckpointsResult
 
+		// select jobs.id as job_id, models.model_json as model_json, inference_events.output_json as result_json
+		// from jobs
+		// JOIN inference_events ON inference_events.job_id = jobs.id and inference_events.event_type = 'file_processed'
+		// JOIN experiments ON experiments.id = jobs.experiment_id
+		// JOIN models ON models.id = jobs.model_id
+		// where experiments.id = 5;
 		if err := db.Table("jobs").
 			Select("jobs.id as job_id, models.model_json as model_json, inference_events.output_json as result_json").
-			Joins("JOIN (SELECT job_id, MAX(event_time) as max_created_at FROM inference_events GROUP BY job_id) as latest_events ON latest_events.job_id = jobs.id").
-			Joins("JOIN inference_events ON inference_events.job_id = latest_events.job_id AND inference_events.event_time = latest_events.max_created_at").
+			Joins("JOIN inference_events ON inference_events.job_id = jobs.id AND inference_events.event_type = ?", models.EventTypeFileProcessed).
 			Joins("JOIN experiments ON experiments.id = jobs.experiment_id").
 			Joins("JOIN models ON models.id = jobs.model_id").
 			Where("experiments.id = ?", experimentID).

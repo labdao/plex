@@ -21,6 +21,7 @@ import (
 	"github.com/labdao/plex/internal/ipwl"
 	"github.com/labdao/plex/internal/ray"
 	s3client "github.com/labdao/plex/internal/s3"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -163,7 +164,8 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Ray job %v was stopped", job.RayJobID), db)
 	} else if ray.JobSucceeded(job.RayJobID) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.RayJobID)
-		bytes := GetRayJobResponseFromS3(&job, db)
+		responseFileName := fmt.Sprintf("%s/%s_response.json", job.RayJobID, job.RayJobID)
+		bytes := GetRayJobResponseFromS3(responseFileName, &job, db)
 		rayJobResponse, err := UnmarshalRayJobResponse(bytes)
 		if err != nil {
 			fmt.Println("Error unmarshalling result JSON:", err)
@@ -177,11 +179,10 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 	return nil
 }
 
-func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) []byte {
+func GetRayJobResponseFromS3(key string, job *models.Job, db *gorm.DB) []byte {
 	// get job uuid and experiment uuid using rayjobid
 	// s3 download file experiment uuid/job uuid/response.json
 	// return response.json
-	jobUUID := job.RayJobID
 	experimentId := job.ExperimentID
 	var experiment models.Experiment
 	result := db.Select("experiment_uuid").Where("id = ?", experimentId).First(&experiment)
@@ -190,7 +191,6 @@ func GetRayJobResponseFromS3(job *models.Job, db *gorm.DB) []byte {
 	}
 	bucketName := os.Getenv("BUCKET_NAME")
 	//TODO-LAB-1491: change this later to exp uuid/ job uuid
-	key := fmt.Sprintf("%s/%s_response.json", jobUUID, jobUUID)
 	fmt.Printf("Downloading file from S3 with key: %s\n", key)
 	fileName := filepath.Base(key)
 	s3client, err := s3client.NewS3Client()
@@ -235,15 +235,19 @@ func MonitorRunningJobs(db *gorm.DB) error {
 		if err := fetchRunningJobsWithModelData(&jobs, db); err != nil {
 			return err
 		}
-		fmt.Printf("There are %d running jobs\n", len(jobs))
 		for _, job := range jobs {
-			// there should not be any errors from checkRunningJob
+			// Check and process new files for each job
+			if err := processNewFiles(&job, db); err != nil {
+				return err
+			}
+
+			// Continue monitoring job status
 			if err := checkRunningJob(job.ID, db); err != nil {
 				return err
 			}
 		}
-		fmt.Printf("Finished watching all running jobs, rehydrating watcher with jobs\n")
-		time.Sleep(10 * time.Second) // Wait for some time before the next cycle
+		log.Println("Finished monitoring all running jobs, will recheck after the interval.")
+		time.Sleep(10 * time.Second) // wait for 10 seconds before checking again
 	}
 }
 
@@ -647,6 +651,100 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	job.OutputFiles = append(job.OutputFiles, file)
 	if err := db.Save(&job).Error; err != nil {
 		return fmt.Errorf("error updating job with new output file: %v", err)
+	}
+
+	return nil
+}
+
+func processNewFiles(job *models.Job, db *gorm.DB) error {
+	bucketName := os.Getenv("BUCKET_NAME")
+	prefix := fmt.Sprintf("%s-", job.RayJobID) // Adjusted to the new naming pattern
+
+	s3client, err := s3client.NewS3Client()
+	if err != nil {
+		log.Printf("Error creating S3 client")
+	}
+
+	files, err := s3client.ListFilesInDirectory(bucketName, prefix)
+	if err != nil {
+		return err
+	}
+
+	for _, fileName := range files {
+		if !fileProcessed(fileName, job.ID, db) {
+			if err := processFile(fileName, job, db); err != nil { // Function to process the file
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func processFile(fileName string, job *models.Job, db *gorm.DB) error {
+	// Get the content of the file from S3 using the GetRayJobResponseFromS3 function
+	data := GetRayJobResponseFromS3(fileName, job, db)
+	if len(data) == 0 {
+		log.Printf("Failed to get or empty data from file %s for job %d", fileName, job.ID)
+		return fmt.Errorf("empty data received from S3 for file %s", fileName)
+	}
+
+	rayJobResponse, err := UnmarshalRayJobResponse(data)
+	if err != nil {
+		fmt.Println("Error unmarshalling result JSON:", err)
+		return err
+	}
+
+	// Add files and update related job data in the database without marking the job as completed
+	if err := addFilesAndUpdateJob(job, data, rayJobResponse, db); err != nil {
+		log.Printf("Failed to add files and update job for job %d from file %s: %v", job.ID, fileName, err)
+		return err
+	}
+
+	// Mark this file as processed in the inference event table
+	event := models.InferenceEvent{ //add job status too
+		JobID:      job.ID,
+		RayJobID:   job.RayJobID,
+		EventType:  models.EventTypeFileProcessed,
+		JobStatus:  models.JobStateRunning,
+		FileName:   fileName,
+		EventTime:  time.Now(),
+		OutputJson: datatypes.JSON(data), // Storing the JSON output directly in the event
+	}
+	if err := db.Create(&event).Error; err != nil {
+		log.Printf("Failed to record file processing event for job %d: %v", job.ID, err)
+		return err
+	}
+
+	var user models.User
+	if err := db.First(&user, "wallet_address = ?", job.WalletAddress).Error; err != nil {
+		return fmt.Errorf("error fetching user: %v", err)
+	}
+
+	if user.SubscriptionStatus == "active" {
+		points := rayJobResponse.Points
+		err := RecordUsage(user.StripeUserID, int64(points))
+		if err != nil {
+			return fmt.Errorf("error recording usage: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func fileProcessed(fileName string, jobID uint, db *gorm.DB) bool {
+	var count int64
+	db.Model(&models.InferenceEvent{}).Where("job_id = ? AND file_name = ?", jobID, fileName).Count(&count)
+	return count > 0
+}
+
+func addFilesAndUpdateJob(job *models.Job, data []byte, response models.RayJobResponse, db *gorm.DB) error {
+	fmt.Printf("Adding output files and updating job data for job %d\n", job.ID)
+
+	// Loop through the files detailed in the response
+	for key, fileDetail := range response.Files {
+		if err := addFileToDB(job, fileDetail, key, db); err != nil {
+			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
+		}
 	}
 
 	return nil
