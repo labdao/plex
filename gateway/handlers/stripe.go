@@ -62,24 +62,6 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
 	}
 
-	// Check if user has already had a trial
-	subscriptions := subscription.List(&stripe.SubscriptionListParams{
-		Customer: stripe.String(stripeUserID),
-	})
-
-	// Default to no trial
-	trialPeriodDays := int64(7) // Default trial period to 7 days if eligible
-
-	for subscriptions.Next() {
-		sub := subscriptions.Subscription()
-
-		// If any subscription was trialing before, don't offer another trial
-		if sub.Status == "trialing" || sub.Status == "active" {
-			trialPeriodDays = 0
-			break
-		}
-	}
-
 	params := &stripe.CheckoutSessionParams{
 		Customer: stripe.String(stripeUserID),
 		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
@@ -99,11 +81,6 @@ func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL st
 		Metadata: map[string]string{
 			"Wallet Address": walletAddress,
 		},
-	}
-
-	// Only set trial period days if it is greater than 0
-	if trialPeriodDays > 0 {
-		params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialPeriodDays)
 	}
 
 	session, err := session.New(params)
@@ -204,7 +181,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 				return
 			}
 
-			if subscription.Status == "trialing" || subscription.Status == "active" {
+			if subscription.Status == "active" {
 				user.SubscriptionStatus = "active"
 			} else {
 				user.SubscriptionStatus = string(subscription.Status)
@@ -219,6 +196,7 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 
 			fmt.Printf("Subscription %s for user %s updated to %s\n", subscription.ID, walletAddress, user.SubscriptionStatus)
 
+		// PR#1010 this might not be relevant anymore as we are not providing a trial period
 		case "customer.subscription.trial_will_end":
 			// Handle trial ending soon (e.g., send notification to user)
 			// This event occurs 3 days before the trial ends
@@ -505,7 +483,7 @@ func StripeCheckSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		isSubscribed := subscription.Status == "active" || subscription.Status == "trialing"
+		isSubscribed := subscription.Status == "active"
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": isSubscribed})
 	}

@@ -95,7 +95,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
         }
       } else if (userTier === 'Paid') {
         if (isUserSubscribed) {
-          // Paid tier user with active subscription (including trial), directly create the experiment
+          // Paid tier user with active subscription, directly create the experiment
           const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
           if (response && response.ID) {
             console.log("Experiment created", response);
