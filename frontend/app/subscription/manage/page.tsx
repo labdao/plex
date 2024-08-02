@@ -179,10 +179,16 @@ export default function ManageSubscription() {
                   </div>
                 </>
               ) : (
+                <>
+                <div className="flex justify-between">
+                    <span style={{ color: '#808080' }}>Plan ends on</span>
+                    <span style={{ color: '#000000' }}>{new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}</span>
+                  </div>
                 <div className="flex justify-between">
                   <span style={{ color: '#808080' }}>Auto renewal</span>
                   <span style={{ color: '#FF0000' }}>Off</span>
                 </div>
+                </>
               )}
             </div>
             <div className="flex justify-between mt-6 space-x-4">
@@ -240,7 +246,11 @@ export default function ManageSubscription() {
           </div>
           <br />
             <div className="text-sm text-gray-600 mb-4 font-mono" style={{ color: '#808080' }}>
-              <span>Your plan ends on {new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}, and will {showRenewalInfo ? 'automatically renew until you cancel.' : 'not renew.'}</span>
+              <span>
+                {showRenewalInfo
+                  ? `Your subscription will automatically renew on ${new Date(subscriptionDetails.next_due).toISOString().split('T')[0]} and you'll be charged ${subscriptionDetails.plan_amount} + overage charges.`
+                  : `Your subscription ends on ${new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}. Click on Renew Plan to continue using the service.`}
+              </span>
             </div>
         </div>
       </div>
