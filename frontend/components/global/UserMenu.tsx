@@ -1,9 +1,9 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
+import { getAccessToken, usePrivy } from "@privy-io/react-auth";
 import { Code2Icon, CreditCardIcon, DownloadIcon, FlaskRoundIcon, FolderIcon, Loader2Icon, LogOutIcon, User, UserCircleIcon } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { CopyToClipboard } from "@/components/shared/CopyToClipboard";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,12 @@ import PrivyLoginButton from "../auth/PrivyLoginButton";
 import StripeCheckoutButton from "../payment/StripeCheckoutButton";
 import TransactionSummaryInfo from "../payment/TransactionSummaryInfo";
 import { NavButton } from "./NavItem";
+import backendUrl from "@/lib/backendUrl";
 
 export default function UserMenu() {
   const { ready, authenticated, user, exportWallet, logout } = usePrivy();
   const walletAddress = user?.wallet?.address;
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const hasEmbeddedWallet =
     ready && authenticated && !!user?.linkedAccounts.find((account: any) => account.type === "wallet" && account.walletClient === "privy");
@@ -38,6 +40,34 @@ export default function UserMenu() {
   const handleLogout = async () => {
     await logout();
   };
+
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      let authToken;
+      try {
+        authToken = await getAccessToken();
+      } catch (error) {
+        console.log("Failed to get access token: ", error);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl()}/stripe/subscription/check`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsSubscribed(data.isSubscribed);
+      }
+    };
+
+    if (authenticated) {
+      checkSubscriptionStatus();
+    }
+  }, [authenticated]);
 
   if (!ready)
     return (
@@ -88,6 +118,12 @@ export default function UserMenu() {
                 </>
               )}
 
+              <DropdownMenuItem asChild>
+                <Link href={isSubscribed ? "/subscription/manage" : "/subscribe"}>
+                  <CreditCardIcon size={20} className="mr-1" />
+                  {isSubscribed ? "Manage Subscription" : "Subscribe"}
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/api">
                   <Code2Icon size={20} className="mr-1" />

@@ -7,14 +7,20 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
+	"time"
 
 	"github.com/labdao/plex/gateway/middleware"
 	"github.com/labdao/plex/gateway/models"
 	"github.com/labdao/plex/gateway/utils"
 	"github.com/stripe/stripe-go/v78"
+	"github.com/stripe/stripe-go/v78/billing/meter"
+	"github.com/stripe/stripe-go/v78/billing/metereventsummary"
+	billingportal "github.com/stripe/stripe-go/v78/billingportal/session"
 	"github.com/stripe/stripe-go/v78/checkout/session"
 	"github.com/stripe/stripe-go/v78/customer"
+	"github.com/stripe/stripe-go/v78/price"
+	"github.com/stripe/stripe-go/v78/product"
+	"github.com/stripe/stripe-go/v78/subscription"
 	"github.com/stripe/stripe-go/v78/webhook"
 	"gorm.io/gorm"
 )
@@ -45,20 +51,33 @@ func createStripeCustomer(walletAddress string) (string, error) {
 	return customer.ID, nil
 }
 
-func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.CheckoutSession, error) {
+func createCheckoutSession(stripeUserID, walletAddress, successURL, cancelURL string) (*stripe.CheckoutSession, error) {
 	err := setupStripeClient()
 	if err != nil {
 		return nil, err
 	}
 
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
-	}
-
 	priceID := os.Getenv("STRIPE_PRICE_ID")
 	if priceID == "" {
 		return nil, errors.New("STRIPE_PRICE_ID environment variable not set")
+	}
+
+	// Check if user has already had a trial
+	subscriptions := subscription.List(&stripe.SubscriptionListParams{
+		Customer: stripe.String(stripeUserID),
+	})
+
+	// Default to no trial
+	trialPeriodDays := int64(7) // Default trial period to 7 days if eligible
+
+	for subscriptions.Next() {
+		sub := subscriptions.Subscription()
+
+		// If any subscription was trialing before, don't offer another trial
+		if sub.Status == "trialing" || sub.Status == "active" {
+			trialPeriodDays = 0
+			break
+		}
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -70,17 +89,21 @@ func createCheckoutSession(stripeUserID, walletAddress string) (*stripe.Checkout
 			},
 		},
 		SubscriptionData: &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(7),
 			Metadata: map[string]string{
 				"Wallet Address": walletAddress,
 			},
 		},
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		SuccessURL:         stripe.String(frontendURL + "/checkout/success"),
-		CancelURL:          stripe.String(frontendURL + "/checkout/cancel"),
+		SuccessURL:         stripe.String(successURL),
+		CancelURL:          stripe.String(cancelURL),
 		Metadata: map[string]string{
 			"Wallet Address": walletAddress,
 		},
+	}
+
+	// Only set trial period days if it is greater than 0
+	if trialPeriodDays > 0 {
+		params.SubscriptionData.TrialPeriodDays = stripe.Int64(trialPeriodDays)
 	}
 
 	session, err := session.New(params)
@@ -100,15 +123,25 @@ func StripeCreateCheckoutSessionHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		thresholdStr := os.Getenv("TIER_THRESHOLD")
-		threshold, _ := strconv.Atoi(thresholdStr)
+		// thresholdStr := os.Getenv("TIER_THRESHOLD")
+		// threshold, _ := strconv.Atoi(thresholdStr)
 
-		if user.ComputeTally < threshold || user.SubscriptionStatus == "active" {
-			utils.SendJSONError(w, "User does not need a subscription at this time", http.StatusBadRequest)
+		// if user.ComputeTally < threshold || user.SubscriptionStatus == "active" {
+		// 	utils.SendJSONError(w, "User does not need a subscription at this time", http.StatusBadRequest)
+		// 	return
+		// }
+
+		var requestBody struct {
+			SuccessURL string `json:"success_url"`
+			CancelURL  string `json:"cancel_url"`
+		}
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			utils.SendJSONError(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress)
+		session, err := createCheckoutSession(user.StripeUserID, user.WalletAddress, requestBody.SuccessURL, requestBody.CancelURL)
 		if err != nil {
 			utils.SendJSONError(w, fmt.Sprintf("Error creating checkout session: %v", err), http.StatusInternalServerError)
 			return
@@ -200,5 +233,325 @@ func StripeFulfillmentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func StripeGetPlanDetailsHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Fetch the default price ID from environment variables
+		priceID := os.Getenv("STRIPE_PRICE_ID")
+		if priceID == "" {
+			utils.SendJSONError(w, "STRIPE_PRICE_ID environment variable not set", http.StatusInternalServerError)
+			return
+		}
+
+		priceParams := &stripe.PriceParams{
+			Expand: []*string{stripe.String("tiers")},
+		}
+
+		// Get the price details
+		priceDetails, err := price.Get(priceID, priceParams)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting price details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Get the associated product details
+		productDetails, err := product.Get(priceDetails.Product.ID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting product details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var flatFee float64
+		tiers := make([]map[string]interface{}, 0)
+
+		if priceDetails.TiersMode == "graduated" && len(priceDetails.Tiers) > 0 {
+			for _, tier := range priceDetails.Tiers {
+				tierInfo := map[string]interface{}{
+					"up_to":       tier.UpTo,
+					"unit_amount": tier.UnitAmountDecimal / 100, // Using UnitAmountDecimal for precision
+				}
+				tiers = append(tiers, tierInfo)
+			}
+
+			// Set included credits and overage charge based on tiers
+			if len(tiers) > 0 {
+				flatFee = float64(priceDetails.Tiers[0].FlatAmount) / 100 // Set the flat fee
+			}
+		} else if priceDetails.UnitAmount != 0 {
+			// Handle non-tiered flat pricing
+			flatFee = float64(priceDetails.UnitAmount) / 100
+		} else {
+			fmt.Println("Tiers or flat pricing not configured properly")
+		}
+
+		// Prepare the response
+		response := map[string]interface{}{
+			"plan_name":        productDetails.Name,
+			"plan_amount":      flatFee,
+			"plan_currency":    priceDetails.Currency,
+			"plan_interval":    priceDetails.Recurring.Interval,
+			"included_credits": 500,  // Replace with your logic
+			"overage_charge":   0.01, // Replace with your logic
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func StripeGetSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.SubscriptionID == nil {
+			utils.SendJSONError(w, "User does not have an active subscription", http.StatusBadRequest)
+			return
+		}
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		subscription, err := subscription.Get(*user.SubscriptionID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting subscription: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if len(subscription.Items.Data) == 0 {
+			utils.SendJSONError(w, "No subscription items found", http.StatusInternalServerError)
+			return
+		}
+
+		item := subscription.Items.Data[0]
+		plan := item.Plan
+
+		product, err := product.Get(plan.Product.ID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting product: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Fetch price details
+		priceParams := &stripe.PriceParams{
+			Expand: []*string{stripe.String("tiers")},
+		}
+		priceDetails, err := price.Get(plan.ID, priceParams)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting price details: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var includedCredits int
+		var overageCharge float64
+		var flatFee float64
+		tiers := make([]map[string]interface{}, 0)
+
+		if priceDetails.TiersMode == "graduated" && len(priceDetails.Tiers) > 0 {
+			for _, tier := range priceDetails.Tiers {
+				tierInfo := map[string]interface{}{
+					"up_to":       tier.UpTo,
+					"unit_amount": tier.UnitAmountDecimal / 100, // Using UnitAmountDecimal for precision
+				}
+				tiers = append(tiers, tierInfo)
+			}
+
+			// Set included credits and overage charge based on tiers
+			if len(tiers) > 0 {
+				includedCredits = int(priceDetails.Tiers[0].UpTo)
+				if len(priceDetails.Tiers) > 1 {
+					overageCharge = float64(priceDetails.Tiers[1].UnitAmountDecimal) / 100
+				}
+				flatFee = float64(priceDetails.Tiers[0].FlatAmount) / 100 // Set the flat fee
+			}
+		} else if priceDetails.UnitAmount != 0 {
+			// Handle non-tiered flat pricing
+			flatFee = float64(priceDetails.UnitAmount) / 100
+		} else {
+			fmt.Println("Tiers or flat pricing not configured properly")
+		}
+
+		// Fetch used credits
+		usedCredits, err := fetchUsedCredits(user.StripeUserID, "compute_units", subscription)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting usage records: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Prepare the response
+		response := map[string]interface{}{
+			"plan_name":            product.Name,
+			"plan_amount":          flatFee, // Use the calculated flat fee
+			"plan_currency":        priceDetails.Currency,
+			"plan_interval":        plan.Interval,
+			"current_period_start": time.Unix(subscription.CurrentPeriodStart, 0),
+			"current_period_end":   time.Unix(subscription.CurrentPeriodEnd, 0),
+			"next_due":             time.Unix(subscription.CurrentPeriodEnd, 0).Format("2006-01-02"),
+			"status":               subscription.Status,
+			"included_credits":     includedCredits,
+			"used_credits":         usedCredits,
+			"overage_charge":       overageCharge,
+			"cancel_at_period_end": subscription.CancelAtPeriodEnd,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func fetchUsedCredits(stripeCustomerID string, eventName string, subscription *stripe.Subscription) (int, error) {
+	err := setupStripeClient()
+	if err != nil {
+		return 0, fmt.Errorf("failed to set up Stripe client: %v", err)
+	}
+
+	meterID, err := fetchMeterIDByEventName(eventName)
+	if err != nil {
+		return 0, err
+	}
+
+	startTime := time.Unix(subscription.CurrentPeriodStart, 0)
+	startTime = time.Date(startTime.Year(), startTime.Month(), startTime.Day(), 0, 0, 0, 0, time.UTC)
+	endTime := time.Unix(subscription.CurrentPeriodEnd, 0)
+	endTime = time.Date(endTime.Year(), endTime.Month(), endTime.Day(), 0, 0, 0, 0, time.UTC)
+
+	fmt.Printf("Fetching usage records from %v to %v\n", startTime, endTime)
+
+	params := &stripe.BillingMeterEventSummaryListParams{
+		Customer:            stripe.String(stripeCustomerID),
+		StartTime:           stripe.Int64(startTime.Unix()),
+		EndTime:             stripe.Int64(endTime.Unix()),
+		ValueGroupingWindow: stripe.String("day"), // Aggregate by day
+		ID:                  stripe.String(meterID),
+	}
+
+	iterator := metereventsummary.List(params)
+
+	usedCredits := 0
+	for iterator.Next() {
+		summary := iterator.BillingMeterEventSummary()
+		if summary == nil {
+			fmt.Println("Empty summary, skipping...")
+			continue
+		}
+		fmt.Printf("Aggregated value on %v: %v\n", time.Unix(summary.StartTime, 0), summary.AggregatedValue)
+		usedCredits += int(summary.AggregatedValue)
+	}
+
+	if err := iterator.Err(); err != nil {
+		return 0, fmt.Errorf("error getting usage records: %v", err)
+	}
+
+	return usedCredits, nil
+}
+
+func fetchMeterIDByEventName(eventName string) (string, error) {
+	params := &stripe.BillingMeterListParams{}
+	iterator := meter.List(params)
+
+	for iterator.Next() {
+		m := iterator.BillingMeter()
+		if m.EventName == eventName {
+			return m.ID, nil
+		}
+	}
+
+	if err := iterator.Err(); err != nil {
+		return "", fmt.Errorf("error listing billing meters: %v", err)
+	}
+
+	return "", fmt.Errorf("meter with event name '%s' not found", eventName)
+}
+
+func StripeCheckSubscriptionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.SubscriptionID == nil {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": false})
+			return
+		}
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		subscription, err := subscription.Get(*user.SubscriptionID, nil)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error getting subscription: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		isSubscribed := subscription.Status == "active" || subscription.Status == "trialing"
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"isSubscribed": isSubscribed})
+	}
+}
+
+func StripeCreateBillingPortalSessionHandler(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctxUser := r.Context().Value(middleware.UserContextKey)
+		user, ok := ctxUser.(*models.User)
+		if !ok {
+			utils.SendJSONError(w, "Unauthorized, user context not passed through auth middleware", http.StatusUnauthorized)
+			return
+		}
+
+		if user.StripeUserID == "" {
+			utils.SendJSONError(w, "User does not have a Stripe Customer ID", http.StatusBadRequest)
+			return
+		}
+
+		err := setupStripeClient()
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error setting up Stripe client: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		var requestBody struct {
+			ReturnURL string `json:"returnURL"`
+		}
+		err = json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			utils.SendJSONError(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		params := &stripe.BillingPortalSessionParams{
+			Customer:  stripe.String(user.StripeUserID),
+			ReturnURL: stripe.String(requestBody.ReturnURL),
+		}
+
+		session, err := billingportal.New(params)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error creating billing portal session: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"url": session.URL})
 	}
 }

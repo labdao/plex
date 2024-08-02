@@ -107,21 +107,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
             toast.error("Failed to start experiment");
           }
         } else {
-          // Paid tier user without active subscription, initiate checkout process
-          const result = await dispatch(addExperimentWithCheckoutThunk(transformedPayload)).unwrap();
-          if (result.checkout) {
-            // User needs to subscribe, redirect to checkout
-            window.location.href = result.checkout.url;
-          } else if (result && result.ID) {
-            // Experiment was created successfully (this case might not occur for non-subscribed users)
-            console.log("Experiment created", result);
-            router.push(`/experiments/${result.ID}`, { scroll: false });
-            dispatch(experimentListThunk(walletAddress));
-            toast.success("Experiment started successfully");
-          } else {
-            console.log("Something went wrong", result);
-            toast.error("Failed to start experiment");
-          }
+          // Paid tier user without active subscription, redirect to subscription page
+          console.log('Redirecting...');
+          router.push('/subscribe');
         }
       } else {
         console.error("Invalid user tier");
