@@ -22,6 +22,10 @@ export const getCheckoutURL = async (): Promise<any> => {
       Authorization: `Bearer ${authToken}`,
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      success_url: `${window.location.origin}/subscription/manage`,
+      cancel_url: `${window.location.origin}/checkout/cancel`,
+    }),
   });
 
   if (!response.ok) {

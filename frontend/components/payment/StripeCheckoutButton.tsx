@@ -1,5 +1,3 @@
-import { useLogin } from "@privy-io/react-auth";
-import { usePrivy } from "@privy-io/react-auth";
 import { Slot } from "@radix-ui/react-slot";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,7 +5,8 @@ import { toast } from "sonner";
 
 import { ButtonProps } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
-import { AppDispatch, selectStripeCheckoutError, selectStripeCheckoutLoading, selectStripeCheckoutUrl, stripeCheckoutThunk } from "@/lib/redux";
+import { AppDispatch, selectStripeCheckoutError, selectStripeCheckoutLoading, selectStripeCheckoutUrl, setStripeCheckoutError, setStripeCheckoutLoading, setStripeCheckoutSuccess, setStripeCheckoutUrl } from "@/lib/redux";
+import { getCheckoutURL } from "@/lib/redux/slices/stripeCheckoutSlice/asyncActions";
 
 import { PageLoader } from "../shared/PageLoader";
 import { AlertDialog, AlertDialogContent } from "../ui/alert-dialog";
@@ -21,17 +20,35 @@ const StripeCheckoutButton = (props: ButtonProps) => {
   const error = useSelector(selectStripeCheckoutError);
 
   const handleCheckout = async () => {
-    dispatch(stripeCheckoutThunk());
+    dispatch(setStripeCheckoutError(null));
+    dispatch(setStripeCheckoutLoading(true));
+    try {
+      const checkoutResponse = await getCheckoutURL();
+      if (checkoutResponse?.url) {
+        dispatch(setStripeCheckoutSuccess(true));
+        dispatch(setStripeCheckoutUrl({ url: checkoutResponse.url }));
+        dispatch(setStripeCheckoutLoading(false));
+        window.location.assign(checkoutResponse.url);
+      } else {
+        throw new Error("Failed to get checkout URL");
+      }
+    } catch (error: unknown) {
+      console.log("Failed to initiate checkout", error);
+      if (error instanceof Error) {
+        dispatch(setStripeCheckoutError(error.message));
+      } else {
+        dispatch(setStripeCheckoutError("Failed to get checkout URL"));
+      }
+      dispatch(setStripeCheckoutLoading(false));
+      toast.error("Failed to get checkout URL");
+    }
   };
 
   useEffect(() => {
-    if (checkoutUrl) {
-      window.location.assign(checkoutUrl);
-    }
     if (error) {
       toast.error(error);
     }
-  }, [checkoutUrl, error]);
+  }, [error]);
 
   return (
     <>
