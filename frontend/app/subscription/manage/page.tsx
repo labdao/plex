@@ -147,7 +147,7 @@ export default function ManageSubscription() {
               <div className="flex justify-between">
                 <span style={{ color: '#808080' }}>Current cycle overage charges</span>
                 <span style={{ color: '#000000' }}>
-                  ${subscriptionDetails.overage_charge} * {Math.max(0, subscriptionDetails.used_credits - subscriptionDetails.included_credits)}
+                  ${subscriptionDetails.overage_charge * Math.max(0, subscriptionDetails.used_credits - subscriptionDetails.included_credits)}
                 </span>
               </div>
             </div>
