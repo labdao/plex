@@ -119,11 +119,6 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 		// Create the HTTP request
 
 	} else if job.JobType == models.JobTypeJob {
-		if pdbValue, ok := adjustedInputs["pdb"].(string); ok {
-			adjustedInputs["pdb"] = "s3://labdao-testeks/test.pdb"
-			log.Println("PDB value is: ", pdbValue)
-		}
-
 		inputsJSON, err := json.Marshal(adjustedInputs)
 		if err != nil {
 			return nil, err

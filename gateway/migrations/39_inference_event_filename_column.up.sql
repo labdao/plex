@@ -1,0 +1,1 @@
+ALTER TABLE inference_events ADD COLUMN IF NOT EXISTS file_name VARCHAR;

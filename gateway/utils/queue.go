@@ -157,10 +157,10 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.RayJobID)
 		return nil
 	} else if ray.JobFailed(job.RayJobID) {
-		fmt.Printf("Job %v , %v failed, updating status and adding output files\n", job.ID, job.RayJobID)
+		fmt.Printf("Job %v , %v failed, updating status\n", job.ID, job.RayJobID)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Ray job %v failed", job.RayJobID), db)
 	} else if ray.JobStopped(job.RayJobID) {
-		fmt.Printf("Job %v , %v was stopped, updating status and adding output files\n", job.ID, job.RayJobID)
+		fmt.Printf("Job %v , %v was stopped, updating status\n", job.ID, job.RayJobID)
 		return setJobStatus(&job, models.JobStateStopped, fmt.Sprintf("Ray job %v was stopped", job.RayJobID), db)
 	} else if ray.JobSucceeded(job.RayJobID) {
 		fmt.Printf("Job %v , %v completed, updating status and adding output files\n", job.ID, job.RayJobID)

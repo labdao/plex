@@ -166,7 +166,7 @@ func GetExperimentCheckpointDataHandler(db *gorm.DB) http.HandlerFunc {
 		// where experiments.id = 5;
 		if err := db.Table("jobs").
 			Select("jobs.id as job_id, models.model_json as model_json, inference_events.output_json as result_json").
-			Joins("JOIN inference_events ON inference_events.job_id = jobs.id AND inference_events.event_type = ?", models.EventTypeFileProcessed).
+			Joins("JOIN inference_events ON inference_events.job_id = jobs.id AND inference_events.file_name is not null AND inference_events.event_type = ?", models.EventTypeFileProcessed).
 			Joins("JOIN experiments ON experiments.id = jobs.experiment_id").
 			Joins("JOIN models ON models.id = jobs.model_id").
 			Where("experiments.id = ?", experimentID).
