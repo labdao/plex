@@ -179,15 +179,18 @@ func GetRayJobStatus(rayJobID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error getting job status: %s", string(body))
+	}
 	log.Printf("Ray job status response: %s\n", string(body))
 	var data map[string]interface{}
 	if err := json.Unmarshal(body, &data); err != nil {
-		log.Fatalf("Error parsing JSON: %s", err)
+		return "", err
 	}
 
 	status, ok := data["status"]
 	if !ok {
-		log.Fatal("Status field not found")
+		return "", fmt.Errorf("status key not found in response: %v", data)
 	}
 	return status.(string), nil
 }
