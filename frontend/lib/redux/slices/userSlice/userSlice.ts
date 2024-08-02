@@ -8,7 +8,7 @@ interface UserState {
   did: string | null;
   tier: 'Free' | 'Paid' | null;
   isAdmin: boolean | null;
-  subscriptionStatus: 'active' | 'trialing' | 'inactive' | null;
+  subscriptionStatus: 'active' | 'inactive' | null;
 }
 
 const initialState: UserState = {
@@ -30,7 +30,7 @@ export const userSlice = createSlice({
     setUserTier: (state, action: PayloadAction<'Free' | 'Paid' | null>) => {
       state.tier = action.payload;
     },
-    setSubscriptionStatus: (state, action: PayloadAction<'active' | 'trialing' | 'inactive' | null>) => {
+    setSubscriptionStatus: (state, action: PayloadAction<'active' | 'inactive' | null>) => {
       state.subscriptionStatus = action.payload;
     },
   },

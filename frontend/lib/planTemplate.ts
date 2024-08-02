@@ -10,7 +10,7 @@ const getPlanTemplate = (): PlanTemplate => {
   return {
     details: [
       {
-        description: "Up to {{includedCredits}} compute tokens per month included (about {{numMolecules}} molecules)"
+        description: "{{includedCredits}} compute tokens per month included (about {{numMolecules}} molecules)"
       },
       {
         description: "Every additional token costs {{overageCharge}} USD"

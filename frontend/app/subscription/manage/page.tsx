@@ -122,7 +122,6 @@ export default function ManageSubscription() {
   }
 
   const showRenewalInfo = !subscriptionDetails.cancel_at_period_end;
-  const isTrialingButNotRenewing = subscriptionDetails.status === 'trialing' && subscriptionDetails.cancel_at_period_end;
 
   return (
     <div className="relative flex flex-col h-screen max-w-full grow">
@@ -148,7 +147,7 @@ export default function ManageSubscription() {
               <div className="flex justify-between">
                 <span style={{ color: '#808080' }}>Current cycle overage charges</span>
                 <span style={{ color: '#000000' }}>
-                  ${subscriptionDetails.overage_charge}
+                  ${subscriptionDetails.overage_charge * Math.max(0, subscriptionDetails.used_credits - subscriptionDetails.included_credits)}
                 </span>
               </div>
             </div>
@@ -157,9 +156,9 @@ export default function ManageSubscription() {
             <h3 className="font-heading text-black">Billing & Payment</h3><br/>
             <div className="text-sm text-gray-600 space-y-1.5 font-mono">
               <div className="flex justify-between">
-                <span style={{ color: '#808080' }}>Cost until {subscriptionDetails.next_due}</span>
+                <span style={{ color: '#808080' }}>Cost</span>
                 <span style={{ color: '#000000' }}>
-                  {subscriptionDetails.status === 'trialing' ? '$0' : `$${subscriptionDetails.plan_amount + Math.max(0, (subscriptionDetails.used_credits - subscriptionDetails.included_credits) * subscriptionDetails.overage_charge)}`}
+                  ${subscriptionDetails.plan_amount + Math.max(0, (subscriptionDetails.used_credits - subscriptionDetails.included_credits) * subscriptionDetails.overage_charge)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -241,7 +240,7 @@ export default function ManageSubscription() {
           </div>
           <br />
             <div className="text-sm text-gray-600 mb-4 font-mono" style={{ color: '#808080' }}>
-              <span>Your trial ends on {new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}. After the trial ends, your plan will {isTrialingButNotRenewing ? 'not renew.' : 'continue with the selected subscription.'}</span>
+              <span>Your plan ends on {new Date(subscriptionDetails.current_period_end).toISOString().split('T')[0]}, and will {showRenewalInfo ? 'automatically renew until you cancel.' : 'not renew.'}</span>
             </div>
         </div>
       </div>
