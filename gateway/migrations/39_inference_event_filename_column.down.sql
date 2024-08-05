@@ -1,0 +1,1 @@
+ALTER TABLE inference_events DROP COLUMN IF EXISTS file_name;

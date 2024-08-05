@@ -15,6 +15,7 @@ const (
 	EventTypeJobStopped    = "job_stopped"
 	EventTypeJobSucceeded  = "job_succeeded"
 	EventTypeJobFailed     = "job_failed"
+	EventTypeFileProcessed = "file_processed"
 )
 
 // retry default 0?
@@ -31,4 +32,5 @@ type InferenceEvent struct {
 	EventTime    time.Time      `gorm:""`
 	EventMessage string         `gorm:"type:text"`
 	EventType    string         `gorm:"type:varchar(255);not null"`
+	FileName     string         `gorm:"type:varchar(255)"`
 }
