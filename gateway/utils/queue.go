@@ -587,19 +587,8 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 		}
 	}
 
-	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
-	// Iterate over all files in the RayJobResponse
-	for key, fileDetail := range resultJSON.Files {
-		fmt.Printf("AddFileToDB for file: %s, Key: %s\n", fileDetail.URI, key)
-		if err := addFileToDB(job, fileDetail, key, db); err != nil {
-			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
-		}
-	}
-
-	fmt.Printf("Adding PDB file to DB\n %v\n", resultJSON.PDB)
-	// Special handling for PDB as it's a common file across many jobs
-	if err := addFileToDB(job, resultJSON.PDB, "pdb", db); err != nil {
-		return fmt.Errorf("failed to add PDB file to database: %v", err)
+	if err := addFiles(job, body, resultJSON, db); err != nil {
+		return fmt.Errorf("failed to add files: %v", err)
 	}
 
 	return nil
@@ -688,7 +677,7 @@ func processFile(fileName string, job *models.Job, db *gorm.DB) error {
 	}
 
 	// Add files and update related job data in the database without marking the job as completed
-	if err := addFilesAndUpdateJob(job, data, rayJobResponse, db); err != nil {
+	if err := addFiles(job, data, rayJobResponse, db); err != nil {
 		log.Printf("Failed to add files and update job for job %d from file %s: %v", job.ID, fileName, err)
 		return err
 	}
@@ -730,14 +719,22 @@ func fileProcessed(fileName string, jobID uint, db *gorm.DB) bool {
 	return count > 0
 }
 
-func addFilesAndUpdateJob(job *models.Job, data []byte, response models.RayJobResponse, db *gorm.DB) error {
-	fmt.Printf("Adding output files and updating job data for job %d\n", job.ID)
+func addFiles(job *models.Job, data []byte, response models.RayJobResponse, db *gorm.DB) error {
+	fmt.Printf("Adding output files for job %d\n", job.ID)
 
-	// Loop through the files detailed in the response
+	fmt.Printf("Looping through files in RayJobResponse\n %v\n", response.Files)
+	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range response.Files {
+		fmt.Printf("AddFileToDB for file: %s, Key: %s\n", fileDetail.URI, key)
 		if err := addFileToDB(job, fileDetail, key, db); err != nil {
 			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
 		}
+	}
+
+	fmt.Printf("Adding PDB file to DB\n %v\n", response.PDB)
+	// Special handling for PDB as it's a common file across many jobs
+	if err := addFileToDB(job, response.PDB, "pdb", db); err != nil {
+		return fmt.Errorf("failed to add PDB file to database: %v", err)
 	}
 
 	return nil
