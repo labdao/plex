@@ -119,9 +119,9 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if user.ComputeTally+totalComputeCost > threshold {
+		if user.ComputeTally+totalComputeCost > threshold && user.Tier == 0 {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": os.Getenv("FRONTEND_URL") + "/subscribe"})
+			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": "/subscribe"})
 			return
 		}
 
@@ -584,9 +584,9 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if user.ComputeTally+totalComputeCost > threshold {
+		if user.ComputeTally+totalComputeCost > threshold && user.Tier == 0 {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": os.Getenv("FRONTEND_URL") + "/subscribe"})
+			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": "/subscribe"})
 			return
 		}
 
