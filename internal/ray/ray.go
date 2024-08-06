@@ -35,7 +35,7 @@ func GetRayJobApiHost() string {
 	if exists {
 		return rayApiHost
 	} else {
-		return "http://localhost:8265" // Default Ray API host
+		return "http://base-job:8265" // Default Ray API host
 	}
 }
 
