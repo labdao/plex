@@ -700,7 +700,7 @@ func processFile(fileName string, job *models.Job, db *gorm.DB) error {
 		EventType:  models.EventTypeFileProcessed,
 		JobStatus:  models.JobStateRunning,
 		FileName:   fileName,
-		EventTime:  time.Now(),
+		EventTime:  time.Now().UTC(),
 		OutputJson: datatypes.JSON(data), // Storing the JSON output directly in the event
 	}
 	if err := db.Create(&event).Error; err != nil {
