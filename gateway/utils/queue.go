@@ -651,7 +651,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 
 func processNewFiles(job *models.Job, db *gorm.DB) error {
 	bucketName := os.Getenv("BUCKET_NAME")
-	prefix := fmt.Sprintf("%s-", job.RayJobID) // Adjusted to the new naming pattern
+	prefix := job.RayJobID // Adjusted to the new naming pattern
 
 	s3client, err := s3client.NewS3Client()
 	if err != nil {

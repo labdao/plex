@@ -92,7 +92,7 @@ func ListAPIKeysHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		var apiKeys []models.APIKey
-		if err := db.Where("wallet_address = ?", user.WalletAddress).Find(&apiKeys).Error; err != nil {
+		if err := db.Where("user_id = ?", user.WalletAddress).Find(&apiKeys).Error; err != nil {
 			utils.SendJSONError(w, "Failed to get API keys: "+err.Error(), http.StatusInternalServerError)
 			return
 		}

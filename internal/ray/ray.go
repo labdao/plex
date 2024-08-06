@@ -123,7 +123,6 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Submitting Ray job with testeks inputs: %s\n", inputsJSON)
 
 		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
 		runtimeEnv := map[string]interface{}{
