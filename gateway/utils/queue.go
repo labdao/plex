@@ -601,7 +601,11 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	var file models.File
 	result := db.Where("s3_uri = ?", fileDetail.URI).First(&file)
 	if result.Error == nil {
-		fmt.Println("File already exists in DB:", fileDetail.URI)
+		fmt.Println("File already exists in DB, adding an entry in the job_output_files table:", fileDetail.URI)
+		job.OutputFiles = append(job.OutputFiles, file)
+		if err := db.Save(&job).Error; err != nil {
+			return fmt.Errorf("error updating job with new output file: %v", err)
+		}
 		return nil // File already processed
 	}
 
