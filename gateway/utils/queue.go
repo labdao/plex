@@ -250,7 +250,7 @@ func MonitorRunningJobs(db *gorm.DB) error {
 }
 
 func fetchRunningJobsWithModelData(jobs *[]models.Job, db *gorm.DB) error {
-	return db.Preload("Model").Where("job_status = ?", models.JobStateRunning).Where("job_type", models.JobTypeJob).Find(jobs).Error
+	return db.Preload("Model").Where("job_status in (?,?)", models.JobStateRunning, models.JobStatePending).Where("job_type", models.JobTypeJob).Find(jobs).Error
 }
 
 func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, db *gorm.DB) error {
