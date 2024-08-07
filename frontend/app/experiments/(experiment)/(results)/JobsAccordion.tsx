@@ -68,7 +68,7 @@ export default function JobsAccordion({ experiment }: JobsAccordionProps) {
     const intervalId = setInterval(() => {
       console.log("Polling for job updates");
       fetchJobUpdates();
-    }, 5000); // Poll every 5 seconds
+    }, 10000); // Poll every 10 seconds
  
     return () => clearInterval(intervalId);
   }, [jobs]);
