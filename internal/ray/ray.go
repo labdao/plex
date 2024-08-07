@@ -35,7 +35,7 @@ func GetRayJobApiHost() string {
 	if exists {
 		return rayApiHost
 	} else {
-		return "http://localhost:8265" // Default Ray API host
+		return "http://base-job:8265" // Default Ray API host
 	}
 }
 
@@ -123,7 +123,6 @@ func CreateRayJob(job *models.Job, modelPath string, rayJobID string, inputs map
 		if err != nil {
 			return nil, err
 		}
-		log.Printf("Submitting Ray job with testeks inputs: %s\n", inputsJSON)
 
 		rayServiceURL = GetRayJobApiHost() + model.RayEndpoint
 		runtimeEnv := map[string]interface{}{

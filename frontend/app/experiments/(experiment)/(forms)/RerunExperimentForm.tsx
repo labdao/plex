@@ -66,7 +66,9 @@ export default function RerunExperimentForm() {
     try {
       if (userTier === 'Free' || (userTier === 'Paid' && isUserSubscribed)) {
         const response = await addJobToExperiment(experimentID, transformedPayload);
-        if (response && response.ID) {
+        if (response.redirectUrl) {
+          router.push(response.redirectUrl);
+        } else if (response && response.ID) {
           console.log("Job added to experiment", response);
           dispatch(experimentDetailThunk(response.ID));
           dispatch(experimentListThunk(walletAddress));

@@ -105,6 +105,26 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Initialized IO List")
 
+		totalComputeCost := len(ioList) * model.ComputeCost
+
+		thresholdStr := os.Getenv("TIER_THRESHOLD")
+		if thresholdStr == "" {
+			utils.SendJSONError(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+			return
+		}
+
+		threshold, err := strconv.Atoi(thresholdStr)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if user.ComputeTally+totalComputeCost > threshold && user.Tier == 0 {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": "/subscribe"})
+			return
+		}
+
 		experiment := models.Experiment{
 			WalletAddress: user.WalletAddress,
 			Name:          name,
@@ -209,18 +229,6 @@ func AddExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(user)
 			if result.Error != nil {
 				utils.SendJSONError(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
-				return
-			}
-
-			thresholdStr := os.Getenv("TIER_THRESHOLD")
-			if thresholdStr == "" {
-				utils.SendJSONError(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
-				return
-			}
-
-			threshold, err := strconv.Atoi(thresholdStr)
-			if err != nil {
-				utils.SendJSONError(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
 				return
 			}
 
@@ -562,6 +570,26 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		log.Println("Initialized IO List")
 
+		totalComputeCost := len(ioList) * model.ComputeCost
+
+		thresholdStr := os.Getenv("TIER_THRESHOLD")
+		if thresholdStr == "" {
+			utils.SendJSONError(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
+			return
+		}
+
+		threshold, err := strconv.Atoi(thresholdStr)
+		if err != nil {
+			utils.SendJSONError(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		if user.ComputeTally+totalComputeCost > threshold && user.Tier == 0 {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"redirectUrl": "/subscribe"})
+			return
+		}
+
 		for _, ioItem := range ioList {
 			log.Println("Creating job entry")
 			inputsJSON, err := json.Marshal(ioItem.Inputs)
@@ -652,18 +680,6 @@ func AddJobToExperimentHandler(db *gorm.DB) http.HandlerFunc {
 			result = db.Save(user)
 			if result.Error != nil {
 				http.Error(w, fmt.Sprintf("Error updating user compute tally: %v", result.Error), http.StatusInternalServerError)
-				return
-			}
-
-			thresholdStr := os.Getenv("TIER_THRESHOLD")
-			if thresholdStr == "" {
-				http.Error(w, "TIER_THRESHOLD environment variable is not set", http.StatusInternalServerError)
-				return
-			}
-
-			threshold, err := strconv.Atoi(thresholdStr)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error converting TIER_THRESHOLD to integer: %v", err), http.StatusInternalServerError)
 				return
 			}
 

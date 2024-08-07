@@ -84,7 +84,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
       if (userTier === 'Free') {
         // For free tier users, directly create the experiment regardless of subscription status
         const response = await dispatch(addExperimentThunk(transformedPayload)).unwrap();
-        if (response && response.ID) {
+        if (response.redirectUrl) {
+          router.push(response.redirectUrl);
+        } else if (response && response.ID) {
           console.log("Experiment created", response);
           router.push(`/experiments/${response.ID}`, { scroll: false });
           dispatch(experimentListThunk(walletAddress));

@@ -87,7 +87,7 @@ func (rq *RayQueue) worker(workerID int) {
 			fmt.Printf("Error marking dangling jobs to stopped: %v\n", err)
 		}
 		var job models.Job
-		err = fetchAndMarkOldestQueuedJobAsProcessing(&job, models.QueueTypeRay, rq.db)
+		err = fetchAndMarkOldestQueuedJobAsProcessing(&job, rq.db)
 		if err != nil {
 			state.Busy = false
 			state.CurrentJob = nil
@@ -140,9 +140,6 @@ func fetchAndMarkOldestRunningJobAsStopped(db *gorm.DB) error {
 func checkRunningJob(jobID uint, db *gorm.DB) error {
 	var job models.Job
 	err := fetchJobWithModelAndExperimentData(&job, jobID, db)
-	if err != nil {
-		return err
-	}
 	if err != nil && strings.Contains(err.Error(), "Job not found") {
 		fmt.Printf("Job %v , %v has missing Ray Job, failing Job\n", job.ID, job.RayJobID)
 		return setJobStatus(&job, models.JobStateFailed, fmt.Sprintf("Ray job %v not found", job.RayJobID), db)
@@ -154,6 +151,14 @@ func checkRunningJob(jobID uint, db *gorm.DB) error {
 		fmt.Printf("Job %v , %v is still in pending state nothing to do\n", job.ID, job.RayJobID)
 		return nil
 	} else if ray.JobIsRunning(job.RayJobID) {
+		if job.JobStatus != models.JobStateRunning {
+			fmt.Printf("Job %v , %v is running, updating status\n", job.ID, job.RayJobID)
+			err := setJobStatus(&job, models.JobStateRunning, "", db)
+			if err != nil {
+				return err
+			}
+			createInferenceEvent(job.ID, models.JobStateRunning, job.RayJobID, job.RetryCount, db)
+		}
 		fmt.Printf("Job %v , %v is still running nothing to do\n", job.ID, job.RayJobID)
 		return nil
 	} else if ray.JobFailed(job.RayJobID) {
@@ -245,10 +250,10 @@ func MonitorRunningJobs(db *gorm.DB) error {
 }
 
 func fetchRunningJobsWithModelData(jobs *[]models.Job, db *gorm.DB) error {
-	return db.Preload("Model").Where("job_status = ?", models.JobStateRunning).Where("job_type", models.JobTypeJob).Find(jobs).Error
+	return db.Preload("Model").Where("job_status in (?,?)", models.JobStateRunning, models.JobStatePending).Where("job_type", models.JobTypeJob).Find(jobs).Error
 }
 
-func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, queueType models.QueueType, db *gorm.DB) error {
+func fetchAndMarkOldestQueuedJobAsProcessing(job *models.Job, db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("job_status = ?", models.JobStateQueued).Order("created_at ASC").First(job).Error; err != nil {
 			return err
@@ -304,14 +309,17 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		rayJobID := uuid.New().String()
 		log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 		job.RayJobID = rayJobID
+		if err := db.Save(&job).Error; err != nil {
+			return err
+		}
+		if err := submitRayJobAndUpdateID(&job, db); err != nil {
+			return err
+		}
 		job.JobStatus = models.JobStatePending
 		if err := db.Save(&job).Error; err != nil {
 			return err
 		}
 		createInferenceEvent(job.ID, models.JobStatePending, job.RayJobID, 0, db)
-		if err := submitRayJobAndUpdateID(&job, db); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -417,9 +425,8 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	modelPath := job.Model.S3URI
 
 	log.Printf("Submitting to Ray with inputs: %+v\n", inputs)
-	createInferenceEvent(job.ID, models.JobStateRunning, job.RayJobID, 0, db)
-	setJobStatusAndID(job, models.JobStateRunning, job.RayJobID, "", db)
-	log.Printf("setting job %v to running\n", job.ID)
+	setRayJobID(job, job.RayJobID, db)
+	// log.Printf("setting job %v to running\n", job.ID)
 	resp, err := ray.SubmitRayJob(*job, modelPath, job.RayJobID, inputs, db)
 	if err != nil {
 		return err
@@ -500,7 +507,11 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 	}
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	if job.JobType == models.JobTypeJob {
+		fmt.Printf("Submitted Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	} else {
+		fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	}
 	err = db.Save(&job).Error
 	if err != nil {
 		return err
@@ -508,15 +519,14 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 	return nil
 }
 
-func setJobStatusAndID(job *models.Job, state models.JobState, rayJobID string, errorMessage string, db *gorm.DB) error {
-	job.JobStatus = state
-	job.StartedAt = time.Now().UTC()
-	job.Error = errorMessage
+func setRayJobID(job *models.Job, rayJobID string, db *gorm.DB) error {
 	job.RayJobID = rayJobID
+	job.StartedAt = time.Now().UTC()
 	err := db.Save(&job).Error
 	if err != nil {
 		return err
 	}
+	createInferenceEvent(job.ID, models.JobStatePending, job.RayJobID, 0, db)
 	return nil
 }
 
@@ -587,19 +597,8 @@ func completeRayJobAndAddFiles(job *models.Job, body []byte, resultJSON models.R
 		}
 	}
 
-	fmt.Printf("Looping through files in RayJobResponse\n %v\n", resultJSON.Files)
-	// Iterate over all files in the RayJobResponse
-	for key, fileDetail := range resultJSON.Files {
-		fmt.Printf("AddFileToDB for file: %s, Key: %s\n", fileDetail.URI, key)
-		if err := addFileToDB(job, fileDetail, key, db); err != nil {
-			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
-		}
-	}
-
-	fmt.Printf("Adding PDB file to DB\n %v\n", resultJSON.PDB)
-	// Special handling for PDB as it's a common file across many jobs
-	if err := addFileToDB(job, resultJSON.PDB, "pdb", db); err != nil {
-		return fmt.Errorf("failed to add PDB file to database: %v", err)
+	if err := addFiles(job, resultJSON, db); err != nil {
+		return fmt.Errorf("failed to add files: %v", err)
 	}
 
 	return nil
@@ -612,7 +611,11 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 	var file models.File
 	result := db.Where("s3_uri = ?", fileDetail.URI).First(&file)
 	if result.Error == nil {
-		fmt.Println("File already exists in DB:", fileDetail.URI)
+		fmt.Println("File already exists in DB, adding an entry in the job_output_files table:", fileDetail.URI)
+		job.OutputFiles = append(job.OutputFiles, file)
+		if err := db.Save(&job).Error; err != nil {
+			return fmt.Errorf("error updating job with new output file: %v", err)
+		}
 		return nil // File already processed
 	}
 
@@ -651,7 +654,7 @@ func addFileToDB(job *models.Job, fileDetail models.FileDetail, fileType string,
 
 func processNewFiles(job *models.Job, db *gorm.DB) error {
 	bucketName := os.Getenv("BUCKET_NAME")
-	prefix := fmt.Sprintf("%s-", job.RayJobID) // Adjusted to the new naming pattern
+	prefix := job.RayJobID // Adjusted to the new naming pattern
 
 	s3client, err := s3client.NewS3Client()
 	if err != nil {
@@ -688,7 +691,7 @@ func processFile(fileName string, job *models.Job, db *gorm.DB) error {
 	}
 
 	// Add files and update related job data in the database without marking the job as completed
-	if err := addFilesAndUpdateJob(job, data, rayJobResponse, db); err != nil {
+	if err := addFiles(job, rayJobResponse, db); err != nil {
 		log.Printf("Failed to add files and update job for job %d from file %s: %v", job.ID, fileName, err)
 		return err
 	}
@@ -700,7 +703,7 @@ func processFile(fileName string, job *models.Job, db *gorm.DB) error {
 		EventType:  models.EventTypeFileProcessed,
 		JobStatus:  models.JobStateRunning,
 		FileName:   fileName,
-		EventTime:  time.Now(),
+		EventTime:  time.Now().UTC(),
 		OutputJson: datatypes.JSON(data), // Storing the JSON output directly in the event
 	}
 	if err := db.Create(&event).Error; err != nil {
@@ -730,14 +733,22 @@ func fileProcessed(fileName string, jobID uint, db *gorm.DB) bool {
 	return count > 0
 }
 
-func addFilesAndUpdateJob(job *models.Job, data []byte, response models.RayJobResponse, db *gorm.DB) error {
-	fmt.Printf("Adding output files and updating job data for job %d\n", job.ID)
+func addFiles(job *models.Job, response models.RayJobResponse, db *gorm.DB) error {
+	fmt.Printf("Adding output files for job %d\n", job.ID)
 
-	// Loop through the files detailed in the response
+	fmt.Printf("Looping through files in RayJobResponse\n %v\n", response.Files)
+	// Iterate over all files in the RayJobResponse
 	for key, fileDetail := range response.Files {
+		fmt.Printf("AddFileToDB for file: %s, Key: %s\n", fileDetail.URI, key)
 		if err := addFileToDB(job, fileDetail, key, db); err != nil {
 			return fmt.Errorf("failed to add file (%s) to database: %v", key, err)
 		}
+	}
+
+	fmt.Printf("Adding PDB file to DB\n %v\n", response.PDB)
+	// Special handling for PDB as it's a common file across many jobs
+	if err := addFileToDB(job, response.PDB, "pdb", db); err != nil {
+		return fmt.Errorf("failed to add PDB file to database: %v", err)
 	}
 
 	return nil
