@@ -309,14 +309,17 @@ func processRayJob(jobID uint, db *gorm.DB) error {
 		rayJobID := uuid.New().String()
 		log.Printf("Here is the UUID for the job: %v\n", rayJobID)
 		job.RayJobID = rayJobID
+		if err := db.Save(&job).Error; err != nil {
+			return err
+		}
+		if err := submitRayJobAndUpdateID(&job, db); err != nil {
+			return err
+		}
 		job.JobStatus = models.JobStatePending
 		if err := db.Save(&job).Error; err != nil {
 			return err
 		}
 		createInferenceEvent(job.ID, models.JobStatePending, job.RayJobID, 0, db)
-		if err := submitRayJobAndUpdateID(&job, db); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -504,7 +507,11 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 	}
 	fmt.Printf("Job had id %v\n", job.ID)
-	fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	if job.JobType == models.JobTypeJob {
+		fmt.Printf("Submitted Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	} else {
+		fmt.Printf("Finished Job with Ray id %v and status %v\n", job.RayJobID, job.JobStatus)
+	}
 	err = db.Save(&job).Error
 	if err != nil {
 		return err
@@ -514,6 +521,7 @@ func submitRayJobAndUpdateID(job *models.Job, db *gorm.DB) error {
 
 func setRayJobID(job *models.Job, rayJobID string, db *gorm.DB) error {
 	job.RayJobID = rayJobID
+	job.StartedAt = time.Now().UTC()
 	err := db.Save(&job).Error
 	if err != nil {
 		return err
