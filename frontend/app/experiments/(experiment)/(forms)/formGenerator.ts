@@ -111,7 +111,7 @@ export function generateRerunSchema(inputs: InputType = {}, jobInputs: any = {})
     schema[key] = z.array(z.object({ value: valueSchema }));
   }
 
-  console.log("Generated schema:", schema); // Add this for debugging
+  // console.log("Generated schema:", schema); // Add this for debugging
 
   return z.object(schema).optional().default({});
 }
@@ -153,7 +153,7 @@ export function generateValues(inputs: InputType = {}, jobInputs: any = {}) {
     values[key] = [{ value }];
   }
 
-  console.log("Generated values:", values); // Add this for debugging
+  // console.log("Generated values:", values); // Add this for debugging
 
   return values;
 }

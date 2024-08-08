@@ -18,8 +18,16 @@ import { addExperimentThunk, addExperimentWithCheckoutThunk, AppDispatch, experi
 import { createExperiment } from "@/lib/redux/slices/experimentAddSlice/asyncActions";
 
 import { DynamicArrayField } from "./DynamicArrayField";
+import ThreeDMolViewer from "./ThreeDMolViewer";
 import { generateDefaultValues, generateSchema } from "./formGenerator";
 import { groupInputs, transformJson } from "./formUtils";
+
+interface FormValues {
+  name: string;
+  model: string;
+  pdbData?: string;            
+  selectedResidues?: string[]; 
+}
 
 export default function NewExperimentForm({ task }: { task: any }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,6 +38,9 @@ export default function NewExperimentForm({ task }: { task: any }) {
   const walletAddress = user?.wallet?.address;
   const userTier = useSelector(selectUserTier);
   const isUserSubscribed = useSelector(selectIsUserSubscribed);
+  const handleViewerSubmit = (data: { pdb: File | null; binderLength: number; hotspots: string }) => {
+    console.log('Data from viewer:', data);
+};
 
   useEffect(() => {
     dispatch(refreshUserDataThunk());
@@ -49,12 +60,12 @@ export default function NewExperimentForm({ task }: { task: any }) {
 
   const groupedInputs = groupInputs(model.ModelJson?.inputs);
   const formSchema = generateSchema(model.ModelJson?.inputs);
-  const defaultValues = generateDefaultValues(model.ModelJson?.inputs, task, model);
+  // const defaultValues = generateDefaultValues(model.ModelJson?.inputs, task, model);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: defaultValues,
-  });
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema), // Make sure formSchema reflects these types
+    defaultValues: generateDefaultValues(model.ModelJson?.inputs, task, model),
+});
 
   // Watch all form values
   const watchedValues = form.watch();
@@ -128,6 +139,7 @@ export default function NewExperimentForm({ task }: { task: any }) {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit((values) => onSubmit(values))}>
+        <ThreeDMolViewer onSubmit={handleViewerSubmit} />
           <Card className="mb-2">
             <CardContent>
               <div className="flex items-center gap-1">
